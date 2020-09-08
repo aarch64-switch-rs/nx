@@ -22,7 +22,12 @@ impl sf::IObject for UserInterface {
             atmosphere_install_mitm: 65000,
             atmosphere_uninstall_mitm: 65001,
             atmosphere_acknowledge_mitm_session: 65003,
-            atmosphere_has_service: 65100
+            atmosphere_has_mitm: 65004,
+            atmosphere_wait_mitm: 64005,
+            atmosphere_declare_future_mitm: 65006,
+            atmosphere_clear_future_mitm: 65007,
+            atmosphere_has_service: 65100,
+            atmosphere_wait_service: 65101
         }
     }
 }
@@ -62,8 +67,28 @@ impl IUserInterface for UserInterface {
         ipc_client_send_request_command!([self.session.object_info; 65003] (name) => (info: MitmProcessInfo, session_handle: sf::MoveHandle))
     }
 
+    fn atmosphere_has_mitm(&mut self, name: ServiceName) -> Result<bool> {
+        ipc_client_send_request_command!([self.session.object_info; 65004] (name) => (has: bool))
+    }
+
+    fn atmosphere_wait_mitm(&mut self, name: ServiceName) -> Result<()> {
+        ipc_client_send_request_command!([self.session.object_info; 65005] (name) => ())
+    }
+
+    fn atmosphere_declare_future_mitm(&mut self, name: ServiceName) -> Result<()> {
+        ipc_client_send_request_command!([self.session.object_info; 65006] (name) => ())
+    }
+
+    fn atmosphere_clear_future_mitm(&mut self, name: ServiceName) -> Result<()> {
+        ipc_client_send_request_command!([self.session.object_info; 65007] (name) => ())
+    }
+
     fn atmosphere_has_service(&mut self, name: ServiceName) -> Result<bool> {
         ipc_client_send_request_command!([self.session.object_info; 65100] (name) => (has: bool))
+    }
+
+    fn atmosphere_wait_service(&mut self, name: ServiceName) -> Result<()> {
+        ipc_client_send_request_command!([self.session.object_info; 65101] (name) => ())
     }
 }
 

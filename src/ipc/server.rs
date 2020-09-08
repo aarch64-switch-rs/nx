@@ -13,6 +13,7 @@ use super::*;
 use core::mem as cmem;
 use arrayvec::ArrayVec;
 
+/*
 macro_rules! debug_log {
     ($fmt:literal) => {
         let mut tls_bak: [u8; 0x100] = [0; 0x100];
@@ -27,6 +28,7 @@ macro_rules! debug_log {
         unsafe { core::ptr::copy(tls_bak.as_ptr(), get_ipc_buffer(), tls_bak.len()) };
     };
 }
+*/
 
 // TODO: proper result codes, implement left control commands
 
@@ -532,7 +534,7 @@ impl ServerHolder {
 impl Drop for ServerHolder {
     fn drop(&mut self) {
         if self.server.use_count() == 1 {
-            debug_log!("Closing holder: type: {:?}, service name: {}, is mitm: {}, (handle: 0x{:X}, owns it: {}, ID: {})", self.handle_type, self.service_name.value, self.is_mitm_service, self.info.handle, self.info.owns_handle, self.info.domain_object_id);
+            // debug_log!("Closing holder: type: {:?}, service name: {}, is mitm: {}, (handle: 0x{:X}, owns it: {}, ID: {})", self.handle_type, self.service_name.value, self.is_mitm_service, self.info.handle, self.info.owns_handle, self.info.domain_object_id);
             self.close().unwrap();
         }
     }
@@ -983,7 +985,13 @@ impl<const P: usize> ServerManager<P> {
         };
 
         self.register_server::<S>(mitm_handle.handle, service_name, true)?;
-        self.register_session::<MitmQueryServer<S>>(query_handle.handle)
+        self.register_session::<MitmQueryServer<S>>(query_handle.handle)?;
+
+        {
+            let sm = service::new_named_port_object::<sm::UserInterface>()?;
+            sm.get().atmosphere_clear_future_mitm(service_name)?;
+        }
+        Ok(())
     }
 
     pub fn register_named_port_server<S: INamedPort + 'static>(&mut self) -> Result<()> {
