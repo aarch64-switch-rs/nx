@@ -13,23 +13,6 @@ use super::*;
 use core::mem as cmem;
 use arrayvec::ArrayVec;
 
-/*
-macro_rules! debug_log {
-    ($fmt:literal) => {
-        let mut tls_bak: [u8; 0x100] = [0; 0x100];
-        unsafe { core::ptr::copy(get_ipc_buffer(), tls_bak.as_mut_ptr(), tls_bak.len()) };
-        diag_log!(crate::diag::log::LmLogger { crate::diag::log::LogSeverity::Fatal, false } => $fmt);
-        unsafe { core::ptr::copy(tls_bak.as_ptr(), get_ipc_buffer(), tls_bak.len()) };
-    };
-    ($fmt:literal, $( $params:expr ),*) => {
-        let mut tls_bak: [u8; 0x100] = [0; 0x100];
-        unsafe { core::ptr::copy(get_ipc_buffer(), tls_bak.as_mut_ptr(), tls_bak.len()) };
-        diag_log!(crate::diag::log::LmLogger { crate::diag::log::LogSeverity::Fatal, false } => $fmt, $( $params ),*);
-        unsafe { core::ptr::copy(tls_bak.as_ptr(), get_ipc_buffer(), tls_bak.len()) };
-    };
-}
-*/
-
 // TODO: proper result codes, implement left control commands
 
 const MAX_COUNT: usize = wait::MAX_OBJECT_COUNT as usize;
@@ -485,7 +468,7 @@ impl ServerHolder {
 
     pub fn make_new_session(&self, handle: svc::Handle, forward_handle: svc::Handle) -> Result<Self> {
         let new_fn = self.get_new_server_fn()?;
-        Ok(Self { server: (new_fn)(), info: ObjectInfo::from_handle(handle), new_server_fn: Some(new_fn), handle_type: WaitHandleType::Session, forward_handle: forward_handle, is_mitm_service: self.is_mitm_service, service_name: sm::ServiceName::empty(), domain_table: mem::Shared::new(DomainTable::new()) })
+        Ok(Self { server: (new_fn)(), info: ObjectInfo::from_handle(handle), new_server_fn: self.new_server_fn, handle_type: WaitHandleType::Session, forward_handle: forward_handle, is_mitm_service: self.is_mitm_service, service_name: sm::ServiceName::empty(), domain_table: mem::Shared::new(DomainTable::new()) })
     }
 
     pub fn clone_self(&self, handle: svc::Handle, forward_handle: svc::Handle) -> Result<Self> {
@@ -534,7 +517,6 @@ impl ServerHolder {
 impl Drop for ServerHolder {
     fn drop(&mut self) {
         if self.server.use_count() == 1 {
-            // debug_log!("Closing holder: type: {:?}, service name: {}, is mitm: {}, (handle: 0x{:X}, owns it: {}, ID: {})", self.handle_type, self.service_name.value, self.is_mitm_service, self.info.handle, self.info.owns_handle, self.info.domain_object_id);
             self.close().unwrap();
         }
     }
@@ -673,12 +655,6 @@ impl<const P: usize> ServerManager<P> {
     fn prepare_wait_handles(&mut self) -> &[svc::Handle] {
         let mut handles_index: usize = 0;
         for server_holder in &mut self.server_holders {
-            /*
-            debug_log!("- Holder [ handle: 0x{:X}, owns it: {}, object ID: {}, domain count: {} ]", server_holder.info.handle, server_holder.info.owns_handle, server_holder.info.domain_object_id, server_holder.domain_table.domains.len());
-            for domain in &server_holder.domain_table.domains {
-                debug_log!(" -- DomainHolder [ handle: 0x{:X}, owns it: {}, object ID: {} ]", domain.info.handle, domain.info.owns_handle, domain.info.domain_object_id);
-            }
-            */
             let server_info = server_holder.info;
             if server_info.handle != 0 {
                 self.wait_handles[handles_index] = server_info.handle;
@@ -874,7 +850,6 @@ impl<const P: usize> ServerManager<P> {
                                         domain_cmd_type = domain_command_type;
                                         rq_id = request_id;
                                         domain_table = server_holder.domain_table.clone();
-                                        // debug_log!("Request received with handle 0x{:X} (owns: {}) and object Id {}", base_info.handle, base_info.owns_handle, base_info.domain_object_id);
                                     },
                                     Err(rc) => return Err(rc)
                                 };
@@ -882,7 +857,6 @@ impl<const P: usize> ServerManager<P> {
                             CommandType::Control | CommandType::ControlWithContext => {
                                 match read_control_command_from_ipc_buffer(&mut ctx) {
                                     Ok(control_rq_id) => {
-                                        // debug_log!("Control received with handle 0x{:X} (owns: {}) and object Id {}", server_info.handle, server_info.owns_handle, server_info.domain_object_id);
                                         rq_id = control_rq_id as u32;
                                     },
                                     Err(rc) => return Err(rc),
@@ -1018,11 +992,7 @@ impl<const P: usize> ServerManager<P> {
                     if results::os::ResultOperationCanceled::matches(rc) {
                         break;
                     }
-                    /*
-                    else {
-                        debug_log!("process_impl failed with {}", rc);
-                    }
-                    */
+                    return Err(rc);
                 },
                 _ => {}
             }

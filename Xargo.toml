@@ -1,10 +1,1 @@
-[dependencies.core]
-stage = 0
-
 [dependencies.alloc]
-stage = 1
-
-[dependencies.libc]
-stage = 2
-default-features = false 
-features = ["align", "rustc-dep-of-std"]

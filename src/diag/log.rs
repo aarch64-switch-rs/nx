@@ -20,12 +20,12 @@ pub enum LogSeverity {
 }
 
 pub struct LogMetadata {
-    severity: LogSeverity,
-    verbosity: bool,
-    msg: String,
-    file_name: &'static str,
-    fn_name: &'static str,
-    line_no: u32
+    pub severity: LogSeverity,
+    pub verbosity: bool,
+    pub msg: String,
+    pub file_name: &'static str,
+    pub fn_name: &'static str,
+    pub line_no: u32
 }
 
 impl LogMetadata {
