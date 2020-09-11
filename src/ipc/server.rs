@@ -451,24 +451,24 @@ pub struct ServerHolder {
 
 impl ServerHolder {
     pub fn new_server_session<S: IServerObject + 'static>(handle: svc::Handle) -> Self {
-        Self { server: mem::Shared::new(S::new()), info: ObjectInfo::from_handle(handle), new_server_fn: None, handle_type: WaitHandleType::Session, forward_handle: 0, is_mitm_service: false, service_name: sm::ServiceName::empty(), domain_table: mem::Shared::new(DomainTable::new()) } 
+        Self { server: mem::Shared::new(S::new()), info: ObjectInfo::from_handle(handle), new_server_fn: None, handle_type: WaitHandleType::Session, forward_handle: 0, is_mitm_service: false, service_name: sm::ServiceName::empty(), domain_table: mem::Shared::empty() } 
     }
 
     pub fn new_session(handle: svc::Handle, object: mem::Shared<dyn sf::IObject>) -> Self {
-        Self { server: object, info: ObjectInfo::from_handle(handle), new_server_fn: None, handle_type: WaitHandleType::Session, forward_handle: 0, is_mitm_service: false, service_name: sm::ServiceName::empty(), domain_table: mem::Shared::new(DomainTable::new()) } 
+        Self { server: object, info: ObjectInfo::from_handle(handle), new_server_fn: None, handle_type: WaitHandleType::Session, forward_handle: 0, is_mitm_service: false, service_name: sm::ServiceName::empty(), domain_table: mem::Shared::empty() } 
     }
 
     pub fn new_domain_session(handle: svc::Handle, domain_object_id: DomainObjectId, object: mem::Shared<dyn sf::IObject>) -> Self {
-        Self { server: object, info: ObjectInfo::from_domain_object_id(handle, domain_object_id), new_server_fn: None, handle_type: WaitHandleType::Session, forward_handle: 0, is_mitm_service: false, service_name: sm::ServiceName::empty(), domain_table: mem::Shared::new(DomainTable::new()) } 
+        Self { server: object, info: ObjectInfo::from_domain_object_id(handle, domain_object_id), new_server_fn: None, handle_type: WaitHandleType::Session, forward_handle: 0, is_mitm_service: false, service_name: sm::ServiceName::empty(), domain_table: mem::Shared::empty() } 
     }
     
     pub fn new_server<S: IServerObject + 'static>(handle: svc::Handle, service_name: sm::ServiceName, is_mitm_service: bool) -> Self {
-        Self { server: mem::Shared::new(S::new()), info: ObjectInfo::from_handle(handle), new_server_fn: Some(create_server_object_impl::<S>), handle_type: WaitHandleType::Server, forward_handle: 0, is_mitm_service: is_mitm_service, service_name: service_name, domain_table: mem::Shared::new(DomainTable::new()) } 
+        Self { server: mem::Shared::new(S::new()), info: ObjectInfo::from_handle(handle), new_server_fn: Some(create_server_object_impl::<S>), handle_type: WaitHandleType::Server, forward_handle: 0, is_mitm_service: is_mitm_service, service_name: service_name, domain_table: mem::Shared::empty() } 
     }
 
     pub fn make_new_session(&self, handle: svc::Handle, forward_handle: svc::Handle) -> Result<Self> {
         let new_fn = self.get_new_server_fn()?;
-        Ok(Self { server: (new_fn)(), info: ObjectInfo::from_handle(handle), new_server_fn: self.new_server_fn, handle_type: WaitHandleType::Session, forward_handle: forward_handle, is_mitm_service: self.is_mitm_service, service_name: sm::ServiceName::empty(), domain_table: mem::Shared::new(DomainTable::new()) })
+        Ok(Self { server: (new_fn)(), info: ObjectInfo::from_handle(handle), new_server_fn: self.new_server_fn, handle_type: WaitHandleType::Session, forward_handle: forward_handle, is_mitm_service: self.is_mitm_service, service_name: sm::ServiceName::empty(), domain_table: mem::Shared::empty() })
     }
 
     pub fn clone_self(&self, handle: svc::Handle, forward_handle: svc::Handle) -> Result<Self> {
@@ -490,6 +490,8 @@ impl ServerHolder {
     }
 
     pub fn convert_to_domain(&mut self) -> Result<DomainObjectId> {
+        // Since we're a base domain object now, create a domain table
+        self.domain_table = mem::Shared::new(DomainTable::new());
         let domain_object_id = self.domain_table.get().allocate_id()?;
         let mut new_info = self.info;
         new_info.domain_object_id = domain_object_id;
@@ -771,7 +773,7 @@ impl<const P: usize> ServerManager<P> {
                     if command.rq_id == rq_id {
                         command_found = true;
                         let mut unused_new_sessions: ArrayVec<[ServerHolder; MAX_COUNT]> = ArrayVec::new();
-                        let unused_domain_table = mem::Shared::new(DomainTable::new());
+                        let unused_domain_table = mem::Shared::empty();
                         let mut server_ctx = ServerContext::new(ctx, DataWalker::empty(), unused_domain_table, &mut unused_new_sessions);
                         if let Err(rc) = hipc_manager.call_self_command(command.command_fn, &mut server_ctx) {
                             write_control_command_response_on_ipc_buffer(ctx, rc, command_type);
