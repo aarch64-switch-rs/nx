@@ -182,9 +182,17 @@ impl Player {
         Self { controller: controller, data: data, prev_button_state: 0 }
     }
 
+    fn get_latest_state_entry(&self) -> *const ControllerStateEntry {
+        unsafe {
+            &(*self.data).main_state.entries[(*self.data).main_state.latest_index as usize]
+        }
+    }
+
     fn get_button_state(&self) -> u64 {
-        let last_entry = unsafe { (*self.data).main_state.entries[(*self.data).main_state.latest_index as usize] };
-        last_entry.button_state
+        let last_entry = self.get_latest_state_entry();
+        unsafe {
+            (*last_entry).button_state
+        }
     }
 
     pub fn get_button_state_held(&mut self) -> Key {

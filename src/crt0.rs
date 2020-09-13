@@ -17,7 +17,7 @@ extern "Rust" {
     fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize;
 }
 
-pub type ExitFn = fn(ResultCode);
+pub type ExitFn = fn(ResultCode) -> !;
 
 static mut G_EXIT_FN: sync::Locked<Option<ExitFn>> = sync::Locked::new(false, None);
 static mut G_MAIN_THREAD: thread::Thread = thread::Thread::empty();
@@ -95,13 +95,8 @@ unsafe fn __nx_crt0_exception_entry(_error_desc: u32, _stack_top: *mut u8) {
 pub fn exit(rc: ResultCode) -> ! {
     unsafe {
         match G_EXIT_FN.get() {
-            Some(exit_fn) => {
-                exit_fn(rc);
-            },
-            None => {
-                svc::exit_process();
-            }
+            Some(exit_fn) => exit_fn(rc),
+            None => svc::exit_process()
         }
     }
-    loop {}
 }

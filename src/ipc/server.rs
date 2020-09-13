@@ -343,11 +343,20 @@ pub trait IServerObject: sf::IObject {
     fn new() -> Self where Self: Sized;
 }
 
+pub trait IMitmServerObject: sf::IObject {
+    fn new(info: sm::MitmProcessInfo) -> Self where Self: Sized;
+}
+
 fn create_server_object_impl<S: IServerObject + 'static>() -> mem::Shared<dyn sf::IObject> {
     mem::Shared::new(S::new())
 }
 
+fn create_mitm_server_object_impl<S: IMitmServerObject + 'static>(info: sm::MitmProcessInfo) -> mem::Shared<dyn sf::IObject> {
+    mem::Shared::new(S::new(info))
+}
+
 pub type NewServerFn = fn() -> mem::Shared<dyn sf::IObject>;
+pub type NewMitmServerFn = fn(sm::MitmProcessInfo) -> mem::Shared<dyn sf::IObject>;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u8)]
@@ -382,6 +391,23 @@ impl DomainTable {
                     }
                 };
             }
+        }
+        Err(ResultCode::new(0xBEBA))
+    }
+
+    pub fn allocate_specific_id(&mut self, specific_domain_object_id: DomainObjectId) -> Result<DomainObjectId> {
+        for i in 0..self.table.len() {
+            match self.table[i] {
+                0 => {
+                    self.table[i] = specific_domain_object_id;
+                    return Ok(specific_domain_object_id);
+                },
+                other => {
+                    if other == specific_domain_object_id {
+                        break;
+                    }
+                }
+            };
         }
         Err(ResultCode::new(0xBEBA))
     }
@@ -442,8 +468,9 @@ pub struct ServerHolder {
     pub server: mem::Shared<dyn sf::IObject>,
     pub info: ObjectInfo,
     pub new_server_fn: Option<NewServerFn>,
+    pub new_mitm_server_fn: Option<NewMitmServerFn>,
     pub handle_type: WaitHandleType,
-    pub forward_handle: svc::Handle,
+    pub mitm_forward_info: ObjectInfo,
     pub is_mitm_service: bool,
     pub service_name: sm::ServiceName,
     pub domain_table: mem::Shared<DomainTable>
@@ -451,35 +478,41 @@ pub struct ServerHolder {
 
 impl ServerHolder {
     pub fn new_server_session<S: IServerObject + 'static>(handle: svc::Handle) -> Self {
-        Self { server: mem::Shared::new(S::new()), info: ObjectInfo::from_handle(handle), new_server_fn: None, handle_type: WaitHandleType::Session, forward_handle: 0, is_mitm_service: false, service_name: sm::ServiceName::empty(), domain_table: mem::Shared::empty() } 
+        Self { server: mem::Shared::new(S::new()), info: ObjectInfo::from_handle(handle), new_server_fn: None, new_mitm_server_fn: None, handle_type: WaitHandleType::Session, mitm_forward_info: ObjectInfo::new(), is_mitm_service: false, service_name: sm::ServiceName::empty(), domain_table: mem::Shared::empty() } 
     }
 
     pub fn new_session(handle: svc::Handle, object: mem::Shared<dyn sf::IObject>) -> Self {
-        Self { server: object, info: ObjectInfo::from_handle(handle), new_server_fn: None, handle_type: WaitHandleType::Session, forward_handle: 0, is_mitm_service: false, service_name: sm::ServiceName::empty(), domain_table: mem::Shared::empty() } 
+        Self { server: object, info: ObjectInfo::from_handle(handle), new_server_fn: None, new_mitm_server_fn: None, handle_type: WaitHandleType::Session, mitm_forward_info: ObjectInfo::new(), is_mitm_service: false, service_name: sm::ServiceName::empty(), domain_table: mem::Shared::empty() } 
     }
 
     pub fn new_domain_session(handle: svc::Handle, domain_object_id: DomainObjectId, object: mem::Shared<dyn sf::IObject>) -> Self {
-        Self { server: object, info: ObjectInfo::from_domain_object_id(handle, domain_object_id), new_server_fn: None, handle_type: WaitHandleType::Session, forward_handle: 0, is_mitm_service: false, service_name: sm::ServiceName::empty(), domain_table: mem::Shared::empty() } 
+        Self { server: object, info: ObjectInfo::from_domain_object_id(handle, domain_object_id), new_server_fn: None, new_mitm_server_fn: None, handle_type: WaitHandleType::Session, mitm_forward_info: ObjectInfo::new(), is_mitm_service: false, service_name: sm::ServiceName::empty(), domain_table: mem::Shared::empty() } 
     }
     
-    pub fn new_server<S: IServerObject + 'static>(handle: svc::Handle, service_name: sm::ServiceName, is_mitm_service: bool) -> Self {
-        Self { server: mem::Shared::new(S::new()), info: ObjectInfo::from_handle(handle), new_server_fn: Some(create_server_object_impl::<S>), handle_type: WaitHandleType::Server, forward_handle: 0, is_mitm_service: is_mitm_service, service_name: service_name, domain_table: mem::Shared::empty() } 
+    pub fn new_server<S: IServerObject + 'static>(handle: svc::Handle, service_name: sm::ServiceName) -> Self {
+        Self { server: mem::Shared::<S>::empty(), info: ObjectInfo::from_handle(handle), new_server_fn: Some(create_server_object_impl::<S>), new_mitm_server_fn: None, handle_type: WaitHandleType::Server, mitm_forward_info: ObjectInfo::new(), is_mitm_service: false, service_name: service_name, domain_table: mem::Shared::empty() } 
     }
 
-    pub fn make_new_session(&self, handle: svc::Handle, forward_handle: svc::Handle) -> Result<Self> {
+    pub fn new_mitm_server<S: IMitmServerObject + 'static>(handle: svc::Handle, service_name: sm::ServiceName) -> Self {
+        Self { server: mem::Shared::<S>::empty(), info: ObjectInfo::from_handle(handle), new_server_fn: None, new_mitm_server_fn: Some(create_mitm_server_object_impl::<S>), handle_type: WaitHandleType::Server, mitm_forward_info: ObjectInfo::new(), is_mitm_service: true, service_name: service_name, domain_table: mem::Shared::empty() } 
+    }
+
+    pub fn make_new_session(&self, handle: svc::Handle) -> Result<Self> {
         let new_fn = self.get_new_server_fn()?;
-        Ok(Self { server: (new_fn)(), info: ObjectInfo::from_handle(handle), new_server_fn: self.new_server_fn, handle_type: WaitHandleType::Session, forward_handle: forward_handle, is_mitm_service: self.is_mitm_service, service_name: sm::ServiceName::empty(), domain_table: mem::Shared::empty() })
+        Ok(Self { server: (new_fn)(), info: ObjectInfo::from_handle(handle), new_server_fn: self.new_server_fn, new_mitm_server_fn: self.new_mitm_server_fn, handle_type: WaitHandleType::Session, mitm_forward_info: ObjectInfo::new(), is_mitm_service: self.is_mitm_service, service_name: sm::ServiceName::empty(), domain_table: mem::Shared::empty() })
+    }
+
+    pub fn make_new_mitm_session(&self, handle: svc::Handle, forward_handle: svc::Handle, info: sm::MitmProcessInfo) -> Result<Self> {
+        let new_mitm_fn = self.get_new_mitm_server_fn()?;
+        Ok(Self { server: (new_mitm_fn)(info), info: ObjectInfo::from_handle(handle), new_server_fn: self.new_server_fn, new_mitm_server_fn: self.new_mitm_server_fn, handle_type: WaitHandleType::Session, mitm_forward_info: ObjectInfo::from_handle(forward_handle), is_mitm_service: self.is_mitm_service, service_name: sm::ServiceName::empty(), domain_table: mem::Shared::empty() })
     }
 
     pub fn clone_self(&self, handle: svc::Handle, forward_handle: svc::Handle) -> Result<Self> {
-        let server_clone = self.server.clone();
         let mut object_info = self.info;
         object_info.handle = handle;
-        Ok(Self { server: server_clone, info: object_info, new_server_fn: self.new_server_fn, handle_type: WaitHandleType::Session, forward_handle: forward_handle, is_mitm_service: forward_handle != 0, service_name: sm::ServiceName::empty(), domain_table: self.domain_table.clone() })
-    }
-
-    pub fn make_forward_info(&self) -> ObjectInfo {
-        ObjectInfo::from_handle(self.forward_handle)
+        let mut mitm_fwd_info = self.mitm_forward_info;
+        mitm_fwd_info.handle = forward_handle;
+        Ok(Self { server: self.server.clone(), info: object_info, new_server_fn: self.new_server_fn, new_mitm_server_fn: self.new_mitm_server_fn, handle_type: WaitHandleType::Session, mitm_forward_info: mitm_fwd_info, is_mitm_service: forward_handle != 0, service_name: sm::ServiceName::empty(), domain_table: self.domain_table.clone() })
     }
 
     pub fn get_new_server_fn(&self) -> Result<NewServerFn> {
@@ -489,13 +522,30 @@ impl ServerHolder {
         }
     }
 
+    pub fn get_new_mitm_server_fn(&self) -> Result<NewMitmServerFn> {
+        match self.new_mitm_server_fn {
+            Some(new_mitm_server_fn) => Ok(new_mitm_server_fn),
+            None => Err(results::hipc::ResultSessionClosed::make())
+        }
+    }
+
     pub fn convert_to_domain(&mut self) -> Result<DomainObjectId> {
+        // Check that we're not already a domain
+        result_return_if!(self.info.is_domain(), 0xBADE);
+
         // Since we're a base domain object now, create a domain table
         self.domain_table = mem::Shared::new(DomainTable::new());
-        let domain_object_id = self.domain_table.get().allocate_id()?;
-        let mut new_info = self.info;
-        new_info.domain_object_id = domain_object_id;
-        self.info = new_info;
+
+        let domain_object_id = match self.is_mitm_service {
+            true => {
+                let forward_object_id = self.mitm_forward_info.convert_current_object_to_domain()?;
+                self.mitm_forward_info.domain_object_id = forward_object_id;
+                self.domain_table.get().allocate_specific_id(forward_object_id)?
+            },
+            false => self.domain_table.get().allocate_id()?
+        };
+
+        self.info.domain_object_id = domain_object_id;
         Ok(domain_object_id)
     }
 
@@ -507,11 +557,12 @@ impl ServerHolder {
                 false => sm.get().unregister_service(self.service_name)?
             };
         }
-        // Force close the session here, so that the server object doesn't dispose it itself (this would cause issues with cloned sessions)
-        // If we don't own the handle we don't have to close anything :P
+
+        // Don't close our session like a normal one (like the forward session below) as we allocated the object IDs ourselves, the only thing we do have to close is the handle
         if self.info.owns_handle {
             svc::close_handle(self.info.handle)?;
         }
+        sf::Session::from(self.mitm_forward_info).close();
         Ok(())
     }
 }
@@ -561,8 +612,7 @@ impl<'a> IHipcManager for HipcManager<'a> {
         
         let mut forward_handle: svc::Handle = 0;
         if self.server_holder.is_mitm_service {
-            let mut fwd_info = self.server_holder.make_forward_info();
-            let fwd_handle = fwd_info.clone_current_object()?;
+            let fwd_handle = self.server_holder.mitm_forward_info.clone_current_object()?;
             forward_handle = fwd_handle.handle;
         }
 
@@ -631,7 +681,7 @@ pub trait IService: IServerObject {
     fn get_max_sesssions() -> i32;
 }
 
-pub trait IMitmService: IServerObject {
+pub trait IMitmService: IMitmServerObject {
     fn get_name() -> &'static str;
     fn should_mitm(info: sm::MitmProcessInfo) -> bool;
 }
@@ -688,7 +738,7 @@ impl<const P: usize> ServerManager<P> {
                             core::ptr::copy(ipc_buf_backup.as_ptr(), ipc_buf, ipc_buf_backup.len());
                         }
                         // Let the original service take care of the command for us.
-                        svc::send_sync_request(server_holder.forward_handle)
+                        svc::send_sync_request(server_holder.mitm_forward_info.handle)
                     };
                     
                     let target_server = match is_domain {
@@ -869,15 +919,16 @@ impl<const P: usize> ServerManager<P> {
                     },
                     WaitHandleType::Server => {
                         let new_handle = svc::accept_session(handle)?;
-                        let mut forward_handle: svc::Handle = 0;
-                        
+
                         if server_holder.is_mitm_service {
                             let sm = service::new_named_port_object::<sm::UserInterface>()?;
-                            let (_info, session_handle) = sm.get().atmosphere_acknowledge_mitm_session(server_holder.service_name)?;
-                            forward_handle = session_handle.handle;
-                        }
+                            let (info, session_handle) = sm.get().atmosphere_acknowledge_mitm_session(server_holder.service_name)?;
 
-                        new_sessions.push(server_holder.make_new_session(new_handle, forward_handle)?);
+                            new_sessions.push(server_holder.make_new_mitm_session(new_handle, session_handle.handle, info)?);
+                        }
+                        else {
+                            new_sessions.push(server_holder.make_new_session(new_handle)?);
+                        }
                     }
                 };
                 break;
@@ -933,8 +984,12 @@ impl<const P: usize> ServerManager<P> {
         }
     }
     
-    pub fn register_server<S: IServerObject + 'static>(&mut self, handle: svc::Handle, service_name: sm::ServiceName, is_mitm_service: bool) -> Result<()> {
-        self.push_holder(ServerHolder::new_server::<S>(handle, service_name, is_mitm_service))
+    pub fn register_server<S: IServerObject + 'static>(&mut self, handle: svc::Handle, service_name: sm::ServiceName) -> Result<()> {
+        self.push_holder(ServerHolder::new_server::<S>(handle, service_name))
+    }
+
+    pub fn register_mitm_server<S: IMitmServerObject + 'static>(&mut self, handle: svc::Handle, service_name: sm::ServiceName) -> Result<()> {
+        self.push_holder(ServerHolder::new_mitm_server::<S>(handle, service_name))
     }
     
     pub fn register_session<S: IServerObject + 'static>(&mut self, handle: svc::Handle) -> Result<()> {
@@ -949,7 +1004,7 @@ impl<const P: usize> ServerManager<P> {
             sm.get().register_service(service_name, false, S::get_max_sesssions())?
         };
 
-        self.register_server::<S>(service_handle.handle, service_name, false)
+        self.register_server::<S>(service_handle.handle, service_name)
     }
     
     pub fn register_mitm_service_server<S: IMitmService + 'static>(&mut self) -> Result<()> {
@@ -960,7 +1015,7 @@ impl<const P: usize> ServerManager<P> {
             sm.get().atmosphere_install_mitm(service_name)?
         };
 
-        self.register_server::<S>(mitm_handle.handle, service_name, true)?;
+        self.register_mitm_server::<S>(mitm_handle.handle, service_name)?;
         self.register_session::<MitmQueryServer<S>>(query_handle.handle)?;
 
         {
@@ -973,7 +1028,7 @@ impl<const P: usize> ServerManager<P> {
     pub fn register_named_port_server<S: INamedPort + 'static>(&mut self) -> Result<()> {
         let port_handle = svc::manage_named_port(S::get_port_name().as_ptr(), S::get_max_sesssions())?;
 
-        self.register_server::<S>(port_handle, sm::ServiceName::empty(), false)
+        self.register_server::<S>(port_handle, sm::ServiceName::empty())
     }
 
     fn process_impl(&mut self) -> Result<()> {

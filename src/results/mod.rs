@@ -9,3 +9,5 @@ pub mod hipc;
 pub mod sm;
 
 pub mod fs;
+
+pub mod nfp;

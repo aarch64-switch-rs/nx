@@ -114,6 +114,7 @@ pub type Handle = u32;
 pub const CURRENT_THREAD_PSEUDO_HANDLE: Handle = 0xFFFF8000;
 pub const CURRENT_PROCESS_PSEUDO_HANDLE: Handle = 0xFFFF8001;
 
+#[inline(always)]
 pub fn set_heap_size(size: Size) -> Result<*mut u8> {
     extern "C" {
         fn __nx_svc_set_heap_size(out_address: *mut *mut u8, size: Size) -> ResultCode;
@@ -127,6 +128,7 @@ pub fn set_heap_size(size: Size) -> Result<*mut u8> {
     }
 }
 
+#[inline(always)]
 pub fn set_memory_attribute(address: Address, size: Size, mask: u32, value: MemoryAttribute) -> Result<()> {
     extern "C" {
         fn __nx_svc_set_memory_attribute(address: Address, size: Size, mask: u32, value: MemoryAttribute) -> ResultCode;
@@ -138,6 +140,7 @@ pub fn set_memory_attribute(address: Address, size: Size, mask: u32, value: Memo
     }
 }
 
+#[inline(always)]
 pub fn query_memory(address: *const u8) -> Result<(MemoryInfo, PageInfo)> {
     extern "C" {
         fn __nx_svc_query_memory(out_info: *mut MemoryInfo, out_page_info: *mut PageInfo, address: *const u8) -> ResultCode;
@@ -152,6 +155,7 @@ pub fn query_memory(address: *const u8) -> Result<(MemoryInfo, PageInfo)> {
     }
 }
 
+#[inline(always)]
 pub fn exit_process() -> ! {
     extern "C" {
         fn __nx_svc_exit_process() -> !;
@@ -162,6 +166,7 @@ pub fn exit_process() -> ! {
     }
 }
 
+#[inline(always)]
 pub fn create_thread(entry: ThreadEntrypointFn, entry_arg: Address, stack_top: Address, priority: i32, cpu_id: i32) -> Result<Handle> {
     extern "C" {
         fn __nx_svc_create_thread(handle: *mut Handle, entry: ThreadEntrypointFn, entry_arg: Address, stack_top: Address, priority: i32, cpu_id: i32) -> ResultCode;
@@ -175,6 +180,7 @@ pub fn create_thread(entry: ThreadEntrypointFn, entry_arg: Address, stack_top: A
     }
 }
 
+#[inline(always)]
 pub fn start_thread(handle: Handle) -> Result<()> {
     extern "C" {
         fn __nx_svc_start_thread(handle: Handle) -> ResultCode;
@@ -186,6 +192,7 @@ pub fn start_thread(handle: Handle) -> Result<()> {
     }
 }
 
+#[inline(always)]
 pub fn exit_thread() -> ! {
     extern "C" {
         fn __nx_svc_exit_thread() -> !;
@@ -196,6 +203,7 @@ pub fn exit_thread() -> ! {
     }
 }
 
+#[inline(always)]
 pub fn sleep_thread(timeout: i64) -> Result<()> {
     extern "C" {
         fn __nx_svc_sleep_thread(timeout: i64) -> ResultCode;
@@ -207,6 +215,7 @@ pub fn sleep_thread(timeout: i64) -> Result<()> {
     }
 }
 
+#[inline(always)]
 pub fn get_thread_priority(handle: Handle) -> Result<i32> {
     extern "C" {
         fn __nx_svc_get_thread_priority(out_priority: *mut i32, handle: Handle) -> ResultCode;
@@ -220,6 +229,7 @@ pub fn get_thread_priority(handle: Handle) -> Result<i32> {
     }
 }
 
+#[inline(always)]
 pub fn signal_event(handle: Handle) -> Result<()> {
     extern "C" {
         fn __nx_svc_signal_event(handle: Handle) -> ResultCode;
@@ -231,6 +241,7 @@ pub fn signal_event(handle: Handle) -> Result<()> {
     }
 }
 
+#[inline(always)]
 pub fn map_shared_memory(handle: Handle, address: Address, size: Size, permission: MemoryPermission) -> Result<()> {
     extern "C" {
         fn __nx_svc_map_shared_memory(handle: Handle, address: Address, size: Size, permission: MemoryPermission) -> ResultCode;
@@ -242,6 +253,7 @@ pub fn map_shared_memory(handle: Handle, address: Address, size: Size, permissio
     }
 }
 
+#[inline(always)]
 pub fn unmap_shared_memory(handle: Handle, address: Address, size: Size) -> Result<()> {
     extern "C" {
         fn __nx_svc_unmap_shared_memory(handle: Handle, address: Address, size: Size) -> ResultCode;
@@ -253,6 +265,7 @@ pub fn unmap_shared_memory(handle: Handle, address: Address, size: Size) -> Resu
     }
 }
 
+#[inline(always)]
 pub fn create_transfer_memory(address: Address, size: Size, permissions: MemoryPermission) -> Result<Handle> {
     extern "C" {
         fn __nx_svc_create_transfer_memory(out_handle: *mut Handle, address: Address, size: Size, permissions: MemoryPermission) -> ResultCode;
@@ -266,6 +279,7 @@ pub fn create_transfer_memory(address: Address, size: Size, permissions: MemoryP
     }
 }
 
+#[inline(always)]
 pub fn close_handle(handle: Handle) -> Result<()> {
     extern "C" {
         fn __nx_svc_close_handle(handle: Handle) -> ResultCode;
@@ -277,6 +291,7 @@ pub fn close_handle(handle: Handle) -> Result<()> {
     }
 }
 
+#[inline(always)]
 pub fn reset_signal(handle: Handle) -> Result<()> {
     extern "C" {
         fn __nx_svc_reset_signal(handle: Handle) -> ResultCode;
@@ -288,6 +303,7 @@ pub fn reset_signal(handle: Handle) -> Result<()> {
     }
 }
 
+#[inline(always)]
 pub fn wait_synchronization(handles: *const Handle, handle_count: u32, timeout: i64) -> Result<i32> {
     extern "C" {
         fn __nx_svc_wait_synchronization(out_index: *mut i32, handles: *const Handle, handle_count: u32, timeout: i64) -> ResultCode;
@@ -301,6 +317,7 @@ pub fn wait_synchronization(handles: *const Handle, handle_count: u32, timeout: 
     }
 }
 
+#[inline(always)]
 pub fn arbitrate_lock(thread_handle: Handle, tag_location: Address, tag: u32) -> Result<()> {
     extern "C" {
         fn __nx_svc_arbitrate_lock(thread_handle: Handle, tag_location: Address, tag: u32) -> ResultCode;
@@ -312,6 +329,7 @@ pub fn arbitrate_lock(thread_handle: Handle, tag_location: Address, tag: u32) ->
     }
 }
 
+#[inline(always)]
 pub fn arbitrate_unlock(tag_location: Address) -> Result<()> {
     extern "C" {
         fn __nx_svc_arbitrate_unlock(tag_location: Address) -> ResultCode;
@@ -323,6 +341,7 @@ pub fn arbitrate_unlock(tag_location: Address) -> Result<()> {
     }
 }
 
+#[inline(always)]
 pub fn connect_to_named_port(name: Address) -> Result<Handle> {
     extern "C" {
         fn __nx_svc_connect_to_named_port(out_handle: *mut Handle, name: Address) -> ResultCode;
@@ -336,6 +355,7 @@ pub fn connect_to_named_port(name: Address) -> Result<Handle> {
     }
 }
 
+#[inline(always)]
 pub fn send_sync_request(handle: Handle) -> Result<()> {
     extern "C" {
         fn __nx_svc_send_sync_request(handle: Handle) -> ResultCode;
@@ -426,6 +446,7 @@ pub fn get_info(id: InfoId, handle: Handle, sub_id: u64) -> Result<u64> {
     }
 }
 
+#[inline(always)]
 pub fn create_session(is_light: bool, unk_name: u64) -> Result<(Handle, Handle)> {
     extern "C" {
         fn __nx_svc_create_session(out_server_handle: *mut Handle, out_client_handle: *mut Handle, is_light: bool, unk_name: u64) -> ResultCode;
@@ -440,6 +461,7 @@ pub fn create_session(is_light: bool, unk_name: u64) -> Result<(Handle, Handle)>
     }
 }
 
+#[inline(always)]
 pub fn accept_session(handle: Handle) -> Result<Handle> {
     extern "C" {
         fn __nx_svc_accept_session(out_session_handle: *mut Handle, handle: Handle) -> ResultCode;
@@ -453,6 +475,7 @@ pub fn accept_session(handle: Handle) -> Result<Handle> {
     }
 }
 
+#[inline(always)]
 pub fn reply_and_receive(handles: *const Handle, handle_count: u32, reply_target: Handle, timeout: i64) -> Result<i32> {
     extern "C" {
         fn __nx_svc_reply_and_receive(out_index: *mut i32, handles: *const Handle, handle_count: u32, reply_target: Handle, timeout: i64) -> ResultCode;
@@ -466,6 +489,7 @@ pub fn reply_and_receive(handles: *const Handle, handle_count: u32, reply_target
     }
 }
 
+#[inline(always)]
 pub fn create_event() -> Result<(Handle, Handle)> {
     extern "C" {
         fn __nx_svc_create_event(out_server_handle: *mut Handle, out_client_handle: *mut Handle) -> ResultCode;
@@ -480,6 +504,7 @@ pub fn create_event() -> Result<(Handle, Handle)> {
     }
 }
 
+#[inline(always)]
 pub fn manage_named_port(name: Address, max_sessions: i32) -> Result<Handle> {
     extern "C" {
         fn __nx_svc_manage_named_port(out_handle: *mut Handle, name: Address, max_sessions: i32) -> ResultCode;

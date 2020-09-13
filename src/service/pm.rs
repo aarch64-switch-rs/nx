@@ -45,3 +45,45 @@ impl service::IService for InformationInterface {
         Ok(())
     }
 }
+
+pub struct DebugMonitorInterface {
+    session: sf::Session
+}
+
+impl sf::IObject for DebugMonitorInterface {
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
+    }
+
+    fn get_command_table(&self) -> sf::CommandMetadataTable {
+        ipc_server_make_command_table! {
+            get_application_process_id: 5
+        }
+    }
+}
+
+impl service::IClientObject for DebugMonitorInterface {
+    fn new(session: sf::Session) -> Self {
+        Self { session: session }
+    }
+}
+
+impl IDebugMonitorInterface for DebugMonitorInterface {
+    fn get_application_process_id(&mut self) -> Result<u64> {
+        ipc_client_send_request_command!([self.session.object_info; 5] () => (process_id: u64))
+    }
+}
+
+impl service::IService for DebugMonitorInterface {
+    fn get_name() -> &'static str {
+        nul!("pm:dmnt")
+    }
+
+    fn as_domain() -> bool {
+        false
+    }
+
+    fn post_initialize(&mut self) -> Result<()> {
+        Ok(())
+    }
+}
