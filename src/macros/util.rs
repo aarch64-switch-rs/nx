@@ -10,7 +10,7 @@ macro_rules! bit {
 #[macro_export]
 macro_rules! bit_enum {
     ($name:ident ($base:ty) { $( $entry_name:ident = $entry_value:expr ),* }) => {
-        #[derive(Copy, Clone, PartialEq, Eq, Debug)]
+        #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
         #[repr(C)]
         pub struct $name($base);
         

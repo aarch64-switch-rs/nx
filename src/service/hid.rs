@@ -15,9 +15,9 @@ impl sf::IObject for AppletResource {
     }
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
-        ipc_server_make_command_table! {
-            get_shared_memory_handle: 0
-        }
+        vec! [
+            ipc_interface_make_command_meta!(get_shared_memory_handle: 1)
+        ]
     }
 }
 
@@ -43,15 +43,15 @@ impl sf::IObject for HidServer {
     }
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
-        ipc_server_make_command_table! {
-            create_applet_resource: 0,
-            set_supported_npad_style_set: 100,
-            set_supported_npad_id_type: 102,
-            activate_npad: 103,
-            deactivate_npad: 104,
-            set_npad_joy_assignment_mode_single: 123,
-            set_npad_joy_assignment_mode_dual: 124
-        }
+        vec! [
+            ipc_interface_make_command_meta!(create_applet_resource: 0),
+            ipc_interface_make_command_meta!(set_supported_npad_style_set: 100),
+            ipc_interface_make_command_meta!(set_supported_npad_id_type: 102),
+            ipc_interface_make_command_meta!(activate_npad: 103),
+            ipc_interface_make_command_meta!(deactivate_npad: 104),
+            ipc_interface_make_command_meta!(set_npad_joy_assignment_mode_single: 123),
+            ipc_interface_make_command_meta!(set_npad_joy_assignment_mode_dual: 124)
+        ]
     }
 }
 

@@ -14,7 +14,7 @@ pub trait Ioctl {
     fn get_fd() -> IoctlFd;
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct NvMapCreate {
     pub size: u32,
@@ -31,7 +31,7 @@ impl Ioctl for NvMapCreate {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct NvMapFromId {
     pub id: u32,
@@ -48,14 +48,16 @@ impl Ioctl for NvMapFromId {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Derivative)]
+#[derivative(Default)]
 #[repr(u32)]
 pub enum AllocFlags {
+    #[derivative(Default)]
     ReadOnly,
     ReadWrite,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct NvMapAlloc {
     pub handle: u32,
@@ -64,7 +66,7 @@ pub struct NvMapAlloc {
     pub align: u32,
     pub kind: Kind,
     pub pad: [u8; 4],
-    pub address: *mut u8,
+    pub address: usize
 }
 
 impl Ioctl for NvMapAlloc {
@@ -77,11 +79,11 @@ impl Ioctl for NvMapAlloc {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct NvMapGetId {
     pub id: u32,
-    pub handle: u32,
+    pub handle: u32
 }
 
 impl Ioctl for NvMapGetId {
@@ -94,7 +96,7 @@ impl Ioctl for NvMapGetId {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct NvHostCtrlSyncptWait {
     pub fence: Fence,

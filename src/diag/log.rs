@@ -2,8 +2,6 @@ use crate::thread;
 use crate::result::*;
 use crate::mem;
 use crate::ipc::sf;
-
-extern crate alloc;
 use alloc::string::String;
 
 pub type LogSeverity = logpacket::detail::LogSeverity;

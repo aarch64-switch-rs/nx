@@ -9,6 +9,11 @@ linked_list_allocator = "0.8.4"
 paste = "1.0"
 logpacket = { git = "https://github.com/aarch64-switch-rs/logpacket" }
 
+[dependencies.derivative]
+version = "2.1.1"
+default-features = false
+features = ["use_core"]
+
 [dependencies.arrayvec]
 version = "0.5.1"
 default-features = false

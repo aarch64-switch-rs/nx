@@ -23,25 +23,32 @@ pub mod ioctl;
 
 pub mod surface;
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Derivative)]
+#[derivative(Default)]
 #[repr(u32)]
 pub enum Layout {
+    #[derivative(Default)]
+    Invalid = 0,
     Pitch = 1,
     Tiled = 2,
     BlockLinear = 3,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Derivative)]
+#[derivative(Default)]
 #[repr(u32)]
 pub enum DisplayScanFormat {
+    #[derivative(Default)]
     Progressive = 0,
     Interlaced = 1,
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Derivative)]
+#[derivative(Default)]
 #[repr(u32)]
 pub enum Kind {
+    #[derivative(Default)]
     Pitch = 0x0,
     Z16 = 0x1,
     Z16_2C = 0x2,
@@ -278,9 +285,11 @@ pub enum Kind {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Derivative)]
+#[derivative(Default)]
 #[repr(u64)]
 pub enum ColorFormat {
+    #[derivative(Default)]
     Unspecified = 0,
     NonColor8 = 0x0009200408,
     NonColor16 = 0x0009200A10,
@@ -514,9 +523,11 @@ pub enum ColorFormat {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Derivative)]
+#[derivative(Default)]
 #[repr(u32)]
 pub enum PixelFormat {
+    #[derivative(Default)]
     Invalid = 0,
     RGBA_8888 = 1,
     RGBX_8888 = 2,
@@ -565,23 +576,28 @@ bit_enum! {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Derivative)]
+#[derivative(Default)]
 #[repr(i32)]
 pub enum ConnectionApi {
+    #[derivative(Default)]
+    Invalid = 0,
     EGL = 1,
     Cpu = 2,
     Media = 3,
     Camera = 4,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Derivative)]
+#[derivative(Default)]
 #[repr(u32)]
 pub enum DisconnectMode {
+    #[derivative(Default)]
     Api,
     AllLocal,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct QueueBufferOutput {
     pub width: u32,
@@ -596,7 +612,7 @@ impl QueueBufferOutput {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct Plane {
     pub width: u32,
@@ -615,7 +631,7 @@ pub struct Plane {
     pub unk: [u32; 6]
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct GraphicBufferHeader {
     pub magic: u32,
@@ -632,7 +648,7 @@ pub struct GraphicBufferHeader {
 
 pub const GRAPHIC_BUFFER_HEADER_MAGIC: u32 = 0x47424652;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 #[repr(packed)]
 pub struct GraphicBuffer {
@@ -656,21 +672,21 @@ pub struct GraphicBuffer {
 
 pub const GRAPHIC_BUFFER_MAGIC: u32 = 0xDAFFCAFF;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct Fence {
     id: u32,
     value: u32
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct MultiFence {
     fence_count: u32,
     fences: [Fence; 4]
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct Rect {
     left: i32,
@@ -679,9 +695,12 @@ pub struct Rect {
     bottom: i32
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Derivative)]
+#[derivative(Default)]
 #[repr(u32)]
 pub enum Transform {
+    #[derivative(Default)]
+    Invalid = 0,
     FlipH = 1,
     FlipV = 2,
     Rotate90 = 4,
@@ -689,7 +708,7 @@ pub enum Transform {
     Rotate270 = 7,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 #[repr(packed)]
 pub struct QueueBufferInput {

@@ -17,10 +17,10 @@ impl sf::IObject for ManagerDisplayService {
     }
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
-        ipc_server_make_command_table! {
-            create_managed_layer: 2010,
-            destroy_managed_layer: 2011
-        }
+        vec! [
+            ipc_interface_make_command_meta!(create_managed_layer: 2010),
+            ipc_interface_make_command_meta!(destroy_managed_layer: 2011)
+        ]
     }
 }
 
@@ -50,14 +50,14 @@ impl sf::IObject for SystemDisplayService {
     }
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
-        ipc_server_make_command_table! {
-            get_z_order_count_min: 1200,
-            get_z_order_count_max: 1202,
-            set_layer_position: 2201,
-            set_layer_size: 2203,
-            set_layer_z: 2205,
-            set_layer_visibility: 2207
-        }
+        vec! [
+            ipc_interface_make_command_meta!(get_z_order_count_min: 1200),
+            ipc_interface_make_command_meta!(get_z_order_count_max: 1202),
+            ipc_interface_make_command_meta!(set_layer_position: 2201),
+            ipc_interface_make_command_meta!(set_layer_size: 2203),
+            ipc_interface_make_command_meta!(set_layer_z: 2205),
+            ipc_interface_make_command_meta!(set_layer_visibility: 2207)
+        ]
     }
 }
 
@@ -103,17 +103,17 @@ impl sf::IObject for ApplicationDisplayService {
     }
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
-        ipc_server_make_command_table! {
-            get_relay_service: 100,
-            get_system_display_service: 101,
-            get_manager_display_service: 102,
-            open_display: 1010,
-            close_display: 1020,
-            open_layer: 2020,
-            create_stray_layer: 2030,
-            destroy_stray_layer: 2031,
-            get_display_vsync_event: 5202
-        }
+        vec! [
+            ipc_interface_make_command_meta!(get_relay_service: 100),
+            ipc_interface_make_command_meta!(get_system_display_service: 101),
+            ipc_interface_make_command_meta!(get_manager_display_service: 102),
+            ipc_interface_make_command_meta!(open_display: 1010),
+            ipc_interface_make_command_meta!(close_display: 1020),
+            ipc_interface_make_command_meta!(open_layer: 2020),
+            ipc_interface_make_command_meta!(create_stray_layer: 2030),
+            ipc_interface_make_command_meta!(destroy_stray_layer: 2031),
+            ipc_interface_make_command_meta!(get_display_vsync_event: 5202)
+        ]
     }
 }
 
@@ -171,9 +171,9 @@ impl sf::IObject for SystemRootService {
     }
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
-        ipc_server_make_command_table! {
-            get_display_service: 1
-        }
+        vec! [
+            ipc_interface_make_command_meta!(get_display_service: 1)
+        ]
     }
 }
 
@@ -213,9 +213,9 @@ impl sf::IObject for ManagerRootService {
     }
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
-        ipc_server_make_command_table! {
-            get_display_service: 2
-        }
+        vec! [
+            ipc_interface_make_command_meta!(get_display_service: 2)
+        ]
     }
 }
 

@@ -2,6 +2,7 @@ use super::*;
 use crate::svc;
 use crate::ipc::client;
 use crate::ipc::server;
+use crate::version;
 use core::mem;
 use alloc::vec::Vec;
 use alloc::string::String;
@@ -191,14 +192,35 @@ pub type CommandSpecificFn<T> = fn(&mut T, &mut server::ServerContext) -> Result
 
 pub struct CommandMetadata {
     pub rq_id: u32,
-    pub command_fn: CommandFn
+    pub command_fn: CommandFn,
+    pub min_ver: Option<version::Version>,
+    pub max_ver: Option<version::Version>
 }
 
 pub type CommandMetadataTable = Vec<CommandMetadata>;
 
 impl CommandMetadata {
-    pub fn new(rq_id: u32, command_fn: CommandFn) -> Self {
-        Self { rq_id: rq_id, command_fn: command_fn }
+    pub fn new(rq_id: u32, command_fn: CommandFn, min_ver: Option<version::Version>, max_ver: Option<version::Version>) -> Self {
+        Self { rq_id: rq_id, command_fn: command_fn, min_ver: min_ver, max_ver: max_ver }
+    }
+
+    pub fn validate_version(&self) -> bool {
+        let ver = version::get_version();
+        if let Some(min_v) = self.min_ver {
+            if ver < min_v {
+                return false;
+            }
+        }
+        if let Some(max_v) = self.max_ver {
+            if ver > max_v {
+                return false;
+            }
+        }
+        true
+    }
+
+    pub fn matches(&self, rq_id: u32) -> bool {
+        self.validate_version() && (self.rq_id == rq_id)
     }
 }
 
@@ -272,3 +294,5 @@ pub mod pm;
 pub mod nfp;
 
 pub mod mii;
+
+pub mod set;

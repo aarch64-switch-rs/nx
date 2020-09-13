@@ -14,12 +14,12 @@ impl sf::IObject for HOSBinderDriver {
     }
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
-        ipc_server_make_command_table! {
-            transact_parcel: 0,
-            adjust_refcount: 1,
-            get_native_handle: 2,
-            transact_parcel_auto: 3
-        }
+        vec! [
+            ipc_interface_make_command_meta!(transact_parcel: 0),
+            ipc_interface_make_command_meta!(adjust_refcount: 1),
+            ipc_interface_make_command_meta!(get_native_handle: 2),
+            ipc_interface_make_command_meta!(transact_parcel_auto: 3)
+        ]
     }
 }
 

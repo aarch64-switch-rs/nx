@@ -204,3 +204,12 @@ impl<T> Locked<T> {
         &self.lock
     }
 }
+
+impl<T: Copy> Locked<T> {
+    pub fn get_val(&mut self) -> T {
+        self.lock.lock();
+        let obj_copy = self.object;
+        self.lock.unlock();
+        obj_copy
+    }
+}

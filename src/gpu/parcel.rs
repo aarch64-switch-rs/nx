@@ -3,7 +3,7 @@ use crate::results;
 use core::mem;
 use core::ptr;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct ParcelHeader {
     pub payload_size: u32,
@@ -33,7 +33,7 @@ impl ParcelPayload {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct ParcelData {
     pub parcel_type: u32,
@@ -100,18 +100,14 @@ impl Parcel {
         self.write_raw(&t as *const T as *const u8, mem::size_of::<T>())
     }
 
-    pub fn read_unaligned<T>(&mut self) -> Result<T> {
-        let mut t: T = unsafe {
-            mem::zeroed()
-        };
+    pub fn read_unaligned<T: Default>(&mut self) -> Result<T> {
+        let mut t: T = Default::default();
         self.read_raw_unaligned(&mut t as *mut T as *mut u8, mem::size_of::<T>())?;
         Ok(t)
     }
 
-    pub fn read<T>(&mut self) -> Result<T> {
-        let mut t: T = unsafe {
-            mem::zeroed()
-        };
+    pub fn read<T: Default>(&mut self) -> Result<T> {
+        let mut t: T = Default::default();
         self.read_raw(&mut t as *mut T as *mut u8, mem::size_of::<T>())?;
         Ok(t)
     }
@@ -146,10 +142,8 @@ impl Parcel {
         Ok(len)
     }
 
-    pub fn read_sized<T>(&mut self) -> Result<T> {
-        let mut t: T = unsafe {
-            mem::zeroed()
-        };
+    pub fn read_sized<T: Default>(&mut self) -> Result<T> {
+        let mut t: T = Default::default();
         let len = self.read_sized_raw(&mut t as *mut T as *mut u8)?;
         result_return_unless!(len == mem::size_of::<T>(), results::lib::gpu::ResultParcelReadSizeMismatch);
         Ok(t)

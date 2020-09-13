@@ -14,9 +14,9 @@ impl sf::IObject for InformationInterface {
     }
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
-        ipc_server_make_command_table! {
-            get_program_id: 0
-        }
+        vec! [
+            ipc_interface_make_command_meta!(get_program_id: 0)
+        ]
     }
 }
 
@@ -56,9 +56,9 @@ impl sf::IObject for DebugMonitorInterface {
     }
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
-        ipc_server_make_command_table! {
-            get_application_process_id: 5
-        }
+        vec! [
+            ipc_interface_make_command_meta!(get_application_process_id: 5)
+        ]
     }
 }
 

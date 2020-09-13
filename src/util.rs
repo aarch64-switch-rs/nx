@@ -7,9 +7,10 @@ use crate::diag::log::Logger;
 use alloc::string::String;
 use core::str;
 use core::ptr;
+use core::fmt;
 use core::panic;
 
-#[derive(Clone, Copy)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]
 pub struct PointerAndSize {
     pub address: *mut u8,
@@ -63,6 +64,35 @@ fn read_string_from(ptr: *const u8, ptr_len: usize) -> Result<String> {
 #[repr(C)]
 pub struct CString<const S: usize> {
     pub c_str: [u8; S]
+}
+
+impl<const S: usize> fmt::Debug for CString<S> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let str_data = match self.get_str() {
+            Ok(got_str) => got_str,
+            Err(_) => "<empty>"
+        };
+        write!(f, "{}", str_data)
+    }
+}
+
+impl<const S: usize> PartialEq for CString<S> {
+    fn eq(&self, other: &Self) -> bool {
+        if let Ok(self_str) = self.get_str() {
+            if let Ok(other_str) = other.get_str() {
+                return self_str == other_str;
+            }
+        }
+        false
+    }
+}
+
+impl<const S: usize> Eq for CString<S> {}
+
+impl<const S: usize> Default for CString<S> {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl<const S: usize> CString<S> {

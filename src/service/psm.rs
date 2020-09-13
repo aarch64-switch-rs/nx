@@ -14,9 +14,9 @@ impl sf::IObject for PsmServer {
     }
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
-        ipc_server_make_command_table! {
-            get_battery_charge_percentage: 0
-        }
+        vec! [
+            ipc_interface_make_command_meta!(get_battery_charge_percentage: 0)
+        ]
     }
 }
 

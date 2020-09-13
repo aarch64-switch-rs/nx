@@ -2,9 +2,11 @@ use crate::result::*;
 use crate::results;
 use core::ptr;
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Derivative)]
+#[derivative(Default)]
 #[repr(i64)]
 pub enum Tag {
+    #[derivative(Default)]
     Invalid = 0,
     Needed = 1,
     PltRelSize = 2,
@@ -36,7 +38,7 @@ pub enum RelocationType {
     AArch64Relative = 1027
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct Dyn {
     pub tag: Tag,
@@ -63,7 +65,7 @@ impl Dyn {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]
 pub struct InfoSymbol {
     pub relocation_type: RelocationType,

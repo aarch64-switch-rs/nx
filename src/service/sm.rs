@@ -14,21 +14,21 @@ impl sf::IObject for UserInterface {
     }
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
-        ipc_server_make_command_table! {
-            initialize: 0,
-            get_service_handle: 1,
-            register_service: 2,
-            unregister_service: 3,
-            atmosphere_install_mitm: 65000,
-            atmosphere_uninstall_mitm: 65001,
-            atmosphere_acknowledge_mitm_session: 65003,
-            atmosphere_has_mitm: 65004,
-            atmosphere_wait_mitm: 64005,
-            atmosphere_declare_future_mitm: 65006,
-            atmosphere_clear_future_mitm: 65007,
-            atmosphere_has_service: 65100,
-            atmosphere_wait_service: 65101
-        }
+        vec! [
+            ipc_interface_make_command_meta!(initialize: 0),
+            ipc_interface_make_command_meta!(get_service_handle: 1),
+            ipc_interface_make_command_meta!(register_service: 2),
+            ipc_interface_make_command_meta!(unregister_service: 3),
+            ipc_interface_make_command_meta!(atmosphere_install_mitm: 65000),
+            ipc_interface_make_command_meta!(atmosphere_uninstall_mitm: 65001),
+            ipc_interface_make_command_meta!(atmosphere_acknowledge_mitm_session: 65003),
+            ipc_interface_make_command_meta!(atmosphere_has_mitm: 65004),
+            ipc_interface_make_command_meta!(atmosphere_wait_mitm: 64005),
+            ipc_interface_make_command_meta!(atmosphere_declare_future_mitm: 65006),
+            ipc_interface_make_command_meta!(atmosphere_clear_future_mitm: 65007),
+            ipc_interface_make_command_meta!(atmosphere_has_service: 65100),
+            ipc_interface_make_command_meta!(atmosphere_wait_service: 65101)
+        ]
     }
 }
 

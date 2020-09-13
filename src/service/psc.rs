@@ -15,13 +15,13 @@ impl sf::IObject for PmModule {
     }
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
-        ipc_server_make_command_table! {
-            initialize: 0,
-            get_request: 1,
-            acknowledge: 2,
-            finalize: 3,
-            acknowledge_ex: 4
-        }
+        vec! [
+            ipc_interface_make_command_meta!(initialize: 0),
+            ipc_interface_make_command_meta!(get_request: 1),
+            ipc_interface_make_command_meta!(acknowledge: 2),
+            ipc_interface_make_command_meta!(finalize: 3),
+            ipc_interface_make_command_meta!(acknowledge_ex: 4)
+        ]
     }
 }
 
@@ -63,9 +63,9 @@ impl sf::IObject for PmService {
     }
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
-        ipc_server_make_command_table! {
-            get_pm_module: 0
-        }
+        vec! [
+            ipc_interface_make_command_meta!(get_pm_module: 0)
+        ]
     }
 }
 

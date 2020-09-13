@@ -15,11 +15,11 @@ impl sf::IObject for StorageAccessor {
     }
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
-        ipc_server_make_command_table! {
-            get_size: 0,
-            write: 10,
-            read: 11
-        }
+        vec! [
+            ipc_interface_make_command_meta!(get_size: 0),
+            ipc_interface_make_command_meta!(write: 10),
+            ipc_interface_make_command_meta!(read: 11)
+        ]
     }
 }
 
@@ -53,9 +53,9 @@ impl sf::IObject for Storage {
     }
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
-        ipc_server_make_command_table! {
-            open: 0
-        }
+        vec! [
+            ipc_interface_make_command_meta!(open: 0)
+        ]
     }
 }
 
@@ -81,11 +81,11 @@ impl sf::IObject for LibraryAppletAccessor {
     }
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
-        ipc_server_make_command_table! {
-            get_applet_state_changed_event: 0,
-            start: 10,
-            push_in_data: 100
-        }
+        vec! [
+            ipc_interface_make_command_meta!(get_applet_state_changed_event: 0),
+            ipc_interface_make_command_meta!(start: 10),
+            ipc_interface_make_command_meta!(push_in_data: 100)
+        ]
     }
 }
 
@@ -119,10 +119,10 @@ impl sf::IObject for LibraryAppletCreator {
     }
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
-        ipc_server_make_command_table! {
-            create_library_applet: 0,
-            create_storage: 10
-        }
+        vec! [
+            ipc_interface_make_command_meta!(create_library_applet: 0),
+            ipc_interface_make_command_meta!(create_storage: 10)
+        ]
     }
 }
 
@@ -152,9 +152,9 @@ impl sf::IObject for WindowController {
     }
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
-        ipc_server_make_command_table! {
-            acquire_foreground_rights: 10
-        }
+        vec! [
+            ipc_interface_make_command_meta!(acquire_foreground_rights: 10)
+        ]
     }
 }
 
@@ -180,9 +180,9 @@ impl sf::IObject for SelfController {
     }
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
-        ipc_server_make_command_table! {
-            set_screenshot_permission: 10
-        }
+        vec! [
+            ipc_interface_make_command_meta!(set_screenshot_permission: 10)
+        ]
     }
 }
 
@@ -208,11 +208,11 @@ impl sf::IObject for LibraryAppletProxy {
     }
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
-        ipc_server_make_command_table! {
-            get_self_controller: 1,
-            get_window_controller: 2,
-            get_library_applet_creator: 11
-        }
+        vec! [
+            ipc_interface_make_command_meta!(get_self_controller: 1),
+            ipc_interface_make_command_meta!(get_window_controller: 2),
+            ipc_interface_make_command_meta!(get_library_applet_creator: 11)
+        ]
     }
 }
 
@@ -246,9 +246,9 @@ impl sf::IObject for AllSystemAppletProxiesService {
     }
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
-        ipc_server_make_command_table! {
-            open_library_applet_proxy: 201
-        }
+        vec! [
+            ipc_interface_make_command_meta!(open_library_applet_proxy: 201)
+        ]
     }
 }
 

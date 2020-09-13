@@ -1,6 +1,10 @@
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+use crate::version;
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Derivative)]
+#[derivative(Default)]
 #[repr(u32)]
 pub enum AbiConfigEntryKey {
+    #[derivative(Default)]
     EndOfList = 0,
     MainThreadHandle = 1,
     NextLoadPath = 2,
@@ -30,10 +34,46 @@ bit_enum! {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct AbiConfigEntry {
     pub key: AbiConfigEntryKey,
     pub flags: AbiConfigEntryFlags,
     pub value: [u64; 2],
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[repr(C)]
+pub struct Version {
+    value: u32
+}
+
+impl Version {
+    pub const fn empty() -> Self {
+        Self { value: 0 }
+    }
+    
+    pub const fn new(value: u32) -> Self {
+        Self { value: value }
+    }
+
+    pub const fn get_major(&self) -> u8 {
+        ((self.value >> 16) & 0xFF) as u8
+    }
+
+    pub const fn get_minor(&self) -> u8 {
+        ((self.value >> 8) & 0xFF) as u8
+    }
+
+    pub const fn get_micro(&self) -> u8 {
+        (self.value & 0xFF) as u8
+    }
+
+    pub const fn is_valid(&self) -> bool {
+        self.value != 0
+    }
+
+    pub const fn to_version(&self) -> version::Version {
+        version::Version::new(self.get_major(), self.get_minor(), self.get_micro())
+    }
 }

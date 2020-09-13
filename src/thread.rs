@@ -8,9 +8,11 @@ use core::ptr;
 
 pub type ThreadName = util::CString<0x20>;
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Derivative)]
+#[derivative(Default)]
 #[repr(u8)]
 pub enum ThreadState {
+    #[derivative(Default)]
     NotInitialized = 0,
     Initialized = 1,
     DestroyedBeforeStarted = 2,

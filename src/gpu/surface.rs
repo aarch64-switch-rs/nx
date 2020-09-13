@@ -49,7 +49,7 @@ impl<NS: nv::INvDrvService> Surface<NS> {
         let _ = binder.connect(ConnectionApi::Cpu, false)?;
         let vsync_event_handle = application_display_service.get().get_display_vsync_event(display_id)?;
         let buffer_event_handle = binder.get_native_handle(dispdrv::NativeHandleType::BufferEvent)?;
-        let mut surface = Self { binder: binder, nvdrv_srv: nvdrv_srv, application_display_service: application_display_service, width: width, height: height, buffer_data: ptr::null_mut(), buffer_alloc_layout: alloc::alloc::Layout::new::<u8>(), single_buffer_size: 0, buffer_count: buffer_count, slot_has_requested: [false; MAX_BUFFERS], graphic_buf: unsafe { cmem::zeroed() }, color_fmt: color_fmt, pixel_fmt: pixel_fmt, layout: layout, display_id: display_id, layer_id: layer_id, layer_destroy_fn: layer_destroy_fn, nvhost_fd: nvhost_fd, nvmap_fd: nvmap_fd, nvhostctrl_fd: nvhostctrl_fd, vsync_event_handle: vsync_event_handle.handle, buffer_event_handle: buffer_event_handle.handle };
+        let mut surface = Self { binder: binder, nvdrv_srv: nvdrv_srv, application_display_service: application_display_service, width: width, height: height, buffer_data: ptr::null_mut(), buffer_alloc_layout: alloc::alloc::Layout::new::<u8>(), single_buffer_size: 0, buffer_count: buffer_count, slot_has_requested: [false; MAX_BUFFERS], graphic_buf: Default::default(), color_fmt: color_fmt, pixel_fmt: pixel_fmt, layout: layout, display_id: display_id, layer_id: layer_id, layer_destroy_fn: layer_destroy_fn, nvhost_fd: nvhost_fd, nvmap_fd: nvmap_fd, nvhostctrl_fd: nvhostctrl_fd, vsync_event_handle: vsync_event_handle.handle, buffer_event_handle: buffer_event_handle.handle };
         surface.initialize()?;
         Ok(surface)
     }
@@ -79,24 +79,24 @@ impl<NS: nv::INvDrvService> Surface<NS> {
         let buf_size = self.buffer_count as usize * self.single_buffer_size;
         self.buffer_alloc_layout = unsafe { alloc::alloc::Layout::from_size_align_unchecked(buf_size, mem::PAGE_ALIGNMENT) };
 
-        let mut ioctl_create: ioctl::NvMapCreate = unsafe { cmem::zeroed() };
+        let mut ioctl_create: ioctl::NvMapCreate = Default::default();
         ioctl_create.size = buf_size as u32;
         self.do_ioctl(&mut ioctl_create)?;
 
-        let mut ioctl_getid: ioctl::NvMapGetId = unsafe { cmem::zeroed() };
+        let mut ioctl_getid: ioctl::NvMapGetId = Default::default();
         ioctl_getid.handle = ioctl_create.handle;
         self.do_ioctl(&mut ioctl_getid)?;
 
         self.buffer_data = unsafe { alloc::alloc::alloc(self.buffer_alloc_layout) };
         svc::set_memory_attribute(self.buffer_data, buf_size, 8, svc::MemoryAttribute::Uncached())?;
 
-        let mut ioctl_alloc: ioctl::NvMapAlloc = unsafe { cmem::zeroed() };
+        let mut ioctl_alloc: ioctl::NvMapAlloc = Default::default();
         ioctl_alloc.handle = ioctl_create.handle;
         ioctl_alloc.heap_mask = 0;
         ioctl_alloc.flags = ioctl::AllocFlags::ReadOnly;
         ioctl_alloc.align = mem::PAGE_ALIGNMENT as u32;
         ioctl_alloc.kind = Kind::Pitch;
-        ioctl_alloc.address = self.buffer_data;
+        ioctl_alloc.address = self.buffer_data as usize;
         self.do_ioctl(&mut ioctl_alloc)?;
 
         self.graphic_buf.header.magic = GRAPHIC_BUFFER_HEADER_MAGIC;
@@ -192,7 +192,7 @@ impl<NS: nv::INvDrvService> Surface<NS> {
     }
 
     pub fn queue_buffer(&mut self, slot: i32, fences: MultiFence) -> Result<()> {
-        let mut qbi: QueueBufferInput = unsafe { cmem::zeroed() };
+        let mut qbi: QueueBufferInput = Default::default();
         qbi.swap_interval = 1;
         qbi.fences = fences;
 
@@ -204,7 +204,7 @@ impl<NS: nv::INvDrvService> Surface<NS> {
 
     pub fn wait_fences(&mut self, fences: MultiFence, timeout: i32) -> Result<()> {
         for i in 0..fences.fence_count {
-            let mut ioctl_syncptwait: ioctl::NvHostCtrlSyncptWait = unsafe { cmem::zeroed() };
+            let mut ioctl_syncptwait: ioctl::NvHostCtrlSyncptWait = Default::default();
             ioctl_syncptwait.fence = fences.fences[i as usize];
             ioctl_syncptwait.timeout = timeout;
 

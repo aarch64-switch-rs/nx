@@ -637,13 +637,13 @@ impl<'a> sf::IObject for HipcManager<'a> {
     }
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
-        ipc_server_make_command_table!(
-            convert_current_object_to_domain: 0,
-            copy_from_current_domain: 1,
-            clone_current_object: 2,
-            query_pointer_buffer_size: 3,
-            clone_current_object_ex: 4
-        )
+        vec! [
+            ipc_interface_make_command_meta!(convert_current_object_to_domain: 0),
+            ipc_interface_make_command_meta!(copy_from_current_domain: 1),
+            ipc_interface_make_command_meta!(clone_current_object: 2),
+            ipc_interface_make_command_meta!(query_pointer_buffer_size: 3),
+            ipc_interface_make_command_meta!(clone_current_object_ex: 4)
+        ]
     }
 }
 
@@ -664,9 +664,9 @@ impl<S: IMitmService> sf::IObject for MitmQueryServer<S> {
     }
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
-        ipc_server_make_command_table!(
-            should_mitm: 65000
-        )
+        vec! [
+            ipc_interface_make_command_meta!(should_mitm: 65000)
+        ]
     }
 }
 
@@ -704,6 +704,7 @@ impl<const P: usize> ServerManager<P> {
         Self { server_holders: ArrayVec::new(), wait_handles: [0; MAX_COUNT], pointer_buffer: [0; P] }
     }
     
+    #[inline(always)]
     fn prepare_wait_handles(&mut self) -> &[svc::Handle] {
         let mut handles_index: usize = 0;
         for server_holder in &mut self.server_holders {
@@ -724,6 +725,7 @@ impl<const P: usize> ServerManager<P> {
         }
     }
 
+    #[inline(always)]
     fn handle_request_command(&mut self, ctx: &mut CommandContext, rq_id: u32, command_type: CommandType, domain_command_type: DomainCommandType, ipc_buf_backup: &[u8], domain_table: mem::Shared<DomainTable>) -> Result<()> {
         let is_domain = ctx.object_info.is_domain();
         let domain_table_clone = domain_table.clone();
@@ -751,7 +753,7 @@ impl<const P: usize> ServerManager<P> {
                     // Nothing done on success here, as if the command succeeds it will automatically respond by itself.
                     let mut command_found = false;
                     for command in target_server.get().get_command_table() {
-                        if command.rq_id == rq_id {
+                        if command.matches(rq_id) {
                             command_found = true;
                             let mut server_ctx = ServerContext::new(ctx, DataWalker::empty(), domain_table_clone.clone(), &mut new_sessions);
                             if let Err(rc) = target_server.get().call_self_command(command.command_fn, &mut server_ctx) {
@@ -812,6 +814,7 @@ impl<const P: usize> ServerManager<P> {
         Ok(())
     }
 
+    #[inline(always)]
     fn handle_control_command(&mut self, ctx: &mut CommandContext, rq_id: u32, command_type: CommandType) -> Result<()> {
         for server_holder in &mut self.server_holders {
             let server_info = server_holder.info;
@@ -820,7 +823,7 @@ impl<const P: usize> ServerManager<P> {
                 // Nothing done on success here, as if the command succeeds it will automatically respond by itself.
                 let mut command_found = false;
                 for command in hipc_manager.get_command_table() {
-                    if command.rq_id == rq_id {
+                    if command.matches(rq_id) {
                         command_found = true;
                         let mut unused_new_sessions: ArrayVec<[ServerHolder; MAX_COUNT]> = ArrayVec::new();
                         let unused_domain_table = mem::Shared::empty();
@@ -1031,7 +1034,7 @@ impl<const P: usize> ServerManager<P> {
         self.register_server::<S>(port_handle, sm::ServiceName::empty())
     }
 
-    fn process_impl(&mut self) -> Result<()> {
+    pub fn process(&mut self) -> Result<()> {
         let handles = self.prepare_wait_handles();
         let index = wait::wait_handles(handles, -1)?;
 
@@ -1043,7 +1046,7 @@ impl<const P: usize> ServerManager<P> {
 
     pub fn loop_process(&mut self) -> Result<()> {
         loop {
-            match self.process_impl() {
+            match self.process() {
                 Err(rc) => {
                     // TODO: handle results properly here
                     if results::os::ResultOperationCanceled::matches(rc) {

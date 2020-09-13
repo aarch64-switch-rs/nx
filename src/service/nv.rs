@@ -62,12 +62,12 @@ impl sf::IObject for AppletNvDrvService {
     }
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
-        ipc_server_make_command_table! {
-            open: 0,
-            ioctl: 1,
-            close: 2,
-            initialize: 3
-        }
+        vec! [
+            ipc_interface_make_command_meta!(open: 0),
+            ipc_interface_make_command_meta!(ioctl: 1),
+            ipc_interface_make_command_meta!(close: 2),
+            ipc_interface_make_command_meta!(initialize: 3)
+        ]
     }
 }
 
@@ -103,12 +103,12 @@ impl sf::IObject for SystemNvDrvService {
     }
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
-        ipc_server_make_command_table! {
-            open: 0,
-            ioctl: 1,
-            close: 2,
-            initialize: 3
-        }
+        vec! [
+            ipc_interface_make_command_meta!(open: 0),
+            ipc_interface_make_command_meta!(ioctl: 1),
+            ipc_interface_make_command_meta!(close: 2),
+            ipc_interface_make_command_meta!(initialize: 3)
+        ]
     }
 }
 

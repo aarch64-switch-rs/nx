@@ -5,14 +5,15 @@ use crate::gpu::parcel;
 use crate::service::dispdrv;
 use crate::service::dispdrv::IHOSBinderDriver;
 use crate::mem;
-use core::mem as cmem;
 use super::*;
 
 pub const INTERFACE_TOKEN: &str = "android.gui.IGraphicBufferProducer";
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Derivative)]
+#[derivative(Default)]
 #[repr(i32)]
 pub enum ErrorCode {
+    #[derivative(Default)]
     Success = 0,
     PermissionDenied = -1,
     NameNotFound = -2,
@@ -161,7 +162,7 @@ impl Binder {
         let mut response_parcel = self.transact_parcel(dispdrv::ParcelTransactionId::RequestBuffer, &mut parcel)?;
         let non_null_v: u32 = response_parcel.read()?;
         let non_null = non_null_v != 0;
-        let mut gfx_buf: GraphicBuffer = unsafe { cmem::zeroed() };
+        let mut gfx_buf: GraphicBuffer = Default::default();
         if non_null {
             gfx_buf = response_parcel.read_sized()?;
         }
@@ -185,7 +186,7 @@ impl Binder {
         let slot: i32 = response_parcel.read()?;
         let has_fences_v: u32 = response_parcel.read()?;
         let has_fences = has_fences_v != 0;
-        let mut fences: MultiFence = unsafe { cmem::zeroed() };
+        let mut fences: MultiFence = Default::default();
         if has_fences {
             fences = response_parcel.read_sized()?;
         }

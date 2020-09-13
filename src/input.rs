@@ -44,7 +44,7 @@ bit_enum! {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct TouchData {
     pub timestamp: u64,
@@ -58,7 +58,7 @@ pub struct TouchData {
     pub pad_2: u32
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct TouchEntry {
     pub timestamp: u64,
@@ -67,7 +67,7 @@ pub struct TouchEntry {
     pub pad: u64
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct TouchState {
     pub timestamp_ticks: u64,
@@ -78,7 +78,7 @@ pub struct TouchState {
     pub entries: [TouchEntry; 17]
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct JoystickPosition {
     pub x: u32,
@@ -93,7 +93,7 @@ bit_enum! {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct ControllerStateEntry {
     pub timestamp: u64,
@@ -104,7 +104,7 @@ pub struct ControllerStateEntry {
     pub connection_state: ConnectionState
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct ControllerState {
     pub timestamp: u64,
@@ -114,13 +114,13 @@ pub struct ControllerState {
     pub entries: [ControllerStateEntry; 17]
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct ControllerMacAddress {
     pub address: [u8; 0x10]
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct ControllerColor {
     pub body: u32,

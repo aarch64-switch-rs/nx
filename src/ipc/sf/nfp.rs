@@ -6,7 +6,7 @@ use crate::util;
 use crate::ipc::sf::applet;
 use crate::ipc::sf::mii;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct DeviceHandle {
     pub npad_id: u32,
@@ -46,7 +46,7 @@ pub enum MountTarget {
     All = 3
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct Date {
     pub year: u16,

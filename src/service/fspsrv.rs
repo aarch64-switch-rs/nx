@@ -15,11 +15,11 @@ impl sf::IObject for File {
     }
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
-        ipc_server_make_command_table! {
-            read: 0,
-            write: 1,
-            get_size: 4
-        }
+        vec! [
+            ipc_interface_make_command_meta!(read: 0),
+            ipc_interface_make_command_meta!(write: 1),
+            ipc_interface_make_command_meta!(get_size: 4)
+        ]
     }
 }
 
@@ -53,14 +53,14 @@ impl sf::IObject for FileSystem {
     }
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
-        ipc_server_make_command_table! {
-            create_file: 0,
-            delete_file: 1,
-            create_directory: 2,
-            delete_directory: 3,
-            delete_directory_recursively: 4,
-            open_file: 8
-        }
+        vec! [
+            ipc_interface_make_command_meta!(create_file: 0),
+            ipc_interface_make_command_meta!(delete_file: 1),
+            ipc_interface_make_command_meta!(create_directory: 2),
+            ipc_interface_make_command_meta!(delete_directory: 3),
+            ipc_interface_make_command_meta!(delete_directory_recursively: 4),
+            ipc_interface_make_command_meta!(open_file: 8)
+        ]
     }
 }
 
@@ -110,11 +110,11 @@ impl sf::IObject for FileSystemProxy {
     }
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
-        ipc_server_make_command_table! {
-            set_current_process: 1,
-            open_sd_card_filesystem: 18,
-            output_access_log_to_sd_card: 1006
-        }
+        vec! [
+            ipc_interface_make_command_meta!(set_current_process: 1),
+            ipc_interface_make_command_meta!(open_sd_card_filesystem: 18),
+            ipc_interface_make_command_meta!(output_access_log_to_sd_card: 1006)
+        ]
     }
 }
 

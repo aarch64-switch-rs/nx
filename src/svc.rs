@@ -1,6 +1,5 @@
 use crate::result::*;
 use core::ptr;
-use core::mem;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
@@ -16,9 +15,11 @@ pub enum BreakReason {
     NotificationOnlyFlag = 0x80000000
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Derivative)]
+#[derivative(Default)]
 #[repr(u32)]
 pub enum MemoryState {
+    #[derivative(Default)]
     Free = 0x0,
     Io = 0x1,
     Static = 0x2,
@@ -63,10 +64,10 @@ bit_enum! {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct MemoryInfo {
-    pub base_address: *mut u8,
+    pub base_address: usize,
     pub size: u64,
     pub memory_state: MemoryState,
     pub memory_attribute: MemoryAttribute,
@@ -147,7 +148,7 @@ pub fn query_memory(address: *const u8) -> Result<(MemoryInfo, PageInfo)> {
     }
 
     unsafe {
-        let mut memory_info: MemoryInfo = mem::zeroed();
+        let mut memory_info: MemoryInfo = Default::default();
         let mut page_info: PageInfo = 0;
 
         let rc = __nx_svc_query_memory(&mut memory_info, &mut page_info, address);

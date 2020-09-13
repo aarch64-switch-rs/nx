@@ -8,7 +8,11 @@ use crate::util;
 use crate::hbl;
 use crate::thread;
 use crate::vmem;
-
+use crate::version;
+use crate::ipc::sf;
+use crate::service;
+use crate::service::set;
+use crate::service::set::ISystemSettingsServer;
 use core::ptr;
 
 // These functions must be implemented by any executable homebrew project using this crate
@@ -35,6 +39,7 @@ unsafe fn __nx_crt0_entry(abi_ptr: *const hbl::AbiConfigEntry, raw_main_thread_h
 
     let mut heap = util::PointerAndSize::new(ptr::null_mut(), 0);
     let mut main_thread_handle = raw_main_thread_handle as svc::Handle;
+    let mut hos_version = hbl::Version::empty();
 
     // If we are a NRO, parse the config entries hbloader sent us
     if is_hbl_nro {
@@ -50,6 +55,10 @@ unsafe fn __nx_crt0_entry(abi_ptr: *const hbl::AbiConfigEntry, raw_main_thread_h
                 },
                 hbl::AbiConfigEntryKey::MainThreadHandle => {
                     main_thread_handle = (*abi_entry).value[0] as svc::Handle;
+                },
+                hbl::AbiConfigEntryKey::HosVersion => {
+                    let hos_version_v = (*abi_entry).value[0] as u32;
+                    hos_version = hbl::Version::new(hos_version_v);
                 }
                 _ => {
                     
@@ -78,12 +87,24 @@ unsafe fn __nx_crt0_entry(abi_ptr: *const hbl::AbiConfigEntry, raw_main_thread_h
     heap = initialize_heap(heap);
     mem::initialize(heap.address, heap.size);
 
+    // Initialize version support
+    if hos_version.is_valid() {
+        version::set_version(hos_version.to_version());
+    }
+    else {
+        let setsys = service::new_service_object::<set::SystemSettingsServer>().unwrap();
+        let fw_version: set::FirmwareVersion = Default::default();
+        setsys.get().get_firmware_version(sf::Buffer::from_var(&fw_version)).unwrap();
+        let version = version::Version::new(fw_version.major, fw_version.minor, fw_version.micro);
+        version::set_version(version);
+    }
+
     // TODO: finish implementing CRT0
 
     // Unwrap main(), which will trigger a panic if it didn't succeed
     main().unwrap();
 
-    // Success exit by default
+    // Successful exit by default
     exit(ResultSuccess::make());
 }
 

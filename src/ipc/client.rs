@@ -35,7 +35,7 @@ pub fn write_command_on_ipc_buffer(ctx: &mut CommandContext, command_type: Comma
         ipc_buf = write_array_to_buffer(ipc_buf, ctx.exchange_buffers.len() as u32, &ctx.exchange_buffers);
         ctx.in_params.data_words_offset = ipc_buf;
         ipc_buf = ipc_buf.offset((cmem::size_of::<u32>() * data_word_count as usize) as isize);
-        /* ipc_buf = */ write_array_to_buffer(ipc_buf, ctx.receive_statics.len() as u32, &ctx.receive_statics);
+        write_array_to_buffer(ipc_buf, ctx.receive_statics.len() as u32, &ctx.receive_statics);
     }
 }
 

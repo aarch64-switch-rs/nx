@@ -18,7 +18,7 @@ pub enum ControlRequestId {
 
 pub type DomainObjectId = u32;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct ObjectInfo {
     pub handle: svc::Handle,
@@ -76,7 +76,7 @@ pub enum BufferFlags {
     NonDevice = 3
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct BufferDescriptor {
     pub size_low: u32,
@@ -119,7 +119,7 @@ impl BufferDescriptor {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct SendStaticDescriptor {
     bits: u32,
@@ -158,7 +158,7 @@ impl SendStaticDescriptor {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct ReceiveStaticDescriptor {
     address_low: u32,
@@ -193,9 +193,11 @@ impl ReceiveStaticDescriptor {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Derivative)]
+#[derivative(Default)]
 #[repr(u16)]
 pub enum CommandType {
+    #[derivative(Default)]
     Invalid = 0,
     LegacyRequest = 1,
     Close = 2,
@@ -206,7 +208,7 @@ pub enum CommandType {
     ControlWithContext = 7
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct CommandHeader {
     bits_1: u32,
@@ -294,7 +296,7 @@ impl CommandHeader {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct CommandSpecialHeader {
     bits: u32,
@@ -327,7 +329,7 @@ impl CommandSpecialHeader {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct DataHeader {
     pub magic: u32,
@@ -351,15 +353,17 @@ pub const DATA_PADDING: u32 = 16;
 pub const IN_DATA_HEADER_MAGIC: u32 = 0x49434653;
 pub const OUT_DATA_HEADER_MAGIC: u32 = 0x4F434653;
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Derivative)]
+#[derivative(Default)]
 #[repr(u8)]
 pub enum DomainCommandType {
+    #[derivative(Default)]
     Invalid = 0,
     SendMessage = 1,
     Close = 2
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct DomainInDataHeader {
     pub command_type: DomainCommandType,
@@ -380,7 +384,7 @@ impl DomainInDataHeader {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct DomainOutDataHeader {
     pub out_object_count: u32,

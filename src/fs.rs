@@ -1,6 +1,16 @@
+use crate::result::*;
+use crate::results;
+use crate::mem;
+use crate::service;
+use crate::service::fspsrv;
+use crate::service::fspsrv::IFileSystemProxy;
+use crate::service::fspsrv::IFileSystem;
+use crate::service::fspsrv::IFile;
+use crate::sync;
+use crate::ipc::sf;
 use alloc::vec::Vec;
 use alloc::string::String;
-use crate::results;
+use core::mem as cmem;
 
 enum PathSegmentType {
     Invalid,
@@ -78,16 +88,6 @@ fn pack_path(unpacked_path: UnpackedPath, add_root: bool) -> String {
 
 // TODO: use traits to use non-IPC filesystems
 
-use crate::result::*;
-use crate::mem;
-use crate::service;
-use crate::service::fspsrv;
-use crate::service::fspsrv::IFileSystemProxy;
-use crate::service::fspsrv::IFileSystem;
-use crate::service::fspsrv::IFile;
-use crate::sync;
-use crate::ipc::sf;
-
 pub use fspsrv::FileAttribute;
 pub use fspsrv::DirectoryEntryType;
 
@@ -140,11 +140,21 @@ impl File {
         Ok(read_size)
     }
 
+    pub fn read_val<T: Copy + Default>(&mut self) -> Result<T> {
+        let mut t: T = Default::default();
+        self.read(&mut t, cmem::size_of::<T>())?;
+        Ok(t)
+    }
+
     pub fn write<T>(&mut self, buf: *const T, size: usize) -> Result<usize> {
         self.file.get().write(fspsrv::FileWriteOption::Flush(), self.offset, size, sf::Buffer::from_const(buf, size))?;
         self.offset += size;
         // Write command does not return the written size
         Ok(size)
+    }
+
+    pub fn write_val<T: Copy>(&mut self, t: T) -> Result<usize> {
+        self.write(&t, cmem::size_of::<T>())
     }
 }
 

@@ -15,10 +15,10 @@ impl sf::IObject for Logger {
     }
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
-        ipc_server_make_command_table! {
-            log: 0,
-            set_destination: 1
-        }
+        vec! [
+            ipc_interface_make_command_meta!(log: 0),
+            ipc_interface_make_command_meta!(set_destination: 1)
+        ]
     }
 }
 
@@ -48,9 +48,9 @@ impl sf::IObject for LogService {
     }
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
-        ipc_server_make_command_table! {
-            open_logger: 0
-        }
+        vec! [
+            ipc_interface_make_command_meta!(open_logger: 0)
+        ]
     }
 }
 

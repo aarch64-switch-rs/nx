@@ -14,9 +14,9 @@ impl sf::IObject for Service {
     }
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
-        ipc_server_make_command_table! {
-            throw_with_policy: 1
-        }
+        vec! [
+            ipc_interface_make_command_meta!(throw_with_policy: 1)
+        ]
     }
 }
 

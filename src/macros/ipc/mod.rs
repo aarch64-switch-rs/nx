@@ -2,8 +2,6 @@
 
 pub mod client;
 
-pub mod server;
-
 #[macro_export]
 macro_rules! ipc_interface_define_command {
     ($name:ident: ( $( $in_param_name:ident: $in_param_type:ty ),* ) => ( $( $out_param_name:ident: $out_param_type:ty ),* )) => {
@@ -60,6 +58,30 @@ macro_rules! ipc_control_interface_define_command {
 
                 Ok(())
             }
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! ipc_interface_make_command_meta {
+    ($name:ident: $id:expr) => {
+        paste::paste! {
+            $crate::ipc::sf::CommandMetadata::new($id, unsafe { core::mem::transmute(Self::[<$name _impl>] as fn(&mut Self, &mut $crate::ipc::server::ServerContext) -> $crate::result::Result<()>) }, None, None)
+        }
+    };
+    ($name:ident: $id:expr, [($major:expr, $minor:expr, $micro:expr) =>]) => {
+        paste::paste! {
+            $crate::ipc::sf::CommandMetadata::new($id, unsafe { core::mem::transmute(Self::[<$name _impl>] as fn(&mut Self, &mut $crate::ipc::server::ServerContext) -> $crate::result::Result<()>) }, Some($crate::version::Version::new($major, $minor, $micro)), None)
+        }
+    };
+    ($name:ident: $id:expr, [=> ($major:expr, $minor:expr, $micro:expr)]) => {
+        paste::paste! {
+            $crate::ipc::sf::CommandMetadata::new($id, unsafe { core::mem::transmute(Self::[<$name _impl>] as fn(&mut Self, &mut $crate::ipc::server::ServerContext) -> $crate::result::Result<()>) }, None, Some($crate::version::Version::new($major, $minor, $micro)))
+        }
+    };
+    ($name:ident: $id:expr, [($major_a:expr, $minor_a:expr, $micro_a:expr) => ($major_b:expr, $minor_b:expr, $micro_b:expr)]) => {
+        paste::paste! {
+            $crate::ipc::sf::CommandMetadata::new($id, unsafe { core::mem::transmute(Self::[<$name _impl>] as fn(&mut Self, &mut $crate::ipc::server::ServerContext) -> $crate::result::Result<()>) }, Some($crate::version::Version::new($major_a, $minor_a, $micro_a)), Some($crate::version::Version::new($major_b, $minor_b, $micro_b)))
         }
     };
 }

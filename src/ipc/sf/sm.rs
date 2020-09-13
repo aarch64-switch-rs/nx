@@ -2,7 +2,7 @@ use crate::result::*;
 use crate::ipc::sf;
 use crate::input;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct ServiceName {
     pub value: u64,
@@ -28,7 +28,7 @@ impl ServiceName {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct MitmProcessInfo {
     pub process_id: u64,
