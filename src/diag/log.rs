@@ -139,7 +139,7 @@ impl Logger for LmLogger {
                     _ => "<unknown>",
                 };
                 log_packet.set_thread_name(String::from(thread_name));
-                let log_buf = log_packet.encode();
+                let log_buf = log_packet.encode_packet();
 
                 match &mut self.logger {
                     Ok(ref mut logger) => {
