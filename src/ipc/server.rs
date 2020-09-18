@@ -10,8 +10,8 @@ use crate::service::sm;
 use crate::service::sm::IUserInterface;
 use crate::mem;
 use super::*;
+use alloc::vec::Vec;
 use core::mem as cmem;
-use arrayvec::ArrayVec;
 
 // TODO: proper result codes, implement left control commands
 
@@ -21,19 +21,12 @@ pub struct ServerContext<'a> {
     pub ctx: &'a mut CommandContext,
     pub raw_data_walker: DataWalker,
     pub domain_table: mem::Shared<DomainTable>,
-    pub new_sessions: &'a mut ArrayVec<[ServerHolder; MAX_COUNT]>
+    pub new_sessions: &'a mut Vec<ServerHolder>
 }
 
 impl<'a> ServerContext<'a> {
-    pub fn new(ctx: &'a mut CommandContext, raw_data_walker: DataWalker, domain_table: mem::Shared<DomainTable>, new_sessions: &'a mut ArrayVec<[ServerHolder; MAX_COUNT]>) -> Self {
+    pub const fn new(ctx: &'a mut CommandContext, raw_data_walker: DataWalker, domain_table: mem::Shared<DomainTable>, new_sessions: &'a mut Vec<ServerHolder>) -> Self {
         Self { ctx: ctx, raw_data_walker: raw_data_walker, domain_table: domain_table, new_sessions: new_sessions }
-    }
-
-    pub fn push_holder(&mut self, server_holder: ServerHolder) -> Result<()> {
-        match self.new_sessions.try_push(server_holder) {
-            Ok(()) => Ok(()),
-            Err(_) => Err(ResultCode::new(23))
-        }
     }
 }
 
@@ -170,12 +163,9 @@ pub fn write_request_command_response_on_ipc_buffer(ctx: &mut CommandContext, re
             data_size += (cmem::size_of::<DomainOutDataHeader>() + cmem::size_of::<DomainObjectId>() * ctx.out_params.objects.len()) as u32;
         }
         data_size = (data_size + 1) & !1;
-        // TODO: out pointer
 
         write_command_response_on_ipc_buffer(ctx, request_type, data_size);
         let mut data_offset = get_aligned_data_offset(ctx.out_params.data_words_offset, ipc_buf);
-
-        // TODO: out pointer
 
         let mut data_header = data_offset as *mut DataHeader;
         if ctx.object_info.is_domain() {
@@ -324,13 +314,15 @@ impl CommandParameter<mem::Shared<dyn sf::IObject>> for mem::Shared<dyn sf::IObj
             let domain_object_id = ctx.domain_table.get().allocate_id()?;
             ctx.ctx.out_params.push_domain_object(domain_object_id)?;
             session.get().set_info(ObjectInfo::new());
-            ctx.domain_table.get().add_domain(ServerHolder::new_domain_session(0, domain_object_id, session.clone()))
+            ctx.domain_table.get().domains.push(ServerHolder::new_domain_session(0, domain_object_id, session.clone()));
+            Ok(())
         }
         else {
             let (server_handle, client_handle) = svc::create_session(false, 0)?;
             ctx.ctx.out_params.push_handle(sf::MoveHandle::from(client_handle))?;
             session.get().set_info(ObjectInfo::new());
-            ctx.push_holder(ServerHolder::new_session(server_handle, session.clone()))
+            ctx.new_sessions.push(ServerHolder::new_session(server_handle, session.clone()));
+            Ok(())
         }
     }
 
@@ -366,57 +358,34 @@ pub enum WaitHandleType {
 }
 
 pub struct DomainTable {
-    pub table: [DomainObjectId; MAX_COUNT],
-    pub domains: ArrayVec<[ServerHolder; MAX_COUNT]>,
+    pub table: Vec<DomainObjectId>,
+    pub domains: Vec<ServerHolder>,
 }
 
 impl DomainTable {
     pub fn new() -> Self {
-        Self { table: [0; MAX_COUNT], domains: ArrayVec::new() }
+        Self { table: Vec::new(), domains: Vec::new() }
     }
 
     pub fn allocate_id(&mut self) -> Result<DomainObjectId> {
-        for base_id in 0..self.table.len() {
-            let domain_object_id = (base_id + 1) as DomainObjectId;
-            for i in 0..self.table.len() {
-                match self.table[i] {
-                    0 => {
-                        self.table[i] = domain_object_id;
-                        return Ok(domain_object_id);
-                    },
-                    other => {
-                        if other == domain_object_id {
-                            break;
-                        }
-                    }
-                };
+        let mut current_id: DomainObjectId = 1;
+        loop {
+            // Note: fix potential infinite loops here?
+            if !self.table.contains(&current_id) {
+                self.table.push(current_id);
+                return Ok(current_id);
             }
+            current_id += 1;
         }
-        Err(ResultCode::new(0xBEBA))
     }
 
     pub fn allocate_specific_id(&mut self, specific_domain_object_id: DomainObjectId) -> Result<DomainObjectId> {
-        for i in 0..self.table.len() {
-            match self.table[i] {
-                0 => {
-                    self.table[i] = specific_domain_object_id;
-                    return Ok(specific_domain_object_id);
-                },
-                other => {
-                    if other == specific_domain_object_id {
-                        break;
-                    }
-                }
-            };
+        if !self.table.contains(&specific_domain_object_id) {
+            self.table.push(specific_domain_object_id);
+            return Ok(specific_domain_object_id);
         }
+        
         Err(ResultCode::new(0xBEBA))
-    }
-
-    pub fn add_domain(&mut self, object: ServerHolder) -> Result<()> {
-        match self.domains.try_push(object) {
-            Ok(()) => Ok(()),
-            Err(_) => Err(ResultCode::new(0xbaba))
-        }
     }
 
     pub fn find_domain(&mut self, id: DomainObjectId) -> Result<mem::Shared<dyn sf::IObject>> {
@@ -438,29 +407,9 @@ impl DomainTable {
         Err(ResultCode::new(0xBEB2))
     }
     
-    pub fn deallocate_domain(&mut self, domain_object_id: DomainObjectId) -> Result<()> {
-        for i in 0..self.table.len() {
-            if self.table[i] == domain_object_id {
-                let mut index: usize = 0;
-                let mut found = false;
-                for holder in &self.domains {
-                    if holder.info.domain_object_id == domain_object_id {
-                        found = true;
-                        break;
-                    }
-                    index += 1;
-                }
-                return match found {
-                    true => {
-                        self.table[i] = 0;
-                        self.domains.pop_at(index);
-                        Ok(())
-                    },
-                    false => Err(ResultCode::new(0xbafa))
-                };
-            }
-        }
-        Err(ResultCode::new(0xBEB4))
+    pub fn deallocate_domain(&mut self, domain_object_id: DomainObjectId) {
+        self.table.retain(|&id| id != domain_object_id);
+        self.domains.retain(|holder| holder.info.domain_object_id != domain_object_id);
     }
 }
 
@@ -569,9 +518,7 @@ impl ServerHolder {
 
 impl Drop for ServerHolder {
     fn drop(&mut self) {
-        if self.server.use_count() == 1 {
-            self.close().unwrap();
-        }
+        self.close().unwrap();
     }
 }
 
@@ -694,14 +641,14 @@ pub trait INamedPort: IServerObject {
 // TODO: use const generics to reduce memory usage, like libstratosphere does?
 
 pub struct ServerManager<const P: usize> {
-    server_holders: ArrayVec<[ServerHolder; MAX_COUNT]>,
+    server_holders: Vec<ServerHolder>,
     wait_handles: [svc::Handle; MAX_COUNT],
     pointer_buffer: [u8; P]
 }
 
 impl<const P: usize> ServerManager<P> {
     pub fn new() -> Self {
-        Self { server_holders: ArrayVec::new(), wait_handles: [0; MAX_COUNT], pointer_buffer: [0; P] }
+        Self { server_holders: Vec::new(), wait_handles: [0; MAX_COUNT], pointer_buffer: [0; P] }
     }
     
     #[inline(always)]
@@ -718,19 +665,12 @@ impl<const P: usize> ServerManager<P> {
         unsafe { core::slice::from_raw_parts(self.wait_handles.as_ptr(), handles_index) }
     }
 
-    fn push_holder(&mut self, holder: ServerHolder) -> Result<()> {
-        match self.server_holders.try_push(holder) {
-            Ok(()) => Ok(()),
-            Err(_) => Err(ResultCode::new(0x12))
-        }
-    }
-
     #[inline(always)]
     fn handle_request_command(&mut self, ctx: &mut CommandContext, rq_id: u32, command_type: CommandType, domain_command_type: DomainCommandType, ipc_buf_backup: &[u8], domain_table: mem::Shared<DomainTable>) -> Result<()> {
         let is_domain = ctx.object_info.is_domain();
         let domain_table_clone = domain_table.clone();
         let mut do_handle_request = || -> Result<()> {
-            let mut new_sessions: ArrayVec<[ServerHolder; MAX_COUNT]> = ArrayVec::new();
+            let mut new_sessions: Vec<ServerHolder> = Vec::new();
             for server_holder in &mut self.server_holders {
                 let server_info = server_holder.info;
                 if server_info.handle == ctx.object_info.handle {
@@ -781,20 +721,15 @@ impl<const P: usize> ServerManager<P> {
                     break;
                 }
             }
-    
-            loop {
-                match new_sessions.pop_at(0) {
-                    Some(holder) => self.push_holder(holder)?,
-                    None => break
-                };
-            }
+
+            self.server_holders.append(&mut new_sessions);
 
             Ok(())
         };
 
         match domain_command_type {
             DomainCommandType::Invalid => {
-                // Invalid command type might mean that the session ain't a domain :P
+                // Invalid command type might mean that the session isn't a domain :P
                 match is_domain {
                     false => do_handle_request()?,
                     true => return Err(ResultCode::new(0xd3d))
@@ -802,11 +737,11 @@ impl<const P: usize> ServerManager<P> {
             },
             DomainCommandType::SendMessage => do_handle_request()?,
             DomainCommandType::Close => {
-                if ctx.object_info.owns_handle {
-                    // ?
+                if !ctx.object_info.owns_handle {
+                    domain_table.get().deallocate_domain(ctx.object_info.domain_object_id);
                 }
                 else {
-                    domain_table.get().deallocate_domain(ctx.object_info.domain_object_id)?;
+                    // TODO: Abort? Error?
                 }
             }
         }
@@ -825,7 +760,7 @@ impl<const P: usize> ServerManager<P> {
                 for command in hipc_manager.get_command_table() {
                     if command.matches(rq_id) {
                         command_found = true;
-                        let mut unused_new_sessions: ArrayVec<[ServerHolder; MAX_COUNT]> = ArrayVec::new();
+                        let mut unused_new_sessions: Vec<ServerHolder> = Vec::new();
                         let unused_domain_table = mem::Shared::empty();
                         let mut server_ctx = ServerContext::new(ctx, DataWalker::empty(), unused_domain_table, &mut unused_new_sessions);
                         if let Err(rc) = hipc_manager.call_self_command(command.command_fn, &mut server_ctx) {
@@ -839,7 +774,7 @@ impl<const P: usize> ServerManager<P> {
 
                 if hipc_manager.has_cloned_object() {
                     let cloned_holder = hipc_manager.clone_object()?;
-                    self.push_holder(cloned_holder)?;
+                    self.server_holders.push(cloned_holder);
                 }
                 break;
             }
@@ -852,7 +787,7 @@ impl<const P: usize> ServerManager<P> {
         let mut server_found = false;
         let mut index: usize = 0;
         let mut should_close_session = false;
-        let mut new_sessions: ArrayVec<[ServerHolder; MAX_COUNT]> = ArrayVec::new();
+        let mut new_sessions: Vec<ServerHolder> = Vec::new();
 
         let mut ctx = CommandContext::empty();
         let mut command_type = CommandType::Invalid;
@@ -971,15 +906,10 @@ impl<const P: usize> ServerManager<P> {
         };
 
         if should_close_session {
-            self.server_holders.pop_at(index);
+            self.server_holders.remove(index);
         }
 
-        loop {
-            match new_sessions.pop_at(0) {
-                Some(holder) => self.push_holder(holder)?,
-                None => break
-            };
-        }
+        self.server_holders.append(&mut new_sessions);
 
         match server_found {
             true => Ok(()),
@@ -987,16 +917,16 @@ impl<const P: usize> ServerManager<P> {
         }
     }
     
-    pub fn register_server<S: IServerObject + 'static>(&mut self, handle: svc::Handle, service_name: sm::ServiceName) -> Result<()> {
-        self.push_holder(ServerHolder::new_server::<S>(handle, service_name))
+    pub fn register_server<S: IServerObject + 'static>(&mut self, handle: svc::Handle, service_name: sm::ServiceName) {
+        self.server_holders.push(ServerHolder::new_server::<S>(handle, service_name));
     }
 
-    pub fn register_mitm_server<S: IMitmServerObject + 'static>(&mut self, handle: svc::Handle, service_name: sm::ServiceName) -> Result<()> {
-        self.push_holder(ServerHolder::new_mitm_server::<S>(handle, service_name))
+    pub fn register_mitm_server<S: IMitmServerObject + 'static>(&mut self, handle: svc::Handle, service_name: sm::ServiceName) {
+        self.server_holders.push(ServerHolder::new_mitm_server::<S>(handle, service_name));
     }
     
-    pub fn register_session<S: IServerObject + 'static>(&mut self, handle: svc::Handle) -> Result<()> {
-        self.push_holder(ServerHolder::new_server_session::<S>(handle))
+    pub fn register_session<S: IServerObject + 'static>(&mut self, handle: svc::Handle) {
+        self.server_holders.push(ServerHolder::new_server_session::<S>(handle));
     }
     
     pub fn register_service_server<S: IService + 'static>(&mut self) -> Result<()> {
@@ -1007,7 +937,8 @@ impl<const P: usize> ServerManager<P> {
             sm.get().register_service(service_name, false, S::get_max_sesssions())?
         };
 
-        self.register_server::<S>(service_handle.handle, service_name)
+        self.register_server::<S>(service_handle.handle, service_name);
+        Ok(())
     }
     
     pub fn register_mitm_service_server<S: IMitmService + 'static>(&mut self) -> Result<()> {
@@ -1018,8 +949,8 @@ impl<const P: usize> ServerManager<P> {
             sm.get().atmosphere_install_mitm(service_name)?
         };
 
-        self.register_mitm_server::<S>(mitm_handle.handle, service_name)?;
-        self.register_session::<MitmQueryServer<S>>(query_handle.handle)?;
+        self.register_mitm_server::<S>(mitm_handle.handle, service_name);
+        self.register_session::<MitmQueryServer<S>>(query_handle.handle);
 
         {
             let sm = service::new_named_port_object::<sm::UserInterface>()?;
@@ -1031,7 +962,8 @@ impl<const P: usize> ServerManager<P> {
     pub fn register_named_port_server<S: INamedPort + 'static>(&mut self) -> Result<()> {
         let port_handle = svc::manage_named_port(S::get_port_name().as_ptr(), S::get_max_sesssions())?;
 
-        self.register_server::<S>(port_handle, sm::ServiceName::empty())
+        self.register_server::<S>(port_handle, sm::ServiceName::empty());
+        Ok(())
     }
 
     pub fn process(&mut self) -> Result<()> {

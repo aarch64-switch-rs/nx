@@ -1,4 +1,5 @@
 use crate::result::*;
+use crate::smc;
 use core::ptr;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -399,14 +400,13 @@ pub fn get_thread_id(process_handle: Handle) -> Result<u64> {
 // Note: original name is just break/Break, but that's a reserved keyword :P
 
 #[inline(always)]
-pub fn break_(reason: BreakReason, arg: Address, size: Size) -> Result<()> {
+pub fn break_(reason: BreakReason, arg: Address, size: Size) -> ! {
     extern "C" {
-        fn __nx_svc_break(reason: BreakReason, arg: Address, size: Size) -> ResultCode;
+        fn __nx_svc_break(reason: BreakReason, arg: Address, size: Size) -> !;
     }
 
     unsafe {
-        let rc = __nx_svc_break(reason, arg, size);
-        wrap(rc, ())
+        __nx_svc_break(reason, arg, size)
     }
 }
 
@@ -516,5 +516,19 @@ pub fn manage_named_port(name: Address, max_sessions: i32) -> Result<Handle> {
 
         let rc = __nx_svc_manage_named_port(&mut handle, name, max_sessions);
         wrap(rc, handle)
+    }
+}
+
+#[inline(always)]
+pub fn call_secure_monitor(input: smc::Input) -> smc::Output {
+    extern "C" {
+        fn __nx_svc_call_secure_monitor(args: *mut smc::Arguments) -> u64;
+    }
+
+    unsafe {
+        let mut args = smc::Arguments::from_input(input);
+
+        let _ =__nx_svc_call_secure_monitor(&mut args);
+        args.to_output()
     }
 }

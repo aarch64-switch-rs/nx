@@ -5,7 +5,7 @@ use crate::ipc::sf;
 use crate::service;
 use crate::service::fatal;
 use crate::service::fatal::IService;
-use core::ptr;
+use core::mem;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub enum AssertMode {
@@ -15,7 +15,7 @@ pub enum AssertMode {
     Panic
 }
 
-pub fn assert(mode: AssertMode, rc: ResultCode) -> ! {
+pub fn assert(mode: AssertMode, rc: ResultCode) {
     if rc.is_failure() {
         match mode {
             AssertMode::ProcessExit => {
@@ -27,10 +27,10 @@ pub fn assert(mode: AssertMode, rc: ResultCode) -> ! {
                         let _ = fatal.get().throw_with_policy(rc, fatal::Policy::ErrorScreen, sf::ProcessId::new());
                     },
                     _ => {}
-                }
+                };
             },
             AssertMode::SvcBreak => {
-                let _ = svc::break_(svc::BreakReason::Assert, ptr::null_mut(), rc.get_value() as svc::Size);
+                svc::break_(svc::BreakReason::Panic, &rc as *const _ as *const u8, mem::size_of::<ResultCode>());
             },
             AssertMode::Panic => {
                 let res: Result<()> = Err(rc);
@@ -38,5 +38,4 @@ pub fn assert(mode: AssertMode, rc: ResultCode) -> ! {
             },
         }
     }
-    loop {}
 }

@@ -53,6 +53,8 @@ pub mod crt0;
 
 pub mod svc;
 
+pub mod smc;
+
 pub mod ipc;
 
 pub mod service;
@@ -74,3 +76,5 @@ pub mod fs;
 pub mod version;
 
 pub use paste;
+
+pub mod rand;

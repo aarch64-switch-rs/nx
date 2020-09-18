@@ -118,32 +118,32 @@ impl Logger for LmLogger {
     fn log(&mut self, metadata: &LogMetadata) {
         if self.service.is_ok() {
             if self.logger.is_ok() {
-                let mut log_packet = logpacket::LogPacket::new();
-
-                if let Ok(process_id) = svc::get_process_id(svc::CURRENT_PROCESS_PSEUDO_HANDLE) {
-                    log_packet.set_process_id(process_id);
-                }
-
-                let cur_thread = thread::get_current_thread();
-                if let Ok(thread_id) = cur_thread.get_id() {
-                    log_packet.set_thread_id(thread_id);
-                }
-
-                log_packet.set_file_name(String::from(metadata.file_name));
-                log_packet.set_function_name(String::from(metadata.fn_name));
-                log_packet.set_line_number(metadata.line_no);
-                log_packet.set_module_name(String::from("aarch64-switch-rs"));
-                log_packet.set_text_log(metadata.msg.clone());
-                let thread_name = match cur_thread.name.get_str() {
-                    Ok(name) => name,
-                    _ => "<unknown>",
-                };
-                log_packet.set_thread_name(String::from(thread_name));
-                let log_buf = log_packet.encode_packet();
-
                 match &mut self.logger {
                     Ok(ref mut logger) => {
-                        let _ = logger.get().log(sf::Buffer::from_const(log_buf.as_ptr(), log_buf.len()));
+                        let mut log_packet = logpacket::LogPacket::new();
+
+                        if let Ok(process_id) = svc::get_process_id(svc::CURRENT_PROCESS_PSEUDO_HANDLE) {
+                            log_packet.set_process_id(process_id);
+                        }
+
+                        let cur_thread = thread::get_current_thread();
+                        if let Ok(thread_id) = cur_thread.get_id() {
+                            log_packet.set_thread_id(thread_id);
+                        }
+
+                        log_packet.set_file_name(String::from(metadata.file_name));
+                        log_packet.set_function_name(String::from(metadata.fn_name));
+                        log_packet.set_line_number(metadata.line_no);
+                        log_packet.set_module_name(String::from("aarch64-switch-rs"));
+                        log_packet.set_text_log(metadata.msg.clone());
+                        let thread_name = match cur_thread.name.get_str() {
+                            Ok(name) => name,
+                            _ => "<unknown>",
+                        };
+                        log_packet.set_thread_name(String::from(thread_name));
+                        for packet in log_packet.encode_packet() {
+                            let _ = logger.get().log(sf::Buffer::from_const(packet.as_ptr(), packet.len()));
+                        }
                     },
                     _ => {}
                 }

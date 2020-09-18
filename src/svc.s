@@ -199,3 +199,19 @@ FN_START __nx_svc_manage_named_port
 	str w1, [x2]
 	ret
 FN_END
+
+FN_START __nx_svc_call_secure_monitor
+	str x0, [sp, #-16]!
+	mov x8, x0
+	ldp x0, x1, [x8]
+	ldp x2, x3, [x8, #0x10]
+	ldp x4, x5, [x8, #0x20]
+	ldp x6, x7, [x8, #0x30]
+	svc 0x7F
+	ldr x8, [sp], #16
+	stp x0, x1, [x8]
+	stp x2, x3, [x8, #0x10]
+	stp x4, x5, [x8, #0x20]
+	stp x6, x7, [x8, #0x30]
+	ret
+FN_END
