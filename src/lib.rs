@@ -14,6 +14,9 @@
 #![feature(linkage)]
 #![feature(const_in_array_repeat_expressions)]
 #![feature(unsize)]
+#![feature(const_fn_fn_ptr_basics)]
+#![feature(const_fn_transmute)]
+#![feature(const_mut_refs)]
 #![macro_use]
 
 // Required assembly bits
