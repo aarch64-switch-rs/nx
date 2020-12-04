@@ -27,6 +27,7 @@ static mut G_EXIT_FN: sync::Locked<Option<ExitFn>> = sync::Locked::new(false, No
 static mut G_MAIN_THREAD: thread::Thread = thread::Thread::empty();
 
 #[no_mangle]
+#[linkage = "weak"]
 unsafe fn __nx_crt0_entry(abi_ptr: *const hbl::AbiConfigEntry, raw_main_thread_handle: u64, aslr_base_address: *const u8, lr_exit_fn: ExitFn, bss_start: *mut u8, bss_end: *mut u8) {
     let is_hbl_nro = !abi_ptr.is_null() && (raw_main_thread_handle == u64::MAX);
     
@@ -109,6 +110,7 @@ unsafe fn __nx_crt0_entry(abi_ptr: *const hbl::AbiConfigEntry, raw_main_thread_h
 }
 
 #[no_mangle]
+#[linkage = "weak"]
 unsafe fn __nx_crt0_exception_entry(_error_desc: u32, _stack_top: *mut u8) {
     svc::return_from_exception(results::os::ResultUnhandledException::make());
 }

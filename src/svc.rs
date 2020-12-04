@@ -1,6 +1,10 @@
 use crate::result::*;
 use crate::smc;
+use crate::arm;
+use crate::util;
+use crate::version;
 use core::ptr;
+use core::mem;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
@@ -69,10 +73,10 @@ bit_enum! {
 #[repr(C)]
 pub struct MemoryInfo {
     pub base_address: usize,
-    pub size: u64,
-    pub memory_state: MemoryState,
-    pub memory_attribute: MemoryAttribute,
-    pub memory_permission: MemoryPermission,
+    pub size: usize,
+    pub state: MemoryState,
+    pub attribute: MemoryAttribute,
+    pub permission: MemoryPermission,
     pub ipc_refcount: u32,
     pub device_refcount: u32,
     pub pad: u32,
@@ -105,6 +109,66 @@ pub enum InfoId {
     TotalNonSystemMemorySize = 21,
     UsedNonSystemMemorySize = 22,
     IsApplication = 23,
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[repr(C)]
+pub struct AttachProcessDebugEventInfo {
+    pub program_id: u64,
+    pub process_id: u64,
+    pub name: util::CString<12>,
+    pub flags: u32,
+    pub user_exception_context_address: u64
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[repr(C)]
+pub struct AttachThreadDebugEventInfo {
+    pub thread_id: u64,
+    pub tls_ptr: usize,
+    pub entrypoint: usize
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[repr(C)]
+pub struct ExitDebugEventInfo {
+    pub exit_type: u32
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[repr(C)]
+pub struct ExceptionDebugEventInfo {
+    pub exception_type: u32,
+    pub fault_register: u32
+}
+
+#[derive(Copy, Clone)]
+#[repr(C)]
+pub union DebugEventInfo {
+    pub attach_process: AttachProcessDebugEventInfo,
+    pub attach_thread: AttachThreadDebugEventInfo,
+    pub exit_process: ExitDebugEventInfo,
+    pub exit_thread: ExitDebugEventInfo,
+    pub exception: ExceptionDebugEventInfo
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[repr(u32)]
+pub enum DebugEventType {
+    AttachProcess,
+    AttachThread,
+    ExitProcess,
+    ExitThread,
+    Exception
+}
+
+#[derive(Copy, Clone)]
+#[repr(C)]
+pub struct DebugEvent {
+    pub event_type: DebugEventType,
+    pub flags: u32,
+    pub thread_id: u32,
+    pub info: DebugEventInfo
 }
 
 pub type PageInfo = u32;
@@ -502,6 +566,160 @@ pub fn create_event() -> Result<(Handle, Handle)> {
 
         let rc = __nx_svc_create_event(&mut server_handle, &mut client_handle);
         wrap(rc, (server_handle, client_handle))
+    }
+}
+
+#[inline(always)]
+pub fn debug_active_process(process_id: u64) -> Result<Handle> {
+    extern "C" {
+        fn __nx_svc_debug_active_process(out_handle: *mut Handle, process_id: u64) -> ResultCode;
+    }
+
+    unsafe {
+        let mut handle: Handle = 0;
+
+        let rc = __nx_svc_debug_active_process(&mut handle, process_id);
+        wrap(rc, handle)
+    }
+}
+
+#[inline(always)]
+pub fn break_debug_process(debug_handle: Handle) -> Result<()> {
+    extern "C" {
+        fn __nx_svc_break_debug_process(debug_handle: Handle) -> ResultCode;
+    }
+
+    unsafe {
+        let rc = __nx_svc_break_debug_process(debug_handle);
+        wrap(rc, ())
+    }
+}
+
+#[inline(always)]
+pub fn get_debug_event(debug_handle: Handle) -> Result<DebugEvent> {
+    extern "C" {
+        fn __nx_svc_get_debug_event(out_debug_event: *mut DebugEvent, debug_handle: Handle) -> ResultCode;
+    }
+
+    unsafe {
+        let mut debug_event: DebugEvent = mem::zeroed();
+
+        let rc = __nx_svc_get_debug_event(&mut debug_event, debug_handle);
+        wrap(rc, debug_event)
+    }
+}
+
+#[inline(always)]
+pub fn continue_debug_event(debug_handle: Handle, flags: u32, thread_ids: &[u64]) -> Result<()> {
+    extern "C" {
+        fn __nx_svc_legacy_continue_debug_event(debug_handle: Handle, flags: u32, thread_id: u64) -> ResultCode;
+        fn __nx_svc_continue_debug_event(debug_handle: Handle, flags: u32, thread_ids: *const u64, thread_id_count: u32) -> ResultCode;
+    }
+
+    unsafe {
+        if version::get_version() < version::Version::new(3, 0, 0) {
+            let rc = __nx_svc_legacy_continue_debug_event(debug_handle, flags, thread_ids[0]);
+            wrap(rc, ())
+        }
+        else {
+            let rc = __nx_svc_continue_debug_event(debug_handle, flags, thread_ids.as_ptr(), thread_ids.len() as u32);
+            wrap(rc, ())
+        }
+    }
+}
+
+#[inline(always)]
+pub fn get_process_list(process_list: &mut [u64]) -> Result<usize> {
+    extern "C" {
+        fn __nx_svc_get_process_list(out_count: *mut u32, out_process_ids: *mut u64, process_id_count: u32) -> ResultCode;
+    }
+
+    unsafe {
+        let mut count: u32 = 0;
+        
+        let rc = __nx_svc_get_process_list(&mut count, process_list.as_mut_ptr(), process_list.len() as u32);
+        wrap(rc, count as usize)
+    }
+}
+
+#[inline(always)]
+pub fn get_thread_list(debug_handle: Handle, thread_id_list: &mut [u64]) -> Result<usize> {
+    extern "C" {
+        fn __nx_svc_get_thread_list(out_count: *mut u32, out_thread_ids: *mut u64, thread_id_count: u32, debug_handle: Handle) -> ResultCode;
+    }
+
+    unsafe {
+        let mut count: u32 = 0;
+        
+        let rc = __nx_svc_get_thread_list(&mut count, thread_id_list.as_mut_ptr(), thread_id_list.len() as u32, debug_handle);
+        wrap(rc, count as usize)
+    }
+}
+
+#[inline(always)]
+#[allow(improper_ctypes)]
+pub fn get_debug_thread_context(debug_handle: Handle, thread_id: u64, register_group: arm::RegisterGroup) -> Result<arm::ThreadContext>  {
+    extern "C" {
+        fn __nx_svc_get_debug_thread_context(thread_context: *mut arm::ThreadContext, debug_handle: Handle, thread_id: u64, register_group: arm::RegisterGroup) -> ResultCode;
+    }
+
+    unsafe {
+        let mut thread_context: arm::ThreadContext = Default::default();
+
+        let rc = __nx_svc_get_debug_thread_context(&mut thread_context, debug_handle, thread_id, register_group);
+        wrap(rc, thread_context)
+    }
+}
+
+#[inline(always)]
+#[allow(improper_ctypes)]
+pub fn set_debug_thread_context(debug_handle: Handle, thread_context: arm::ThreadContext, thread_id: u64, register_group: arm::RegisterGroup) -> Result<()>  {
+    extern "C" {
+        fn __nx_svc_set_debug_thread_context(debug_handle: Handle, thread_id: u64, thread_context: *const arm::ThreadContext, register_group: arm::RegisterGroup) -> ResultCode;
+    }
+
+    unsafe {
+        let rc = __nx_svc_set_debug_thread_context(debug_handle, thread_id, &thread_context as *const _, register_group);
+        wrap(rc, ())
+    }
+}
+
+#[inline(always)]
+pub fn query_debug_process_memory(debug_handle: Handle, address: *const u8) -> Result<(MemoryInfo, PageInfo)> {
+    extern "C" {
+        fn __nx_svc_query_debug_process_memory(out_info: *mut MemoryInfo, out_page_info: *mut PageInfo, debug_handle: Handle, address: *const u8) -> ResultCode;
+    }
+
+    unsafe {
+        let mut memory_info: MemoryInfo = Default::default();
+        let mut page_info: PageInfo = 0;
+
+        let rc = __nx_svc_query_debug_process_memory(&mut memory_info, &mut page_info, debug_handle, address);
+        wrap(rc, (memory_info, page_info))
+    }
+}
+
+#[inline(always)]
+pub fn read_debug_process_memory(debug_handle: Handle, read_address: usize, read_size: usize, buffer: *mut u8) -> Result<()> {
+    extern "C" {
+        fn __nx_svc_read_debug_process_memory(buffer: *mut u8, debug_handle: Handle, address: usize, size: usize) -> ResultCode;
+    }
+
+    unsafe {
+        let rc = __nx_svc_read_debug_process_memory(buffer, debug_handle, read_address, read_size);
+        wrap(rc, ())
+    }
+}
+
+#[inline(always)]
+pub fn write_debug_process_memory(debug_handle: Handle, write_address: usize, write_size: usize, buffer: *const u8) -> Result<()> {
+    extern "C" {
+        fn __nx_svc_write_debug_process_memory(debug_handle: Handle, buffer: *const u8, address: usize, size: usize) -> ResultCode;
+    }
+
+    unsafe {
+        let rc = __nx_svc_write_debug_process_memory(debug_handle, buffer, write_address, write_size);
+        wrap(rc, ())
     }
 }
 

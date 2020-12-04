@@ -192,6 +192,78 @@ FN_START __nx_svc_create_event
 	ret
 FN_END
 
+FN_START __nx_svc_debug_active_process
+	str x0, [sp, #-16]!
+	svc 0x60
+	ldr x2, [sp], #16
+	str w1, [x2]
+	ret
+FN_END
+
+FN_START __nx_svc_break_debug_process
+	svc 0x61
+	ret
+FN_END
+
+FN_START __nx_svc_get_debug_event
+	svc 0x63
+	ret
+FN_END
+
+FN_START __nx_svc_legacy_continue_debug_event
+	svc 0x64
+	ret
+FN_END
+
+FN_START __nx_svc_continue_debug_event
+	svc 0x64
+	ret
+FN_END
+
+FN_START __nx_svc_get_process_list
+	str x0, [sp, #-16]!
+	svc 0x65
+	ldr x2, [sp], #16
+	str w1, [x2]
+	ret
+FN_END
+
+FN_START __nx_svc_get_thread_list
+	str x0, [sp, #-16]!
+	svc 0x66
+	ldr x2, [sp], #16
+	str w1, [x2]
+	ret
+FN_END
+
+FN_START __nx_svc_get_debug_thread_context
+	svc 0x67
+	ret
+FN_END
+
+FN_START __nx_svc_set_debug_thread_context
+	svc 0x68
+	ret
+FN_END
+
+FN_START __nx_svc_query_debug_process_memory
+	str x1, [sp, #-16]!
+	svc 0x69
+	ldr x2, [sp], #16
+	str w1, [x2]
+	ret
+FN_END
+
+FN_START __nx_svc_read_debug_process_memory
+	svc 0x6A
+	ret
+FN_END
+
+FN_START __nx_svc_write_debug_process_memory
+	svc 0x6B
+	ret
+FN_END
+
 FN_START __nx_svc_manage_named_port
 	str x0, [sp, #-16]!
 	svc 0x71

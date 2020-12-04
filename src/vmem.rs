@@ -96,7 +96,7 @@ pub fn allocate(size: usize) -> Result<*mut u8> {
             let current_address = address + size;
             let (memory_info, _) = svc::query_memory(address as *mut u8)?;
             let info_address = memory_info.base_address as usize + memory_info.size as usize;
-            if memory_info.memory_state != svc::MemoryState::Free {
+            if memory_info.state != svc::MemoryState::Free {
                 address = info_address;
                 continue;
             }
