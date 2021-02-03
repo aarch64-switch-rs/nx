@@ -42,6 +42,7 @@ pub trait IUserInterface {
     ipc_interface_define_command!(get_service_handle: (name: ServiceName) => (service_handle: sf::MoveHandle));
     ipc_interface_define_command!(register_service: (name: ServiceName, is_light: bool, max_sessions: i32) => (port_handle: sf::MoveHandle));
     ipc_interface_define_command!(unregister_service: (name: ServiceName) => ());
+    ipc_interface_define_command!(detach_client: (process_id: sf::ProcessId) => ());
     ipc_interface_define_command!(atmosphere_install_mitm: (name: ServiceName) => (port_handle: sf::MoveHandle, query_handle: sf::MoveHandle));
     ipc_interface_define_command!(atmosphere_uninstall_mitm: (name: ServiceName) => ());
     ipc_interface_define_command!(atmosphere_acknowledge_mitm_session: (name: ServiceName) => (info: MitmProcessInfo, session_handle: sf::MoveHandle));

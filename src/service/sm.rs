@@ -19,6 +19,7 @@ impl sf::IObject for UserInterface {
             ipc_interface_make_command_meta!(get_service_handle: 1),
             ipc_interface_make_command_meta!(register_service: 2),
             ipc_interface_make_command_meta!(unregister_service: 3),
+            ipc_interface_make_command_meta!(detach_client: 4),
             ipc_interface_make_command_meta!(atmosphere_install_mitm: 65000),
             ipc_interface_make_command_meta!(atmosphere_uninstall_mitm: 65001),
             ipc_interface_make_command_meta!(atmosphere_acknowledge_mitm_session: 65003),
@@ -53,6 +54,10 @@ impl IUserInterface for UserInterface {
 
     fn unregister_service(&mut self, name: ServiceName) -> Result<()> {
         ipc_client_send_request_command!([self.session.object_info; 3] (name) => ())
+    }
+
+    fn detach_client(&mut self, process_id: sf::ProcessId) -> Result<()> {
+        ipc_client_send_request_command!([self.session.object_info; 4] (process_id) => ())
     }
 
     fn atmosphere_install_mitm(&mut self, name: ServiceName) -> Result<(sf::MoveHandle, sf::MoveHandle)> {
