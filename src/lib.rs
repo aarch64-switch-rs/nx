@@ -12,7 +12,6 @@
 #![feature(specialization)]
 #![feature(coerce_unsized)]
 #![feature(linkage)]
-#![feature(const_in_array_repeat_expressions)]
 #![feature(unsize)]
 #![feature(const_fn_fn_ptr_basics)]
 #![feature(const_fn_transmute)]
