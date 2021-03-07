@@ -18,6 +18,8 @@
 #![feature(const_mut_refs)]
 #![macro_use]
 
+pub use nx_macros::*;
+
 // Required assembly bits
 
 global_asm!(include_str!("asm.s"));

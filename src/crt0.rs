@@ -17,8 +17,8 @@ use core::ptr;
 
 // These functions must be implemented by any executable homebrew project using this crate
 extern "Rust" {
-    fn main() -> Result<()>;
-    fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize;
+    fn __nx_internal_main() -> Result<()>;
+    fn __initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize;
 }
 
 pub type ExitFn = fn(ResultCode) -> !;
@@ -85,7 +85,7 @@ unsafe fn __nx_crt0_entry(abi_ptr: *const hbl::AbiConfigEntry, raw_main_thread_h
     }
     
     // Initialize heap and memory allocation
-    heap = initialize_heap(heap);
+    heap = __initialize_heap(heap);
     mem::initialize(heap.address, heap.size);
 
     // Initialize version support
@@ -103,7 +103,7 @@ unsafe fn __nx_crt0_entry(abi_ptr: *const hbl::AbiConfigEntry, raw_main_thread_h
     // TODO: finish implementing CRT0
 
     // Unwrap main(), which will trigger a panic if it didn't succeed
-    main().unwrap();
+    __nx_internal_main().unwrap();
 
     // Successful exit by default
     exit(ResultSuccess::make());
