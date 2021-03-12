@@ -36,7 +36,7 @@ pub fn heap(_: TokenStream, input: TokenStream) -> TokenStream {
         #input
 
         #[no_mangle]
-        pub fn __initialize_heap(_hbl_heap: ::nx::util::PointerAndSize) -> ::nx::util::PointerAndSize {
+        pub fn __nx_initialize_heap(_hbl_heap: ::nx::util::PointerAndSize) -> ::nx::util::PointerAndSize {
             unsafe {
                 ::nx::util::PointerAndSize::new(#ident.as_mut_ptr(), #ident.len())
             }
