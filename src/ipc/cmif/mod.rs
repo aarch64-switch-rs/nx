@@ -42,15 +42,15 @@ impl ObjectInfo {
     }
 
     pub fn convert_current_object_to_domain(&mut self) -> Result<DomainObjectId> {
-        nipc_cmif_client_send_control_command!([*self; ControlRequestId::ConvertCurrentObjectToDomain] () => (domain_object_id: DomainObjectId))
+        ipc_cmif_client_send_control_command!([*self; ControlRequestId::ConvertCurrentObjectToDomain] () => (domain_object_id: DomainObjectId))
     }
 
     pub fn query_pointer_buffer_size(&mut self) -> Result<u16> {
-        nipc_cmif_client_send_control_command!([*self; ControlRequestId::QueryPointerBufferSize] () => (pointer_buffer_size: u16))
+        ipc_cmif_client_send_control_command!([*self; ControlRequestId::QueryPointerBufferSize] () => (pointer_buffer_size: u16))
     }
 
     pub fn clone_current_object(&mut self) -> Result<sf::MoveHandle> {
-        nipc_cmif_client_send_control_command!([*self; ControlRequestId::CloneCurrentObject] () => (cloned_handle: sf::MoveHandle))
+        ipc_cmif_client_send_control_command!([*self; ControlRequestId::CloneCurrentObject] () => (cloned_handle: sf::MoveHandle))
     }
 }
 

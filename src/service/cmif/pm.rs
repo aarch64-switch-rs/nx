@@ -15,7 +15,7 @@ impl sf::IObject for InformationInterface {
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
         vec! [
-            nipc_cmif_interface_make_command_meta!(get_program_id: 0)
+            ipc_cmif_interface_make_command_meta!(get_program_id: 0)
         ]
     }
 }
@@ -28,7 +28,7 @@ impl service::cmif::IClientObject for InformationInterface {
 
 impl IInformationInterface for InformationInterface {
     fn get_program_id(&mut self, process_id: u64) -> Result<u64> {
-        nipc_cmif_client_send_request_command!([self.session.object_info; 0] (process_id) => (program_id: u64))
+        ipc_cmif_client_send_request_command!([self.session.object_info; 0] (process_id) => (program_id: u64))
     }
 }
 
@@ -57,7 +57,7 @@ impl sf::IObject for DebugMonitorInterface {
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
         vec! [
-            nipc_cmif_interface_make_command_meta!(get_application_process_id: 5)
+            ipc_cmif_interface_make_command_meta!(get_application_process_id: 5)
         ]
     }
 }
@@ -70,7 +70,7 @@ impl service::cmif::IClientObject for DebugMonitorInterface {
 
 impl IDebugMonitorInterface for DebugMonitorInterface {
     fn get_application_process_id(&mut self) -> Result<u64> {
-        nipc_cmif_client_send_request_command!([self.session.object_info; 5] () => (process_id: u64))
+        ipc_cmif_client_send_request_command!([self.session.object_info; 5] () => (process_id: u64))
     }
 }
 

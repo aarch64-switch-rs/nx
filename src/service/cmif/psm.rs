@@ -15,7 +15,7 @@ impl sf::IObject for PsmServer {
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
         vec! [
-            nipc_cmif_interface_make_command_meta!(get_battery_charge_percentage: 0)
+            ipc_cmif_interface_make_command_meta!(get_battery_charge_percentage: 0)
         ]
     }
 }
@@ -28,7 +28,7 @@ impl service::cmif::IClientObject for PsmServer {
 
 impl IPsmServer for PsmServer {
     fn get_battery_charge_percentage(&mut self) -> Result<u32> {
-        nipc_cmif_client_send_request_command!([self.session.object_info; 0] () => (charge: u32))
+        ipc_cmif_client_send_request_command!([self.session.object_info; 0] () => (charge: u32))
     }
 }
 

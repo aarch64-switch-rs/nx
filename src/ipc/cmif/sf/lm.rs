@@ -12,10 +12,10 @@ bit_enum! {
 }
 
 pub trait ILogger {
-    nipc_cmif_interface_define_command!(log: (log_buf: sf::InAutoSelectBuffer) => ());
-    nipc_cmif_interface_define_command!(set_destination: (log_destination: LogDestination) => ());
+    ipc_cmif_interface_define_command!(log: (log_buf: sf::InAutoSelectBuffer) => ());
+    ipc_cmif_interface_define_command!(set_destination: (log_destination: LogDestination) => ());
 }
 
 pub trait ILogService {
-    nipc_cmif_interface_define_command!(open_logger: (process_id: sf::ProcessId) => (logger: mem::Shared<dyn sf::IObject>));
+    ipc_cmif_interface_define_command!(open_logger: (process_id: sf::ProcessId) => (logger: mem::Shared<dyn sf::IObject>));
 }

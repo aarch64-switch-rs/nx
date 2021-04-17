@@ -20,13 +20,13 @@ pub enum State {
 }
 
 pub trait IPmModule {
-    nipc_cmif_interface_define_command!(initialize: (id: ModuleId, dependencies: sf::InMapAliasBuffer) => (event_handle: sf::CopyHandle));
-    nipc_cmif_interface_define_command!(get_request: () => (state: State, flags: u32));
-    nipc_cmif_interface_define_command!(acknowledge: () => ());
-    nipc_cmif_interface_define_command!(finalize: () => ());
-    nipc_cmif_interface_define_command!(acknowledge_ex: (state: State) => ());
+    ipc_cmif_interface_define_command!(initialize: (id: ModuleId, dependencies: sf::InMapAliasBuffer) => (event_handle: sf::CopyHandle));
+    ipc_cmif_interface_define_command!(get_request: () => (state: State, flags: u32));
+    ipc_cmif_interface_define_command!(acknowledge: () => ());
+    ipc_cmif_interface_define_command!(finalize: () => ());
+    ipc_cmif_interface_define_command!(acknowledge_ex: (state: State) => ());
 }
 
 pub trait IPmService {
-    nipc_cmif_interface_define_command!(get_pm_module: () => (pm_module: mem::Shared<dyn sf::IObject>));
+    ipc_cmif_interface_define_command!(get_pm_module: () => (pm_module: mem::Shared<dyn sf::IObject>));
 }

@@ -36,19 +36,19 @@ pub trait NvDrvService:service::cmif::IClientObject {}
 
 impl<S: NvDrvService> INvDrvService for S {
     fn open(&mut self, path: sf::InMapAliasBuffer) -> Result<(Fd, ErrorCode)> {
-        nipc_cmif_client_send_request_command!([self.get_info(); 0] (path) => (fd: Fd, error_code: ErrorCode))
+        ipc_cmif_client_send_request_command!([self.get_info(); 0] (path) => (fd: Fd, error_code: ErrorCode))
     }
 
     fn ioctl(&mut self, fd: Fd, id: IoctlId, in_buf: sf::InAutoSelectBuffer, out_buf: sf::OutAutoSelectBuffer) -> Result<ErrorCode> {
-        nipc_cmif_client_send_request_command!([self.get_info(); 1] (fd, id, in_buf, out_buf) => (error_code: ErrorCode))
+        ipc_cmif_client_send_request_command!([self.get_info(); 1] (fd, id, in_buf, out_buf) => (error_code: ErrorCode))
     }
 
     fn close(&mut self, fd: Fd) -> Result<ErrorCode> {
-        nipc_cmif_client_send_request_command!([self.get_info(); 2] (fd) => (error_code: ErrorCode))
+        ipc_cmif_client_send_request_command!([self.get_info(); 2] (fd) => (error_code: ErrorCode))
     }
 
     fn initialize(&mut self, transfer_mem_size: u32, self_process_handle: sf::CopyHandle, transfer_mem_handle: sf::CopyHandle) -> Result<ErrorCode> {
-        nipc_cmif_client_send_request_command!([self.get_info(); 3] (transfer_mem_size, self_process_handle, transfer_mem_handle) => (error_code: ErrorCode))
+        ipc_cmif_client_send_request_command!([self.get_info(); 3] (transfer_mem_size, self_process_handle, transfer_mem_handle) => (error_code: ErrorCode))
     }
 }
 
@@ -63,10 +63,10 @@ impl sf::IObject for AppletNvDrvService {
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
         vec! [
-            nipc_cmif_interface_make_command_meta!(open: 0),
-            nipc_cmif_interface_make_command_meta!(ioctl: 1),
-            nipc_cmif_interface_make_command_meta!(close: 2),
-            nipc_cmif_interface_make_command_meta!(initialize: 3)
+            ipc_cmif_interface_make_command_meta!(open: 0),
+            ipc_cmif_interface_make_command_meta!(ioctl: 1),
+            ipc_cmif_interface_make_command_meta!(close: 2),
+            ipc_cmif_interface_make_command_meta!(initialize: 3)
         ]
     }
 }
@@ -104,10 +104,10 @@ impl sf::IObject for SystemNvDrvService {
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
         vec! [
-            nipc_cmif_interface_make_command_meta!(open: 0),
-            nipc_cmif_interface_make_command_meta!(ioctl: 1),
-            nipc_cmif_interface_make_command_meta!(close: 2),
-            nipc_cmif_interface_make_command_meta!(initialize: 3)
+            ipc_cmif_interface_make_command_meta!(open: 0),
+            ipc_cmif_interface_make_command_meta!(ioctl: 1),
+            ipc_cmif_interface_make_command_meta!(close: 2),
+            ipc_cmif_interface_make_command_meta!(initialize: 3)
         ]
     }
 }

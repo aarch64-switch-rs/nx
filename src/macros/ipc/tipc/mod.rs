@@ -3,7 +3,7 @@
 pub mod client;
 
 #[macro_export]
-macro_rules! nipc_tipc_interface_define_command {
+macro_rules! ipc_tipc_interface_define_command {
     ($name:ident: ( $( $in_param_name:ident: $in_param_type:ty ),* ) => ( $( $out_param_name:ident: $out_param_type:ty ),* )) => {
         #[allow(unused_parens)]
         fn $name(&mut self, $( $in_param_name: $in_param_type ),* ) -> $crate::result::Result<( $( $out_param_type ),* )>;
@@ -33,7 +33,7 @@ macro_rules! nipc_tipc_interface_define_command {
 }
 
 #[macro_export]
-macro_rules! nipc_tipc_interface_make_command_meta {
+macro_rules! ipc_tipc_interface_make_command_meta {
     ($name:ident: $id:expr) => {
         paste::paste! {
             $crate::ipc::tipc::sf::CommandMetadata::new($id, unsafe { core::mem::transmute(Self::[<$name _impl>] as fn(&mut Self, &mut $crate::ipc::tipc::server::ServerContext) -> $crate::result::Result<()>) }, None, None)

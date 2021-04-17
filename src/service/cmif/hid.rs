@@ -16,7 +16,7 @@ impl sf::IObject for AppletResource {
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
         vec! [
-            nipc_cmif_interface_make_command_meta!(get_shared_memory_handle: 1)
+            ipc_cmif_interface_make_command_meta!(get_shared_memory_handle: 1)
         ]
     }
 }
@@ -29,7 +29,7 @@ impl service::cmif::IClientObject for AppletResource {
 
 impl IAppletResource for AppletResource {
     fn get_shared_memory_handle(&mut self) -> Result<sf::CopyHandle> {
-        nipc_cmif_client_send_request_command!([self.session.object_info; 0] () => (shmem_handle: sf::CopyHandle))
+        ipc_cmif_client_send_request_command!([self.session.object_info; 0] () => (shmem_handle: sf::CopyHandle))
     }
 }
 
@@ -44,13 +44,13 @@ impl sf::IObject for HidServer {
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
         vec! [
-            nipc_cmif_interface_make_command_meta!(create_applet_resource: 0),
-            nipc_cmif_interface_make_command_meta!(set_supported_npad_style_set: 100),
-            nipc_cmif_interface_make_command_meta!(set_supported_npad_id_type: 102),
-            nipc_cmif_interface_make_command_meta!(activate_npad: 103),
-            nipc_cmif_interface_make_command_meta!(deactivate_npad: 104),
-            nipc_cmif_interface_make_command_meta!(set_npad_joy_assignment_mode_single: 123),
-            nipc_cmif_interface_make_command_meta!(set_npad_joy_assignment_mode_dual: 124)
+            ipc_cmif_interface_make_command_meta!(create_applet_resource: 0),
+            ipc_cmif_interface_make_command_meta!(set_supported_npad_style_set: 100),
+            ipc_cmif_interface_make_command_meta!(set_supported_npad_id_type: 102),
+            ipc_cmif_interface_make_command_meta!(activate_npad: 103),
+            ipc_cmif_interface_make_command_meta!(deactivate_npad: 104),
+            ipc_cmif_interface_make_command_meta!(set_npad_joy_assignment_mode_single: 123),
+            ipc_cmif_interface_make_command_meta!(set_npad_joy_assignment_mode_dual: 124)
         ]
     }
 }
@@ -63,31 +63,31 @@ impl service::cmif::IClientObject for HidServer {
 
 impl IHidServer for HidServer {
     fn create_applet_resource(&mut self, aruid: sf::ProcessId) -> Result<mem::Shared<dyn sf::IObject>> {
-        nipc_cmif_client_send_request_command!([self.session.object_info; 0] (aruid) => (applet_resource: mem::Shared<AppletResource>))
+        ipc_cmif_client_send_request_command!([self.session.object_info; 0] (aruid) => (applet_resource: mem::Shared<AppletResource>))
     }
 
     fn set_supported_npad_style_set(&mut self, aruid: sf::ProcessId, npad_style_tag: NpadStyleTag) -> Result<()> {
-        nipc_cmif_client_send_request_command!([self.session.object_info; 100] (npad_style_tag, aruid) => ())
+        ipc_cmif_client_send_request_command!([self.session.object_info; 100] (npad_style_tag, aruid) => ())
     }
 
     fn set_supported_npad_id_type(&mut self, aruid: sf::ProcessId, controllers: sf::InPointerBuffer) -> Result<()> {
-        nipc_cmif_client_send_request_command!([self.session.object_info; 102] (aruid, controllers) => ())
+        ipc_cmif_client_send_request_command!([self.session.object_info; 102] (aruid, controllers) => ())
     }
 
     fn activate_npad(&mut self, aruid: sf::ProcessId) -> Result<()> {
-        nipc_cmif_client_send_request_command!([self.session.object_info; 103] (aruid) => ())
+        ipc_cmif_client_send_request_command!([self.session.object_info; 103] (aruid) => ())
     }
 
     fn deactivate_npad(&mut self, aruid: sf::ProcessId) -> Result<()> {
-        nipc_cmif_client_send_request_command!([self.session.object_info; 104] (aruid) => ())
+        ipc_cmif_client_send_request_command!([self.session.object_info; 104] (aruid) => ())
     }
 
     fn set_npad_joy_assignment_mode_single(&mut self, aruid: sf::ProcessId, controller: ControllerId, joy_type: NpadJoyDeviceType) -> Result<()> {
-        nipc_cmif_client_send_request_command!([self.session.object_info; 123] (controller, aruid, joy_type) => ())
+        ipc_cmif_client_send_request_command!([self.session.object_info; 123] (controller, aruid, joy_type) => ())
     }
 
     fn set_npad_joy_assignment_mode_dual(&mut self, aruid: sf::ProcessId, controller: ControllerId) -> Result<()> {
-        nipc_cmif_client_send_request_command!([self.session.object_info; 124] (controller, aruid) => ())
+        ipc_cmif_client_send_request_command!([self.session.object_info; 124] (controller, aruid) => ())
     }
 }
 

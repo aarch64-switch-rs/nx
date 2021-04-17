@@ -15,7 +15,7 @@ impl sf::IObject for Service {
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
         vec! [
-            nipc_cmif_interface_make_command_meta!(throw_with_policy: 1)
+            ipc_cmif_interface_make_command_meta!(throw_with_policy: 1)
         ]
     }
 }
@@ -28,7 +28,7 @@ impl service::cmif::IClientObject for Service {
 
 impl IService for Service {
     fn throw_with_policy(&mut self, rc: ResultCode, policy: Policy, process_id: sf::ProcessId) -> Result<()> {
-        nipc_cmif_client_send_request_command!([self.session.object_info; 1] (rc, policy, process_id) => ())
+        ipc_cmif_client_send_request_command!([self.session.object_info; 1] (rc, policy, process_id) => ())
     }
 }
 

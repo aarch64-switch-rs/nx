@@ -16,9 +16,9 @@ impl sf::IObject for StorageAccessor {
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
         vec! [
-            nipc_cmif_interface_make_command_meta!(get_size: 0),
-            nipc_cmif_interface_make_command_meta!(write: 10),
-            nipc_cmif_interface_make_command_meta!(read: 11)
+            ipc_cmif_interface_make_command_meta!(get_size: 0),
+            ipc_cmif_interface_make_command_meta!(write: 10),
+            ipc_cmif_interface_make_command_meta!(read: 11)
         ]
     }
 }
@@ -31,15 +31,15 @@ impl service::cmif::IClientObject for StorageAccessor {
 
 impl IStorageAccessor for StorageAccessor {
     fn get_size(&mut self) -> Result<usize> {
-        nipc_cmif_client_send_request_command!([self.session.object_info; 0] () => (size: usize))
+        ipc_cmif_client_send_request_command!([self.session.object_info; 0] () => (size: usize))
     }
 
     fn write(&mut self, offset: usize, buf: sf::InAutoSelectBuffer) -> Result<()> {
-        nipc_cmif_client_send_request_command!([self.session.object_info; 10] (offset, buf) => ())
+        ipc_cmif_client_send_request_command!([self.session.object_info; 10] (offset, buf) => ())
     }
 
     fn read(&mut self, offset: usize, buf: sf::OutAutoSelectBuffer) -> Result<()> {
-        nipc_cmif_client_send_request_command!([self.session.object_info; 11] (offset, buf) => ())
+        ipc_cmif_client_send_request_command!([self.session.object_info; 11] (offset, buf) => ())
     }
 }
 
@@ -54,7 +54,7 @@ impl sf::IObject for Storage {
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
         vec! [
-            nipc_cmif_interface_make_command_meta!(open: 0)
+            ipc_cmif_interface_make_command_meta!(open: 0)
         ]
     }
 }
@@ -67,7 +67,7 @@ impl service::cmif::IClientObject for Storage {
 
 impl IStorage for Storage {
     fn open(&mut self) -> Result<mem::Shared<dyn sf::IObject>> {
-        nipc_cmif_client_send_request_command!([self.session.object_info; 0] () => (storage_accessor: mem::Shared<StorageAccessor>))
+        ipc_cmif_client_send_request_command!([self.session.object_info; 0] () => (storage_accessor: mem::Shared<StorageAccessor>))
     }
 }
 
@@ -82,9 +82,9 @@ impl sf::IObject for LibraryAppletAccessor {
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
         vec! [
-            nipc_cmif_interface_make_command_meta!(get_applet_state_changed_event: 0),
-            nipc_cmif_interface_make_command_meta!(start: 10),
-            nipc_cmif_interface_make_command_meta!(push_in_data: 100)
+            ipc_cmif_interface_make_command_meta!(get_applet_state_changed_event: 0),
+            ipc_cmif_interface_make_command_meta!(start: 10),
+            ipc_cmif_interface_make_command_meta!(push_in_data: 100)
         ]
     }
 }
@@ -97,15 +97,15 @@ impl service::cmif::IClientObject for LibraryAppletAccessor {
 
 impl ILibraryAppletAccessor for LibraryAppletAccessor {
     fn get_applet_state_changed_event(&mut self) -> Result<sf::CopyHandle> {
-        nipc_cmif_client_send_request_command!([self.session.object_info; 0] () => (applet_state_changed_event: sf::CopyHandle))
+        ipc_cmif_client_send_request_command!([self.session.object_info; 0] () => (applet_state_changed_event: sf::CopyHandle))
     }
 
     fn start(&mut self) -> Result<()> {
-        nipc_cmif_client_send_request_command!([self.session.object_info; 10] () => ())
+        ipc_cmif_client_send_request_command!([self.session.object_info; 10] () => ())
     }
 
     fn push_in_data(&mut self, storage: mem::Shared<dyn sf::IObject>) -> Result<()> {
-        nipc_cmif_client_send_request_command!([self.session.object_info; 100] (storage) => ())
+        ipc_cmif_client_send_request_command!([self.session.object_info; 100] (storage) => ())
     }
 }
 
@@ -120,8 +120,8 @@ impl sf::IObject for LibraryAppletCreator {
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
         vec! [
-            nipc_cmif_interface_make_command_meta!(create_library_applet: 0),
-            nipc_cmif_interface_make_command_meta!(create_storage: 10)
+            ipc_cmif_interface_make_command_meta!(create_library_applet: 0),
+            ipc_cmif_interface_make_command_meta!(create_storage: 10)
         ]
     }
 }
@@ -134,11 +134,11 @@ impl service::cmif::IClientObject for LibraryAppletCreator {
 
 impl ILibraryAppletCreator for LibraryAppletCreator {
     fn create_library_applet(&mut self, id: AppletId, mode: LibraryAppletMode) -> Result<mem::Shared<dyn sf::IObject>> {
-        nipc_cmif_client_send_request_command!([self.session.object_info; 0] (id, mode) => (library_applet_accessor: mem::Shared<LibraryAppletAccessor>))
+        ipc_cmif_client_send_request_command!([self.session.object_info; 0] (id, mode) => (library_applet_accessor: mem::Shared<LibraryAppletAccessor>))
     }
 
     fn create_storage(&mut self, size: usize) -> Result<mem::Shared<dyn sf::IObject>> {
-        nipc_cmif_client_send_request_command!([self.session.object_info; 10] (size) => (storage: mem::Shared<Storage>))
+        ipc_cmif_client_send_request_command!([self.session.object_info; 10] (size) => (storage: mem::Shared<Storage>))
     }
 }
 
@@ -153,7 +153,7 @@ impl sf::IObject for WindowController {
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
         vec! [
-            nipc_cmif_interface_make_command_meta!(acquire_foreground_rights: 10)
+            ipc_cmif_interface_make_command_meta!(acquire_foreground_rights: 10)
         ]
     }
 }
@@ -166,7 +166,7 @@ impl service::cmif::IClientObject for WindowController {
 
 impl IWindowController for WindowController {
     fn acquire_foreground_rights(&mut self) -> Result<()> {
-        nipc_cmif_client_send_request_command!([self.session.object_info; 10] () => ())
+        ipc_cmif_client_send_request_command!([self.session.object_info; 10] () => ())
     }
 }
 
@@ -181,7 +181,7 @@ impl sf::IObject for SelfController {
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
         vec! [
-            nipc_cmif_interface_make_command_meta!(set_screenshot_permission: 10)
+            ipc_cmif_interface_make_command_meta!(set_screenshot_permission: 10)
         ]
     }
 }
@@ -194,7 +194,7 @@ impl service::cmif::IClientObject for SelfController {
 
 impl ISelfController for SelfController {
     fn set_screenshot_permission(&mut self, permission: ScreenShotPermission) -> Result<()> {
-        nipc_cmif_client_send_request_command!([self.session.object_info; 10] (permission) => ())
+        ipc_cmif_client_send_request_command!([self.session.object_info; 10] (permission) => ())
     }
 }
 
@@ -209,9 +209,9 @@ impl sf::IObject for LibraryAppletProxy {
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
         vec! [
-            nipc_cmif_interface_make_command_meta!(get_self_controller: 1),
-            nipc_cmif_interface_make_command_meta!(get_window_controller: 2),
-            nipc_cmif_interface_make_command_meta!(get_library_applet_creator: 11)
+            ipc_cmif_interface_make_command_meta!(get_self_controller: 1),
+            ipc_cmif_interface_make_command_meta!(get_window_controller: 2),
+            ipc_cmif_interface_make_command_meta!(get_library_applet_creator: 11)
         ]
     }
 }
@@ -224,15 +224,15 @@ impl service::cmif::IClientObject for LibraryAppletProxy {
 
 impl ILibraryAppletProxy for LibraryAppletProxy {
     fn get_self_controller(&mut self) -> Result<mem::Shared<dyn sf::IObject>> {
-        nipc_cmif_client_send_request_command!([self.session.object_info; 1] () => (self_controller: mem::Shared<SelfController>))
+        ipc_cmif_client_send_request_command!([self.session.object_info; 1] () => (self_controller: mem::Shared<SelfController>))
     }
 
     fn get_window_controller(&mut self) -> Result<mem::Shared<dyn sf::IObject>> {
-        nipc_cmif_client_send_request_command!([self.session.object_info; 2] () => (window_controller: mem::Shared<WindowController>))
+        ipc_cmif_client_send_request_command!([self.session.object_info; 2] () => (window_controller: mem::Shared<WindowController>))
     }
 
     fn get_library_applet_creator(&mut self) -> Result<mem::Shared<dyn sf::IObject>> {
-        nipc_cmif_client_send_request_command!([self.session.object_info; 11] () => (library_applet_creator: mem::Shared<LibraryAppletCreator>))
+        ipc_cmif_client_send_request_command!([self.session.object_info; 11] () => (library_applet_creator: mem::Shared<LibraryAppletCreator>))
     }
 }
 
@@ -247,7 +247,7 @@ impl sf::IObject for AllSystemAppletProxiesService {
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
         vec! [
-            nipc_cmif_interface_make_command_meta!(open_library_applet_proxy: 201)
+            ipc_cmif_interface_make_command_meta!(open_library_applet_proxy: 201)
         ]
     }
 }
@@ -260,7 +260,7 @@ impl service::cmif::IClientObject for AllSystemAppletProxiesService {
 
 impl IAllSystemAppletProxiesService for AllSystemAppletProxiesService {
     fn open_library_applet_proxy(&mut self, process_id: sf::ProcessId, self_process_handle: sf::CopyHandle, applet_attribute: sf::InMapAliasBuffer) -> Result<mem::Shared<dyn sf::IObject>> {
-        nipc_cmif_client_send_request_command!([self.session.object_info; 201] (process_id, self_process_handle, applet_attribute) => (library_applet_proxy: mem::Shared<LibraryAppletProxy>))
+        ipc_cmif_client_send_request_command!([self.session.object_info; 201] (process_id, self_process_handle, applet_attribute) => (library_applet_proxy: mem::Shared<LibraryAppletProxy>))
     }
 }
 

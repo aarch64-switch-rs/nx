@@ -110,13 +110,13 @@ pub struct CharInfo {
 }
 
 pub trait IDatabaseService {
-    nipc_cmif_interface_define_command!(is_updated: (flag: SourceFlag) => (updated: bool));
-    nipc_cmif_interface_define_command!(is_full: () => (full: bool));
-    nipc_cmif_interface_define_command!(get_count: (flag: SourceFlag) => (count: u32));
-    nipc_cmif_interface_define_command!(get_1: (flag: SourceFlag, out_char_infos: sf::OutMapAliasBuffer) => (count: u32));
-    nipc_cmif_interface_define_command!(build_random: (age: Age, gender: Gender, face_color: FaceColor) => (char_info: CharInfo));
+    ipc_cmif_interface_define_command!(is_updated: (flag: SourceFlag) => (updated: bool));
+    ipc_cmif_interface_define_command!(is_full: () => (full: bool));
+    ipc_cmif_interface_define_command!(get_count: (flag: SourceFlag) => (count: u32));
+    ipc_cmif_interface_define_command!(get_1: (flag: SourceFlag, out_char_infos: sf::OutMapAliasBuffer) => (count: u32));
+    ipc_cmif_interface_define_command!(build_random: (age: Age, gender: Gender, face_color: FaceColor) => (char_info: CharInfo));
 }
 
 pub trait IStaticService {
-    nipc_cmif_interface_define_command!(get_database_service: (key_code: SpecialKeyCode) => (database_service: mem::Shared<dyn sf::IObject>));
+    ipc_cmif_interface_define_command!(get_database_service: (key_code: SpecialKeyCode) => (database_service: mem::Shared<dyn sf::IObject>));
 }

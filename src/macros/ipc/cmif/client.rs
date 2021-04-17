@@ -1,7 +1,7 @@
 #![macro_use]
 
 #[macro_export]
-macro_rules! nipc_cmif_client_send_request_command {
+macro_rules! ipc_cmif_client_send_request_command {
     ([$session:expr; $rq_id:expr] ( $( $in_param:expr ),* ) => ( $( $out_param:ident: $out_param_type:ty ),* )) => {{
         let rc: $crate::result::Result<_> = {
             let mut ctx = $crate::ipc::cmif::CommandContext::new_client($session);
@@ -39,7 +39,7 @@ macro_rules! nipc_cmif_client_send_request_command {
 }
 
 #[macro_export]
-macro_rules! nipc_cmif_client_send_control_command {
+macro_rules! ipc_cmif_client_send_control_command {
     ([$session:expr; $control_rq_id:expr] ( $( $in_param:expr ),* ) => ( $( $out_param:ident: $out_param_type:ty ),* )) => {{
         let rc: $crate::result::Result<_> = {
             let mut ctx = $crate::ipc::cmif::CommandContext::new_client($session);

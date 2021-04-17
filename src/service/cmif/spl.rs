@@ -15,7 +15,7 @@ impl sf::IObject for RandomInterface {
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
         vec! [
-            nipc_cmif_interface_make_command_meta!(generate_random_bytes: 0)
+            ipc_cmif_interface_make_command_meta!(generate_random_bytes: 0)
         ]
     }
 }
@@ -28,7 +28,7 @@ impl service::cmif::IClientObject for RandomInterface {
 
 impl IRandomInterface for RandomInterface {
     fn generate_random_bytes(&mut self, out_buf: sf::OutMapAliasBuffer) -> Result<()> {
-        nipc_cmif_client_send_request_command!([self.session.object_info; 0] (out_buf) => ())
+        ipc_cmif_client_send_request_command!([self.session.object_info; 0] (out_buf) => ())
     }
 }
 

@@ -586,11 +586,11 @@ impl<'a> sf::IObject for HipcManager<'a> {
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
         vec! [
-            nipc_cmif_interface_make_command_meta!(convert_current_object_to_domain: 0),
-            nipc_cmif_interface_make_command_meta!(copy_from_current_domain: 1),
-            nipc_cmif_interface_make_command_meta!(clone_current_object: 2),
-            nipc_cmif_interface_make_command_meta!(query_pointer_buffer_size: 3),
-            nipc_cmif_interface_make_command_meta!(clone_current_object_ex: 4)
+            ipc_cmif_interface_make_command_meta!(convert_current_object_to_domain: 0),
+            ipc_cmif_interface_make_command_meta!(copy_from_current_domain: 1),
+            ipc_cmif_interface_make_command_meta!(clone_current_object: 2),
+            ipc_cmif_interface_make_command_meta!(query_pointer_buffer_size: 3),
+            ipc_cmif_interface_make_command_meta!(clone_current_object_ex: 4)
         ]
     }
 }
@@ -613,7 +613,7 @@ impl<S: IMitmService> sf::IObject for MitmQueryServer<S> {
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
         vec! [
-            nipc_cmif_interface_make_command_meta!(should_mitm: 65000)
+            ipc_cmif_interface_make_command_meta!(should_mitm: 65000)
         ]
     }
 }

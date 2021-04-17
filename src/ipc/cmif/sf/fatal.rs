@@ -10,5 +10,5 @@ pub enum Policy {
 }
 
 pub trait IService {
-    nipc_cmif_interface_define_command!(throw_with_policy: (rc: ResultCode, policy: Policy, process_id: sf::ProcessId) => ());
+    ipc_cmif_interface_define_command!(throw_with_policy: (rc: ResultCode, policy: Policy, process_id: sf::ProcessId) => ());
 }

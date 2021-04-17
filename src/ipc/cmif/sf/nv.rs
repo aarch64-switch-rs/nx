@@ -43,8 +43,8 @@ pub enum IoctlId {
 pub type Fd = u32;
 
 pub trait INvDrvService {
-    nipc_cmif_interface_define_command!(open: (path: sf::InMapAliasBuffer) => (fd: Fd, error_code: ErrorCode));
-    nipc_cmif_interface_define_command!(ioctl: (fd: Fd, id: IoctlId, in_buf: sf::InAutoSelectBuffer, out_buf: sf::OutAutoSelectBuffer) => (error_code: ErrorCode));
-    nipc_cmif_interface_define_command!(close: (fd: Fd) => (error_code: ErrorCode));
-    nipc_cmif_interface_define_command!(initialize: (transfer_mem_size: u32, self_process_handle: sf::CopyHandle, transfer_mem_handle: sf::CopyHandle) => (error_code: ErrorCode));
+    ipc_cmif_interface_define_command!(open: (path: sf::InMapAliasBuffer) => (fd: Fd, error_code: ErrorCode));
+    ipc_cmif_interface_define_command!(ioctl: (fd: Fd, id: IoctlId, in_buf: sf::InAutoSelectBuffer, out_buf: sf::OutAutoSelectBuffer) => (error_code: ErrorCode));
+    ipc_cmif_interface_define_command!(close: (fd: Fd) => (error_code: ErrorCode));
+    ipc_cmif_interface_define_command!(initialize: (transfer_mem_size: u32, self_process_handle: sf::CopyHandle, transfer_mem_handle: sf::CopyHandle) => (error_code: ErrorCode));
 }

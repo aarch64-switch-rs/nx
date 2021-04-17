@@ -20,5 +20,5 @@ pub struct FirmwareVersion {
 }
 
 pub trait ISystemSettingsServer {
-    nipc_cmif_interface_define_command!(get_firmware_version: (out_version: sf::OutFixedPointerBuffer<FirmwareVersion>) => ());
+    ipc_cmif_interface_define_command!(get_firmware_version: (out_version: sf::OutFixedPointerBuffer<FirmwareVersion>) => ());
 }

@@ -36,8 +36,8 @@ pub enum NativeHandleType {
 pub type BinderHandle = i32;
 
 pub trait IHOSBinderDriver {
-    nipc_cmif_interface_define_command!(transact_parcel: (binder_handle: BinderHandle, transaction_id: ParcelTransactionId, flags: u32, in_parcel: sf::InMapAliasBuffer, out_parcel: sf::OutMapAliasBuffer) => ());
-    nipc_cmif_interface_define_command!(adjust_refcount: (binder_handle: BinderHandle, add_value: i32, refcount_type: RefcountType) => ());
-    nipc_cmif_interface_define_command!(get_native_handle: (binder_handle: BinderHandle, handle_type: NativeHandleType) => (native_handle: sf::CopyHandle));
-    nipc_cmif_interface_define_command!(transact_parcel_auto: (binder_handle: BinderHandle, transaction_id: ParcelTransactionId, flags: u32, in_parcel: sf::InAutoSelectBuffer, out_parcel: sf::OutAutoSelectBuffer) => ());
+    ipc_cmif_interface_define_command!(transact_parcel: (binder_handle: BinderHandle, transaction_id: ParcelTransactionId, flags: u32, in_parcel: sf::InMapAliasBuffer, out_parcel: sf::OutMapAliasBuffer) => ());
+    ipc_cmif_interface_define_command!(adjust_refcount: (binder_handle: BinderHandle, add_value: i32, refcount_type: RefcountType) => ());
+    ipc_cmif_interface_define_command!(get_native_handle: (binder_handle: BinderHandle, handle_type: NativeHandleType) => (native_handle: sf::CopyHandle));
+    ipc_cmif_interface_define_command!(transact_parcel_auto: (binder_handle: BinderHandle, transaction_id: ParcelTransactionId, flags: u32, in_parcel: sf::InAutoSelectBuffer, out_parcel: sf::OutAutoSelectBuffer) => ());
 }

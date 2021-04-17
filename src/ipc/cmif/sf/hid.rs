@@ -36,15 +36,15 @@ pub enum ControllerId {
 }
 
 pub trait IAppletResource {
-    nipc_cmif_interface_define_command!(get_shared_memory_handle: () => (shmem_handle: sf::CopyHandle));
+    ipc_cmif_interface_define_command!(get_shared_memory_handle: () => (shmem_handle: sf::CopyHandle));
 }
 
 pub trait IHidServer {
-    nipc_cmif_interface_define_command!(create_applet_resource: (aruid: sf::ProcessId) => (applet_resource: mem::Shared<dyn sf::IObject>));
-    nipc_cmif_interface_define_command!(set_supported_npad_style_set: (aruid: sf::ProcessId, npad_style_tag: NpadStyleTag) => ());
-    nipc_cmif_interface_define_command!(set_supported_npad_id_type: (aruid: sf::ProcessId, controllers: sf::InPointerBuffer) => ());
-    nipc_cmif_interface_define_command!(activate_npad: (aruid: sf::ProcessId) => ());
-    nipc_cmif_interface_define_command!(deactivate_npad: (aruid: sf::ProcessId) => ());
-    nipc_cmif_interface_define_command!(set_npad_joy_assignment_mode_single: (aruid: sf::ProcessId, controller: ControllerId, joy_type: NpadJoyDeviceType) => ());
-    nipc_cmif_interface_define_command!(set_npad_joy_assignment_mode_dual: (aruid: sf::ProcessId, controller: ControllerId) => ());
+    ipc_cmif_interface_define_command!(create_applet_resource: (aruid: sf::ProcessId) => (applet_resource: mem::Shared<dyn sf::IObject>));
+    ipc_cmif_interface_define_command!(set_supported_npad_style_set: (aruid: sf::ProcessId, npad_style_tag: NpadStyleTag) => ());
+    ipc_cmif_interface_define_command!(set_supported_npad_id_type: (aruid: sf::ProcessId, controllers: sf::InPointerBuffer) => ());
+    ipc_cmif_interface_define_command!(activate_npad: (aruid: sf::ProcessId) => ());
+    ipc_cmif_interface_define_command!(deactivate_npad: (aruid: sf::ProcessId) => ());
+    ipc_cmif_interface_define_command!(set_npad_joy_assignment_mode_single: (aruid: sf::ProcessId, controller: ControllerId, joy_type: NpadJoyDeviceType) => ());
+    ipc_cmif_interface_define_command!(set_npad_joy_assignment_mode_dual: (aruid: sf::ProcessId, controller: ControllerId) => ());
 }

@@ -57,40 +57,40 @@ pub enum LibraryAppletMode {
 }
 
 pub trait IStorageAccessor {
-    nipc_cmif_interface_define_command!(get_size: () => (size: usize));
-    nipc_cmif_interface_define_command!(write: (offset: usize, buf: sf::InAutoSelectBuffer) => ());
-    nipc_cmif_interface_define_command!(read: (offset: usize, buf: sf::OutAutoSelectBuffer) => ());
+    ipc_cmif_interface_define_command!(get_size: () => (size: usize));
+    ipc_cmif_interface_define_command!(write: (offset: usize, buf: sf::InAutoSelectBuffer) => ());
+    ipc_cmif_interface_define_command!(read: (offset: usize, buf: sf::OutAutoSelectBuffer) => ());
 }
 
 pub trait IStorage {
-    nipc_cmif_interface_define_command!(open: () => (storage_accessor: mem::Shared<dyn sf::IObject>));
+    ipc_cmif_interface_define_command!(open: () => (storage_accessor: mem::Shared<dyn sf::IObject>));
 }
 
 pub trait ILibraryAppletAccessor {
-    nipc_cmif_interface_define_command!(get_applet_state_changed_event: () => (applet_state_changed_event: sf::CopyHandle));
-    nipc_cmif_interface_define_command!(start: () => ());
-    nipc_cmif_interface_define_command!(push_in_data: (storage: mem::Shared<dyn sf::IObject>) => ());
+    ipc_cmif_interface_define_command!(get_applet_state_changed_event: () => (applet_state_changed_event: sf::CopyHandle));
+    ipc_cmif_interface_define_command!(start: () => ());
+    ipc_cmif_interface_define_command!(push_in_data: (storage: mem::Shared<dyn sf::IObject>) => ());
 }
 
 pub trait ILibraryAppletCreator {
-    nipc_cmif_interface_define_command!(create_library_applet: (applet_id: AppletId, applet_mode: LibraryAppletMode) => (library_applet_accessor: mem::Shared<dyn sf::IObject>));
-    nipc_cmif_interface_define_command!(create_storage: (size: usize) => (storage: mem::Shared<dyn sf::IObject>));
+    ipc_cmif_interface_define_command!(create_library_applet: (applet_id: AppletId, applet_mode: LibraryAppletMode) => (library_applet_accessor: mem::Shared<dyn sf::IObject>));
+    ipc_cmif_interface_define_command!(create_storage: (size: usize) => (storage: mem::Shared<dyn sf::IObject>));
 }
 
 pub trait IWindowController {
-    nipc_cmif_interface_define_command!(acquire_foreground_rights: () => ());
+    ipc_cmif_interface_define_command!(acquire_foreground_rights: () => ());
 }
 
 pub trait ISelfController {
-    nipc_cmif_interface_define_command!(set_screenshot_permission: (permission: ScreenShotPermission) => ());
+    ipc_cmif_interface_define_command!(set_screenshot_permission: (permission: ScreenShotPermission) => ());
 }
 
 pub trait ILibraryAppletProxy {
-    nipc_cmif_interface_define_command!(get_self_controller: () => (self_controller: mem::Shared<dyn sf::IObject>));
-    nipc_cmif_interface_define_command!(get_window_controller: () => (window_controller: mem::Shared<dyn sf::IObject>));
-    nipc_cmif_interface_define_command!(get_library_applet_creator: () => (library_applet_creator: mem::Shared<dyn sf::IObject>));
+    ipc_cmif_interface_define_command!(get_self_controller: () => (self_controller: mem::Shared<dyn sf::IObject>));
+    ipc_cmif_interface_define_command!(get_window_controller: () => (window_controller: mem::Shared<dyn sf::IObject>));
+    ipc_cmif_interface_define_command!(get_library_applet_creator: () => (library_applet_creator: mem::Shared<dyn sf::IObject>));
 }
 
 pub trait IAllSystemAppletProxiesService {
-    nipc_cmif_interface_define_command!(open_library_applet_proxy: (process_id: sf::ProcessId, self_process_handle: sf::CopyHandle, applet_attribute: sf::InMapAliasBuffer) => (library_applet_proxy: mem::Shared<dyn sf::IObject>));
+    ipc_cmif_interface_define_command!(open_library_applet_proxy: (process_id: sf::ProcessId, self_process_handle: sf::CopyHandle, applet_attribute: sf::InMapAliasBuffer) => (library_applet_proxy: mem::Shared<dyn sf::IObject>));
 }
