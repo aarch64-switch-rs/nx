@@ -1,7 +1,7 @@
 use crate::thread;
 use crate::result::*;
 use crate::mem;
-use crate::ipc::sf;
+use crate::ipc::cmif::sf;
 use alloc::string::String;
 
 pub type LogSeverity = logpacket::detail::LogSeverity;
@@ -69,8 +69,8 @@ impl Logger for SvcOutputLogger {
 }
 
 use crate::service;
-use crate::service::fspsrv;
-use crate::service::fspsrv::IFileSystemProxy;
+use crate::service::cmif::fspsrv;
+use crate::service::cmif::fspsrv::IFileSystemProxy;
 
 pub struct FsAccessLogLogger {
     service: Result<mem::Shared<fspsrv::FileSystemProxy>>
@@ -78,7 +78,7 @@ pub struct FsAccessLogLogger {
 
 impl Logger for FsAccessLogLogger {
     fn new() -> Self {
-        Self { service: service::new_service_object() }
+        Self { service:service::cmif::new_service_object() }
     }
 
     fn log(&mut self, metadata: &LogMetadata) {
@@ -92,10 +92,9 @@ impl Logger for FsAccessLogLogger {
     }
 }
 
-
-use crate::service::lm;
-use crate::service::lm::ILogService;
-use crate::service::lm::ILogger;
+use crate::service::cmif::lm;
+use crate::service::cmif::lm::ILogService;
+use crate::service::cmif::lm::ILogger;
 
 pub struct LmLogger {
     service: Result<mem::Shared<lm::LogService>>,
@@ -104,7 +103,7 @@ pub struct LmLogger {
 
 impl Logger for LmLogger {
     fn new() -> Self {
-        let mut service = service::new_service_object::<lm::LogService>();
+        let mut service = service::cmif::new_service_object::<lm::LogService>();
         let logger = match service {
             Ok(ref mut service_obj) => match service_obj.get().open_logger(sf::ProcessId::new()) {
                 Ok(logger_obj) => Ok(logger_obj.to::<lm::Logger>()),

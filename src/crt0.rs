@@ -9,10 +9,10 @@ use crate::hbl;
 use crate::thread;
 use crate::vmem;
 use crate::version;
-use crate::ipc::sf;
+use crate::ipc::cmif::sf;
 use crate::service;
-use crate::service::set;
-use crate::service::set::ISystemSettingsServer;
+use crate::service::cmif::set;
+use crate::service::cmif::set::ISystemSettingsServer;
 use core::ptr;
 
 // These functions must be implemented by any executable homebrew project using this crate
@@ -93,7 +93,7 @@ unsafe fn __nx_crt0_entry(abi_ptr: *const hbl::AbiConfigEntry, raw_main_thread_h
         version::set_version(hos_version.to_version());
     }
     else {
-        let setsys = service::new_service_object::<set::SystemSettingsServer>().unwrap();
+        let setsys = service::cmif::new_service_object::<set::SystemSettingsServer>().unwrap();
         let fw_version: set::FirmwareVersion = Default::default();
         setsys.get().get_firmware_version(sf::Buffer::from_var(&fw_version)).unwrap();
         let version = version::Version::new(fw_version.major, fw_version.minor, fw_version.micro);

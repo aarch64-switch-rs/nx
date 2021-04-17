@@ -11,10 +11,10 @@ pub trait RandomGenerator {
     }
 }
 
-use crate::ipc::sf;
+use crate::ipc::cmif::sf;
 use crate::service;
-use crate::service::spl;
-use crate::service::spl::IRandomInterface;
+use crate::service::cmif::spl;
+use crate::service::cmif::spl::IRandomInterface;
 use crate::mem;
 
 pub struct SplCsrngGenerator {
@@ -23,7 +23,7 @@ pub struct SplCsrngGenerator {
 
 impl SplCsrngGenerator {
     pub fn new() -> Result<Self> {
-        let csrng = service::new_service_object::<spl::RandomInterface>()?;
+        let csrng = service::cmif::new_service_object::<spl::RandomInterface>()?;
         Ok(Self { csrng: csrng })
     }
 }

@@ -1,9 +1,9 @@
 use crate::result::*;
-use crate::service::applet;
-use crate::service::hid;
-use crate::service::hid::IAppletResource;
-use crate::service::hid::IHidServer;
-use crate::ipc::sf;
+use crate::service::cmif::applet;
+use crate::service::cmif::hid;
+use crate::service::cmif::hid::IAppletResource;
+use crate::service::cmif::hid::IHidServer;
+use crate::ipc::cmif::sf;
 use crate::svc;
 use crate::mem;
 use crate::vmem;
@@ -249,7 +249,7 @@ fn get_index_for_controller(controller: hid::ControllerId) -> Result<usize> {
 
 impl InputContext {
     pub fn new(aruid: applet::AppletResourceUserId, supported_tags: hid::NpadStyleTag, controllers: &[hid::ControllerId]) -> Result<Self> {
-        let hid_srv = service::new_service_object::<hid::HidServer>()?;
+        let hid_srv = service::cmif::new_service_object::<hid::HidServer>()?;
         let hid_process_id = sf::ProcessId::from(aruid);
         let applet_res = hid_srv.get().create_applet_resource(hid_process_id)?.to::<hid::AppletResource>();
         let shmem_handle = applet_res.get().get_shared_memory_handle()?;

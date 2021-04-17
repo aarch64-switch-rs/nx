@@ -2,12 +2,12 @@ use crate::result::*;
 use crate::results;
 use crate::mem;
 use crate::service;
-use crate::service::fspsrv;
-use crate::service::fspsrv::IFileSystemProxy;
-use crate::service::fspsrv::IFileSystem;
-use crate::service::fspsrv::IFile;
+use crate::service::cmif::fspsrv;
+use crate::service::cmif::fspsrv::IFileSystemProxy;
+use crate::service::cmif::fspsrv::IFileSystem;
+use crate::service::cmif::fspsrv::IFile;
 use crate::sync;
-use crate::ipc::sf;
+use crate::ipc::cmif::sf;
 use alloc::vec::Vec;
 use alloc::string::String;
 use core::mem as cmem;
@@ -174,7 +174,7 @@ fn find_device_by_name(name: &PathSegment) -> Result<mem::Shared<fspsrv::FileSys
 
 pub fn initialize() -> Result<()> {
     unsafe {
-        G_FSPSRV_SESSION.set(service::new_service_object()?);
+        G_FSPSRV_SESSION.set(service::cmif::new_service_object()?);
     }
     Ok(())
 }
@@ -312,6 +312,10 @@ pub fn open_file(path: String, option: FileOpenOption) -> Result<File> {
             }
         }
     };
+    let offset : usize = match option.contains(FileOpenOption::Append()) {
+        true => file.get().get_size().unwrap_or(0),
+        false => 0
+    };
 
-    Ok(File::new(file))
+    Ok(File { file: file, offset: offset })
 }

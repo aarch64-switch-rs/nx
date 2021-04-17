@@ -1,10 +1,10 @@
 use crate::result::*;
 use crate::svc;
 use crate::crt0;
-use crate::ipc::sf;
+use crate::ipc::cmif::sf;
 use crate::service;
-use crate::service::fatal;
-use crate::service::fatal::IService;
+use crate::service::cmif::fatal;
+use crate::service::cmif::fatal::IService;
 use core::mem;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -22,7 +22,7 @@ pub fn assert(mode: AssertMode, rc: ResultCode) {
                 crt0::exit(rc);
             },
             AssertMode::FatalThrow => {
-                match service::new_service_object::<fatal::Service>() {
+                match service::cmif::new_service_object::<fatal::Service>() {
                     Ok(fatal) => {
                         let _ = fatal.get().throw_with_policy(rc, fatal::Policy::ErrorScreen, sf::ProcessId::new());
                     },

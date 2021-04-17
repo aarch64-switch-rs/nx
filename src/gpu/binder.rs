@@ -1,9 +1,9 @@
 use crate::result::*;
 use crate::results;
-use crate::ipc::sf;
+use crate::ipc::cmif::sf;
 use crate::gpu::parcel;
-use crate::service::dispdrv;
-use crate::service::dispdrv::IHOSBinderDriver;
+use crate::service::cmif::dispdrv;
+use crate::service::cmif::dispdrv::IHOSBinderDriver;
 use crate::mem;
 use super::*;
 
