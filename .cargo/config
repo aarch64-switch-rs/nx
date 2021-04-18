@@ -1,0 +1,5 @@
+[build]
+target = "aarch64-none-elf.json"
+
+[unstable]
+build-std = ["core", "compiler_builtins", "alloc"]

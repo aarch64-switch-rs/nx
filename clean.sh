@@ -1,1 +1,1 @@
-xargo clean
+cargo clean
