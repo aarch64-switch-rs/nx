@@ -1,0 +1,12 @@
+[package]
+name = "nx-macros"
+version = "0.1.0"
+authors = ["jam1garner <8260240+jam1garner@users.noreply.github.com>"]
+edition = "2018"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = { version = "1", features = ["full"] }
+quote = "1"
