@@ -35,7 +35,7 @@ impl BufferDescriptor {
         Self { size_low: 0, address_low: 0, bits: 0 }
     }
 
-    pub const fn new(buffer: *const u8, buffer_size: usize, flags: BufferFlags) -> Self {
+    pub fn new(buffer: *const u8, buffer_size: usize, flags: BufferFlags) -> Self {
         unsafe {
             let address_low = buffer as usize as u32;
             let address_mid = ((buffer as usize) >> 32) as u32;
@@ -77,7 +77,7 @@ impl SendStaticDescriptor {
         Self { bits: 0, address_low: 0 }
     }
 
-    pub const fn new(buffer: *const u8, buffer_size: usize, index: u32) -> Self {
+    pub fn new(buffer: *const u8, buffer_size: usize, index: u32) -> Self {
         unsafe {
             let address_low = buffer as usize as u32;
             let address_mid = ((buffer as usize) >> 32) as u32;
@@ -116,7 +116,7 @@ impl ReceiveStaticDescriptor {
         Self { address_low: 0, bits: 0 }
     }
 
-    pub const fn new(buffer: *const u8, buffer_size: usize) -> Self {
+    pub fn new(buffer: *const u8, buffer_size: usize) -> Self {
         unsafe {
             let address_low = buffer as usize as u32;
             let address_high = ((buffer as usize) >> 32) as u32;
@@ -366,7 +366,7 @@ pub fn write_array_to_buffer<T: Copy>(buffer: *mut u8, count: u32, array: &Array
 }
 
 #[inline(always)]
-pub const fn get_aligned_data_offset(data_words_offset: *mut u8, base_offset: *mut u8) -> *mut u8 {
+pub fn get_aligned_data_offset(data_words_offset: *mut u8, base_offset: *mut u8) -> *mut u8 {
     unsafe {
         let align = DATA_PADDING as usize - 1;
         let data_offset = (data_words_offset as usize - base_offset as usize + align) & !align;
