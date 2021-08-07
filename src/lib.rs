@@ -12,7 +12,6 @@
 #![feature(linkage)]
 #![feature(unsize)]
 #![feature(const_fn_fn_ptr_basics)]
-#![feature(const_fn_transmute)]
 #![feature(const_mut_refs)]
 #![macro_use]
 
