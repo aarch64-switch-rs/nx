@@ -4,9 +4,7 @@
 #![feature(llvm_asm)]
 #![feature(global_asm)]
 #![feature(alloc_error_handler)]
-#![feature(const_fn)]
 #![feature(const_generics)]
-#![feature(const_raw_ptr_to_usize_cast)]
 #![feature(const_raw_ptr_deref)]
 #![feature(const_trait_impl)]
 #![feature(specialization)]
@@ -14,7 +12,6 @@
 #![feature(linkage)]
 #![feature(unsize)]
 #![feature(const_fn_fn_ptr_basics)]
-#![feature(const_fn_transmute)]
 #![feature(const_mut_refs)]
 #![macro_use]
 

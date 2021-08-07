@@ -35,22 +35,20 @@ impl BufferDescriptor {
         Self { size_low: 0, address_low: 0, bits: 0 }
     }
 
-    pub const fn new(buffer: *const u8, buffer_size: usize, flags: BufferFlags) -> Self {
-        unsafe {
-            let address_low = buffer as usize as u32;
-            let address_mid = ((buffer as usize) >> 32) as u32;
-            let address_high = ((buffer as usize) >> 36) as u32;
-            let size_low = buffer_size as u32;
-            let size_high = (buffer_size >> 32) as u32;
+    pub fn new(buffer: *const u8, buffer_size: usize, flags: BufferFlags) -> Self {
+        let address_low = buffer as usize as u32;
+        let address_mid = ((buffer as usize) >> 32) as u32;
+        let address_high = ((buffer as usize) >> 36) as u32;
+        let size_low = buffer_size as u32;
+        let size_high = (buffer_size >> 32) as u32;
 
-            let mut bits: u32 = 0;
-            write_bits!(0, 1, bits, flags as u32);
-            write_bits!(2, 23, bits, address_high);
-            write_bits!(24, 27, bits, size_high);
-            write_bits!(28, 31, bits, address_mid);
+        let mut bits: u32 = 0;
+        write_bits!(0, 1, bits, flags as u32);
+        write_bits!(2, 23, bits, address_high);
+        write_bits!(24, 27, bits, size_high);
+        write_bits!(28, 31, bits, address_mid);
 
-            Self { size_low: size_low, address_low: address_low, bits: bits }
-        }
+        Self { size_low: size_low, address_low: address_low, bits: bits }
     }
 
     pub const fn get_address(&self) -> *mut u8 {
@@ -77,20 +75,18 @@ impl SendStaticDescriptor {
         Self { bits: 0, address_low: 0 }
     }
 
-    pub const fn new(buffer: *const u8, buffer_size: usize, index: u32) -> Self {
-        unsafe {
-            let address_low = buffer as usize as u32;
-            let address_mid = ((buffer as usize) >> 32) as u32;
-            let address_high = ((buffer as usize) >> 36) as u32;
+    pub fn new(buffer: *const u8, buffer_size: usize, index: u32) -> Self {
+        let address_low = buffer as usize as u32;
+        let address_mid = ((buffer as usize) >> 32) as u32;
+        let address_high = ((buffer as usize) >> 36) as u32;
 
-            let mut bits: u32 = 0;
-            write_bits!(0, 5, bits, index);
-            write_bits!(6, 11, bits, address_high);
-            write_bits!(12, 15, bits, address_mid);
-            write_bits!(16, 31, bits, buffer_size as u32);
+        let mut bits: u32 = 0;
+        write_bits!(0, 5, bits, index);
+        write_bits!(6, 11, bits, address_high);
+        write_bits!(12, 15, bits, address_mid);
+        write_bits!(16, 31, bits, buffer_size as u32);
 
-            Self { bits: bits, address_low: address_low }
-        }
+        Self { bits: bits, address_low: address_low }
     }
 
     pub const fn get_address(&self) -> *mut u8 {
@@ -116,17 +112,15 @@ impl ReceiveStaticDescriptor {
         Self { address_low: 0, bits: 0 }
     }
 
-    pub const fn new(buffer: *const u8, buffer_size: usize) -> Self {
-        unsafe {
-            let address_low = buffer as usize as u32;
-            let address_high = ((buffer as usize) >> 32) as u32;
+    pub fn new(buffer: *const u8, buffer_size: usize) -> Self {
+        let address_low = buffer as usize as u32;
+        let address_high = ((buffer as usize) >> 32) as u32;
 
-            let mut bits: u32 = 0;
-            write_bits!(0, 15, bits, address_high);
-            write_bits!(16, 31, bits, buffer_size as u32);
+        let mut bits: u32 = 0;
+        write_bits!(0, 15, bits, address_high);
+        write_bits!(16, 31, bits, buffer_size as u32);
 
-            Self { address_low: address_low, bits: bits }
-        }
+        Self { address_low: address_low, bits: bits }
     }
 
     pub const fn get_address(&self) -> *mut u8 {
@@ -366,12 +360,10 @@ pub fn write_array_to_buffer<T: Copy>(buffer: *mut u8, count: u32, array: &Array
 }
 
 #[inline(always)]
-pub const fn get_aligned_data_offset(data_words_offset: *mut u8, base_offset: *mut u8) -> *mut u8 {
-    unsafe {
-        let align = DATA_PADDING as usize - 1;
-        let data_offset = (data_words_offset as usize - base_offset as usize + align) & !align;
-        (data_offset + base_offset as usize) as *mut u8
-    }
+pub fn get_aligned_data_offset(data_words_offset: *mut u8, base_offset: *mut u8) -> *mut u8 {
+    let align = DATA_PADDING as usize - 1;
+    let data_offset = (data_words_offset as usize - base_offset as usize + align) & !align;
+    (data_offset + base_offset as usize) as *mut u8
 }
 
 pub mod cmif;
