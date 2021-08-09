@@ -4,16 +4,16 @@ use crate::result::*;
 use crate::service;
 use crate::mem;
 use crate::svc;
-use crate::ipc::cmif::sf;
-use crate::service::cmif::nv;
-use crate::service::cmif::nv::INvDrvService;
-use crate::service::cmif::vi;
-use crate::service::cmif::vi::IRootService;
-use crate::service::cmif::vi::IManagerDisplayService;
-use crate::service::cmif::vi::ISystemDisplayService;
-use crate::service::cmif::vi::IApplicationDisplayService;
-use crate::service::cmif::dispdrv;
-use crate::service::cmif::applet;
+use crate::ipc::sf;
+use crate::service::nv;
+use crate::service::nv::INvDrvService;
+use crate::service::vi;
+use crate::service::vi::IRootService;
+use crate::service::vi::IManagerDisplayService;
+use crate::service::vi::ISystemDisplayService;
+use crate::service::vi::IApplicationDisplayService;
+use crate::service::dispdrv;
+use crate::service::applet;
 
 pub mod parcel;
 
@@ -753,7 +753,7 @@ pub enum LayerZ {
     Value(i64)
 }
 
-pub struct GpuContext<VS: IRootService + service::cmif::IService + 'static, NS: INvDrvService + service::cmif::IService + 'static> {
+pub struct GpuContext<VS: IRootService + service::IService + 'static, NS: INvDrvService + service::IService + 'static> {
     vi_service: mem::Shared<VS>,
     nvdrv_service: mem::Shared<NS>,
     application_display_service: mem::Shared<vi::ApplicationDisplayService>,
@@ -766,10 +766,10 @@ pub struct GpuContext<VS: IRootService + service::cmif::IService + 'static, NS: 
     nvhostctrl_fd: u32,
 }
 
-impl<VS: IRootService + service::cmif::IService + 'static, NS: INvDrvService + service::cmif::IService + 'static> GpuContext<VS, NS> {
+impl<VS: IRootService + service::IService + 'static, NS: INvDrvService + service::IService + 'static> GpuContext<VS, NS> {
     pub fn new(transfer_mem_size: usize) -> Result<Self> {
-        let vi_srv = service::cmif::new_service_object::<VS>()?;
-        let nvdrv_srv = service::cmif::new_service_object::<NS>()?;
+        let vi_srv = service::new_service_object::<VS>()?;
+        let nvdrv_srv = service::new_service_object::<NS>()?;
         
         let transfer_mem_alloc_layout = unsafe { alloc::alloc::Layout::from_size_align_unchecked(transfer_mem_size, 0x1000) };
         
@@ -864,7 +864,7 @@ impl<VS: IRootService + service::cmif::IService + 'static, NS: INvDrvService + s
     }
 }
 
-impl<VS: IRootService + service::cmif::IService + 'static, NS: INvDrvService + service::cmif::IService + 'static> Drop for GpuContext<VS, NS> {
+impl<VS: IRootService + service::IService + 'static, NS: INvDrvService + service::IService + 'static> Drop for GpuContext<VS, NS> {
     fn drop(&mut self) {
         let _ = self.nvdrv_service.get().close(self.nvhost_fd);
         let _ = self.nvdrv_service.get().close(self.nvmap_fd);

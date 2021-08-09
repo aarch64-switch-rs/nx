@@ -1,9 +1,10 @@
 use crate::result::*;
-use crate::service::cmif::applet;
-use crate::service::cmif::hid;
-use crate::service::cmif::hid::IAppletResource;
-use crate::service::cmif::hid::IHidServer;
-use crate::ipc::cmif::sf;
+use crate::results;
+use crate::service::applet;
+use crate::service::hid;
+use crate::service::hid::IAppletResource;
+use crate::service::hid::IHidServer;
+use crate::ipc::sf;
 use crate::svc;
 use crate::mem;
 use crate::vmem;
@@ -243,13 +244,13 @@ fn get_index_for_controller(controller: hid::ControllerId) -> Result<usize> {
     match controller {
         hid::ControllerId::Player1 | hid::ControllerId::Player2 | hid::ControllerId::Player3 | hid::ControllerId::Player4 | hid::ControllerId::Player5 | hid::ControllerId::Player6 | hid::ControllerId::Player7 | hid::ControllerId::Player8 => Ok(controller as usize),
         hid::ControllerId::Handheld => Ok(8),
-        _ => Err(ResultCode::new(0xBAAF))
+        _ => Err(results::lib::input::ResultInvalidControllerId::make())
     }
 }
 
 impl InputContext {
     pub fn new(aruid: applet::AppletResourceUserId, supported_tags: hid::NpadStyleTag, controllers: &[hid::ControllerId]) -> Result<Self> {
-        let hid_srv = service::cmif::new_service_object::<hid::HidServer>()?;
+        let hid_srv = service::new_service_object::<hid::HidServer>()?;
         let hid_process_id = sf::ProcessId::from(aruid);
         let applet_res = hid_srv.get().create_applet_resource(hid_process_id)?.to::<hid::AppletResource>();
         let shmem_handle = applet_res.get().get_shared_memory_handle()?;

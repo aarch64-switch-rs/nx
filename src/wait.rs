@@ -127,8 +127,6 @@ fn wait_impl<W>(wait_objects: &[W], timeout: i64, wait_fn: WaitFn<W>) -> Result<
             }
         }
     }
-
-    // Err(ResultCode::new(0x2345))
 }
 
 pub fn wait(waiters: &[Waiter], timeout: i64) -> Result<usize> {

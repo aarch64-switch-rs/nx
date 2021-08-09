@@ -1,4 +1,4 @@
-use crate::service::cmif::nv;
+use crate::service::nv;
 use super::*;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]

@@ -2,12 +2,12 @@ use crate::result::*;
 use crate::results;
 use crate::mem;
 use crate::service;
-use crate::service::cmif::fspsrv;
-use crate::service::cmif::fspsrv::IFileSystemProxy;
-use crate::service::cmif::fspsrv::IFileSystem;
-use crate::service::cmif::fspsrv::IFile;
+use crate::service::fspsrv;
+use crate::service::fspsrv::IFileSystemProxy;
+use crate::service::fspsrv::IFileSystem;
+use crate::service::fspsrv::IFile;
 use crate::sync;
-use crate::ipc::cmif::sf;
+use crate::ipc::sf;
 use alloc::vec::Vec;
 use alloc::string::String;
 use core::mem as cmem;
@@ -168,13 +168,13 @@ fn find_device_by_name(name: &PathSegment) -> Result<mem::Shared<fspsrv::FileSys
                 return Ok(device.fs.clone());
             }
         }
-        Err(ResultCode::new(0xbababab))
+        Err(results::lib::fs::ResultDeviceNotFound::make())
     }
 }
 
 pub fn initialize() -> Result<()> {
     unsafe {
-        G_FSPSRV_SESSION.set(service::cmif::new_service_object()?);
+        G_FSPSRV_SESSION.set(service::new_service_object()?);
     }
     Ok(())
 }
