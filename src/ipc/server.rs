@@ -641,6 +641,9 @@ impl<const P: usize> ServerManager<P> {
                                     Err(rc) => return Err(rc),
                                 };
                             },
+                            cmif::CommandType::Close => {
+                                should_close_session = true;
+                            },
                             _ => return Err(results::lib::ipc::ResultInvalidCommandType::make())
                         }
                     },
@@ -689,7 +692,6 @@ impl<const P: usize> ServerManager<P> {
             cmif::CommandType::Close => {
                 cmif::server::write_close_command_response_on_ipc_buffer(&mut ctx);
                 reply_impl()?;
-                should_close_session = true;
             }
             _ => {
                 // Do nothing, since it might not be set at all without having failed (for instance, if a new session was accepted)
