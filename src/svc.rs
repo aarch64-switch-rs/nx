@@ -20,11 +20,10 @@ pub enum BreakReason {
     NotificationOnlyFlag = 0x80000000
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Derivative)]
-#[derivative(Default)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u32)]
 pub enum MemoryState {
-    #[derivative(Default)]
+    #[default]
     Free = 0x0,
     Io = 0x1,
     Static = 0x2,

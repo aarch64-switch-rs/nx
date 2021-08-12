@@ -15,11 +15,10 @@ pub enum ControlRequestId {
 pub const IN_DATA_HEADER_MAGIC: u32 = 0x49434653;
 pub const OUT_DATA_HEADER_MAGIC: u32 = 0x4F434653;
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Derivative)]
-#[derivative(Default)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 pub enum DomainCommandType {
-    #[derivative(Default)]
+    #[default]
     Invalid = 0,
     SendMessage = 1,
     Close = 2
@@ -65,11 +64,10 @@ impl DomainOutDataHeader {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Derivative)]
-#[derivative(Default)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u16)]
 pub enum CommandType {
-    #[derivative(Default)]
+    #[default]
     Invalid = 0,
     LegacyRequest = 1,
     Close = 2,

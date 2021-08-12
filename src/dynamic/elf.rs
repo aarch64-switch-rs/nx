@@ -2,11 +2,10 @@ use crate::result::*;
 use crate::results;
 use core::ptr;
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Derivative)]
-#[derivative(Default)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(i64)]
 pub enum Tag {
-    #[derivative(Default)]
+    #[default]
     Invalid = 0,
     Needed = 1,
     PltRelSize = 2,

@@ -1,10 +1,9 @@
 use crate::version;
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Derivative)]
-#[derivative(Default)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u32)]
 pub enum AbiConfigEntryKey {
-    #[derivative(Default)]
+    #[default]
     EndOfList = 0,
     MainThreadHandle = 1,
     NextLoadPath = 2,

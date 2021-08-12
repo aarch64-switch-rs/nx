@@ -48,11 +48,10 @@ impl Ioctl for NvMapFromId {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Derivative)]
-#[derivative(Default)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u32)]
 pub enum AllocFlags {
-    #[derivative(Default)]
+    #[default]
     ReadOnly,
     ReadWrite,
 }

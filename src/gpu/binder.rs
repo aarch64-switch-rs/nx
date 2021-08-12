@@ -9,11 +9,10 @@ use super::*;
 
 pub const INTERFACE_TOKEN: &str = "android.gui.IGraphicBufferProducer";
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Derivative)]
-#[derivative(Default)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(i32)]
 pub enum ErrorCode {
-    #[derivative(Default)]
+    #[default]
     Success = 0,
     PermissionDenied = -1,
     NameNotFound = -2,

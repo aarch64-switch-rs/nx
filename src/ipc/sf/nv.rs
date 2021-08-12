@@ -1,11 +1,10 @@
 use crate::result::*;
 use crate::ipc::sf;
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Derivative)]
-#[derivative(Default)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u32)]
 pub enum ErrorCode {
-    #[derivative(Default)]
+    #[default]
     Success = 0,
     NotImplemented = 1,
     NotSupported = 2,

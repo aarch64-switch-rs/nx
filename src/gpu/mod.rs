@@ -23,32 +23,29 @@ pub mod ioctl;
 
 pub mod surface;
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Derivative)]
-#[derivative(Default)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u32)]
 pub enum Layout {
-    #[derivative(Default)]
+    #[default]
     Invalid = 0,
     Pitch = 1,
     Tiled = 2,
     BlockLinear = 3,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Derivative)]
-#[derivative(Default)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u32)]
 pub enum DisplayScanFormat {
-    #[derivative(Default)]
+    #[default]
     Progressive = 0,
     Interlaced = 1,
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Derivative)]
-#[derivative(Default)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u32)]
 pub enum Kind {
-    #[derivative(Default)]
+    #[default]
     Pitch = 0x0,
     Z16 = 0x1,
     Z16_2C = 0x2,
@@ -285,11 +282,10 @@ pub enum Kind {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Derivative)]
-#[derivative(Default)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u64)]
 pub enum ColorFormat {
-    #[derivative(Default)]
+    #[default]
     Unspecified = 0,
     NonColor8 = 0x0009200408,
     NonColor16 = 0x0009200A10,
@@ -523,11 +519,10 @@ pub enum ColorFormat {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Derivative)]
-#[derivative(Default)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u32)]
 pub enum PixelFormat {
-    #[derivative(Default)]
+    #[default]
     Invalid = 0,
     RGBA_8888 = 1,
     RGBX_8888 = 2,
@@ -576,11 +571,10 @@ bit_enum! {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Derivative)]
-#[derivative(Default)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(i32)]
 pub enum ConnectionApi {
-    #[derivative(Default)]
+    #[default]
     Invalid = 0,
     EGL = 1,
     Cpu = 2,
@@ -588,11 +582,10 @@ pub enum ConnectionApi {
     Camera = 4,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Derivative)]
-#[derivative(Default)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u32)]
 pub enum DisconnectMode {
-    #[derivative(Default)]
+    #[default]
     Api,
     AllLocal,
 }
@@ -695,11 +688,10 @@ pub struct Rect {
     bottom: i32
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Derivative)]
-#[derivative(Default)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u32)]
 pub enum Transform {
-    #[derivative(Default)]
+    #[default]
     Invalid = 0,
     FlipH = 1,
     FlipV = 2,

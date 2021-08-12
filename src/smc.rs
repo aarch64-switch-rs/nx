@@ -20,11 +20,10 @@ impl Input {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Derivative)]
-#[derivative(Default)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u64)]
 pub enum Result {
-    #[derivative(Default)]
+    #[default]
     Success = 0,
     NotImplemented = 1,
     InvalidArgument = 2,

@@ -3,35 +3,32 @@ use crate::ipc::sf;
 use crate::mem;
 use crate::util;
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Derivative)]
-#[derivative(Default)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u32)]
 pub enum Age {
     Young,
     Normal,
     Old,
-    #[derivative(Default)]
+    #[default]
     All
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Derivative)]
-#[derivative(Default)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u32)]
 pub enum Gender {
     Male,
     Female,
-    #[derivative(Default)]
+    #[default]
     All
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Derivative)]
-#[derivative(Default)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u32)]
 pub enum FaceColor {
     Black,
     White,
     Asian,
-    #[derivative(Default)]
+    #[default]
     All
 }
 
@@ -42,11 +39,10 @@ bit_enum! {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Derivative)]
-#[derivative(Default)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u32)]
 pub enum SpecialKeyCode {
-    #[derivative(Default)]
+    #[default]
     Normal = 0,
     Special = 0xA523B78F
 }

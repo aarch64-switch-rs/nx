@@ -28,9 +28,6 @@ global_asm!(include_str!("svc.s"));
 extern crate alloc;
 
 #[macro_use]
-extern crate derivative;
-
-#[macro_use]
 pub mod macros;
 
 pub mod result;
