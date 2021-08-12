@@ -176,6 +176,8 @@ pub type Size = usize;
 pub type ThreadEntrypointFn = extern fn(*mut u8) -> !;
 pub type Handle = u32;
 
+pub const INVALID_HANDLE: Handle = 0;
+
 pub const CURRENT_THREAD_PSEUDO_HANDLE: Handle = 0xFFFF8000;
 pub const CURRENT_PROCESS_PSEUDO_HANDLE: Handle = 0xFFFF8001;
 

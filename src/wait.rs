@@ -9,7 +9,7 @@ pub struct RemoteEvent {
 
 impl RemoteEvent {
     pub const fn empty() -> Self {
-        Self { handle: 0 }
+        Self { handle: svc::INVALID_HANDLE }
     }
     
     pub const fn new(handle: svc::Handle) -> Self {
@@ -21,10 +21,8 @@ impl RemoteEvent {
     }
 
     pub fn wait(&self, timeout: i64) -> Result<()> {
-        // This is a temporary solution
-        // TODO: implement waiters, get rid of this
-        svc::wait_synchronization(&self.handle, 1, timeout)?;
-        svc::reset_signal(self.handle)
+        wait_handles(&[self.handle], timeout)?;
+        self.reset()
     }
 }
 

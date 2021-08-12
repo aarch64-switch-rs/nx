@@ -22,7 +22,7 @@ __module_header:
 
 .section .text, "x"
 
-__normal_entry:
+__default_entry:
 	// Set aslr base address as 3rd argument
 	adrp x2, _start
 
@@ -48,5 +48,5 @@ _entry:
 	// Determine which entry we need to call (if x0 != 0 and x1 != -1, we're being called to handle an exception)
 	cmp x0, #0
     ccmn x1, #1, #4, ne
-    beq __normal_entry
+    beq __default_entry
     bne __exception_entry
