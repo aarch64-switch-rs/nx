@@ -24,6 +24,10 @@ pub struct PointerAndSize {
 }
 
 impl PointerAndSize {
+    pub const fn empty() -> Self {
+        Self { address: ptr::null_mut(), size: 0 }
+    }
+    
     pub const fn new(address: *mut u8, size: usize) -> Self {
         Self { address: address, size: size }
     }

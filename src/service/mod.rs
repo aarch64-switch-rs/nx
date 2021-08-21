@@ -36,7 +36,6 @@ pub fn new_service_object<T: IService + 'static>() -> Result<mem::Shared<T>> {
         object.convert_to_domain()?;
     }
     object.post_initialize()?;
-    sm.get().detach_client(sf::ProcessId::new())?;
     Ok(mem::Shared::new(object))
 }
 

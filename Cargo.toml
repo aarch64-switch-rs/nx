@@ -5,9 +5,13 @@ authors = ["XorTroll"]
 edition = "2018"
 
 [dependencies]
-linked_list_allocator = "0.9.0"
 paste = "1.0"
 logpacket = { git = "https://github.com/aarch64-switch-rs/logpacket" }
+
+[dependencies.linked_list_allocator]
+version = "0.9.0"
+default-features = false
+features = ["const_mut_refs"]
 
 [dependencies.arrayvec]
 version = "0.5.1"

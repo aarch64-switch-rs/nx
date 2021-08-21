@@ -1,7 +1,7 @@
 use crate::result::*;
 use crate::sync;
 use crate::svc;
-use crate::mem;
+use crate::mem::alloc;
 
 #[derive(Copy, Clone)]
 pub struct VirtualRegion {
@@ -87,7 +87,7 @@ pub fn allocate(size: usize) -> Result<*mut u8> {
         let mut address = G_CURRENT_ADDRESS;
 
         loop {
-            address += mem::PAGE_ALIGNMENT;
+            address += alloc::PAGE_ALIGNMENT;
 
             if !G_ADDRESS_SPACE.contains(address) {
                 address = G_ADDRESS_SPACE.start;

@@ -1,10 +1,11 @@
-extern crate alloc;
-use alloc::boxed::Box;
-use linked_list_allocator::LockedHeap;
+extern crate alloc as core_alloc;
+use core_alloc::boxed::Box;
 use core::ops;
 use core::ptr;
 use core::mem;
 use core::marker;
+
+pub mod alloc;
 
 #[derive(Copy, Clone)]
 struct Refcount {
@@ -29,7 +30,7 @@ impl Refcount {
         if !ptr.is_null() {
             unsafe {
                 if self.holder.is_null() {
-                    self.holder = alloc::alloc::alloc(alloc::alloc::Layout::new::<i64>()) as *mut i64;
+                    self.holder = alloc::new::<i64>().unwrap();
                     *self.holder = 1;
                 }
                 else {
@@ -46,7 +47,7 @@ impl Refcount {
                 if *self.holder == 0 {
                     // We created the variable as a Box, so we destroy it the same way
                     mem::drop(Box::from_raw(ptr));
-                    alloc::alloc::dealloc(self.holder as *mut u8, alloc::alloc::Layout::new::<i64>());
+                    alloc::delete(self.holder);
                     self.holder = ptr::null_mut();
                 }
             }
@@ -67,6 +68,8 @@ impl<T> Shared<T> {
         shared.refcount.acquire(object);
         shared
     }
+
+    // TODO: custom allocator support?
 
     pub const fn empty() -> Self {
         Self { object: ptr::null_mut(), refcount: Refcount::new() }
@@ -142,20 +145,6 @@ impl<T> ops::DerefMut for Shared<T> {
     }
 }
 
-pub const PAGE_ALIGNMENT: usize = 0x1000;
-
-// TODO: switch from the spin crate linked_list_allocator uses to our lock system
-// TODO: allocator failures
-
-#[global_allocator]
-static GLOBAL_ALLOCATOR: LockedHeap = LockedHeap::empty();
-
-pub fn initialize(heap_address: *mut u8, heap_size: usize) {
-    unsafe {
-        GLOBAL_ALLOCATOR.lock().init(heap_address as usize, heap_size);
-    }
-}
-
 pub fn flush_data_cache(address: *mut u8, size: usize) {
     extern "C" {
         fn __nx_mem_flush_data_cache(address: *mut u8, size: usize);
@@ -174,10 +163,4 @@ pub const fn align_up(value: usize, align: usize) -> usize {
 pub const fn align_down(value: usize, align: usize) -> usize {
     let inv_mask = align - 1;
     value & !inv_mask
-}
-
-#[alloc_error_handler]
-fn alloc_error_handler(_layout: core::alloc::Layout) -> ! {
-    loop {}
-    // todo!();
 }

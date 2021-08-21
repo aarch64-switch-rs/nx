@@ -1,8 +1,7 @@
-extern crate alloc;
-
 use crate::result::*;
 use crate::service;
 use crate::mem;
+use crate::mem::alloc;
 use crate::svc;
 use crate::ipc::sf;
 use crate::service::nv;
@@ -750,8 +749,7 @@ pub struct GpuContext<VS: IRootService + service::IService + 'static, NS: INvDrv
     nvdrv_service: mem::Shared<NS>,
     application_display_service: mem::Shared<vi::ApplicationDisplayService>,
     hos_binder_driver: mem::Shared<dispdrv::HOSBinderDriver>,
-    transfer_mem: *mut u8,
-    transfer_mem_alloc_layout: alloc::alloc::Layout,
+    transfer_mem: alloc::Buffer<u8>,
     transfer_mem_handle: svc::Handle,
     nvhost_fd: u32,
     nvmap_fd: u32,
@@ -763,10 +761,8 @@ impl<VS: IRootService + service::IService + 'static, NS: INvDrvService + service
         let vi_srv = service::new_service_object::<VS>()?;
         let nvdrv_srv = service::new_service_object::<NS>()?;
         
-        let transfer_mem_alloc_layout = unsafe { alloc::alloc::Layout::from_size_align_unchecked(transfer_mem_size, 0x1000) };
-        
-        let transfer_mem = unsafe { alloc::alloc::alloc(transfer_mem_alloc_layout) };
-        let transfer_mem_handle = svc::create_transfer_memory(transfer_mem, transfer_mem_size, svc::MemoryPermission::None())?;
+        let transfer_mem = alloc::Buffer::new(alloc::PAGE_ALIGNMENT, transfer_mem_size)?;
+        let transfer_mem_handle = svc::create_transfer_memory(transfer_mem.ptr, transfer_mem_size, svc::MemoryPermission::None())?;
         nvdrv_srv.get().initialize(transfer_mem_size as u32, sf::Handle::from(svc::CURRENT_PROCESS_PSEUDO_HANDLE), sf::Handle::from(transfer_mem_handle))?;
 
         let (nvhost_fd, nvhost_err) = nvdrv_srv.get().open(sf::Buffer::from_const(NVHOST_PATH.as_ptr(), NVHOST_PATH.len()))?;
@@ -778,7 +774,7 @@ impl<VS: IRootService + service::IService + 'static, NS: INvDrvService + service
         
         let application_display_srv = vi_srv.get().get_display_service(vi::DisplayServiceMode::Privileged)?.to::<vi::ApplicationDisplayService>();
         let hos_binder_drv = application_display_srv.get().get_relay_service()?.to::<dispdrv::HOSBinderDriver>();
-        Ok(Self { vi_service: vi_srv, nvdrv_service: nvdrv_srv, application_display_service: application_display_srv, hos_binder_driver: hos_binder_drv, transfer_mem: transfer_mem, transfer_mem_alloc_layout: transfer_mem_alloc_layout, transfer_mem_handle: transfer_mem_handle, nvhost_fd: nvhost_fd, nvmap_fd: nvmap_fd, nvhostctrl_fd: nvhostctrl_fd })
+        Ok(Self { vi_service: vi_srv, nvdrv_service: nvdrv_srv, application_display_service: application_display_srv, hos_binder_driver: hos_binder_drv, transfer_mem: transfer_mem, transfer_mem_handle: transfer_mem_handle, nvhost_fd: nvhost_fd, nvmap_fd: nvmap_fd, nvhostctrl_fd: nvhostctrl_fd })
     }
 
     pub fn get_vi_service(&self) -> mem::Shared<VS> {
@@ -862,7 +858,7 @@ impl<VS: IRootService + service::IService + 'static, NS: INvDrvService + service
         let _ = self.nvdrv_service.get().close(self.nvmap_fd);
         let _ = self.nvdrv_service.get().close(self.nvhostctrl_fd);
 
-        unsafe { alloc::alloc::dealloc(self.transfer_mem, self.transfer_mem_alloc_layout); }
+        self.transfer_mem.release();
         let _ = svc::close_handle(self.transfer_mem_handle);
     }
 }

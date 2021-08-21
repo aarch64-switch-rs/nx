@@ -14,6 +14,7 @@
 #![feature(const_fn_fn_ptr_basics)]
 #![feature(const_mut_refs)]
 #![feature(derive_default_enum)]
+#![feature(const_fn_trait_bound)]
 #![macro_use]
 
 // Required assembly bits

@@ -1,19 +1,15 @@
 use crate::svc;
 use crate::thread;
-
-pub struct Mutex {
-    value: u32,
-    is_recursive: bool,
-    counter: u32,
-    thread_handle: u32,
-}
+use core::cell::UnsafeCell;
 
 const HANDLE_WAIT_MASK: u32 = 0x40000000;
 
+#[inline(always)]
 fn get_current_thread_handle() -> u32 {
     thread::get_current_thread().get_handle()
 }
 
+#[inline(always)]
 fn load_exclusive(ptr: *mut u32) -> u32 {
     let value: u32;
     unsafe {
@@ -22,6 +18,7 @@ fn load_exclusive(ptr: *mut u32) -> u32 {
     value
 }
 
+#[inline(always)]
 fn store_exclusive(ptr: *mut u32, value: u32) -> i32 {
     let res: i32;
     unsafe {
@@ -30,6 +27,7 @@ fn store_exclusive(ptr: *mut u32, value: u32) -> i32 {
     res
 }
 
+#[inline(always)]
 fn clear_exclusive() {
     unsafe {
         llvm_asm!("clrex" ::: "memory" : "volatile");
@@ -102,6 +100,13 @@ fn try_lock_impl(handle_ref: *mut u32) -> bool {
 
     clear_exclusive();
     false
+}
+
+pub struct Mutex {
+    value: u32,
+    is_recursive: bool,
+    counter: u32,
+    thread_handle: u32,
 }
 
 impl Mutex {
@@ -178,38 +183,44 @@ impl<'a> Drop for ScopedLock<'a> {
 }
 
 pub struct Locked<T> {
-    lock: Mutex,
-    object: T,
+    lock_cell: UnsafeCell<Mutex>,
+    object_cell: UnsafeCell<T>,
 }
 
 impl<T> Locked<T> {
     pub const fn new(recursive: bool, t: T) -> Self {
-        Self { lock: Mutex::new(recursive), object: t }
+        Self { lock_cell: UnsafeCell::new(Mutex::new(recursive)), object_cell: UnsafeCell::new(t) }
     }
 
-    pub fn get(&mut self) -> &mut T {
-        self.lock.lock();
-        let obj_ref = &mut self.object;
-        self.lock.unlock();
+    pub const fn get_lock(&self) -> &mut Mutex {
+        unsafe {
+            &mut *self.lock_cell.get()
+        }
+    }
+
+    pub fn get(&self) -> &mut T {
+        self.get_lock().lock();
+        let obj_ref = unsafe {
+            &mut *self.object_cell.get()
+        };
+        self.get_lock().unlock();
         obj_ref
     }
 
     pub fn set(&mut self, t: T) {
-        self.lock.lock();
-        self.object = t;
-        self.lock.unlock();
-    }
-
-    pub fn get_lock(&self) -> &Mutex {
-        &self.lock
+        self.get_lock().lock();
+        self.object_cell = UnsafeCell::new(t);
+        self.get_lock().unlock();
     }
 }
 
 impl<T: Copy> Locked<T> {
-    pub fn get_val(&mut self) -> T {
-        self.lock.lock();
-        let obj_copy = self.object;
-        self.lock.unlock();
+    pub fn get_val(&self) -> T {
+        self.get_lock().lock();
+        let obj_copy = unsafe {
+            *self.object_cell.get()
+        };
+        self.get_lock().unlock();
         obj_copy
     }
 }

@@ -1,9 +1,7 @@
-extern crate alloc;
-
 use crate::result::*;
 use crate::svc;
+use crate::mem::alloc;
 use crate::util;
-use crate::mem;
 use core::ptr;
 
 pub type ThreadName = util::CString<0x20>;
@@ -101,13 +99,9 @@ impl Thread {
 
     pub fn new(entry: fn(*mut u8), entry_arg: *mut u8, stack: *mut u8, stack_size: usize, name: &str) -> Result<Self> {
         let mut stack_value = stack;
-        let mut owns_stack = false;
-        if stack_value.is_null() {
-            unsafe {
-                let stack_layout = alloc::alloc::Layout::from_size_align_unchecked(stack_size, mem::PAGE_ALIGNMENT);
-                stack_value = alloc::alloc::alloc(stack_layout);
-                owns_stack = true;
-            }
+        let owns_stack = stack_value.is_null();
+        if owns_stack {
+            stack_value = alloc::allocate(alloc::PAGE_ALIGNMENT, stack_size)?;
         }
 
         Self::existing(0, name, stack_value, stack_size, owns_stack, Some(entry), entry_arg)
@@ -153,10 +147,7 @@ impl Thread {
 impl Drop for Thread {
     fn drop(&mut self) {
         if self.owns_stack {
-            unsafe {
-                let stack_layout = alloc::alloc::Layout::from_size_align_unchecked(self.stack_size, mem::PAGE_ALIGNMENT);
-                alloc::alloc::dealloc(self.stack, stack_layout);
-            }
+            alloc::release(self.stack, alloc::PAGE_ALIGNMENT, self.stack_size);
         }
 
         // If a thread is not created (like the main thread) the entry field will have nothing (Thread::empty), and we want to avoid closing threads we did not create :P

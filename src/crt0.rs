@@ -1,7 +1,7 @@
 use crate::result::*;
 use crate::results;
 use crate::svc;
-use crate::mem;
+use crate::mem::alloc;
 use crate::dynamic;
 use crate::sync;
 use crate::util;
@@ -86,7 +86,7 @@ unsafe extern "C" fn __nx_crt0_entry(abi_ptr: *const hbl::AbiConfigEntry, raw_ma
     
     // Initialize heap and memory allocation
     heap = initialize_heap(heap);
-    mem::initialize(heap.address, heap.size);
+    alloc::initialize(heap);
 
     // Initialize version support
     if hos_version.is_valid() {

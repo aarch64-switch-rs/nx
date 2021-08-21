@@ -462,7 +462,7 @@ pub fn get_thread_id(process_handle: Handle) -> Result<u64> {
     }
 }
 
-// Note: original name is just break/Break, but that's a reserved keyword :P
+// TODO: original name is just break/Break but the keyword is reserved, think of a better way to name this?
 
 #[inline(always)]
 pub fn break_(reason: BreakReason, arg: Address, size: Size) -> ! {
