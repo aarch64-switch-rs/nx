@@ -20,7 +20,7 @@
 // Required assembly bits
 
 global_asm!(include_str!("asm.s"));
-global_asm!(include_str!("crt0.s"));
+global_asm!(include_str!("rrt0.s"));
 global_asm!(include_str!("arm.s"));
 global_asm!(include_str!("mem.s"));
 global_asm!(include_str!("svc.s"));
@@ -47,7 +47,7 @@ pub mod thread;
 
 pub mod hbl;
 
-pub mod crt0;
+pub mod rrt0;
 
 pub mod svc;
 

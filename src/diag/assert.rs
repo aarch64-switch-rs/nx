@@ -1,6 +1,6 @@
 use crate::result::*;
 use crate::svc;
-use crate::crt0;
+use crate::rrt0;
 use crate::ipc::sf;
 use crate::service;
 use crate::service::fatal;
@@ -19,7 +19,7 @@ pub fn assert(mode: AssertMode, rc: ResultCode) {
     if rc.is_failure() {
         match mode {
             AssertMode::ProcessExit => {
-                crt0::exit(rc);
+                rrt0::exit(rc);
             },
             AssertMode::FatalThrow => {
                 match service::new_service_object::<fatal::Service>() {
