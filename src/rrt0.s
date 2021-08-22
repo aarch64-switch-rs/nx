@@ -36,11 +36,11 @@ __default_entry:
 	add x5, x5, #:lo12:__bss_end
 	
 	// Call the normal entrypoint (implemented in Rust)
-	b __nx_crt0_entry
+	b __nx_rrt0_entry
 
 __exception_entry:
 	// Call the exception entrypoint (implemented in Rust)
-	b __nx_crt0_exception_entry
+	b __nx_rrt0_exception_entry
 
 // Actual entrypoint called
 

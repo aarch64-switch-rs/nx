@@ -28,7 +28,7 @@ static mut G_MAIN_THREAD: thread::Thread = thread::Thread::empty();
 
 #[no_mangle]
 #[linkage = "weak"]
-unsafe extern "C" fn __nx_crt0_entry(abi_ptr: *const hbl::AbiConfigEntry, raw_main_thread_handle: u64, aslr_base_address: *const u8, lr_exit_fn: ExitFn, bss_start: *mut u8, bss_end: *mut u8) {
+unsafe extern "C" fn __nx_rrt0_entry(abi_ptr: *const hbl::AbiConfigEntry, raw_main_thread_handle: u64, aslr_base_address: *const u8, lr_exit_fn: ExitFn, bss_start: *mut u8, bss_end: *mut u8) {
     let is_hbl_nro = !abi_ptr.is_null() && (raw_main_thread_handle == u64::MAX);
     
     // Clear .bss section
@@ -111,7 +111,7 @@ unsafe extern "C" fn __nx_crt0_entry(abi_ptr: *const hbl::AbiConfigEntry, raw_ma
 
 #[no_mangle]
 #[linkage = "weak"]
-unsafe extern "C" fn __nx_crt0_exception_entry(_error_desc: u32, _stack_top: *mut u8) {
+unsafe extern "C" fn __nx_rrt0_exception_entry(_error_desc: u32, _stack_top: *mut u8) {
     svc::return_from_exception(results::os::ResultUnhandledException::make());
 }
 
