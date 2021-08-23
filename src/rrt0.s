@@ -29,7 +29,7 @@ __default_entry:
 	// Set lr as 4th argument
 	mov x3, x30
 
-	// Set .bss start and end as 5th and 6th arguments
+	// Set .bss start and end as 5th and 6th arguments respectively
 	adrp x4, __bss_start
 	add x4, x4, #:lo12:__bss_start
 	adrp x5, __bss_end

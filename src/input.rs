@@ -285,7 +285,7 @@ impl InputContext {
     pub fn get_touch_data(&mut self, touch_index: u32) -> Result<TouchData> {
         unsafe {
             let touch_entry: *const TouchEntry = &(*self.shared_mem_data).touch_state.entries[(*self.shared_mem_data).touch_state.latest_index as usize];
-            result_return_unless!((touch_index as u64) < (*touch_entry).count, 0xBAEEF);
+            result_return_unless!((touch_index as u64) < (*touch_entry).count, results::lib::input::ResultInvalidTouchIndex);
             Ok((*touch_entry).touches[touch_index as usize])
         }
     }

@@ -90,6 +90,10 @@ impl<T: ?Sized> Shared<T> {
         self.object.is_null()
     }
 
+    pub fn is_valid(&self) -> bool {
+        !self.is_null()
+    }
+
     pub fn use_count(&self) -> i64 {
         self.refcount.use_count()
     }

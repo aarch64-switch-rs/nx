@@ -96,6 +96,7 @@ pub fn cache_flush(address: *mut u8, size: usize) {
     }
 }
 
+#[inline(always)]
 pub fn get_system_tick() -> u64 {
     unsafe {
         let tick: u64;
@@ -105,6 +106,7 @@ pub fn get_system_tick() -> u64 {
     }
 }
 
+#[inline(always)]
 pub fn get_system_tick_frequency() -> u64 {
     unsafe {
         let tick_freq: u64;

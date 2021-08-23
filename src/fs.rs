@@ -193,7 +193,7 @@ pub fn finalize() {
 }
 
 pub fn mount(name: &str, fs: mem::Shared<fspsrv::FileSystem>) -> Result<()> {
-    result_return_unless!(is_initialized(), 0xBABE);
+    result_return_unless!(is_initialized(), results::lib::ResultNotInitialized);
 
     let root_name = PathSegment::from(format!("{}:", name), PathSegmentType::Root);
     unsafe {
@@ -204,7 +204,7 @@ pub fn mount(name: &str, fs: mem::Shared<fspsrv::FileSystem>) -> Result<()> {
 }
 
 pub fn mount_sd_card(name: &str) -> Result<()> {
-    result_return_unless!(is_initialized(), 0xBABE);
+    result_return_unless!(is_initialized(), results::lib::ResultNotInitialized);
     
     let sd_fs = unsafe { G_FSPSRV_SESSION.get().get().open_sd_card_filesystem()?.to::<fspsrv::FileSystem>() };
     mount(name, sd_fs)
@@ -218,7 +218,7 @@ pub fn unmount(name: &str) {
 }
 
 pub fn create_file(path: String, size: usize, attribute: FileAttribute) -> Result<()> {
-    result_return_unless!(is_initialized(), 0xBABE);
+    result_return_unless!(is_initialized(), results::lib::ResultNotInitialized);
 
     let unpacked_path = unpack_path(path)?;
     let fs = find_device_by_name(unpacked_path.first().unwrap())?;
@@ -228,7 +228,7 @@ pub fn create_file(path: String, size: usize, attribute: FileAttribute) -> Resul
 }
 
 pub fn delete_file(path: String) -> Result<()> {
-    result_return_unless!(is_initialized(), 0xBABE);
+    result_return_unless!(is_initialized(), results::lib::ResultNotInitialized);
 
     let unpacked_path = unpack_path(path)?;
     let fs = find_device_by_name(unpacked_path.first().unwrap())?;
@@ -238,7 +238,7 @@ pub fn delete_file(path: String) -> Result<()> {
 }
 
 pub fn create_directory(path: String) -> Result<()> {
-    result_return_unless!(is_initialized(), 0xBABE);
+    result_return_unless!(is_initialized(), results::lib::ResultNotInitialized);
 
     let unpacked_path = unpack_path(path)?;
     let fs = find_device_by_name(unpacked_path.first().unwrap())?;
@@ -248,7 +248,7 @@ pub fn create_directory(path: String) -> Result<()> {
 }
 
 pub fn delete_directory(path: String) -> Result<()> {
-    result_return_unless!(is_initialized(), 0xBABE);
+    result_return_unless!(is_initialized(), results::lib::ResultNotInitialized);
 
     let unpacked_path = unpack_path(path)?;
     let fs = find_device_by_name(unpacked_path.first().unwrap())?;
@@ -258,7 +258,7 @@ pub fn delete_directory(path: String) -> Result<()> {
 }
 
 pub fn get_entry_type(path: String) -> Result<DirectoryEntryType> {
-    result_return_unless!(is_initialized(), 0xBABE);
+    result_return_unless!(is_initialized(), results::lib::ResultNotInitialized);
 
     let unpacked_path = unpack_path(path)?;
     let fs = find_device_by_name(unpacked_path.first().unwrap())?;
@@ -291,7 +291,7 @@ fn convert_file_open_option(option: FileOpenOption) -> fspsrv::FileOpenMode {
 }
 
 pub fn open_file(path: String, option: FileOpenOption) -> Result<File> {
-    result_return_unless!(is_initialized(), 0xBABE);
+    result_return_unless!(is_initialized(), results::lib::ResultNotInitialized);
 
     let unpacked_path = unpack_path(path)?;
     let fs = find_device_by_name(unpacked_path.first().unwrap())?;

@@ -1,6 +1,11 @@
+extern crate alloc as core_alloc;
+use core_alloc::boxed::Box;
+
 use crate::result::*;
+use crate::results;
 use crate::svc;
 use crate::mem::alloc;
+use crate::wait;
 use crate::util;
 use core::ptr;
 
@@ -22,16 +27,18 @@ extern fn thread_entry_impl(thread_arg: *mut u8) -> ! {
     set_current_thread(thread_ref);
 
     unsafe {
-        if let Some(entry) = (*thread_ref).entry {
-            let entry_arg = (*thread_ref).entry_arg;
-            (entry)(entry_arg);
+        if let Some(entry) = (*thread_ref).entry.as_ref() {
+            entry.call(());
         }
     }
 
-    svc::exit_thread();
+    exit();
 }
 
-pub const INVALID_PRIORITY: i32 = -1;
+pub const PRIORITY_AUTO: i32 = -1;
+
+// Note: our thread type attempts to mimic the official nn::os::ThreadType struct so that the thread name is accessible from TLS by, for instance, creport
+// TODO: TLS slots
 
 #[repr(C)]
 pub struct Thread {
@@ -42,9 +49,8 @@ pub struct Thread {
     pub handle: svc::Handle,
     pub stack: *mut u8,
     pub stack_size: usize,
-    pub entry: Option<fn(*mut u8)>,
-    pub entry_arg: *mut u8,
-    pub tls_slots: [*mut u8; 0x20],
+    pub entry: Option<Box<dyn Fn()>>, // Note: size of this field is 0x10 bytes, same thing as entry and entry_arg ptrs on the official ThreadType struct
+    pub unused_tls_slots: [*mut u8; 0x20],
     pub reserved: [u8; 0x54],
     pub name_len: u32,
     pub name: ThreadName,
@@ -63,8 +69,7 @@ impl Thread {
             stack: ptr::null_mut(),
             stack_size: 0,
             entry: None,
-            entry_arg: ptr::null_mut(),
-            tls_slots: [ptr::null_mut(); 0x20],
+            unused_tls_slots: [ptr::null_mut(); 0x20],
             reserved: [0; 0x54],
             name_len: 0,
             name: ThreadName::new(),
@@ -73,18 +78,17 @@ impl Thread {
         }
     }
 
-    pub fn existing(handle: svc::Handle, name: &str, stack: *mut u8, stack_size: usize, owns_stack: bool, entry: Option<fn(*mut u8)>, entry_arg: *mut u8) -> Result<Self> {
+    fn new_impl(handle: svc::Handle, state: ThreadState, name: &str, stack: *mut u8, stack_size: usize, owns_stack: bool, entry: Option<Box<dyn Fn()>>) -> Result<Self> {
         let mut thread = Self {
             self_ref: ptr::null_mut(),
-            state: ThreadState::Started,
+            state: state,
             owns_stack: owns_stack,
             pad: [0; 2],
             handle: handle,
             stack: stack,
             stack_size: stack_size,
             entry: entry,
-            entry_arg: entry_arg,
-            tls_slots: [ptr::null_mut(); 0x20],
+            unused_tls_slots: [ptr::null_mut(); 0x20],
             reserved: [0; 0x54],
             name_len: 0,
             name: util::CString::new(),
@@ -97,24 +101,57 @@ impl Thread {
         Ok(thread)
     }
 
-    pub fn new(entry: fn(*mut u8), entry_arg: *mut u8, stack: *mut u8, stack_size: usize, name: &str) -> Result<Self> {
-        let mut stack_value = stack;
-        let owns_stack = stack_value.is_null();
-        if owns_stack {
-            stack_value = alloc::allocate(alloc::PAGE_ALIGNMENT, stack_size)?;
-        }
+    pub fn new_remote(handle: svc::Handle, name: &str, stack: *mut u8, stack_size: usize) -> Result<Self> {
+        Self::new_impl(handle, ThreadState::Started, name, stack, stack_size, false, None)
+    }
+    
+    pub fn new_with_stack<F: 'static + Fn()>(entry: F, name: &str, stack: *mut u8, stack_size: usize) -> Result<Self> {
+        result_return_unless!(!stack.is_null(), results::lib::thread::ResultInvalidStack);
+        // TODO: also check alignment
 
-        Self::existing(0, name, stack_value, stack_size, owns_stack, Some(entry), entry_arg)
+        Self::new_impl(svc::INVALID_HANDLE, ThreadState::NotInitialized, name, stack, stack_size, false, Some(Box::new(entry)))
+    }
+    
+    pub fn new<F: 'static + Fn()>(entry: F, name: &str, stack_size: usize) -> Result<Self> {
+        let stack = alloc::allocate(alloc::PAGE_ALIGNMENT, stack_size)?;
+
+        Self::new_impl(svc::INVALID_HANDLE, ThreadState::NotInitialized, name, stack, stack_size, true, Some(Box::new(entry)))
     }
 
-    pub fn create(&mut self, priority: i32, cpu_id: i32) -> Result<()> {
+    pub fn initialize(&mut self, priority: i32, processor_id: i32) -> Result<()> {
+        result_return_unless!(self.state == ThreadState::NotInitialized, results::lib::thread::ResultInvalidState);
+
         let mut priority_value = priority;
-        if priority_value == INVALID_PRIORITY {
+        if priority_value == PRIORITY_AUTO {
             priority_value = get_current_thread().get_priority()?;
         }
 
-        self.handle = svc::create_thread(thread_entry_impl, self as *mut _ as *mut u8, (self.stack as usize + self.stack_size) as *const u8, priority_value, cpu_id)?;
+        self.handle = svc::create_thread(thread_entry_impl, self as *mut _ as *mut u8, (self.stack as usize + self.stack_size) as *const u8, priority_value, processor_id)?;
+        
+        self.state = ThreadState::Initialized;
         Ok(())
+    }
+
+    pub fn start(&mut self) -> Result<()> {
+        result_return_unless!((self.state == ThreadState::Initialized) || (self.state == ThreadState::Terminated), results::lib::thread::ResultInvalidState);
+
+        svc::start_thread(self.handle)?;
+
+        self.state = ThreadState::Started;
+        Ok(())
+    }
+
+    pub fn join(&mut self) -> Result<()> {
+        result_return_unless!(self.state == ThreadState::Started, results::lib::thread::ResultInvalidState);
+        
+        wait::wait_handles(&[self.handle], -1)?;
+
+        self.state = ThreadState::Terminated;
+        Ok(())
+    }
+
+    pub fn is_remote(&self) -> bool {
+        self.entry.is_none()
     }
 
     pub fn get_handle(&self) -> svc::Handle {
@@ -122,38 +159,35 @@ impl Thread {
     }
 
     pub fn get_priority(&self) -> Result<i32> {
+        result_return_unless!(self.state != ThreadState::NotInitialized, results::lib::thread::ResultInvalidState);
+
         svc::get_thread_priority(self.handle)
     }
 
     pub fn get_id(&self) -> Result<u64> {
+        result_return_unless!(self.state != ThreadState::NotInitialized, results::lib::thread::ResultInvalidState);
+        
         svc::get_thread_id(self.handle)
-    }
-
-    pub fn start(&self) -> Result<()> {
-        svc::start_thread(self.handle)
-    }
-
-    pub fn create_and_start(&mut self, priority: i32, cpu_id: i32) -> Result<()> {
-        self.create(priority, cpu_id)?;
-        self.start()
-    }
-
-    pub fn join(&self) -> Result<()> {
-        svc::wait_synchronization(&self.handle, 1, -1)?;
-        Ok(())
-    }
+    } 
 }
 
 impl Drop for Thread {
     fn drop(&mut self) {
+        // If it's still active, finalize it
+        if self.state == ThreadState::Started {
+            let _ = self.join();
+        }
+
         if self.owns_stack {
             alloc::release(self.stack, alloc::PAGE_ALIGNMENT, self.stack_size);
         }
 
-        // If a thread is not created (like the main thread) the entry field will have nothing (Thread::empty), and we want to avoid closing threads we did not create :P
-        if self.entry.is_some() {
+        // If a thread is not created (like the main thread) the entry field will have nothing, and we definitely should not close threads we did not create...
+        if !self.is_remote() {
             let _ = svc::close_handle(self.handle);
         }
+
+        self.state = ThreadState::NotInitialized;
     }
 }
 
@@ -166,6 +200,7 @@ pub struct Tls {
     pub thread_ref: *mut Thread,
 }
 
+#[inline(always)]
 pub fn get_thread_local_storage() -> *mut Tls {
     let tls: *mut Tls;
     unsafe {
@@ -193,4 +228,8 @@ pub fn get_current_thread() -> &'static mut Thread {
 
 pub fn sleep(timeout: i64) -> Result<()> {
     svc::sleep_thread(timeout)
+}
+
+pub fn exit() -> ! {
+    svc::exit_thread()
 }

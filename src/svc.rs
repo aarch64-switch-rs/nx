@@ -234,15 +234,15 @@ pub fn exit_process() -> ! {
 }
 
 #[inline(always)]
-pub fn create_thread(entry: ThreadEntrypointFn, entry_arg: Address, stack_top: Address, priority: i32, cpu_id: i32) -> Result<Handle> {
+pub fn create_thread(entry: ThreadEntrypointFn, entry_arg: Address, stack_top: Address, priority: i32, processor_id: i32) -> Result<Handle> {
     extern "C" {
-        fn __nx_svc_create_thread(handle: *mut Handle, entry: ThreadEntrypointFn, entry_arg: Address, stack_top: Address, priority: i32, cpu_id: i32) -> ResultCode;
+        fn __nx_svc_create_thread(handle: *mut Handle, entry: ThreadEntrypointFn, entry_arg: Address, stack_top: Address, priority: i32, processor_id: i32) -> ResultCode;
     }
 
     unsafe {
         let mut handle: Handle = 0;
 
-        let rc = __nx_svc_create_thread(&mut handle, entry, entry_arg, stack_top, priority, cpu_id);
+        let rc = __nx_svc_create_thread(&mut handle, entry, entry_arg, stack_top, priority, processor_id);
         wrap(rc, handle)
     }
 }
@@ -449,15 +449,15 @@ pub fn get_process_id(process_handle: Handle) -> Result<u64> {
 }
 
 #[inline(always)]
-pub fn get_thread_id(process_handle: Handle) -> Result<u64> {
+pub fn get_thread_id(handle: Handle) -> Result<u64> {
     extern "C" {
-        fn __nx_svc_get_thread_id(out_thread_id: *mut u64, process_handle: Handle) -> ResultCode;
+        fn __nx_svc_get_thread_id(out_thread_id: *mut u64, handle: Handle) -> ResultCode;
     }
     
     unsafe {
         let mut thread_id: u64 = 0;
 
-        let rc = __nx_svc_get_thread_id(&mut thread_id, process_handle);
+        let rc = __nx_svc_get_thread_id(&mut thread_id, handle);
         wrap(rc, thread_id)
     }
 }

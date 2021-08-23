@@ -70,7 +70,8 @@ unsafe extern "C" fn __nx_rrt0_entry(abi_ptr: *const hbl::AbiConfigEntry, raw_ma
     }
 
     // Initialize the main thread object and initialize its TLS section
-    G_MAIN_THREAD = thread::Thread::existing(main_thread_handle, "MainThread", ptr::null_mut(), 0, false, None, ptr::null_mut()).unwrap();
+    // TODO: query memory for main thread stack address/size?
+    G_MAIN_THREAD = thread::Thread::new_remote(main_thread_handle, "MainThread", ptr::null_mut(), 0).unwrap();
     thread::set_current_thread(&mut G_MAIN_THREAD);
 
     // Initialize virtual memory
