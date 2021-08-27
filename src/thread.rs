@@ -1,6 +1,3 @@
-extern crate alloc as core_alloc;
-use core_alloc::boxed::Box;
-
 use crate::result::*;
 use crate::results;
 use crate::svc;
@@ -22,17 +19,41 @@ pub enum ThreadState {
     Terminated = 4
 }
 
-extern fn thread_entry_impl(thread_arg: *mut u8) -> ! {
-    let thread_ref = thread_arg as *mut Thread;
-    set_current_thread(thread_ref);
+pub struct ThreadEntry {
+    pub entry_impl: svc::ThreadEntrypointFn,
+    pub raw_entry: *const u8,
+    pub raw_args: *const u8
+}
 
-    unsafe {
-        if let Some(entry) = (*thread_ref).entry.as_ref() {
-            entry.call(());
+impl ThreadEntry {
+    pub fn new<T: Copy, F: 'static + Fn(&T)>(entry_impl: svc::ThreadEntrypointFn, entry: F, args: &T) -> Self {
+        Self {
+            entry_impl: entry_impl,
+            raw_entry: &entry as *const _ as *const u8,
+            raw_args: args as *const _ as *const u8
         }
     }
 
-    exit();
+    pub fn run<T: Copy, F: 'static + Fn(&T)>(&mut self) {
+        unsafe {
+            let entry = self.raw_entry as *const F;
+            let args = &*(self.raw_args as *const T);
+            (*entry)(args);
+        }
+    }
+}
+
+extern fn thread_entry_impl<T: Copy, F: 'static + Fn(&T)>(thread_ref_v: *mut u8) -> ! {
+    let thread_ref = thread_ref_v as *mut Thread;
+    set_current_thread(thread_ref);
+
+    unsafe {
+        if let Some(entry_ref) = (*thread_ref).entry.as_mut() {
+            entry_ref.run::<T, F>();
+        }
+    }
+
+    exit()
 }
 
 pub const PRIORITY_AUTO: i32 = -1;
@@ -49,13 +70,14 @@ pub struct Thread {
     pub handle: svc::Handle,
     pub stack: *mut u8,
     pub stack_size: usize,
-    pub entry: Option<Box<dyn Fn()>>, // Note: size of this field is 0x10 bytes, same thing as entry and entry_arg ptrs on the official ThreadType struct
+    pub reserved: [u8; 0x20], // Note: size of this field is 0x10 bytes, same thing as entry and entry_arg ptrs on the official ThreadType struct
     pub unused_tls_slots: [*mut u8; 0x20],
-    pub reserved: [u8; 0x54],
+    pub entry: Option<ThreadEntry>,
+    pub reserved_2: [u8; 0x3C],
     pub name_len: u32,
     pub name: ThreadName,
     pub name_addr: *mut u8,
-    pub reserved_2: [u8; 0x20],
+    pub reserved_3: [u8; 0x20],
 }
 
 impl Thread {
@@ -68,17 +90,18 @@ impl Thread {
             handle: 0,
             stack: ptr::null_mut(),
             stack_size: 0,
-            entry: None,
+            reserved: [0; 0x20],
             unused_tls_slots: [ptr::null_mut(); 0x20],
-            reserved: [0; 0x54],
+            entry: None,
+            reserved_2: [0; 0x3C],
             name_len: 0,
             name: ThreadName::new(),
             name_addr: ptr::null_mut(),
-            reserved_2: [0; 0x20],
+            reserved_3: [0; 0x20],
         }
     }
 
-    fn new_impl(handle: svc::Handle, state: ThreadState, name: &str, stack: *mut u8, stack_size: usize, owns_stack: bool, entry: Option<Box<dyn Fn()>>) -> Result<Self> {
+    fn new_impl(handle: svc::Handle, state: ThreadState, name: &str, stack: *mut u8, stack_size: usize, owns_stack: bool, entry: Option<ThreadEntry>) -> Result<Self> {
         let mut thread = Self {
             self_ref: ptr::null_mut(),
             state: state,
@@ -87,13 +110,14 @@ impl Thread {
             handle: handle,
             stack: stack,
             stack_size: stack_size,
-            entry: entry,
+            reserved: [0; 0x20],
             unused_tls_slots: [ptr::null_mut(); 0x20],
-            reserved: [0; 0x54],
+            entry: entry,
+            reserved_2: [0; 0x3C],
             name_len: 0,
             name: util::CString::new(),
             name_addr: ptr::null_mut(),
-            reserved_2: [0; 0x20],
+            reserved_3: [0; 0x20],
         };
         thread.self_ref = &mut thread;
         thread.name_addr = &mut thread.name as *mut ThreadName as *mut u8;
@@ -105,17 +129,19 @@ impl Thread {
         Self::new_impl(handle, ThreadState::Started, name, stack, stack_size, false, None)
     }
     
-    pub fn new_with_stack<F: 'static + Fn()>(entry: F, name: &str, stack: *mut u8, stack_size: usize) -> Result<Self> {
+    pub fn new_with_stack<T: Copy, F: 'static + Fn(&T)>(entry: F, args: &T, name: &str, stack: *mut u8, stack_size: usize) -> Result<Self> {
         result_return_unless!(!stack.is_null(), results::lib::thread::ResultInvalidStack);
         // TODO: also check alignment
 
-        Self::new_impl(svc::INVALID_HANDLE, ThreadState::NotInitialized, name, stack, stack_size, false, Some(Box::new(entry)))
+        let thread_entry = ThreadEntry::new(thread_entry_impl::<T, F>, entry, args);
+        Self::new_impl(svc::INVALID_HANDLE, ThreadState::NotInitialized, name, stack, stack_size, false, Some(thread_entry))
     }
     
-    pub fn new<F: 'static + Fn()>(entry: F, name: &str, stack_size: usize) -> Result<Self> {
+    pub fn new<T: Copy, F: 'static + Fn(&T)>(entry: F, args: &T, name: &str, stack_size: usize) -> Result<Self> {
         let stack = alloc::allocate(alloc::PAGE_ALIGNMENT, stack_size)?;
 
-        Self::new_impl(svc::INVALID_HANDLE, ThreadState::NotInitialized, name, stack, stack_size, true, Some(Box::new(entry)))
+        let thread_entry = ThreadEntry::new(thread_entry_impl::<T, F>, entry, args);
+        Self::new_impl(svc::INVALID_HANDLE, ThreadState::NotInitialized, name, stack, stack_size, true, Some(thread_entry))
     }
 
     pub fn initialize(&mut self, priority: i32, processor_id: i32) -> Result<()> {
@@ -126,7 +152,7 @@ impl Thread {
             priority_value = get_current_thread().get_priority()?;
         }
 
-        self.handle = svc::create_thread(thread_entry_impl, self as *mut _ as *mut u8, (self.stack as usize + self.stack_size) as *const u8, priority_value, processor_id)?;
+        self.handle = svc::create_thread(self.entry.as_ref().unwrap().entry_impl, self as *mut _ as *mut u8, (self.stack as usize + self.stack_size) as *const u8, priority_value, processor_id)?;
         
         self.state = ThreadState::Initialized;
         Ok(())
