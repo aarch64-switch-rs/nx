@@ -34,7 +34,7 @@ impl ThreadEntry {
         }
     }
 
-    pub fn run<T: Copy, F: 'static + Fn(&T)>(&mut self) {
+    pub fn run<T: Copy, F: 'static + Fn(&T)>(&self) {
         unsafe {
             let entry = self.raw_entry as *const F;
             let args = &*(self.raw_args as *const T);
@@ -48,7 +48,7 @@ extern fn thread_entry_impl<T: Copy, F: 'static + Fn(&T)>(thread_ref_v: *mut u8)
     set_current_thread(thread_ref);
 
     unsafe {
-        if let Some(entry_ref) = (*thread_ref).entry.as_mut() {
+        if let Some(entry_ref) = (*thread_ref).entry.as_ref() {
             entry_ref.run::<T, F>();
         }
     }
@@ -58,7 +58,7 @@ extern fn thread_entry_impl<T: Copy, F: 'static + Fn(&T)>(thread_ref_v: *mut u8)
 
 pub const PRIORITY_AUTO: i32 = -1;
 
-// Note: our thread type attempts to mimic the official nn::os::ThreadType struct so that the thread name is accessible from TLS by, for instance, creport
+// Note: our thread type attempts to kind-of mimic the official nn::os::ThreadType struct, at least so that the thread name is properly accessible from TLS by, for instance, creport -- thus all the reserved fields
 // TODO: TLS slots
 
 #[repr(C)]
@@ -70,7 +70,7 @@ pub struct Thread {
     pub handle: svc::Handle,
     pub stack: *mut u8,
     pub stack_size: usize,
-    pub reserved: [u8; 0x20], // Note: size of this field is 0x10 bytes, same thing as entry and entry_arg ptrs on the official ThreadType struct
+    pub reserved: [u8; 0x20], // Note: Originally entry and entry_arg ptrs would go here, but we use a different entry system (see entry field below)
     pub unused_tls_slots: [*mut u8; 0x20],
     pub entry: Option<ThreadEntry>,
     pub reserved_2: [u8; 0x3C],
@@ -230,7 +230,10 @@ pub struct Tls {
 pub fn get_thread_local_storage() -> *mut Tls {
     let tls: *mut Tls;
     unsafe {
-        llvm_asm!("mrs x0, tpidrro_el0" : "={x0}"(tls) ::: "volatile");
+        asm!(
+            "mrs {}, tpidrro_el0",
+            out(reg) tls
+        );
     }
     tls
 }

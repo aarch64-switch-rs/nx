@@ -1,7 +1,7 @@
 #![no_std]
 #![allow(incomplete_features)]
 #![allow(non_snake_case)]
-#![feature(llvm_asm)]
+#![feature(asm)]
 #![feature(global_asm)]
 #![feature(alloc_error_handler)]
 #![feature(const_generics)]
@@ -18,7 +18,7 @@
 #![feature(fn_traits)]
 #![macro_use]
 
-// Required assembly bits
+// Required assembly bits (those which essentially cannot/shouldn't be inlined)
 
 global_asm!(include_str!("asm.s"));
 global_asm!(include_str!("rrt0.s"));

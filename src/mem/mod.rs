@@ -149,6 +149,7 @@ impl<T> ops::DerefMut for Shared<T> {
     }
 }
 
+#[inline(always)]
 pub fn flush_data_cache(address: *mut u8, size: usize) {
     extern "C" {
         fn __nx_mem_flush_data_cache(address: *mut u8, size: usize);

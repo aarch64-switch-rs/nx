@@ -13,7 +13,11 @@ fn get_current_thread_handle() -> u32 {
 fn load_exclusive(ptr: *mut u32) -> u32 {
     let value: u32;
     unsafe {
-        llvm_asm!("ldaxr w0, [x1]" : "={w0}"(value) : "{x1}"(ptr) : "memory" : "volatile");
+        asm!(
+            "ldaxr {0:w}, [{1:x}]",
+            out(reg) value,
+            in(reg) ptr
+        );
     }
     value
 }
@@ -22,7 +26,12 @@ fn load_exclusive(ptr: *mut u32) -> u32 {
 fn store_exclusive(ptr: *mut u32, value: u32) -> i32 {
     let res: i32;
     unsafe {
-        llvm_asm!("stlxr w0, w1, [x2]" : "={w0}"(res) : "{w1}"(value), "{x2}"(ptr) : "memory" : "volatile");
+        asm!(
+            "stlxr {0:w}, {1:w}, [{2:x}]",
+            out(reg) res,
+            in(reg) value,
+            in(reg) ptr
+        );
     }
     res
 }
@@ -30,7 +39,7 @@ fn store_exclusive(ptr: *mut u32, value: u32) -> i32 {
 #[inline(always)]
 fn clear_exclusive() {
     unsafe {
-        llvm_asm!("clrex" ::: "memory" : "volatile");
+        asm!("clrex");
     }
 }
 
