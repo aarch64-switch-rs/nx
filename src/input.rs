@@ -251,17 +251,16 @@ fn get_index_for_controller(controller: hid::ControllerId) -> Result<usize> {
 impl InputContext {
     pub fn new(aruid: applet::AppletResourceUserId, supported_tags: hid::NpadStyleTag, controllers: &[hid::ControllerId]) -> Result<Self> {
         let hid_srv = service::new_service_object::<hid::HidServer>()?;
-        let hid_process_id = sf::ProcessId::from(aruid);
-        let applet_res = hid_srv.get().create_applet_resource(hid_process_id)?.to::<hid::AppletResource>();
+        let applet_res = hid_srv.get().create_applet_resource(sf::ProcessId::from(aruid))?.to::<hid::AppletResource>();
         let shmem_handle = applet_res.get().get_shared_memory_handle()?;
         let shmem_size = cmem::size_of::<SharedMemoryData>();
         let shmem_address = vmem::allocate(shmem_size)?;
         svc::map_shared_memory(shmem_handle.handle, shmem_address, shmem_size, svc::MemoryPermission::Read())?;
-        hid_srv.get().activate_npad(hid_process_id)?;
-        hid_srv.get().set_supported_npad_style_set(hid_process_id, supported_tags)?;
-        hid_srv.get().set_supported_npad_id_type(hid_process_id, sf::Buffer::from_array(controllers))?;
-        hid_srv.get().activate_npad(hid_process_id)?;
-        set_all_controllers_mode_dual_impl!(? hid_srv, hid_process_id, hid::ControllerId::Player1, hid::ControllerId::Player2, hid::ControllerId::Player3, hid::ControllerId::Player4, hid::ControllerId::Player5, hid::ControllerId::Player6, hid::ControllerId::Player7, hid::ControllerId::Player8, hid::ControllerId::Handheld);
+        hid_srv.get().activate_npad(sf::ProcessId::from(aruid))?;
+        hid_srv.get().set_supported_npad_style_set(sf::ProcessId::from(aruid), supported_tags)?;
+        hid_srv.get().set_supported_npad_id_type(sf::ProcessId::from(aruid), sf::Buffer::from_array(controllers))?;
+        hid_srv.get().activate_npad(sf::ProcessId::from(aruid))?;
+        set_all_controllers_mode_dual_impl!(? hid_srv, sf::ProcessId::from(aruid), hid::ControllerId::Player1, hid::ControllerId::Player2, hid::ControllerId::Player3, hid::ControllerId::Player4, hid::ControllerId::Player5, hid::ControllerId::Player6, hid::ControllerId::Player7, hid::ControllerId::Player8, hid::ControllerId::Handheld);
         Ok(Self { hid_service: hid_srv, applet_resource: applet_res, shared_mem_handle: shmem_handle.handle, aruid: aruid, shared_mem_data: shmem_address as *const SharedMemoryData })
     }
 
@@ -293,9 +292,8 @@ impl InputContext {
 
 impl Drop for InputContext {
     fn drop(&mut self) {
-        let hid_process_id = sf::ProcessId::from(self.aruid);
-        set_all_controllers_mode_dual_impl!(self.hid_service, hid_process_id, hid::ControllerId::Player1, hid::ControllerId::Player2, hid::ControllerId::Player3, hid::ControllerId::Player4, hid::ControllerId::Player5, hid::ControllerId::Player6, hid::ControllerId::Player7, hid::ControllerId::Player8, hid::ControllerId::Handheld);
-        let _ = self.hid_service.get().deactivate_npad(hid_process_id);
+        set_all_controllers_mode_dual_impl!(self.hid_service, sf::ProcessId::from(self.aruid), hid::ControllerId::Player1, hid::ControllerId::Player2, hid::ControllerId::Player3, hid::ControllerId::Player4, hid::ControllerId::Player5, hid::ControllerId::Player6, hid::ControllerId::Player7, hid::ControllerId::Player8, hid::ControllerId::Handheld);
+        let _ = self.hid_service.get().deactivate_npad(sf::ProcessId::from(self.aruid));
         let _ = svc::unmap_shared_memory(self.shared_mem_handle, self.shared_mem_data as *mut u8, cmem::size_of::<SharedMemoryData>());
         let _ = svc::close_handle(self.shared_mem_handle);
     }

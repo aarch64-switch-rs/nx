@@ -28,7 +28,7 @@ impl<T: Copy> CommandParameter<T> for T {
 
 impl<const A: BufferAttribute, const S: usize> CommandParameter<sf::Buffer<A, S>> for sf::Buffer<A, S> {
     fn before_request_write(buffer: &Self, _walker: &mut DataWalker, ctx: &mut CommandContext) -> Result<()> {
-        ctx.add_buffer(*buffer)
+        ctx.add_buffer(buffer.clone())
     }
 
     fn before_send_sync_request(_buffer: &Self, _walker: &mut DataWalker, _ctx: &mut CommandContext) -> Result<()> {
@@ -43,7 +43,7 @@ impl<const A: BufferAttribute, const S: usize> CommandParameter<sf::Buffer<A, S>
 
 impl<const M: HandleMode> CommandParameter<sf::Handle<M>> for sf::Handle<M> {
     fn before_request_write(handle: &Self, _walker: &mut DataWalker, ctx: &mut CommandContext) -> Result<()> {
-        ctx.in_params.add_handle(*handle)
+        ctx.in_params.add_handle(handle.clone())
     }
 
     fn before_send_sync_request(_handle: &Self, _walker: &mut DataWalker, _ctx: &mut CommandContext) -> Result<()> {

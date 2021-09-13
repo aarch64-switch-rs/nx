@@ -5,7 +5,7 @@ use core::mem;
 use alloc::vec::Vec;
 use alloc::string::String;
 
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 pub struct Buffer<const A: BufferAttribute, const S: usize> {
     pub buf: *const u8,
     pub size: usize
@@ -16,7 +16,7 @@ impl<const A: BufferAttribute, const S: usize> Buffer<A, S> {
         Self { buf: ptr::null_mut(), size: 0 }
     }
 
-    pub const fn from_other<const B: BufferAttribute, const Z: usize>(other: Buffer<B, Z>) -> Self {
+    pub const fn from_other<const B: BufferAttribute, const Z: usize>(other: &Buffer<B, Z>) -> Self {
         Self { buf: other.buf, size: other.size }
     }
     
@@ -100,7 +100,7 @@ pub type OutPointerBuffer = Buffer<{bit_group!{ BufferAttribute [Out, Pointer] }
 pub type InFixedPointerBuffer<T> = Buffer<{bit_group!{ BufferAttribute [In, Pointer, FixedSize] }}, {mem::size_of::<T>()}>;
 pub type OutFixedPointerBuffer<T> = Buffer<{bit_group!{ BufferAttribute [Out, Pointer, FixedSize] }}, {mem::size_of::<T>()}>;
 
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 pub struct Handle<const M: HandleMode> {
     pub handle: svc::Handle
 }
@@ -114,7 +114,7 @@ impl<const M: HandleMode> Handle<M> {
 pub type CopyHandle = Handle<{HandleMode::Copy}>;
 pub type MoveHandle = Handle<{HandleMode::Move}>;
 
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 pub struct ProcessId {
     pub process_id: u64
 }

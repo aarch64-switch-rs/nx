@@ -58,7 +58,7 @@ impl<const A: BufferAttribute, const S: usize> CommandParameter<sf::Buffer<A, S>
         if A.contains(BufferAttribute::Out()) && A.contains(BufferAttribute::Pointer()) {
             // For Out(Fixed)Pointer buffers, we need to send them back as InPointer
             // Note: since buffers can't be out params in this command param system, we need to send them back this way
-            ctx.ctx.add_buffer(sf::InPointerBuffer::from_other(buf))?;
+            ctx.ctx.add_buffer(sf::InPointerBuffer::from_other(&buf))?;
         }
 
         Ok(buf)
@@ -80,7 +80,7 @@ impl<const M: HandleMode> CommandParameter<sf::Handle<M>> for sf::Handle<M> {
     }
 
     fn before_response_write(handle: &Self, ctx: &mut ServerContext) -> Result<()> {
-        ctx.ctx.out_params.push_handle(*handle)
+        ctx.ctx.out_params.push_handle(handle.clone())
     }
 
     fn after_response_write(_handle: &Self, _ctx: &mut ServerContext) -> Result<()> {
