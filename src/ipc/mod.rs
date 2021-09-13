@@ -581,14 +581,15 @@ pub struct CommandContext {
     receive_buffers: ArrayVec<[BufferDescriptor; MAX_COUNT]>,
     exchange_buffers: ArrayVec<[BufferDescriptor; MAX_COUNT]>,
     pointer_buffer: *mut u8,
-    pointer_buffer_offset: usize,
+    in_pointer_buffer_offset: usize,
+    out_pointer_buffer_offset: usize,
     pointer_size_walker: DataWalker,
     pointer_size_walker_initialized: bool
 }
 
 impl CommandContext {
     pub fn empty() -> Self {
-        Self { object_info: ObjectInfo::new(), in_params: CommandIn::empty(), out_params: CommandOut::empty(), send_statics: ArrayVec::new(), receive_statics: ArrayVec::new(), send_buffers: ArrayVec::new(), receive_buffers: ArrayVec::new(), exchange_buffers: ArrayVec::new(), pointer_buffer: core::ptr::null_mut(), pointer_buffer_offset: 0, pointer_size_walker: DataWalker::empty(), pointer_size_walker_initialized: false }
+        Self { object_info: ObjectInfo::new(), in_params: CommandIn::empty(), out_params: CommandOut::empty(), send_statics: ArrayVec::new(), receive_statics: ArrayVec::new(), send_buffers: ArrayVec::new(), receive_buffers: ArrayVec::new(), exchange_buffers: ArrayVec::new(), pointer_buffer: core::ptr::null_mut(), in_pointer_buffer_offset: 0, out_pointer_buffer_offset: 0, pointer_size_walker: DataWalker::empty(), pointer_size_walker_initialized: false }
     }
 
     pub fn new_client(object_info: ObjectInfo) -> Self {
@@ -666,11 +667,11 @@ impl CommandContext {
             let pointer_buf_size = self.pointer_buffer as usize;
             let mut buffer_in_static = false;
             if pointer_buf_size > 0 {
-                let left_size = pointer_buf_size - self.pointer_buffer_offset;
+                let left_size = pointer_buf_size - self.in_pointer_buffer_offset;
                 buffer_in_static = buffer.size <= left_size;
             }
             if buffer_in_static {
-                self.pointer_buffer_offset += buffer.size;
+                self.in_pointer_buffer_offset += buffer.size;
             }
             
             if is_in {
@@ -812,9 +813,9 @@ impl CommandContext {
                         self.pointer_size_walker.advance_get::<u16>() as usize
                     }
                 };
-                self.pointer_buffer_offset = crate::mem::align_down(self.pointer_buffer_offset - buf_size, 0x10);
-                let buf = unsafe { self.pointer_buffer.offset(self.pointer_buffer_offset as isize) };
-                self.add_send_static(SendStaticDescriptor::new(buf as *const u8, buf_size, self.send_statics.len() as u32))?;
+
+                let buf = unsafe { self.pointer_buffer.offset(self.out_pointer_buffer_offset as isize) };
+                self.out_pointer_buffer_offset += buf_size;
                 return Ok(sf::Buffer::from_mut(buf, buf_size));
             }
         }
