@@ -402,9 +402,9 @@ impl DataWalker {
 }
 
 #[inline(always)]
-pub fn get_ipc_buffer() -> *mut u8 {
+pub fn get_msg_buffer() -> *mut u8 {
     unsafe {
-        &mut (*thread::get_thread_local_storage()).ipc_buffer as *mut _ as *mut u8
+        (*thread::get_thread_local_region()).msg_buffer.as_mut_ptr()
     }
 }
 

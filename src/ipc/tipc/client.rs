@@ -2,10 +2,10 @@ use super::*;
 use core::mem as cmem;
 
 #[inline(always)]
-pub fn write_command_on_ipc_buffer(ctx: &mut CommandContext, command_type: u32, data_size: u32) {
+pub fn write_command_on_msg_buffer(ctx: &mut CommandContext, command_type: u32, data_size: u32) {
     unsafe {
         // TODO: in move handles are allowed?
-        let mut ipc_buf = get_ipc_buffer();
+        let mut ipc_buf = get_msg_buffer();
     
         let has_special_header = ctx.in_params.send_process_id || ctx.in_params.copy_handles.len() > 0 || ctx.in_params.move_handles.len() > 0;
         let data_word_count = (data_size + 3) / 4;
@@ -34,9 +34,9 @@ pub fn write_command_on_ipc_buffer(ctx: &mut CommandContext, command_type: u32, 
 }
 
 #[inline(always)]
-pub fn read_command_response_from_ipc_buffer(ctx: &mut CommandContext) {
+pub fn read_command_response_from_msg_buffer(ctx: &mut CommandContext) {
     unsafe {
-        let mut ipc_buf = get_ipc_buffer();
+        let mut ipc_buf = get_msg_buffer();
 
         let command_header = ipc_buf as *mut CommandHeader;
         ipc_buf = command_header.offset(1) as *mut u8;
@@ -61,18 +61,18 @@ pub fn read_command_response_from_ipc_buffer(ctx: &mut CommandContext) {
 }
 
 #[inline(always)]
-pub fn write_request_command_on_ipc_buffer(ctx: &mut CommandContext, request_id: u32) {
+pub fn write_request_command_on_msg_buffer(ctx: &mut CommandContext, request_id: u32) {
     // TIPC directly sends the request ID here, withot wasting data words
     let command_type = request_id + 16;
-    write_command_on_ipc_buffer(ctx, command_type, ctx.in_params.data_size);
+    write_command_on_msg_buffer(ctx, command_type, ctx.in_params.data_size);
 
     ctx.in_params.data_offset = ctx.in_params.data_words_offset;
 }
 
 #[inline(always)]
-pub fn read_request_command_response_from_ipc_buffer(ctx: &mut CommandContext) -> Result<()> {
+pub fn read_request_command_response_from_msg_buffer(ctx: &mut CommandContext) -> Result<()> {
     unsafe {
-        read_command_response_from_ipc_buffer(ctx);
+        read_command_response_from_msg_buffer(ctx);
 
         let data_offset = ctx.out_params.data_words_offset;
         let rc_ref = data_offset as *mut ResultCode;
@@ -84,6 +84,6 @@ pub fn read_request_command_response_from_ipc_buffer(ctx: &mut CommandContext) -
 }
 
 #[inline(always)]
-pub fn write_close_command_on_ipc_buffer(ctx: &mut CommandContext) {
-    write_command_on_ipc_buffer(ctx, CommandType::CloseSession as u32, 0);
+pub fn write_close_command_on_msg_buffer(ctx: &mut CommandContext) {
+    write_command_on_msg_buffer(ctx, CommandType::CloseSession as u32, 0);
 }

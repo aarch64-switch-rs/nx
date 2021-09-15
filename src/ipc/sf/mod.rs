@@ -163,15 +163,15 @@ impl Session {
         if self.object_info.is_valid() {
             if self.object_info.is_domain() {
                 let mut ctx = CommandContext::new_client(self.object_info);
-                cmif::client::write_request_command_on_ipc_buffer(&mut ctx, None, cmif::DomainCommandType::Close);
+                cmif::client::write_request_command_on_msg_buffer(&mut ctx, None, cmif::DomainCommandType::Close);
                 let _ = svc::send_sync_request(self.object_info.handle);
             }
             else if self.object_info.owns_handle {
                 let mut ctx = CommandContext::new_client(self.object_info);
                 
                 match self.object_info.protocol {
-                    CommandProtocol::Cmif => cmif::client::write_close_command_on_ipc_buffer(&mut ctx),
-                    CommandProtocol::Tipc => tipc::client::write_close_command_on_ipc_buffer(&mut ctx)
+                    CommandProtocol::Cmif => cmif::client::write_close_command_on_msg_buffer(&mut ctx),
+                    CommandProtocol::Tipc => tipc::client::write_close_command_on_msg_buffer(&mut ctx)
                 };
 
                 let _ = svc::send_sync_request(self.object_info.handle);

@@ -217,25 +217,35 @@ impl Drop for Thread {
     }
 }
 
+// Note: https://switchbrew.org/wiki/Thread_Local_Region
+
 #[derive(Copy, Clone)]
 #[repr(C)]
-pub struct Tls {
-    pub ipc_buffer: [u8; 0x100],
-    pub preemption_state: u32,
-    pub unk: [u8; 0xF4],
+pub struct ThreadLocalRegion {
+    pub msg_buffer: [u8; 0x100],
+    pub disable_counter: u16,
+    pub interrupt_flag: u16,
+    pub reserved_1: [u8; 0x4],
+    pub reserved_2: [u8; 0x78],
+    pub tls: [u8; 0x50],
+    pub locale_ptr: *mut u8,
+    pub errno_val: i64,
+    pub thread_data: [u8; 0x8],
+    pub eh_globals: [u8; 0x8],
+    pub thread_ptr: *mut u8,
     pub thread_ref: *mut Thread,
 }
 
 #[inline(always)]
-pub fn get_thread_local_storage() -> *mut Tls {
-    let tls: *mut Tls;
+pub fn get_thread_local_region() -> *mut ThreadLocalRegion {
+    let tlr: *mut ThreadLocalRegion;
     unsafe {
         asm!(
             "mrs {}, tpidrro_el0",
-            out(reg) tls
+            out(reg) tlr
         );
     }
-    tls
+    tlr
 }
 
 pub fn set_current_thread(thread_ref: *mut Thread) {
@@ -243,15 +253,15 @@ pub fn set_current_thread(thread_ref: *mut Thread) {
         (*thread_ref).self_ref = thread_ref;
         (*thread_ref).name_addr = &mut (*thread_ref).name as *mut _ as *mut u8;
 
-        let tls = get_thread_local_storage();
-        (*tls).thread_ref = thread_ref;
+        let tlr = get_thread_local_region();
+        (*tlr).thread_ref = thread_ref;
     }
 }
 
 pub fn get_current_thread() -> &'static mut Thread {
     unsafe {
-        let tls = get_thread_local_storage();
-        &mut *(*tls).thread_ref
+        let tlr = get_thread_local_region();
+        &mut *(*tlr).thread_ref
     }
 }
 

@@ -472,7 +472,7 @@ impl<const P: usize> ServerManager<P> {
                 let server_info = server_holder.info;
                 if server_info.handle == ctx.object_info.handle {
                     let send_to_forward_handle = || -> Result<()> {
-                        let ipc_buf = get_ipc_buffer();
+                        let ipc_buf = get_msg_buffer();
                         unsafe {
                             core::ptr::copy(ipc_buf_backup.as_ptr(), ipc_buf, ipc_buf_backup.len());
                         }
@@ -496,11 +496,11 @@ impl<const P: usize> ServerManager<P> {
                             if let Err(rc) = target_server.get().call_self_command(command.command_fn, &mut server_ctx) {
                                 if server_holder.is_mitm_service && results::sm::mitm::ResultShouldForwardToSession::matches(rc) {
                                     if let Err(rc) = send_to_forward_handle() {
-                                        cmif::server::write_request_command_response_on_ipc_buffer(ctx, rc, command_type);
+                                        cmif::server::write_request_command_response_on_msg_buffer(ctx, rc, command_type);
                                     }
                                 }
                                 else {
-                                    cmif::server::write_request_command_response_on_ipc_buffer(ctx, rc, command_type);
+                                    cmif::server::write_request_command_response_on_msg_buffer(ctx, rc, command_type);
                                 }
                             }
                         }
@@ -508,11 +508,11 @@ impl<const P: usize> ServerManager<P> {
                     if !command_found {
                         if server_holder.is_mitm_service {
                             if let Err(rc) = send_to_forward_handle() {
-                                cmif::server::write_request_command_response_on_ipc_buffer(ctx, rc, command_type);
+                                cmif::server::write_request_command_response_on_msg_buffer(ctx, rc, command_type);
                             }
                         }
                         else {
-                            cmif::server::write_request_command_response_on_ipc_buffer(ctx, results::cmif::ResultInvalidCommandRequestId::make(), command_type);
+                            cmif::server::write_request_command_response_on_msg_buffer(ctx, results::cmif::ResultInvalidCommandRequestId::make(), command_type);
                         }
                     }
                     break;
@@ -561,12 +561,12 @@ impl<const P: usize> ServerManager<P> {
                         let unused_domain_table = mem::Shared::empty();
                         let mut server_ctx = ServerContext::new(ctx, DataWalker::empty(), unused_domain_table, &mut unused_new_sessions);
                         if let Err(rc) = hipc_manager.call_self_command(command.command_fn, &mut server_ctx) {
-                            cmif::server::write_control_command_response_on_ipc_buffer(ctx, rc, command_type);
+                            cmif::server::write_control_command_response_on_msg_buffer(ctx, rc, command_type);
                         }
                     }
                 }
                 if !command_found {
-                    cmif::server::write_control_command_response_on_ipc_buffer(ctx, results::cmif::ResultInvalidCommandRequestId::make(), command_type);
+                    cmif::server::write_control_command_response_on_msg_buffer(ctx, results::cmif::ResultInvalidCommandRequestId::make(), command_type);
                 }
 
                 if hipc_manager.has_cloned_object() {
@@ -603,7 +603,7 @@ impl<const P: usize> ServerManager<P> {
                             // Send our pointer buffer as a C descriptor for kernel - why are Pointer buffers so fucking weird?
                             let mut tmp_ctx = CommandContext::new_client(server_info);
                             tmp_ctx.add_receive_static(ReceiveStaticDescriptor::new(self.pointer_buffer.as_ptr(), P))?;
-                            cmif::client::write_command_on_ipc_buffer(&mut tmp_ctx, cmif::CommandType::Invalid, 0);
+                            cmif::client::write_command_on_msg_buffer(&mut tmp_ctx, cmif::CommandType::Invalid, 0);
                         }
 
                         match svc::reply_and_receive(&handle, 1, 0, -1) {
@@ -619,13 +619,13 @@ impl<const P: usize> ServerManager<P> {
                             _ => {}
                         };
 
-                        unsafe { core::ptr::copy(get_ipc_buffer(), ipc_buf_backup.as_mut_ptr(), ipc_buf_backup.len()) };
+                        unsafe { core::ptr::copy(get_msg_buffer(), ipc_buf_backup.as_mut_ptr(), ipc_buf_backup.len()) };
 
                         ctx = CommandContext::new_server(server_info, self.pointer_buffer.as_mut_ptr());
-                        command_type = cmif::server::read_command_from_ipc_buffer(&mut ctx);
+                        command_type = cmif::server::read_command_from_msg_buffer(&mut ctx);
                         match command_type {
                             cmif::CommandType::Request | cmif::CommandType::RequestWithContext => {
-                                match cmif::server::read_request_command_from_ipc_buffer(&mut ctx) {
+                                match cmif::server::read_request_command_from_msg_buffer(&mut ctx) {
                                     Ok((request_id, domain_command_type, domain_object_id)) => {
                                         let mut base_info = server_info;
                                         if server_info.is_domain() {
@@ -642,7 +642,7 @@ impl<const P: usize> ServerManager<P> {
                                 };
                             },
                             cmif::CommandType::Control | cmif::CommandType::ControlWithContext => {
-                                match cmif::server::read_control_command_from_ipc_buffer(&mut ctx) {
+                                match cmif::server::read_control_command_from_msg_buffer(&mut ctx) {
                                     Ok(control_rq_id) => {
                                         rq_id = control_rq_id as u32;
                                     },
@@ -698,7 +698,7 @@ impl<const P: usize> ServerManager<P> {
                 reply_impl()?;
             },
             cmif::CommandType::Close => {
-                cmif::server::write_close_command_response_on_ipc_buffer(&mut ctx);
+                cmif::server::write_close_command_response_on_msg_buffer(&mut ctx);
                 reply_impl()?;
             }
             _ => {

@@ -21,7 +21,7 @@ macro_rules! ipc_cmif_interface_define_command {
                 $( $crate::ipc::server::CommandParameter::<_>::before_response_write(&$out_param_name, &mut ctx)?; )*
                 ctx.ctx.out_params.data_size = ctx.raw_data_walker.get_offset() as u32;
 
-                $crate::ipc::cmif::server::write_request_command_response_on_ipc_buffer(&mut ctx.ctx, $crate::result::ResultSuccess::make(), $crate::ipc::cmif::CommandType::Request);
+                $crate::ipc::cmif::server::write_request_command_response_on_msg_buffer(&mut ctx.ctx, $crate::result::ResultSuccess::make(), $crate::ipc::cmif::CommandType::Request);
 
                 ctx.raw_data_walker = $crate::ipc::DataWalker::new(ctx.ctx.out_params.data_offset);
                 $( $crate::ipc::server::CommandParameter::<_>::after_response_write(&$out_param_name, &mut ctx)?; )*
@@ -51,7 +51,7 @@ macro_rules! ipc_tipc_interface_define_command {
                 $( $crate::ipc::server::CommandParameter::<_>::before_response_write(&$out_param_name, &mut ctx)?; )*
                 ctx.ctx.out_params.data_size = ctx.raw_data_walker.get_offset() as u32;
 
-                $crate::ipc::tipc::server::write_request_command_response_on_ipc_buffer(&mut ctx.ctx, $crate::result::ResultSuccess::make(), 16); // TODO: is this command type actually read/used/relevant?
+                $crate::ipc::tipc::server::write_request_command_response_on_msg_buffer(&mut ctx.ctx, $crate::result::ResultSuccess::make(), 16); // TODO: is this command type actually read/used/relevant?
 
                 ctx.raw_data_walker = $crate::ipc::DataWalker::new(ctx.ctx.out_params.data_offset);
                 $( $crate::ipc::server::CommandParameter::<_>::after_response_write(&$out_param_name, &mut ctx)?; )*
@@ -81,7 +81,7 @@ macro_rules! ipc_cmif_tipc_interface_define_command {
                 $( $crate::ipc::server::CommandParameter::<_>::before_response_write(&$out_param_name, &mut ctx)?; )*
                 ctx.ctx.out_params.data_size = ctx.raw_data_walker.get_offset() as u32;
 
-                $crate::ipc::cmif::server::write_request_command_response_on_ipc_buffer(&mut ctx.ctx, $crate::result::ResultSuccess::make(), $crate::ipc::cmif::CommandType::Request);
+                $crate::ipc::cmif::server::write_request_command_response_on_msg_buffer(&mut ctx.ctx, $crate::result::ResultSuccess::make(), $crate::ipc::cmif::CommandType::Request);
 
                 ctx.raw_data_walker = $crate::ipc::DataWalker::new(ctx.ctx.out_params.data_offset);
                 $( $crate::ipc::server::CommandParameter::<_>::after_response_write(&$out_param_name, &mut ctx)?; )*
@@ -101,7 +101,7 @@ macro_rules! ipc_cmif_tipc_interface_define_command {
                 $( $crate::ipc::server::CommandParameter::<_>::before_response_write(&$out_param_name, &mut ctx)?; )*
                 ctx.ctx.out_params.data_size = ctx.raw_data_walker.get_offset() as u32;
 
-                $crate::ipc::tipc::server::write_request_command_response_on_ipc_buffer(&mut ctx.ctx, $crate::result::ResultSuccess::make(), 16); // TODO: is this command type actually read/used/relevant?
+                $crate::ipc::tipc::server::write_request_command_response_on_msg_buffer(&mut ctx.ctx, $crate::result::ResultSuccess::make(), 16); // TODO: is this command type actually read/used/relevant?
 
                 ctx.raw_data_walker = $crate::ipc::DataWalker::new(ctx.ctx.out_params.data_offset);
                 $( $crate::ipc::server::CommandParameter::<_>::after_response_write(&$out_param_name, &mut ctx)?; )*
@@ -131,7 +131,7 @@ macro_rules! ipc_control_interface_define_command {
                 $( $crate::ipc::server::CommandParameter::<_>::before_response_write(&$out_param_name, &mut ctx)?; )*
                 ctx.ctx.out_params.data_size = ctx.raw_data_walker.get_offset() as u32;
 
-                $crate::ipc::cmif::server::write_control_command_response_on_ipc_buffer(&mut ctx.ctx, $crate::result::ResultSuccess::make(), $crate::ipc::cmif::CommandType::Control);
+                $crate::ipc::cmif::server::write_control_command_response_on_msg_buffer(&mut ctx.ctx, $crate::result::ResultSuccess::make(), $crate::ipc::cmif::CommandType::Control);
 
                 ctx.raw_data_walker = $crate::ipc::DataWalker::new(ctx.ctx.out_params.data_offset);
                 $( $crate::ipc::server::CommandParameter::<_>::after_response_write(&$out_param_name, &mut ctx)?; )*

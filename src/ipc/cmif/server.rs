@@ -4,9 +4,9 @@ use super::*;
 use core::mem as cmem;
 
 #[inline(always)]
-pub fn read_command_from_ipc_buffer(ctx: &mut CommandContext) -> CommandType {
+pub fn read_command_from_msg_buffer(ctx: &mut CommandContext) -> CommandType {
     unsafe {
-        let mut ipc_buf = get_ipc_buffer();
+        let mut ipc_buf = get_msg_buffer();
 
         let command_header = ipc_buf as *mut CommandHeader;
         ipc_buf = command_header.offset(1) as *mut u8;
@@ -52,9 +52,9 @@ pub fn read_command_from_ipc_buffer(ctx: &mut CommandContext) -> CommandType {
 }
 
 #[inline(always)]
-pub fn write_command_response_on_ipc_buffer(ctx: &mut CommandContext, command_type: CommandType, data_size: u32) {
+pub fn write_command_response_on_msg_buffer(ctx: &mut CommandContext, command_type: CommandType, data_size: u32) {
     unsafe {
-        let mut ipc_buf = get_ipc_buffer();
+        let mut ipc_buf = get_msg_buffer();
         
         let command_header = ipc_buf as *mut CommandHeader;
         ipc_buf = command_header.offset(1) as *mut u8;
@@ -88,11 +88,11 @@ pub fn write_command_response_on_ipc_buffer(ctx: &mut CommandContext, command_ty
 }
 
 #[inline(always)]
-pub fn read_request_command_from_ipc_buffer(ctx: &mut CommandContext) -> Result<(u32, DomainCommandType, DomainObjectId)> {
+pub fn read_request_command_from_msg_buffer(ctx: &mut CommandContext) -> Result<(u32, DomainCommandType, DomainObjectId)> {
     unsafe {
         let mut domain_command_type = DomainCommandType::Invalid;
         let mut domain_object_id: DomainObjectId = 0;
-        let ipc_buf = get_ipc_buffer();
+        let ipc_buf = get_msg_buffer();
         let mut data_offset = get_aligned_data_offset(ctx.in_params.data_words_offset, ipc_buf);
 
         let mut data_header = data_offset as *mut DataHeader;
@@ -128,16 +128,16 @@ pub fn read_request_command_from_ipc_buffer(ctx: &mut CommandContext) -> Result<
 }
 
 #[inline(always)]
-pub fn write_request_command_response_on_ipc_buffer(ctx: &mut CommandContext, result: ResultCode, request_type: CommandType) {
+pub fn write_request_command_response_on_msg_buffer(ctx: &mut CommandContext, result: ResultCode, request_type: CommandType) {
     unsafe {
-        let ipc_buf = get_ipc_buffer();
+        let ipc_buf = get_msg_buffer();
         let mut data_size = DATA_PADDING + cmem::size_of::<DataHeader>() as u32 + ctx.out_params.data_size;
         if ctx.object_info.is_domain() {
             data_size += (cmem::size_of::<DomainOutDataHeader>() + cmem::size_of::<DomainObjectId>() * ctx.out_params.objects.len()) as u32;
         }
         data_size = (data_size + 1) & !1;
 
-        write_command_response_on_ipc_buffer(ctx, request_type, data_size);
+        write_command_response_on_msg_buffer(ctx, request_type, data_size);
         let mut data_offset = get_aligned_data_offset(ctx.out_params.data_words_offset, ipc_buf);
 
         let mut data_header = data_offset as *mut DataHeader;
@@ -161,9 +161,9 @@ pub fn write_request_command_response_on_ipc_buffer(ctx: &mut CommandContext, re
 }
 
 #[inline(always)]
-pub fn read_control_command_from_ipc_buffer(ctx: &mut CommandContext) -> Result<ControlRequestId> {
+pub fn read_control_command_from_msg_buffer(ctx: &mut CommandContext) -> Result<ControlRequestId> {
     unsafe {
-        let ipc_buf = get_ipc_buffer();
+        let ipc_buf = get_msg_buffer();
         let mut data_offset = get_aligned_data_offset(ctx.in_params.data_words_offset, ipc_buf);
 
         let data_header = data_offset as *mut DataHeader;
@@ -179,13 +179,13 @@ pub fn read_control_command_from_ipc_buffer(ctx: &mut CommandContext) -> Result<
 }
 
 #[inline(always)]
-pub fn write_control_command_response_on_ipc_buffer(ctx: &mut CommandContext, result: ResultCode, control_type: CommandType) {
+pub fn write_control_command_response_on_msg_buffer(ctx: &mut CommandContext, result: ResultCode, control_type: CommandType) {
     unsafe {
-        let ipc_buf = get_ipc_buffer();
+        let ipc_buf = get_msg_buffer();
         let mut data_size = DATA_PADDING + cmem::size_of::<DataHeader>() as u32 + ctx.out_params.data_size;
         data_size = (data_size + 1) & !1;
 
-        write_command_response_on_ipc_buffer(ctx, control_type, data_size);
+        write_command_response_on_msg_buffer(ctx, control_type, data_size);
         let mut data_offset = get_aligned_data_offset(ctx.out_params.data_words_offset, ipc_buf);
 
         let data_header = data_offset as *mut DataHeader;
@@ -201,6 +201,6 @@ pub fn write_control_command_response_on_ipc_buffer(ctx: &mut CommandContext, re
 }
 
 #[inline(always)]
-pub fn write_close_command_response_on_ipc_buffer(ctx: &mut CommandContext) {
-    write_command_response_on_ipc_buffer(ctx, CommandType::Close, 0);
+pub fn write_close_command_response_on_msg_buffer(ctx: &mut CommandContext) {
+    write_command_response_on_msg_buffer(ctx, CommandType::Close, 0);
 }
