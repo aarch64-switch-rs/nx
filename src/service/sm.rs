@@ -52,7 +52,7 @@ impl sf::IObject for UserInterface {
 
 impl service::IClientObject for UserInterface {
     fn new(session: sf::Session) -> Self {
-        Self { session: session }
+        Self { session }
     }
 }
 

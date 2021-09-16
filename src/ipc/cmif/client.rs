@@ -7,7 +7,7 @@ pub fn write_command_on_msg_buffer(ctx: &mut CommandContext, command_type: Comma
     unsafe {
         let mut ipc_buf = get_msg_buffer();
     
-        let has_special_header = ctx.in_params.send_process_id || ctx.in_params.copy_handles.len() > 0 || ctx.in_params.move_handles.len() > 0;
+        let has_special_header = ctx.in_params.send_process_id || !ctx.in_params.copy_handles.is_empty() || !ctx.in_params.move_handles.is_empty();
         let data_word_count = (data_size + 3) / 4;
         let command_header = ipc_buf as *mut CommandHeader;
         *command_header = CommandHeader::new(command_type as u32, ctx.send_statics.len() as u32, ctx.send_buffers.len() as u32, ctx.receive_buffers.len() as u32, ctx.exchange_buffers.len() as u32, data_word_count, ctx.receive_statics.len() as u32, has_special_header);
@@ -19,7 +19,7 @@ pub fn write_command_on_msg_buffer(ctx: &mut CommandContext, command_type: Comma
             ipc_buf = special_header.offset(1) as *mut u8;
 
             if ctx.in_params.send_process_id {
-                ipc_buf = ipc_buf.offset(cmem::size_of::<u64>() as isize);
+                ipc_buf = ipc_buf.add(cmem::size_of::<u64>());
             }
 
             ipc_buf = write_array_to_buffer(ipc_buf, ctx.in_params.copy_handles.len() as u32, &ctx.in_params.copy_handles);
@@ -31,7 +31,7 @@ pub fn write_command_on_msg_buffer(ctx: &mut CommandContext, command_type: Comma
         ipc_buf = write_array_to_buffer(ipc_buf, ctx.receive_buffers.len() as u32, &ctx.receive_buffers);
         ipc_buf = write_array_to_buffer(ipc_buf, ctx.exchange_buffers.len() as u32, &ctx.exchange_buffers);
         ctx.in_params.data_words_offset = ipc_buf;
-        ipc_buf = ipc_buf.offset((cmem::size_of::<u32>() * data_word_count as usize) as isize);
+        ipc_buf = ipc_buf.add((cmem::size_of::<u32>() * data_word_count as usize));
         write_array_to_buffer(ipc_buf, ctx.receive_statics.len() as u32, &ctx.receive_statics);
     }
 }
@@ -53,14 +53,14 @@ pub fn read_command_response_from_msg_buffer(ctx: &mut CommandContext) {
             ipc_buf = special_header.offset(1) as *mut u8;
             if (*special_header).get_send_process_id() {
                 ctx.out_params.process_id = *(ipc_buf as *mut u64);
-                ipc_buf = ipc_buf.offset(cmem::size_of::<u64>() as isize);
+                ipc_buf = ipc_buf.add(cmem::size_of::<u64>());
             }
         }
 
         ipc_buf = read_array_from_buffer(ipc_buf, copy_handle_count, &mut ctx.out_params.copy_handles);
         ipc_buf = read_array_from_buffer(ipc_buf, move_handle_count, &mut ctx.out_params.move_handles);
 
-        ipc_buf = ipc_buf.offset((cmem::size_of::<SendStaticDescriptor>() * (*command_header).get_send_static_count() as usize) as isize);
+        ipc_buf = ipc_buf.add((cmem::size_of::<SendStaticDescriptor>() * (*command_header).get_send_static_count() as usize));
         ctx.out_params.data_words_offset = ipc_buf;
     }
 }
@@ -95,7 +95,7 @@ pub fn write_request_command_on_msg_buffer(ctx: &mut CommandContext, request_id:
             let domain_header = data_offset as *mut DomainInDataHeader;
             let left_data_size = cmem::size_of::<DataHeader>() as u32 + ctx.in_params.data_size;
             *domain_header = DomainInDataHeader::new(domain_command_type, ctx.in_params.objects.len() as u8, left_data_size as u16, ctx.object_info.domain_object_id, 0);
-            data_offset = data_offset.offset(cmem::size_of::<DomainInDataHeader>() as isize);
+            data_offset = data_offset.add(cmem::size_of::<DomainInDataHeader>());
             let objects_offset = data_offset.offset(left_data_size as isize);
             write_array_to_buffer(objects_offset, ctx.in_params.objects.len() as u32, &ctx.in_params.objects);
             data_header = data_offset as *mut DataHeader;
@@ -103,7 +103,7 @@ pub fn write_request_command_on_msg_buffer(ctx: &mut CommandContext, request_id:
 
         if has_data_header {
             *data_header = DataHeader::new(IN_DATA_HEADER_MAGIC, 0, request_id.unwrap(), 0);
-            data_offset = data_offset.offset(cmem::size_of::<DataHeader>() as isize);
+            data_offset = data_offset.add(cmem::size_of::<DataHeader>());
         }
 
         ctx.in_params.data_offset = data_offset;
@@ -120,14 +120,14 @@ pub fn read_request_command_response_from_msg_buffer(ctx: &mut CommandContext) -
         let mut data_header = data_offset as *mut DataHeader;
         if ctx.object_info.is_domain() {
             let domain_header = data_offset as *mut DomainOutDataHeader;
-            data_offset = data_offset.offset(cmem::size_of::<DomainOutDataHeader>() as isize);
-            let objects_offset = data_offset.offset((cmem::size_of::<DataHeader>() + ctx.out_params.data_size as usize) as isize);
+            data_offset = data_offset.add(cmem::size_of::<DomainOutDataHeader>());
+            let objects_offset = data_offset.add((cmem::size_of::<DataHeader>() + ctx.out_params.data_size as usize));
             let object_count = (*domain_header).out_object_count;
             read_array_from_buffer(objects_offset, object_count, &mut ctx.out_params.objects);
             data_header = data_offset as *mut DataHeader;
         }
 
-        data_offset = data_offset.offset(cmem::size_of::<DataHeader>() as isize);
+        data_offset = data_offset.add(cmem::size_of::<DataHeader>());
         result_return_unless!((*data_header).magic == OUT_DATA_HEADER_MAGIC, results::cmif::ResultInvalidOutputHeader);
         result_try!(ResultCode::new((*data_header).value));
 
@@ -148,7 +148,7 @@ pub fn write_control_command_on_msg_buffer(ctx: &mut CommandContext, request_id:
         let data_header = data_offset as *mut DataHeader;
         *data_header = DataHeader::new(IN_DATA_HEADER_MAGIC, 0, request_id as u32, 0);
 
-        data_offset = data_offset.offset(cmem::size_of::<DataHeader>() as isize);
+        data_offset = data_offset.add(cmem::size_of::<DataHeader>());
         ctx.in_params.data_offset = data_offset;
     }
 }
@@ -163,7 +163,7 @@ pub fn read_control_command_response_from_msg_buffer(ctx: &mut CommandContext) -
 
         let data_header = data_offset as *mut DataHeader;
         
-        data_offset = data_offset.offset(cmem::size_of::<DataHeader>() as isize);
+        data_offset = data_offset.add(cmem::size_of::<DataHeader>());
         result_return_unless!((*data_header).magic == OUT_DATA_HEADER_MAGIC, results::cmif::ResultInvalidOutputHeader);
         result_try!(ResultCode::new((*data_header).value));
 

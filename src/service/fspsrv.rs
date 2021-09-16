@@ -25,7 +25,7 @@ impl sf::IObject for File {
 
 impl service::IClientObject for File {
     fn new(session: sf::Session) -> Self {
-        Self { session: session }
+        Self { session }
     }
 }
 
@@ -66,7 +66,7 @@ impl sf::IObject for FileSystem {
 
 impl service::IClientObject for FileSystem {
     fn new(session: sf::Session) -> Self {
-        Self { session: session }
+        Self { session }
     }
 }
 
@@ -120,7 +120,7 @@ impl sf::IObject for FileSystemProxy {
 
 impl service::IClientObject for FileSystemProxy {
     fn new(session: sf::Session) -> Self {
-        Self { session: session }
+        Self { session }
     }
 }
 

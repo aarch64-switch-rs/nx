@@ -27,7 +27,7 @@ impl sf::IObject for PmModule {
 
 impl service::IClientObject for PmModule {
     fn new(session: sf::Session) -> Self {
-        Self { session: session }
+        Self { session }
     }
 }
 
@@ -71,7 +71,7 @@ impl sf::IObject for PmService {
 
 impl service::IClientObject for PmService {
     fn new(session: sf::Session) -> Self {
-        Self { session: session }
+        Self { session }
     }
 }
 

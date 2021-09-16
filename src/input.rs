@@ -180,7 +180,7 @@ pub struct Player {
 
 impl Player {
     pub fn new(controller: hid::ControllerId, data: *const ControllerData) -> Self {
-        Self { controller: controller, data: data, prev_button_state: 0 }
+        Self { controller, data, prev_button_state: 0 }
     }
 
     fn get_latest_state_entry(&self) -> *const ControllerStateEntry {
@@ -261,7 +261,7 @@ impl InputContext {
         hid_srv.get().set_supported_npad_id_type(sf::ProcessId::from(aruid), sf::Buffer::from_array(controllers))?;
         hid_srv.get().activate_npad(sf::ProcessId::from(aruid))?;
         set_all_controllers_mode_dual_impl!(? hid_srv, sf::ProcessId::from(aruid), hid::ControllerId::Player1, hid::ControllerId::Player2, hid::ControllerId::Player3, hid::ControllerId::Player4, hid::ControllerId::Player5, hid::ControllerId::Player6, hid::ControllerId::Player7, hid::ControllerId::Player8, hid::ControllerId::Handheld);
-        Ok(Self { hid_service: hid_srv, applet_resource: applet_res, shared_mem_handle: shmem_handle.handle, aruid: aruid, shared_mem_data: shmem_address as *const SharedMemoryData })
+        Ok(Self { hid_service: hid_srv, applet_resource: applet_res, shared_mem_handle: shmem_handle.handle, aruid, shared_mem_data: shmem_address as *const SharedMemoryData })
     }
 
     pub fn is_controller_connected(&mut self, controller: hid::ControllerId) -> bool {

@@ -53,7 +53,7 @@ impl Version {
     }
     
     pub const fn new(value: u32) -> Self {
-        Self { value: value }
+        Self { value }
     }
 
     pub const fn get_major(&self) -> u8 {

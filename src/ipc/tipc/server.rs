@@ -52,7 +52,7 @@ pub fn write_command_response_on_msg_buffer(ctx: &mut CommandContext, command_ty
         ipc_buf = command_header.offset(1) as *mut u8;
 
         let data_word_count = (data_size + 3) / 4;
-        let has_special_header = ctx.out_params.send_process_id || (ctx.out_params.copy_handles.len() > 0) || (ctx.out_params.move_handles.len() > 0);
+        let has_special_header = ctx.out_params.send_process_id || !ctx.out_params.copy_handles.is_empty() || !ctx.out_params.move_handles.is_empty();
         *command_header = CommandHeader::new(command_type, 0, ctx.send_buffers.len() as u32, ctx.receive_buffers.len() as u32, ctx.exchange_buffers.len() as u32, data_word_count, 0, has_special_header);
 
         if has_special_header {
@@ -61,7 +61,7 @@ pub fn write_command_response_on_msg_buffer(ctx: &mut CommandContext, command_ty
 
             *special_header = CommandSpecialHeader::new(ctx.out_params.send_process_id, ctx.out_params.copy_handles.len() as u32, ctx.out_params.move_handles.len() as u32);
             if ctx.out_params.send_process_id {
-                ipc_buf = ipc_buf.offset(cmem::size_of::<u64>() as isize);
+                ipc_buf = ipc_buf.add(cmem::size_of::<u64>());
             }
 
             ipc_buf = write_array_to_buffer(ipc_buf, ctx.out_params.copy_handles.len() as u32, &ctx.out_params.copy_handles);

@@ -22,7 +22,7 @@ impl sf::IObject for RandomInterface {
 
 impl service::IClientObject for RandomInterface {
     fn new(session: sf::Session) -> Self {
-        Self { session: session }
+        Self { session }
     }
 }
 

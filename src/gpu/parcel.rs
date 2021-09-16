@@ -59,7 +59,7 @@ impl Parcel {
         result_return_if!((self.read_offset + data_size) > PAYLOAD_SIZE, results::lib::gpu::ResultParcelNotEnoughReadSpace);
 
         unsafe {
-            ptr::copy((&mut self.payload.payload as *mut _ as *mut u8).offset(self.read_offset as isize), out_data, data_size);
+            ptr::copy((&mut self.payload.payload as *mut _ as *mut u8).add(self.read_offset), out_data, data_size);
         }
         self.read_offset += data_size;
         Ok(())
@@ -73,7 +73,7 @@ impl Parcel {
         result_return_if!((self.write_offset + data_size) > PAYLOAD_SIZE, results::lib::gpu::ResultParcelNotEnoughWriteSpace);
 
         unsafe {
-            ptr::copy(data, (&mut self.payload.payload as *mut _ as *mut u8).offset(self.write_offset as isize), data_size);
+            ptr::copy(data, (&mut self.payload.payload as *mut _ as *mut u8).add(self.write_offset), data_size);
         }
         self.write_offset += data_size;
         Ok(())
@@ -83,7 +83,7 @@ impl Parcel {
         let actual_size = (data_size + 3) & !3;
         result_return_if!((self.write_offset + actual_size) > PAYLOAD_SIZE, results::lib::gpu::ResultParcelNotEnoughWriteSpace);
 
-        let buf = unsafe { (&mut self.payload.payload as *mut _ as *mut u8).offset(self.write_offset as isize) };
+        let buf = unsafe { (&mut self.payload.payload as *mut _ as *mut u8).add(self.write_offset) };
         self.write_offset += actual_size;
         Ok(buf)
     }
@@ -120,7 +120,7 @@ impl Parcel {
 
         for i in 0..len {
             unsafe {
-                let cur = str_write_buf.offset(i as isize);
+                let cur = str_write_buf.add(i);
                 *cur = str_bytes[i] as u16;
             }
         }

@@ -26,7 +26,7 @@ impl sf::IObject for ManagerDisplayService {
 
 impl service::IClientObject for ManagerDisplayService {
     fn new(session: sf::Session) -> Self {
-        Self { session: session }
+        Self { session }
     }
 }
 
@@ -63,7 +63,7 @@ impl sf::IObject for SystemDisplayService {
 
 impl service::IClientObject for SystemDisplayService {
     fn new(session: sf::Session) -> Self {
-        Self { session: session }
+        Self { session }
     }
 }
 
@@ -119,7 +119,7 @@ impl sf::IObject for ApplicationDisplayService {
 
 impl service::IClientObject for ApplicationDisplayService {
     fn new(session: sf::Session) -> Self {
-        Self { session: session }
+        Self { session }
     }
 }
 
@@ -179,7 +179,7 @@ impl sf::IObject for SystemRootService {
 
 impl service::IClientObject for SystemRootService {
     fn new(session: sf::Session) -> Self {
-        Self { session: session }
+        Self { session }
     }
 }
 
@@ -221,7 +221,7 @@ impl sf::IObject for ManagerRootService {
 
 impl service::IClientObject for ManagerRootService {
     fn new(session: sf::Session) -> Self {
-        Self { session: session }
+        Self { session }
     }
 }
 

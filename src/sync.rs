@@ -55,11 +55,9 @@ fn lock_impl(handle_ref: *mut u32) {
             }
             break;
         }
-        if (value & HANDLE_WAIT_MASK) == 0 {
-            if store_exclusive(handle_ref, value | HANDLE_WAIT_MASK) != 0 {
-                value = load_exclusive(handle_ref);
-                continue;
-            }
+        if (value & HANDLE_WAIT_MASK) == 0 && store_exclusive(handle_ref, value | HANDLE_WAIT_MASK) != 0 {
+            value = load_exclusive(handle_ref);
+            continue;
         }
 
         // TODO: handle this instead of unwrapping it?
@@ -181,7 +179,7 @@ pub struct ScopedLock<'a> {
 impl<'a> ScopedLock<'a> {
     pub fn new(lock: &'a mut Mutex) -> Self {
         lock.lock();
-        Self { lock: lock }
+        Self { lock }
     }
 }
 

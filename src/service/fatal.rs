@@ -22,7 +22,7 @@ impl sf::IObject for Service {
 
 impl service::IClientObject for Service {
     fn new(session: sf::Session) -> Self {
-        Self { session: session }
+        Self { session }
     }
 }
 

@@ -774,7 +774,7 @@ impl<VS: IRootService + service::IService + 'static, NS: INvDrvService + service
         
         let application_display_srv = vi_srv.get().get_display_service(vi::DisplayServiceMode::Privileged)?.to::<vi::ApplicationDisplayService>();
         let hos_binder_drv = application_display_srv.get().get_relay_service()?.to::<dispdrv::HOSBinderDriver>();
-        Ok(Self { vi_service: vi_srv, nvdrv_service: nvdrv_srv, application_display_service: application_display_srv, hos_binder_driver: hos_binder_drv, transfer_mem: transfer_mem, transfer_mem_handle: transfer_mem_handle, nvhost_fd: nvhost_fd, nvmap_fd: nvmap_fd, nvhostctrl_fd: nvhostctrl_fd })
+        Ok(Self { vi_service: vi_srv, nvdrv_service: nvdrv_srv, application_display_service: application_display_srv, hos_binder_driver: hos_binder_drv, transfer_mem, transfer_mem_handle, nvhost_fd, nvmap_fd, nvhostctrl_fd })
     }
 
     pub fn get_vi_service(&self) -> mem::Shared<VS> {
@@ -846,7 +846,7 @@ impl<VS: IRootService + service::IService + 'static, NS: INvDrvService + service
         self.application_display_service.get().open_layer(display_name_v, layer_id, sf::ProcessId::from(aruid), sf::Buffer::from_var(&native_window))?;
         Self::set_layer_position_impl(layer_id, x, y, system_display_service.clone())?;
         Self::set_layer_size_impl(layer_id, width, height, system_display_service.clone())?;
-        Self::set_layer_z_impl(display_id, layer_id, z, system_display_service.clone())?;
+        Self::set_layer_z_impl(display_id, layer_id, z, system_display_service)?;
 
         self.create_surface_impl(buffer_count, display_id, layer_id, width, height, color_fmt, pixel_fmt, layout, Self::managed_layer_destroy, native_window)
     }
