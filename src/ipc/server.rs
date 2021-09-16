@@ -25,7 +25,7 @@ pub struct ServerContext<'a> {
 
 impl<'a> ServerContext<'a> {
     pub const fn new(ctx: &'a mut CommandContext, raw_data_walker: DataWalker, domain_table: mem::Shared<DomainTable>, new_sessions: &'a mut Vec<ServerHolder>) -> Self {
-        Self { ctx: ctx, raw_data_walker: raw_data_walker, domain_table: domain_table, new_sessions: new_sessions }
+        Self { ctx, raw_data_walker, domain_table, new_sessions }
     }
 }
 
@@ -235,11 +235,11 @@ impl ServerHolder {
     }
     
     pub fn new_server<S: IServerObject + 'static>(handle: svc::Handle, service_name: sm::ServiceName) -> Self {
-        Self { server: mem::Shared::<S>::empty(), info: ObjectInfo::from_handle(handle), new_server_fn: Some(create_server_object_impl::<S>), new_mitm_server_fn: None, handle_type: WaitHandleType::Server, mitm_forward_info: ObjectInfo::new(), is_mitm_service: false, service_name: service_name, domain_table: mem::Shared::empty() } 
+        Self { server: mem::Shared::<S>::empty(), info: ObjectInfo::from_handle(handle), new_server_fn: Some(create_server_object_impl::<S>), new_mitm_server_fn: None, handle_type: WaitHandleType::Server, mitm_forward_info: ObjectInfo::new(), is_mitm_service: false, service_name, domain_table: mem::Shared::empty() } 
     }
 
     pub fn new_mitm_server<S: IMitmServerObject + 'static>(handle: svc::Handle, service_name: sm::ServiceName) -> Self {
-        Self { server: mem::Shared::<S>::empty(), info: ObjectInfo::from_handle(handle), new_server_fn: None, new_mitm_server_fn: Some(create_mitm_server_object_impl::<S>), handle_type: WaitHandleType::Server, mitm_forward_info: ObjectInfo::new(), is_mitm_service: true, service_name: service_name, domain_table: mem::Shared::empty() } 
+        Self { server: mem::Shared::<S>::empty(), info: ObjectInfo::from_handle(handle), new_server_fn: None, new_mitm_server_fn: Some(create_mitm_server_object_impl::<S>), handle_type: WaitHandleType::Server, mitm_forward_info: ObjectInfo::new(), is_mitm_service: true, service_name, domain_table: mem::Shared::empty() } 
     }
 
     pub fn make_new_session(&self, handle: svc::Handle) -> Result<Self> {
@@ -329,7 +329,7 @@ pub struct HipcManager<'a> {
 
 impl<'a> HipcManager<'a> {
     pub fn new(server_holder: &'a mut ServerHolder, pointer_buf_size: usize) -> Self {
-        Self { session: sf::Session::new(), server_holder: server_holder, pointer_buf_size: pointer_buf_size, cloned_object_server_handle: 0, cloned_object_forward_handle: 0 }
+        Self { session: sf::Session::new(), server_holder, pointer_buf_size, cloned_object_server_handle: 0, cloned_object_forward_handle: 0 }
     }
 
     pub fn has_cloned_object(&self) -> bool {

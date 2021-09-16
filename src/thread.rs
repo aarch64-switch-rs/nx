@@ -28,7 +28,7 @@ pub struct ThreadEntry {
 impl ThreadEntry {
     pub fn new<T: Copy, F: 'static + Fn(&T)>(entry_impl: svc::ThreadEntrypointFn, entry: F, args: &T) -> Self {
         Self {
-            entry_impl: entry_impl,
+            entry_impl,
             raw_entry: &entry as *const _ as *const u8,
             raw_args: args as *const _ as *const u8
         }
@@ -104,15 +104,15 @@ impl Thread {
     fn new_impl(handle: svc::Handle, state: ThreadState, name: &str, stack: *mut u8, stack_size: usize, owns_stack: bool, entry: Option<ThreadEntry>) -> Result<Self> {
         let mut thread = Self {
             self_ref: ptr::null_mut(),
-            state: state,
-            owns_stack: owns_stack,
+            state,
+            owns_stack,
             pad: [0; 2],
-            handle: handle,
-            stack: stack,
-            stack_size: stack_size,
+            handle,
+            stack,
+            stack_size,
             reserved: [0; 0x20],
             unused_tls_slots: [ptr::null_mut(); 0x20],
-            entry: entry,
+            entry,
             reserved_2: [0; 0x3C],
             name_len: 0,
             name: util::CString::new(),

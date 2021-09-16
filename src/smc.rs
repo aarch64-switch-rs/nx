@@ -16,7 +16,7 @@ pub struct Input {
 
 impl Input {
     pub const fn new(function_id: FunctionId) -> Self {
-        Self { function_id: function_id, arguments: [0; 7] }
+        Self { function_id, arguments: [0; 7] }
     }
 }
 

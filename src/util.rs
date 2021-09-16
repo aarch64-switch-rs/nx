@@ -29,7 +29,7 @@ impl PointerAndSize {
     }
     
     pub const fn new(address: *mut u8, size: usize) -> Self {
-        Self { address: address, size: size }
+        Self { address, size }
     }
 
     pub fn is_valid(&self) -> bool {
@@ -45,10 +45,7 @@ pub struct CString<const S: usize> {
 
 impl<const S: usize> fmt::Debug for CString<S> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let str_data = match self.get_str() {
-            Ok(got_str) => got_str,
-            Err(_) => "<empty>"
-        };
+        let str_data = self.get_str().unwrap_or("<empty>");
         write!(f, "{}", str_data)
     }
 }

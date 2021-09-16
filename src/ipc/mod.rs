@@ -29,11 +29,11 @@ impl ObjectInfo {
     }
 
     pub const fn from_handle(handle: svc::Handle) -> Self {
-        Self { handle: handle, domain_object_id: 0, owns_handle: true, protocol: CommandProtocol::Cmif }
+        Self { handle, domain_object_id: 0, owns_handle: true, protocol: CommandProtocol::Cmif }
     }
 
     pub const fn from_domain_object_id(parent_handle: svc::Handle, domain_object_id: cmif::DomainObjectId) -> Self {
-        Self { handle: parent_handle, domain_object_id: domain_object_id, owns_handle: false, protocol: CommandProtocol::Cmif }
+        Self { handle: parent_handle, domain_object_id, owns_handle: false, protocol: CommandProtocol::Cmif }
     }
 
     pub const fn is_valid(&self) -> bool {
@@ -116,7 +116,7 @@ impl BufferDescriptor {
         write_bits!(24, 27, bits, size_high);
         write_bits!(28, 31, bits, address_mid);
 
-        Self { size_low: size_low, address_low: address_low, bits: bits }
+        Self { size_low, address_low, bits }
     }
 
     pub const fn get_address(&self) -> *mut u8 {
@@ -154,7 +154,7 @@ impl SendStaticDescriptor {
         write_bits!(12, 15, bits, address_mid);
         write_bits!(16, 31, bits, buffer_size as u32);
 
-        Self { bits: bits, address_low: address_low }
+        Self { bits, address_low }
     }
 
     pub const fn get_address(&self) -> *mut u8 {
@@ -188,7 +188,7 @@ impl ReceiveStaticDescriptor {
         write_bits!(0, 15, bits, address_high);
         write_bits!(16, 31, bits, buffer_size as u32);
 
-        Self { address_low: address_low, bits: bits }
+        Self { address_low, bits }
     }
 
     pub const fn get_address(&self) -> *mut u8 {
@@ -250,7 +250,7 @@ impl CommandHeader {
         write_bits!(10, 13, bits_2, Self::encode_receive_static_type(receive_static_count));
         write_bits!(31, 31, bits_2, has_special_header as u32);
 
-        Self { bits_1: bits_1, bits_2: bits_2 }
+        Self { bits_1, bits_2 }
     }
 
     pub const fn get_command_type(&self) -> u32 {
@@ -306,7 +306,7 @@ impl CommandSpecialHeader {
         write_bits!(1, 4, bits, copy_handle_count);
         write_bits!(5, 8, bits, move_handle_count);
 
-        Self { bits: bits }
+        Self { bits }
     }
 
     pub const fn get_send_process_id(&self) -> bool {
@@ -351,7 +351,7 @@ impl DataWalker {
     }
 
     pub fn new(ptr: *mut u8) -> Self {
-        Self { ptr: ptr, cur_offset: 0 }
+        Self { ptr, cur_offset: 0 }
     }
 
     pub fn advance<T>(&mut self) {
@@ -814,7 +814,7 @@ impl CommandContext {
                     }
                 };
 
-                let buf = unsafe { self.pointer_buffer.offset(self.out_pointer_buffer_offset as isize) };
+                let buf = unsafe { self.pointer_buffer.add(self.out_pointer_buffer_offset) };
                 self.out_pointer_buffer_offset += buf_size;
                 return Ok(sf::Buffer::from_mut(buf, buf_size));
             }

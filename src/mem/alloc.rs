@@ -111,7 +111,7 @@ impl<T> Buffer<T> {
     pub fn new(align: usize, size: usize) -> Result<Self> {
         let ptr = allocate(align, size)? as *mut T;
         Ok(Self {
-            ptr: ptr,
+            ptr,
             layout: unsafe {
                 Layout::from_size_align_unchecked(size, align)
             }
@@ -125,8 +125,8 @@ impl<T> Buffer<T> {
         let ptr = allocator.allocate(layout)? as *mut T;
 
         Ok(Self {
-            ptr: ptr,
-            layout: layout
+            ptr,
+            layout
         })
     }
 

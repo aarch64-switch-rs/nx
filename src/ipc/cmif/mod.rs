@@ -41,7 +41,7 @@ impl DomainInDataHeader {
     }
 
     pub const fn new(command_type: DomainCommandType, object_count: u8, data_size: u16, domain_object_id: DomainObjectId, token: u32) -> Self {
-        Self { command_type: command_type, object_count: object_count, data_size: data_size, domain_object_id: domain_object_id, pad: 0, token: token }
+        Self { command_type, object_count, data_size, domain_object_id, pad: 0, token }
     }
 }
 
@@ -106,7 +106,7 @@ impl DataHeader {
     }
 
     pub const fn new(magic: u32, version: u32, value: u32, token: u32) -> Self {
-        Self { magic: magic, version: version, value: value, token: token }
+        Self { magic, version, value, token }
     }
 }
 

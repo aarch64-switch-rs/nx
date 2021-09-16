@@ -25,7 +25,7 @@ impl sf::IObject for HOSBinderDriver {
 
 impl service::IClientObject for HOSBinderDriver {
     fn new(session: sf::Session) -> Self {
-        Self { session: session }
+        Self { session }
     }
 }
 

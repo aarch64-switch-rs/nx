@@ -10,7 +10,7 @@ pub struct ServiceName {
 
 impl ServiceName {
     pub const fn from(value: u64) -> Self {
-        Self { value: value }
+        Self { value }
     }
     
     pub const fn new(name: &str) -> Self {

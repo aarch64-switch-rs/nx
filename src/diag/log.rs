@@ -18,12 +18,12 @@ pub struct LogMetadata {
 impl LogMetadata {
     pub fn new(severity: LogSeverity, verbosity: bool, msg: String, file_name: &'static str, fn_name: &'static str, line_no: u32) -> Self {
         Self {
-            severity: severity,
-            verbosity: verbosity,
-            msg: msg,
-            file_name: file_name,
-            fn_name: fn_name,
-            line_no: line_no,
+            severity,
+            verbosity,
+            msg,
+            file_name,
+            fn_name,
+            line_no,
         }
     }
 }
@@ -111,41 +111,39 @@ impl Logger for LmLogger {
             },
             Err(rc) => Err(rc),
         };
-        Self { service: service, logger: logger }
+        Self { service, logger }
     }
 
     fn log(&mut self, metadata: &LogMetadata) {
-        if self.service.is_ok() {
-            if self.logger.is_ok() {
-                match &mut self.logger {
-                    Ok(ref mut logger) => {
-                        let mut log_packet = logpacket::LogPacket::new();
+        if self.service.is_ok() && self.logger.is_ok() {
+            match &mut self.logger {
+                Ok(ref mut logger) => {
+                    let mut log_packet = logpacket::LogPacket::new();
 
-                        if let Ok(process_id) = svc::get_process_id(svc::CURRENT_PROCESS_PSEUDO_HANDLE) {
-                            log_packet.set_process_id(process_id);
-                        }
+                    if let Ok(process_id) = svc::get_process_id(svc::CURRENT_PROCESS_PSEUDO_HANDLE) {
+                        log_packet.set_process_id(process_id);
+                    }
 
-                        let cur_thread = thread::get_current_thread();
-                        if let Ok(thread_id) = cur_thread.get_id() {
-                            log_packet.set_thread_id(thread_id);
-                        }
+                    let cur_thread = thread::get_current_thread();
+                    if let Ok(thread_id) = cur_thread.get_id() {
+                        log_packet.set_thread_id(thread_id);
+                    }
 
-                        log_packet.set_file_name(String::from(metadata.file_name));
-                        log_packet.set_function_name(String::from(metadata.fn_name));
-                        log_packet.set_line_number(metadata.line_no);
-                        log_packet.set_module_name(String::from("aarch64-switch-rs"));
-                        log_packet.set_text_log(metadata.msg.clone());
-                        let thread_name = match cur_thread.name.get_str() {
-                            Ok(name) => name,
-                            _ => "<unknown>",
-                        };
-                        log_packet.set_thread_name(String::from(thread_name));
-                        for packet in log_packet.encode_packet() {
-                            let _ = logger.get().log(sf::Buffer::from_const(packet.as_ptr(), packet.len()));
-                        }
-                    },
-                    _ => {}
-                }
+                    log_packet.set_file_name(String::from(metadata.file_name));
+                    log_packet.set_function_name(String::from(metadata.fn_name));
+                    log_packet.set_line_number(metadata.line_no);
+                    log_packet.set_module_name(String::from("aarch64-switch-rs"));
+                    log_packet.set_text_log(metadata.msg.clone());
+                    let thread_name = match cur_thread.name.get_str() {
+                        Ok(name) => name,
+                        _ => "<unknown>",
+                    };
+                    log_packet.set_thread_name(String::from(thread_name));
+                    for packet in log_packet.encode_packet() {
+                        let _ = logger.get().log(sf::Buffer::from_const(packet.as_ptr(), packet.len()));
+                    }
+                },
+                _ => {}
             }
         }
     }

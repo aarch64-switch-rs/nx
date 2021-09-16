@@ -63,7 +63,7 @@ pub struct Binder {
 
 impl Binder {
     pub fn new(handle: dispdrv::BinderHandle, hos_binder_driver: mem::Shared<dispdrv::HOSBinderDriver>) -> Result<Self> {
-        Ok(Self { handle: handle, hos_binder_driver: hos_binder_driver })
+        Ok(Self { handle, hos_binder_driver })
     }
 
     fn transact_parcel_begin(&self, parcel: &mut parcel::Parcel) -> Result<()> {

@@ -64,7 +64,7 @@ impl<T> Shared<T> {
     pub fn new(var: T) -> Self {
         // This is done instead of just &var to avoid dropping the variable inside this function
         let object = Box::into_raw(Box::new(var));
-        let mut shared = Self { object: object, refcount: Refcount::new() };
+        let mut shared = Self { object, refcount: Refcount::new() };
         shared.refcount.acquire(object);
         shared
     }

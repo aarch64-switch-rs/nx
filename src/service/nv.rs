@@ -73,7 +73,7 @@ impl sf::IObject for AppletNvDrvService {
 
 impl service::IClientObject for AppletNvDrvService {
     fn new(session: sf::Session) -> Self {
-        Self { session: session }
+        Self { session }
     }
 }
 
@@ -114,7 +114,7 @@ impl sf::IObject for SystemNvDrvService {
 
 impl service::IClientObject for SystemNvDrvService {
     fn new(session: sf::Session) -> Self {
-        Self { session: session }
+        Self { session }
     }
 }
 

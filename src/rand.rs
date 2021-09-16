@@ -24,7 +24,7 @@ pub struct SplCsrngGenerator {
 impl SplCsrngGenerator {
     pub fn new() -> Result<Self> {
         let csrng = service::new_service_object::<spl::RandomInterface>()?;
-        Ok(Self { csrng: csrng })
+        Ok(Self { csrng })
     }
 }
 

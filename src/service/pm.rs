@@ -22,7 +22,7 @@ impl sf::IObject for InformationInterface {
 
 impl service::IClientObject for InformationInterface {
     fn new(session: sf::Session) -> Self {
-        Self { session: session }
+        Self { session }
     }
 }
 
@@ -64,7 +64,7 @@ impl sf::IObject for DebugMonitorInterface {
 
 impl service::IClientObject for DebugMonitorInterface {
     fn new(session: sf::Session) -> Self {
-        Self { session: session }
+        Self { session }
     }
 }
 

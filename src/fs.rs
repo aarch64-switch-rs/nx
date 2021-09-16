@@ -25,7 +25,7 @@ struct PathSegment {
 
 impl PathSegment {
     pub const fn from(name: String, segment_type: PathSegmentType) -> Self {
-        Self { name: name, segment_type: segment_type }
+        Self { name, segment_type }
     }
 
     pub const fn new() -> Self {
@@ -38,9 +38,9 @@ type UnpackedPath = Vec<PathSegment>;
 fn unpack_path_impl(path: String) -> UnpackedPath {
     let mut unpacked_path: UnpackedPath = UnpackedPath::new();
 
-    for sub_path in path.split("/") {
+    for sub_path in path.split('/') {
         let mut cur_segment = PathSegment::new();
-        if sub_path.ends_with(":") {
+        if sub_path.ends_with(':') {
             cur_segment.segment_type = PathSegmentType::Root;
             cur_segment.name = String::from(sub_path);
             unpacked_path.push(cur_segment);
@@ -98,7 +98,7 @@ struct Device {
 
 impl Device {
     pub fn from(root_name: PathSegment, fs: mem::Shared<fspsrv::FileSystem>) -> Self {
-        Self { root_name: root_name, fs: fs }
+        Self { root_name, fs }
     }
 }
 
@@ -115,7 +115,7 @@ pub enum Whence {
 
 impl File {
     pub fn new(file: mem::Shared<fspsrv::File>) -> Self {
-        Self { file: file, offset: 0 }
+        Self { file, offset: 0 }
     }
 
     pub fn get_size(&mut self) -> Result<usize> {
@@ -317,5 +317,5 @@ pub fn open_file(path: String, option: FileOpenOption) -> Result<File> {
         false => 0
     };
 
-    Ok(File { file: file, offset: offset })
+    Ok(File { file, offset })
 }

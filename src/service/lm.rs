@@ -24,7 +24,7 @@ impl sf::IObject for Logger {
 
 impl service::IClientObject for Logger {
     fn new(session: sf::Session) -> Self {
-        Self { session: session }
+        Self { session }
     }
 }
 
@@ -56,7 +56,7 @@ impl sf::IObject for LogService {
 
 impl service::IClientObject for LogService {
     fn new(session: sf::Session) -> Self {
-        Self { session: session }
+        Self { session }
     }
 }
 
