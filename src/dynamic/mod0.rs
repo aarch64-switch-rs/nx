@@ -10,4 +10,4 @@ pub struct Header {
     pub module_object: u32,
 }
 
-pub const MAGIC: u32 = 0x30444F4D;
+pub const MAGIC: u32 = u32::from_le_bytes(*b"MOD0");

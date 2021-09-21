@@ -12,8 +12,8 @@ pub enum ControlRequestId {
     CloneCurrentObjectEx = 4
 }
 
-pub const IN_DATA_HEADER_MAGIC: u32 = 0x49434653;
-pub const OUT_DATA_HEADER_MAGIC: u32 = 0x4F434653;
+pub const IN_DATA_HEADER_MAGIC: u32 = u32::from_le_bytes(*b"SFCI");
+pub const OUT_DATA_HEADER_MAGIC: u32 = u32::from_le_bytes(*b"SFCO");
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
