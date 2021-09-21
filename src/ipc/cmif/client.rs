@@ -31,7 +31,7 @@ pub fn write_command_on_msg_buffer(ctx: &mut CommandContext, command_type: Comma
         ipc_buf = write_array_to_buffer(ipc_buf, ctx.receive_buffers.len() as u32, &ctx.receive_buffers);
         ipc_buf = write_array_to_buffer(ipc_buf, ctx.exchange_buffers.len() as u32, &ctx.exchange_buffers);
         ctx.in_params.data_words_offset = ipc_buf;
-        ipc_buf = ipc_buf.add((cmem::size_of::<u32>() * data_word_count as usize));
+        ipc_buf = ipc_buf.add(cmem::size_of::<u32>() * data_word_count as usize);
         write_array_to_buffer(ipc_buf, ctx.receive_statics.len() as u32, &ctx.receive_statics);
     }
 }
@@ -60,7 +60,7 @@ pub fn read_command_response_from_msg_buffer(ctx: &mut CommandContext) {
         ipc_buf = read_array_from_buffer(ipc_buf, copy_handle_count, &mut ctx.out_params.copy_handles);
         ipc_buf = read_array_from_buffer(ipc_buf, move_handle_count, &mut ctx.out_params.move_handles);
 
-        ipc_buf = ipc_buf.add((cmem::size_of::<SendStaticDescriptor>() * (*command_header).get_send_static_count() as usize));
+        ipc_buf = ipc_buf.add(cmem::size_of::<SendStaticDescriptor>() * (*command_header).get_send_static_count() as usize);
         ctx.out_params.data_words_offset = ipc_buf;
     }
 }
@@ -121,7 +121,7 @@ pub fn read_request_command_response_from_msg_buffer(ctx: &mut CommandContext) -
         if ctx.object_info.is_domain() {
             let domain_header = data_offset as *mut DomainOutDataHeader;
             data_offset = data_offset.add(cmem::size_of::<DomainOutDataHeader>());
-            let objects_offset = data_offset.add((cmem::size_of::<DataHeader>() + ctx.out_params.data_size as usize));
+            let objects_offset = data_offset.add(cmem::size_of::<DataHeader>() + ctx.out_params.data_size as usize);
             let object_count = (*domain_header).out_object_count;
             read_array_from_buffer(objects_offset, object_count, &mut ctx.out_params.objects);
             data_header = data_offset as *mut DataHeader;

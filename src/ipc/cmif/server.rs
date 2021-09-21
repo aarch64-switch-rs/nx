@@ -145,7 +145,7 @@ pub fn write_request_command_response_on_msg_buffer(ctx: &mut CommandContext, re
             let domain_header = data_offset as *mut DomainOutDataHeader;
             data_offset = domain_header.offset(1) as *mut u8;
             *domain_header = DomainOutDataHeader::new(ctx.out_params.objects.len() as u32);
-            let objects_offset = data_offset.add((cmem::size_of::<DataHeader>() + ctx.out_params.data_size as usize));
+            let objects_offset = data_offset.add(cmem::size_of::<DataHeader>() + ctx.out_params.data_size as usize);
             write_array_to_buffer(objects_offset, ctx.out_params.objects.len() as u32, &ctx.out_params.objects);
             data_header = data_offset as *mut DataHeader;
         }

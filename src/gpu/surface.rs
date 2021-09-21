@@ -183,7 +183,7 @@ impl<NS: nv::INvDrvService> Surface<NS> {
             self.slot_has_requested[slot as usize] = true;
         }
 
-        let buf = unsafe { self.buffer_data.ptr.add((slot as usize * self.single_buffer_size)) };
+        let buf = unsafe { self.buffer_data.ptr.add(slot as usize * self.single_buffer_size) };
         Ok((buf, self.single_buffer_size, slot, has_fences, fences))
     }
 
