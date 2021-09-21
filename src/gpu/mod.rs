@@ -638,7 +638,7 @@ pub struct GraphicBufferHeader {
     pub buffer_size: u32,
 }
 
-pub const GRAPHIC_BUFFER_HEADER_MAGIC: u32 = u32::from_le_bytes(*b"RFBG");
+pub const GRAPHIC_BUFFER_HEADER_MAGIC: u32 = u32::from_be_bytes(*b"GBFR");
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
