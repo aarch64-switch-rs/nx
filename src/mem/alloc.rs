@@ -1,4 +1,6 @@
+use crate::diag::assert;
 use crate::result::*;
+use crate::results;
 use crate::util::PointerAndSize;
 use crate::sync;
 use core::ptr;
@@ -58,10 +60,24 @@ unsafe impl<A: Allocator> GlobalAlloc for sync::Locked<A> {
 
 #[global_allocator]
 static mut G_ALLOCATOR_HOLDER: sync::Locked<LinkedListAllocator> = sync::Locked::new(false, LinkedListAllocator::empty());
+static mut G_ALLOCATOR_ENABLED: bool = false;
 
 pub fn initialize(heap: PointerAndSize) {
     unsafe {
         G_ALLOCATOR_HOLDER.get().init(heap.address as usize, heap.size);
+        G_ALLOCATOR_ENABLED = true;
+    }
+}
+
+pub(crate) fn set_enabled(enabled: bool) {
+    unsafe {
+        G_ALLOCATOR_ENABLED = enabled;
+    }
+}
+
+pub fn is_enabled() -> bool {
+    unsafe {
+        G_ALLOCATOR_ENABLED
     }
 }
 
@@ -135,12 +151,13 @@ impl<T> Buffer<T> {
     }
 }
 
-use crate::svc;
-
 #[alloc_error_handler]
 fn alloc_error_handler(_layout: core::alloc::Layout) -> ! {
-    // TODO: properly abort using diag?
+    // Disable memory allocation for this crate, this will avoid assertion methods which would need to allocate memory
+    set_enabled(false);
 
-    let mut rc: u32 = 0xBEEF;
-    svc::break_(svc::BreakReason::Panic, &mut rc as *mut _ as *mut u8, core::mem::size_of::<u32>())
+    // TODO: which desired assert level shall we choose here?
+    assert::assert(assert::AssertLevel::FatalThrow(), results::lib::alloc::ResultOutOfMemory::make());
+
+    loop {}
 }
