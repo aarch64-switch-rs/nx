@@ -239,13 +239,40 @@ impl<const S: usize> CString16<S> {
     }
 }
 
-pub fn simple_panic_handler<L: Logger>(info: &panic::PanicInfo, assert_mode: assert::AssertMode) -> ! {
+pub fn str_ptr_len(str_ptr: *const u8) -> usize {
+    unsafe {
+        let mut iter_ptr = str_ptr as *mut u8;
+        while (*iter_ptr) != 0 {
+            iter_ptr = iter_ptr.add(1);
+        }
+
+        iter_ptr.offset_from(str_ptr) as usize
+    }
+}
+
+pub fn str_copy<'a>(dst_str: &'a str, src_str: &'a str) -> &'a str {
+    let dst_str_len = dst_str.len().min(src_str.len());
+
+    unsafe {
+        let dst_buf = dst_str.as_ptr() as *mut u8;
+        let src_buf = src_str.as_ptr();
+
+        for i in 0..dst_str_len as isize {
+            *dst_buf.offset(i) = *src_buf.offset(i);
+        }
+
+        let dst_slice = core::slice::from_raw_parts_mut(dst_buf, dst_str_len);
+        core::str::from_utf8_unchecked(dst_slice)
+    }
+}
+
+pub fn simple_panic_handler<L: Logger>(info: &panic::PanicInfo, desired_level: assert::AssertLevel) -> ! {
     let thread_name = match thread::get_current_thread().name.get_str() {
         Ok(name) => name,
         _ => "<unknown>",
     };
     diag_log!(L { log::LogSeverity::Fatal, true } => "Panic! at thread '{}' -> {}\n", thread_name, info);
 
-    assert::assert(assert_mode, results::lib::assert::ResultAssertionFailed::make());
+    assert::assert(desired_level, results::lib::ResultPanicked::make());
     loop {}
 }

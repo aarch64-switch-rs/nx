@@ -5,7 +5,8 @@ pub const RESULT_SUBMODULE: u32 = 0;
 result_define_subgroup!(RESULT_MODULE, RESULT_SUBMODULE => {
     NotImplemented: 1,
     NotSupported: 2,
-    NotInitialized: 3
+    NotInitialized: 3,
+    Panicked: 4
 });
 
 // Note: result submodules below are ordered by their submodule values
@@ -27,3 +28,5 @@ pub mod fs;
 pub mod input;
 
 pub mod thread;
+
+pub mod alloc;

@@ -2,9 +2,9 @@
 
 #[macro_export]
 macro_rules! diag_assert {
-    ($mode:expr, $cond:expr) => {
+    ($desired_level:expr, $cond:expr) => {
         if !$cond {
-            $crate::diag::assert::assert($mode, $crate::results::lib::assert::ResultAssertionFailed::make());
+            $crate::diag::assert::assert($desired_level, $crate::results::lib::assert::ResultAssertionFailed::make());
         }
     };
 }
@@ -56,7 +56,7 @@ macro_rules! diag_log {
 
 #[macro_export]
 macro_rules! diag_log_assert {
-    ($logger:ty, $assert_mode:expr => $cond:expr) => {
+    ($logger:ty, $desired_level:expr => $cond:expr) => {
         {
             fn f() {}
             fn type_name_of<T>(_: T) -> &'static str {
@@ -73,12 +73,12 @@ macro_rules! diag_log_assert {
                 logger.log(&metadata);
             }
             else {
-                let msg = format!("Assertion failed ({}) -> {}", stringify!($assert_mode), stringify!($cond));
+                let msg = format!("Assertion failed ({}) -> {}", stringify!($desired_level), stringify!($cond));
 
                 let metadata = $crate::diag::log::LogMetadata::new($crate::diag::log::LogSeverity::Fatal, false, msg, file!(), fn_name, line!());
                 $crate::diag::log::log_with::<$logger>(&metadata);
 
-                $crate::diag::assert::assert($assert_mode, $crate::results::lib::assert::ResultAssertionFailed::make());
+                $crate::diag::assert::assert($desired_level, $crate::results::lib::assert::ResultAssertionFailed::make());
             }
         }
     };
@@ -86,7 +86,7 @@ macro_rules! diag_log_assert {
 
 #[macro_export]
 macro_rules! diag_result_log_assert {
-    ($logger:ty, $assert_mode:expr => $rc:expr) => {
+    ($logger:ty, $desired_level:expr => $rc:expr) => {
         {
             fn f() {}
             fn type_name_of<T>(_: T) -> &'static str {
@@ -102,12 +102,12 @@ macro_rules! diag_result_log_assert {
                 $crate::diag::log::log_with::<$logger>(&metadata);
             }
             else {
-                let msg = format!("Result assertion failed ({0}) -> {1} - {1:?}", stringify!($assert_mode), $rc);
+                let msg = format!("Result assertion failed ({0}) -> {1} - {1:?}", stringify!($desired_level), $rc);
 
                 let metadata = $crate::diag::log::LogMetadata::new($crate::diag::log::LogSeverity::Fatal, false, msg, file!(), fn_name, line!());
                 $crate::diag::log::log_with::<$logger>(&metadata);
 
-                $crate::diag::assert::assert($assert_mode, $rc);
+                $crate::diag::assert::assert($desired_level, $rc);
             }
         }
     };
