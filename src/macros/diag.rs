@@ -13,42 +13,21 @@ macro_rules! diag_assert {
 macro_rules! diag_log {
     ($logger:ty { $severity:expr, $verbosity:expr } => $msg:literal) => {
         {
-            fn f() {}
-            fn type_name_of<T>(_: T) -> &'static str {
-                core::any::type_name::<T>()
-            }
-            let name = type_name_of(f);
-            let fn_name = &name[..name.len() - 3];
-
-            let metadata = $crate::diag::log::LogMetadata::new($severity, $verbosity, alloc::string::String::from($msg), file!(), fn_name, line!());
+            let metadata = $crate::diag::log::LogMetadata::new($severity, $verbosity, alloc::string::String::from($msg), file!(), cur_fn_name!(), line!());
             $crate::diag::log::log_with::<$logger>(&metadata);
         }
     };
     ($logger:ty { $severity:expr, $verbosity:expr } => $msg:expr) => {
         {
-            fn f() {}
-            fn type_name_of<T>(_: T) -> &'static str {
-                core::any::type_name::<T>()
-            }
-            let name = type_name_of(f);
-            let fn_name = &name[..name.len() - 3];
-
-            let metadata = $crate::diag::log::LogMetadata::new($severity, $verbosity, $msg, file!(), fn_name, line!());
+            let metadata = $crate::diag::log::LogMetadata::new($severity, $verbosity, $msg, file!(), cur_fn_name!(), line!());
             $crate::diag::log::log_with::<$logger>(&metadata);
         }
     };
     ($logger:ty { $severity:expr, $verbosity:expr } => $fmt:literal, $( $params:expr ),*) => {
         {
-            fn f() {}
-            fn type_name_of<T>(_: T) -> &'static str {
-                core::any::type_name::<T>()
-            }
-            let name = type_name_of(f);
-            let fn_name = &name[..name.len() - 3];
-
             let msg = format!($fmt, $( $params, )*);
 
-            let metadata = $crate::diag::log::LogMetadata::new($severity, $verbosity, msg, file!(), fn_name, line!());
+            let metadata = $crate::diag::log::LogMetadata::new($severity, $verbosity, msg, file!(), cur_fn_name!(), line!());
             $crate::diag::log::log_with::<$logger>(&metadata);
         }
     };
@@ -58,24 +37,17 @@ macro_rules! diag_log {
 macro_rules! diag_log_assert {
     ($logger:ty, $desired_level:expr => $cond:expr) => {
         {
-            fn f() {}
-            fn type_name_of<T>(_: T) -> &'static str {
-                core::any::type_name::<T>()
-            }
-            let name = type_name_of(f);
-            let fn_name = &name[..name.len() - 3];
-
             if $cond {
                 let msg = format!("Assertion suceeded -> {}", stringify!($cond));
 
                 let mut logger = <$logger>::new();
-                let metadata = $crate::diag::log::LogMetadata::new($crate::diag::log::LogSeverity::Info, false, msg, file!(), fn_name, line!());
+                let metadata = $crate::diag::log::LogMetadata::new($crate::diag::log::LogSeverity::Info, false, msg, file!(), cur_fn_name!(), line!());
                 logger.log(&metadata);
             }
             else {
                 let msg = format!("Assertion failed ({}) -> {}", stringify!($desired_level), stringify!($cond));
 
-                let metadata = $crate::diag::log::LogMetadata::new($crate::diag::log::LogSeverity::Fatal, false, msg, file!(), fn_name, line!());
+                let metadata = $crate::diag::log::LogMetadata::new($crate::diag::log::LogSeverity::Fatal, false, msg, file!(), cur_fn_name!(), line!());
                 $crate::diag::log::log_with::<$logger>(&metadata);
 
                 $crate::diag::assert::assert($desired_level, $crate::results::lib::assert::ResultAssertionFailed::make());

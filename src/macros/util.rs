@@ -113,3 +113,18 @@ macro_rules! nul {
         concat!($lit, "\0\0\0\0\0\0\0\0")
     };
 }
+
+#[macro_export]
+macro_rules! cur_fn_name {
+    () => {{
+        fn dummy_fn() {}
+        const DUMMY_FN_EXTRA_SIZE: usize = 10; // "::dummy_fn"
+
+        fn type_name_of<T>(_: T) -> &'static str {
+            core::any::type_name::<T>()
+        }
+
+        let name = type_name_of(dummy_fn);
+        &name[..name.len() - DUMMY_FN_EXTRA_SIZE]
+    }}
+}
