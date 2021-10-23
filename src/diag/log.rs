@@ -78,7 +78,7 @@ pub struct FsAccessLogLogger {
 
 impl Logger for FsAccessLogLogger {
     fn new() -> Self {
-        Self { service:service::new_service_object() }
+        Self { service: service::new_service_object() }
     }
 
     fn log(&mut self, metadata: &LogMetadata) {

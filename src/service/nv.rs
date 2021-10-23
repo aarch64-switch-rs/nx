@@ -32,7 +32,7 @@ pub fn convert_error_code(err: ErrorCode) -> Result<()> {
 }
 
 // NvDrvService is the base trait for all the different services, since the only difference is their service names :P
-pub trait NvDrvService:service::IClientObject {}
+pub trait NvDrvService: service::IClientObject {}
 
 impl<S: NvDrvService> INvDrvService for S {
     fn open(&mut self, path: sf::InMapAliasBuffer) -> Result<(Fd, ErrorCode)> {
