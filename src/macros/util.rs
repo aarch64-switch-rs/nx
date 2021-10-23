@@ -107,10 +107,12 @@ macro_rules! read_bits {
     };
 }
 
+// Note: adding so many null characters since service names need to have a length of (at least) 8, in order to guarantee this
+
 #[macro_export]
 macro_rules! nul {
     ($lit:expr) => {
-        concat!($lit, "\0")
+        concat!($lit, "\0\0\0\0\0\0\0\0")
     };
 }
 
