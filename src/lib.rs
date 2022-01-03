@@ -1,12 +1,9 @@
 #![no_std]
 #![allow(incomplete_features)]
 #![allow(non_snake_case)]
-#![feature(asm)]
-#![feature(global_asm)]
 #![feature(alloc_error_handler)]
 #![feature(adt_const_params)]
 #![feature(generic_const_exprs)]
-#![feature(const_raw_ptr_deref)]
 #![feature(const_trait_impl)]
 #![feature(specialization)]
 #![feature(coerce_unsized)]
@@ -18,6 +15,8 @@
 #![feature(const_fn_trait_bound)]
 #![feature(fn_traits)]
 #![macro_use]
+
+use core::arch::global_asm;
 
 // Required assembly bits (those which essentially cannot/shouldn't be inlined)
 

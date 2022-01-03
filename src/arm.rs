@@ -1,3 +1,5 @@
+use core::arch::asm;
+
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct CpuRegister {

@@ -22,14 +22,17 @@ pub trait ResultBase {
     fn get_module() -> u32;
     fn get_description() -> u32;
 
+    #[inline(always)]
     fn get_value() -> u32 {
         pack_value(Self::get_module(), Self::get_description())
     }
 
+    #[inline(always)]
     fn make() -> ResultCode {
         ResultCode::new(Self::get_value())
     }
 
+    #[inline(always)]
     fn matches(rc: ResultCode) -> bool {
         rc.get_value() == Self::get_value()
     }
@@ -83,6 +86,7 @@ result_define!(Success: 0, 0);
 
 pub type Result<T> = result::Result<T, ResultCode>;
 
+#[inline(always)]
 pub fn wrap<T>(rc: ResultCode, value: T) -> Result<T> {
     if rc.is_success() {
         Ok(value)
