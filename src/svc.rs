@@ -208,9 +208,9 @@ pub fn set_memory_attribute(address: Address, size: Size, mask: u32, value: Memo
 }
 
 #[inline(always)]
-pub fn query_memory(address: *const u8) -> Result<(MemoryInfo, PageInfo)> {
+pub fn query_memory(address: Address) -> Result<(MemoryInfo, PageInfo)> {
     extern "C" {
-        fn __nx_svc_query_memory(out_info: *mut MemoryInfo, out_page_info: *mut PageInfo, address: *const u8) -> ResultCode;
+        fn __nx_svc_query_memory(out_info: *mut MemoryInfo, out_page_info: *mut PageInfo, address: Address) -> ResultCode;
     }
 
     unsafe {
@@ -686,9 +686,9 @@ pub fn set_debug_thread_context(debug_handle: Handle, thread_context: arm::Threa
 }
 
 #[inline(always)]
-pub fn query_debug_process_memory(debug_handle: Handle, address: *const u8) -> Result<(MemoryInfo, PageInfo)> {
+pub fn query_debug_process_memory(debug_handle: Handle, address: Address) -> Result<(MemoryInfo, PageInfo)> {
     extern "C" {
-        fn __nx_svc_query_debug_process_memory(out_info: *mut MemoryInfo, out_page_info: *mut PageInfo, debug_handle: Handle, address: *const u8) -> ResultCode;
+        fn __nx_svc_query_debug_process_memory(out_info: *mut MemoryInfo, out_page_info: *mut PageInfo, debug_handle: Handle, address: Address) -> ResultCode;
     }
 
     unsafe {
@@ -713,9 +713,9 @@ pub fn read_debug_process_memory(debug_handle: Handle, read_address: usize, read
 }
 
 #[inline(always)]
-pub fn write_debug_process_memory(debug_handle: Handle, write_address: usize, write_size: usize, buffer: *const u8) -> Result<()> {
+pub fn write_debug_process_memory(debug_handle: Handle, write_address: usize, write_size: usize, buffer: Address) -> Result<()> {
     extern "C" {
-        fn __nx_svc_write_debug_process_memory(debug_handle: Handle, buffer: *const u8, address: usize, size: usize) -> ResultCode;
+        fn __nx_svc_write_debug_process_memory(debug_handle: Handle, buffer: Address, address: usize, size: usize) -> ResultCode;
     }
 
     unsafe {
