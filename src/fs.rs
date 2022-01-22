@@ -6,6 +6,7 @@ use crate::service::fspsrv;
 use crate::service::fspsrv::IFileSystemProxy;
 use crate::service::fspsrv::IFileSystem;
 use crate::service::fspsrv::IFile;
+use crate::service::fspsrv::IDirectory;
 use crate::sync;
 use crate::ipc::sf;
 use alloc::vec::Vec;
@@ -81,7 +82,11 @@ fn pack_path(unpacked_path: UnpackedPath, add_root: bool) -> String {
             _ => {}
         }
     }
-    path.pop();
+    
+    // Minimum path must be "/"
+    if path.len() > 1 {
+        path.pop();
+    }
 
     path
 }
@@ -90,6 +95,7 @@ fn pack_path(unpacked_path: UnpackedPath, add_root: bool) -> String {
 
 pub use fspsrv::FileAttribute;
 pub use fspsrv::DirectoryEntryType;
+pub use fspsrv::DirectoryOpenMode;
 
 struct Device {
     root_name: PathSegment,
@@ -140,6 +146,10 @@ impl File {
         Ok(read_size)
     }
 
+    pub fn read_array<T>(&mut self, arr: &mut [T]) -> Result<usize> {
+        self.read(arr.as_mut_ptr(), arr.len() * cmem::size_of::<T>())
+    }
+
     pub fn read_val<T: Copy + Default>(&mut self) -> Result<T> {
         let mut t: T = Default::default();
         self.read(&mut t, cmem::size_of::<T>())?;
@@ -153,8 +163,66 @@ impl File {
         Ok(size)
     }
 
+    pub fn write_array<T>(&mut self, arr: &[T]) -> Result<usize> {
+        self.write(arr.as_ptr(), arr.len() * cmem::size_of::<T>())
+    }
+
     pub fn write_val<T: Copy>(&mut self, t: T) -> Result<usize> {
         self.write(&t, cmem::size_of::<T>())
+    }
+}
+
+pub struct Directory {
+    dir: mem::Shared<fspsrv::Directory>,
+    offset: usize,
+    entry_count: usize,
+    entries: Vec<fspsrv::DirectoryEntry>
+}
+
+impl Directory {
+    pub fn new(dir: mem::Shared<fspsrv::Directory>) -> Result<Self> {
+        let entry_count = dir.get().get_entry_count()?;
+
+        Ok(Self { dir, offset: 0, entry_count: entry_count as usize, entries: Vec::new() })
+    }
+
+    fn refresh(&mut self) -> Result<()> {
+        if self.offset >= self.entries.len() {
+            let new_count = 16;
+            let mut new_entries: Vec<fspsrv::DirectoryEntry> = vec![unsafe { core::mem::zeroed() }; new_count];
+            let read = self.dir.get().read(sf::Buffer::from_array(&new_entries))?;
+            new_entries.shrink_to(read as usize);
+
+            self.entries.append(&mut new_entries);
+        }
+
+        Ok(())
+    }
+
+    pub fn rewind(&mut self) -> Result<()> {
+        self.offset = 0;
+        self.refresh()
+    }
+
+    pub fn rel(&self) -> (usize, usize) {
+        (self.offset, self.entry_count)
+    }
+
+    pub fn next(&mut self) -> Result<Option<fspsrv::DirectoryEntry>> {
+        if self.entries.len() == self.entry_count {
+            Ok(None)
+        }
+        else {
+            self.refresh()?;
+            if self.offset == self.entry_count {
+                Ok(None)
+            }
+            else {
+                let entry = self.entries[self.offset];
+                self.offset += 1;
+                Ok(Some(entry))
+            }
+        }
     }
 }
 
@@ -318,4 +386,26 @@ pub fn open_file(path: String, option: FileOpenOption) -> Result<File> {
     };
 
     Ok(File { file, offset })
+}
+
+pub fn open_directory(path: String, mode: fspsrv::DirectoryOpenMode) -> Result<Directory> {
+    result_return_unless!(is_initialized(), results::lib::ResultNotInitialized);
+
+    let unpacked_path = unpack_path(path)?;
+    let fs = find_device_by_name(unpacked_path.first().unwrap())?;
+    let processed_path = pack_path(unpacked_path, false);
+    let path_buf = fspsrv::Path::from_string(processed_path)?;
+
+    let dir = fs.get().open_directory(mode, sf::Buffer::from_var(&path_buf))?.to::<fspsrv::Directory>();
+    Directory::new(dir)
+}
+
+pub fn format_path(path: String) -> Result<(mem::Shared<fspsrv::FileSystem>, String)> {
+    result_return_unless!(is_initialized(), results::lib::ResultNotInitialized);
+
+    let unpacked_path = unpack_path(path)?;
+    let fs = find_device_by_name(unpacked_path.first().unwrap())?;
+    let processed_path = pack_path(unpacked_path, false);
+    
+    Ok((fs, processed_path))
 }

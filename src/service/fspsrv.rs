@@ -5,6 +5,39 @@ use crate::mem;
 
 pub use crate::ipc::sf::fspsrv::*;
 
+pub struct Directory {
+    session: sf::Session
+}
+
+impl sf::IObject for Directory {
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
+    }
+
+    fn get_command_table(&self) -> sf::CommandMetadataTable {
+        vec! [
+            ipc_cmif_interface_make_command_meta!(read: 0),
+            ipc_cmif_interface_make_command_meta!(get_entry_count: 1)
+        ]
+    }
+}
+
+impl service::IClientObject for Directory {
+    fn new(session: sf::Session) -> Self {
+        Self { session }
+    }
+}
+
+impl IDirectory for Directory {
+    fn read(&mut self, out_entries: sf::OutMapAliasBuffer) -> Result<u64> {
+        ipc_client_send_request_command!([self.session.object_info; 0] (out_entries) => (read_count: u64))
+    }
+
+    fn get_entry_count(&mut self) -> Result<u64> {
+        ipc_client_send_request_command!([self.session.object_info; 1] () => (count: u64))
+    }
+}
+
 pub struct File {
     session: sf::Session
 }
@@ -59,7 +92,8 @@ impl sf::IObject for FileSystem {
             ipc_cmif_interface_make_command_meta!(create_directory: 2),
             ipc_cmif_interface_make_command_meta!(delete_directory: 3),
             ipc_cmif_interface_make_command_meta!(delete_directory_recursively: 4),
-            ipc_cmif_interface_make_command_meta!(open_file: 8)
+            ipc_cmif_interface_make_command_meta!(open_file: 8),
+            ipc_cmif_interface_make_command_meta!(open_directory: 9)
         ]
     }
 }
@@ -97,6 +131,10 @@ impl IFileSystem for FileSystem {
     
     fn open_file(&mut self, mode: FileOpenMode, path_buf: sf::InPointerBuffer) -> Result<mem::Shared<dyn sf::IObject>> {
         ipc_client_send_request_command!([self.session.object_info; 8] (mode, path_buf) => (file: mem::Shared<File>))
+    }
+
+    fn open_directory(&mut self, mode: DirectoryOpenMode, path_buf: sf::InPointerBuffer) -> Result<mem::Shared<dyn sf::IObject>> {
+        ipc_client_send_request_command!([self.session.object_info; 9] (mode, path_buf) => (dir: mem::Shared<Directory>))
     }
 }
 
