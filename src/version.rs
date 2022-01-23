@@ -60,7 +60,7 @@ impl fmt::Display for Version {
 
 static mut G_VERSION: sync::Locked<Version> = sync::Locked::new(false, Version::empty());
 
-pub(crate) fn set_version(version: Version) {
+pub fn set_version(version: Version) {
     unsafe {
         G_VERSION.set(version);
     }

@@ -49,6 +49,24 @@ pub fn get_executable_type() -> ExecutableType {
 static mut G_EXIT_FN: sync::Locked<Option<ExitFn>> = sync::Locked::new(false, None);
 static mut G_MAIN_THREAD: thread::Thread = thread::Thread::empty();
 
+// TODO: consider adding a default heap-init function?
+
+#[no_mangle]
+#[linkage = "weak"]
+fn initialize_version(hbl_hos_version: hbl::Version) {
+    if hbl_hos_version.is_valid() {
+        version::set_version(hbl_hos_version.to_version());
+    }
+    else {
+        let set_sys = service::new_service_object::<set::SystemSettingsServer>().unwrap();
+        let fw_version: set::FirmwareVersion = Default::default();
+        set_sys.get().get_firmware_version(sf::Buffer::from_var(&fw_version)).unwrap();
+
+        let version = version::Version::new(fw_version.major, fw_version.minor, fw_version.micro);
+        version::set_version(version);
+    }
+}
+
 #[no_mangle]
 #[linkage = "weak"]
 unsafe extern "C" fn __nx_rrt0_entry(abi_ptr: *const hbl::AbiConfigEntry, raw_main_thread_handle: u64, aslr_base_address: *const u8, lr_exit_fn: ExitFn, bss_start: *mut u8, bss_end: *mut u8) {
@@ -167,17 +185,7 @@ unsafe extern "C" fn __nx_rrt0_entry(abi_ptr: *const hbl::AbiConfigEntry, raw_ma
     alloc::initialize(heap);
 
     // Initialize version support
-    if hos_version.is_valid() {
-        version::set_version(hos_version.to_version());
-    }
-    else {
-        let setsys = service::new_service_object::<set::SystemSettingsServer>().unwrap();
-        let fw_version: set::FirmwareVersion = Default::default();
-        setsys.get().get_firmware_version(sf::Buffer::from_var(&fw_version)).unwrap();
-
-        let version = version::Version::new(fw_version.major, fw_version.minor, fw_version.micro);
-        version::set_version(version);
-    }
+    initialize_version(hos_version);
 
     // TODO: finish implementing CRT0
 
