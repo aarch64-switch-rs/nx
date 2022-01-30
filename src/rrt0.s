@@ -1,6 +1,6 @@
 // Note: this is a slightly modified version of libbio's CRT0 (https://github.com/biosphere-switch/libbio)
 
-.section .text.jmp, "x"
+.section .text.jmp, "ax"
 
 .global _start
 _start:
@@ -17,23 +17,32 @@ __module_header:
 	.word __bss_end - __module_header
 	.word __eh_frame_hdr_start - __module_header
 	.word __eh_frame_hdr_end - __module_header
-	// Runtime-generated module object offset - ignore it
-	.word 0
+	.word 0 // Runtime-generated module object offset, unused
 
-.section .text, "x"
+.section .text, "ax"
 
 __default_entry:
+	// Get pointer to MOD0 struct (contains offsets to important places)
+    adr x28, __module_header
+
+    // Calculate BSS address/size
+    ldp  w8, w9, [x28, #8] // load BSS start/end offset from MOD0
+    sub  w9, w9, w8        // calculate BSS size
+    add  w9, w9, #7        // round up to 8
+    bic  w9, w9, #7        // ^
+    add  x8, x28, x8       // fixup the start pointer
+
+    // Clear the BSS in 8-byte units
+__clear_bss_loop:
+    subs w9, w9, #8
+    str  xzr, [x8], #8
+    bne  __clear_bss_loop
+	
 	// Set aslr base address as 3rd argument
 	adrp x2, _start
 
-	// Set lr as 4th argument
+	// Set loader return address as 4th argument
 	mov x3, x30
-
-	// Set .bss start and end as 5th and 6th arguments respectively
-	adrp x4, __bss_start
-	add x4, x4, #:lo12:__bss_start
-	adrp x5, __bss_end
-	add x5, x5, #:lo12:__bss_end
 	
 	// Call the normal entrypoint (implemented in Rust)
 	b __nx_rrt0_entry

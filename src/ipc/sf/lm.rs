@@ -4,9 +4,9 @@ use crate::mem;
 
 bit_enum! {
     LogDestination (u32) {
-        TMA = bit!(0),
-        UART = bit!(1),
-        UARTSleeping = bit!(2),
+        Tma = bit!(0),
+        Uart = bit!(1),
+        UartSleeping = bit!(2),
         All = 0xFFFF
     }
 }

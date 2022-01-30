@@ -10,6 +10,7 @@ pub struct AppletAttribute {
     flag: u8,
     reserved: [u8; 0x7F]
 }
+const_assert!(core::mem::size_of::<AppletAttribute>() == 0x80);
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]

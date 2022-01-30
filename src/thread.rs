@@ -236,6 +236,7 @@ pub struct ThreadLocalRegion {
     pub thread_ptr: *mut u8,
     pub thread_ref: *mut Thread,
 }
+const_assert!(core::mem::size_of::<ThreadLocalRegion>() == 0x200);
 
 #[inline(always)]
 pub fn get_thread_local_region() -> *mut ThreadLocalRegion {

@@ -13,6 +13,7 @@ pub struct Input {
     pub function_id: FunctionId,
     pub arguments: [u64; 7],
 }
+const_assert!(core::mem::size_of::<Input>() == 0x40);
 
 impl Input {
     pub const fn new(function_id: FunctionId) -> Self {
@@ -39,6 +40,7 @@ pub struct Output {
     pub result: Result,
     pub arguments: [u64; 7],
 }
+const_assert!(core::mem::size_of::<Output>() == 0x40);
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]

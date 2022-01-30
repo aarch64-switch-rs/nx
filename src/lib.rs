@@ -30,6 +30,9 @@ global_asm!(include_str!("svc.s"));
 extern crate alloc;
 
 #[macro_use]
+extern crate static_assertions;
+
+#[macro_use]
 pub mod macros;
 
 pub mod result;

@@ -53,11 +53,13 @@ pub type Path = util::CString<0x301>;
 #[repr(C)]
 pub struct DirectoryEntry {
     pub name: Path,
-    pub pad: [u8; 3],
+    pub attr: u8,
+    pub pad: [u8; 2],
     pub entry_type: DirectoryEntryType,
     pub pad_2: [u8; 3],
     pub file_size: usize
 }
+const_assert!(core::mem::size_of::<DirectoryEntry>() == 0x310);
 
 pub trait IFile {
     ipc_cmif_interface_define_command!(read: (option: FileReadOption, offset: usize, size: usize, buf: sf::OutNonSecureMapAliasBuffer) => (read_size: usize));

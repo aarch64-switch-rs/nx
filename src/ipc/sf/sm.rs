@@ -7,6 +7,7 @@ use crate::input;
 pub struct ServiceName {
     pub value: u64,
 }
+const_assert!(core::mem::size_of::<ServiceName>() == 0x8);
 
 impl ServiceName {
     pub const fn from(value: u64) -> Self {

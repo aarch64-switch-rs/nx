@@ -59,7 +59,8 @@ pub struct CharInfo {
     pub mii_sex: u8,
     pub mii_height: u8,
     pub mii_width: u8,
-    pub unk_2: [u8; 2],
+    pub t_type: u8,
+    pub region_move: u8,
     pub mii_face_shape: u8,
     pub mii_face_color: u8,
     pub mii_wrinkles_style: u8,
@@ -102,8 +103,27 @@ pub struct CharInfo {
     pub mii_mole_size: u8,
     pub mii_mole_pos_x: u8,
     pub mii_mole_pos_y: u8,
-    pub unk_3: u8
+    pub reserved: u8
 }
+const_assert!(core::mem::size_of::<CharInfo>() == 0x58);
+
+#[derive(Copy, Clone)]
+#[repr(C)]
+pub struct CoreData {
+    pub data: [u8; 0x1C], // TODO
+    pub name: util::CString16<10>
+}
+const_assert!(core::mem::size_of::<CoreData>() == 0x30);
+
+#[derive(Copy, Clone)]
+#[repr(C)]
+pub struct StoreData {
+    pub core_data: CoreData,
+    pub id: CreateId,
+    pub data_crc: u16,
+    pub device_crc: u16
+}
+const_assert!(core::mem::size_of::<StoreData>() == 0x44);
 
 pub trait IDatabaseService {
     ipc_cmif_interface_define_command!(is_updated: (flag: SourceFlag) => (updated: bool));

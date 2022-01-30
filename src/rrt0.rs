@@ -69,19 +69,15 @@ fn initialize_version(hbl_hos_version: hbl::Version) {
 
 #[no_mangle]
 #[linkage = "weak"]
-unsafe extern "C" fn __nx_rrt0_entry(abi_ptr: *const hbl::AbiConfigEntry, raw_main_thread_handle: u64, aslr_base_address: *const u8, lr_exit_fn: ExitFn, bss_start: *mut u8, bss_end: *mut u8) {
+unsafe extern "C" fn __nx_rrt0_entry(abi_ptr: *const hbl::AbiConfigEntry, raw_main_thread_handle: u64, aslr_base_address: *const u8, lr_exit_fn: ExitFn) {
+    // First of all, relocate ourselves
+    dynamic::relocate(aslr_base_address).unwrap();
+    
     let exec_type = match !abi_ptr.is_null() && (raw_main_thread_handle == u64::MAX) {
         true => ExecutableType::Nro,
         false => ExecutableType::Nso
     };
     set_executable_type(exec_type);
-    
-    // Clear .bss section
-    let bss_size = bss_end as usize - bss_start as usize;
-    ptr::write_bytes(bss_start, 0, bss_size);
-
-    // Relocate ourselves
-    dynamic::relocate(aslr_base_address).unwrap();
 
     let mut heap = util::PointerAndSize::new(ptr::null_mut(), 0);
     let mut main_thread_handle = raw_main_thread_handle as svc::Handle;
