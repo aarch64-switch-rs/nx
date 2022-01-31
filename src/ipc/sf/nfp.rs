@@ -35,7 +35,7 @@ pub enum DeviceState {
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
-pub enum DeviceType {
+pub enum ModelType {
     Amiibo = 0
 }
 
@@ -132,8 +132,8 @@ pub struct AdminInfo {
     pub flags: AdminInfoFlags, // Raw amiibo settings flags without the first 4 bits
     pub unk_0x2: u8, // Always 0x2
     pub console_type: ProgramIdConsoleType,
-    pub pad: [u8; 7],
-    pub reserved: [u8; 40]
+    pub pad: [u8; 0x7],
+    pub reserved: [u8; 0x28]
 }
 const_assert!(core::mem::size_of::<AdminInfo>() == 0x40);
 
@@ -154,7 +154,7 @@ pub trait IUser {
     ipc_cmif_interface_define_command!(list_devices: (out_devices: sf::OutPointerBuffer) => (count: u32));
     ipc_cmif_interface_define_command!(start_detection: (device_handle: DeviceHandle) => ());
     ipc_cmif_interface_define_command!(stop_detection: (device_handle: DeviceHandle) => ());
-    ipc_cmif_interface_define_command!(mount: (device_handle: DeviceHandle, device_type: DeviceType, mount_target: MountTarget) => ());
+    ipc_cmif_interface_define_command!(mount: (device_handle: DeviceHandle, model_type: ModelType, mount_target: MountTarget) => ());
     ipc_cmif_interface_define_command!(unmount: (device_handle: DeviceHandle) => ());
     ipc_cmif_interface_define_command!(open_application_area: (device_handle: DeviceHandle, access_id: AccessId) => ());
     ipc_cmif_interface_define_command!(get_application_area: (device_handle: DeviceHandle, out_data: sf::OutMapAliasBuffer) => (size: u32));
@@ -186,7 +186,7 @@ pub trait ISystem {
     ipc_cmif_interface_define_command!(list_devices: (out_devices: sf::OutPointerBuffer) => (count: u32));
     ipc_cmif_interface_define_command!(start_detection: (device_handle: DeviceHandle) => ());
     ipc_cmif_interface_define_command!(stop_detection: (device_handle: DeviceHandle) => ());
-    ipc_cmif_interface_define_command!(mount: (device_handle: DeviceHandle, device_type: DeviceType, mount_target: MountTarget) => ());
+    ipc_cmif_interface_define_command!(mount: (device_handle: DeviceHandle, model_type: ModelType, mount_target: MountTarget) => ());
     ipc_cmif_interface_define_command!(unmount: (device_handle: DeviceHandle) => ());
     ipc_cmif_interface_define_command!(flush: (device_handle: DeviceHandle) => ());
     ipc_cmif_interface_define_command!(restore: (device_handle: DeviceHandle) => ());
@@ -219,7 +219,7 @@ pub trait IDebug {
     ipc_cmif_interface_define_command!(list_devices: (out_devices: sf::OutPointerBuffer) => (count: u32));
     ipc_cmif_interface_define_command!(start_detection: (device_handle: DeviceHandle) => ());
     ipc_cmif_interface_define_command!(stop_detection: (device_handle: DeviceHandle) => ());
-    ipc_cmif_interface_define_command!(mount: (device_handle: DeviceHandle, device_type: DeviceType, mount_target: MountTarget) => ());
+    ipc_cmif_interface_define_command!(mount: (device_handle: DeviceHandle, model_type: ModelType, mount_target: MountTarget) => ());
     ipc_cmif_interface_define_command!(unmount: (device_handle: DeviceHandle) => ());
     ipc_cmif_interface_define_command!(open_application_area: (device_handle: DeviceHandle, access_id: AccessId) => ());
     ipc_cmif_interface_define_command!(get_application_area: (device_handle: DeviceHandle, out_data: sf::OutMapAliasBuffer) => (size: u32));

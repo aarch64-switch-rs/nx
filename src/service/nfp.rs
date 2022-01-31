@@ -72,8 +72,8 @@ impl IUser for User {
         ipc_client_send_request_command!([self.session.object_info; 4] (device_handle) => ())
     }
 
-    fn mount(&mut self, device_handle: DeviceHandle, device_type: DeviceType, mount_target: MountTarget) -> Result<()> {
-        ipc_client_send_request_command!([self.session.object_info; 5] (device_handle, device_type, mount_target) => ())
+    fn mount(&mut self, device_handle: DeviceHandle, model_type: ModelType, mount_target: MountTarget) -> Result<()> {
+        ipc_client_send_request_command!([self.session.object_info; 5] (device_handle, model_type, mount_target) => ())
     }
 
     fn unmount(&mut self, device_handle: DeviceHandle) -> Result<()> {
