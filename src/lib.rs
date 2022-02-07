@@ -14,6 +14,8 @@
 #![feature(derive_default_enum)]
 #![feature(const_fn_trait_bound)]
 #![feature(fn_traits)]
+#![feature(asm)]
+#![feature(global_asm)]
 #![macro_use]
 
 use core::arch::global_asm;
