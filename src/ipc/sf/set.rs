@@ -1,5 +1,6 @@
 use crate::result::*;
 use crate::ipc::sf;
+use crate::ipc::sf::mii;
 use crate::util;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -23,4 +24,5 @@ const_assert!(core::mem::size_of::<FirmwareVersion>() == 0x100);
 pub trait ISystemSettingsServer {
     ipc_cmif_interface_define_command!(get_firmware_version: (out_version: sf::OutFixedPointerBuffer<FirmwareVersion>) => ());
     ipc_cmif_interface_define_command!(get_firmware_version_2: (out_version: sf::OutFixedPointerBuffer<FirmwareVersion>) => ());
+    ipc_cmif_interface_define_command!(get_mii_author_id: () => (id: mii::CreateId));
 }

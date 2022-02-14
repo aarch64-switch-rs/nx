@@ -48,8 +48,8 @@ impl IDatabaseService for DatabaseService {
         ipc_client_send_request_command!([self.session.object_info; 4] (flag, out_char_infos) => (count: u32))
     }
 
-    fn build_random(&mut self, age: Age, gender: Gender, face_color: FaceColor) -> Result<CharInfo> {
-        ipc_client_send_request_command!([self.session.object_info; 6] (age, gender, face_color) => (char_info: CharInfo))
+    fn build_random(&mut self, age: sf::EnumAsPrimitiveType<Age, u32>, gender: sf::EnumAsPrimitiveType<Gender, u32>, race: sf::EnumAsPrimitiveType<Race, u32>) -> Result<CharInfo> {
+        ipc_client_send_request_command!([self.session.object_info; 6] (age, gender, race) => (char_info: CharInfo))
     }
 }
 

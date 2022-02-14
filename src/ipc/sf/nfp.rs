@@ -56,7 +56,7 @@ pub struct Date {
 }
 const_assert!(core::mem::size_of::<Date>() == 0x4);
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]
 pub struct TagInfo {
     pub uuid: [u8; 10],
@@ -68,7 +68,7 @@ pub struct TagInfo {
 }
 const_assert!(core::mem::size_of::<TagInfo>() == 0x58);
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]
 pub struct RegisterInfo {
     pub mii_charinfo: mii::CharInfo,
@@ -79,7 +79,7 @@ pub struct RegisterInfo {
 }
 const_assert!(core::mem::size_of::<RegisterInfo>() == 0x100);
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]
 pub struct CommonInfo {
     pub last_write_date: Date,
@@ -91,14 +91,14 @@ pub struct CommonInfo {
 }
 const_assert!(core::mem::size_of::<CommonInfo>() == 0x40);
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]
 pub struct ModelInfo {
     pub game_character_id: u16,
     pub character_variant: u8,
-    pub figure_type: u8,
-    pub model_number: u16,
     pub series: u8,
+    pub model_number: u16,
+    pub figure_type: u8,
     pub reserved: [u8; 0x39]
 }
 const_assert!(core::mem::size_of::<ModelInfo>() == 0x40);
@@ -123,7 +123,7 @@ pub enum ProgramIdConsoleType {
     NintendoSwitch = 3
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]
 pub struct AdminInfo {
     pub program_id: u64,
@@ -137,7 +137,7 @@ pub struct AdminInfo {
 }
 const_assert!(core::mem::size_of::<AdminInfo>() == 0x40);
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]
 pub struct RegisterInfoPrivate {
     pub mii_store_data: mii::StoreData,

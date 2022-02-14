@@ -129,6 +129,45 @@ impl ProcessId {
     }
 }
 
+// This is used, for instance, with u8-sized enums which are sent/received as u32s in commands
+
+#[derive(Copy, Clone)]
+#[repr(C)]
+pub union EnumAsPrimitiveType<E: Copy + Clone, T: Copy + Clone> {
+    val: T,
+    enum_val: E
+}
+
+impl<E: Copy + Clone, T: Copy + Clone> EnumAsPrimitiveType<E, T> {
+    pub fn from(enum_val: E) -> Self {
+        Self {
+            enum_val
+        }
+    }
+
+    pub fn from_val(val: T) -> Self {
+        Self {
+            val
+        }
+    }
+
+    pub fn get(&self) -> E {
+        unsafe { self.enum_val }
+    }
+
+    pub fn set(&mut self, enum_val: E) {
+        self.enum_val = enum_val;
+    }
+
+    pub fn get_value(&self) -> T {
+        unsafe { self.val }
+    }
+
+    pub fn set_value(&mut self, val: T) {
+        self.val = val;
+    }
+}
+
 pub struct Session {
     pub object_info: ObjectInfo
 }

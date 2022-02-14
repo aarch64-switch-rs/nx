@@ -105,18 +105,33 @@ impl<const S: usize> CString<S> {
         }
         Ok(())
     }
-    
-    fn read_str_from(ptr: *const u8, ptr_len: usize) -> Result<&'static str> {
-        unsafe {
-            match core::str::from_utf8(core::slice::from_raw_parts(ptr, ptr_len)) {
-                Ok(name) => Ok(name.trim_matches('\0')),
-                Err(_) => Err(results::lib::util::ResultInvalidConversion::make())
+
+    fn read_str_from(ptr: *const u8, str_len: usize) -> Result<&'static str> {
+        if str_len == 0 {
+            Ok("")
+        }
+        else {
+            unsafe {
+                match core::str::from_utf8(core::slice::from_raw_parts(ptr, str_len)) {
+                    Ok(name) => Ok(name.trim_end_matches('\0')),
+                    Err(_) => Err(results::lib::util::ResultInvalidConversion::make())
+                }
             }
         }
     }
     
-    fn read_string_from(ptr: *const u8, ptr_len: usize) -> Result<String> {
-        Ok(String::from(Self::read_str_from(ptr, ptr_len)?))
+    fn read_string_from(ptr: *const u8, str_len: usize) -> Result<String> {
+        Ok(String::from(Self::read_str_from(ptr, str_len)?))
+    }
+
+    pub fn len(&self) -> usize {
+        for i in 0..S {
+            if self.c_str[i] == 0 {
+                return i;
+            }
+        }
+
+        S
     }
 
     pub fn set_str(&mut self, string: &str) -> Result<()> {
@@ -128,11 +143,11 @@ impl<const S: usize> CString<S> {
     }
 
     pub fn get_str(&self) -> Result<&'static str> {
-        Self::read_str_from(&self.c_str as *const _ as *const u8, S)
+        Self::read_str_from(&self.c_str as *const _ as *const u8, self.len())
     }
 
     pub fn get_string(&self) -> Result<String> {
-        Self::read_string_from(&self.c_str as *const _ as *const u8, S)
+        Self::read_string_from(&self.c_str as *const _ as *const u8, self.len())
     }
 }
 
@@ -207,23 +222,32 @@ impl<const S: usize> CString16<S> {
         Ok(())
     }
     
-    fn read_string_from(ptr: *const u16, ptr_len: usize) -> Result<String> {
+    fn read_string_from(ptr: *const u16, str_len: usize) -> Result<String> {
         let mut string = String::new();
-        unsafe {
-            let tmp_slice = core::slice::from_raw_parts(ptr, ptr_len);
-            for ch_v in core::char::decode_utf16(tmp_slice.iter().cloned()) {
-                if let Ok(ch) = ch_v {
-                    if ch == '\0' {
+        if str_len > 0 {
+            unsafe {
+                let tmp_slice = core::slice::from_raw_parts(ptr, str_len);
+                for ch_v in core::char::decode_utf16(tmp_slice.iter().cloned()) {
+                    if let Ok(ch) = ch_v {
+                        string.push(ch);
+                    }
+                    else {
                         break;
                     }
-                    string.push(ch);
-                }
-                else {
-                    break;
                 }
             }
         }
         Ok(string)
+    }
+
+    pub fn len(&self) -> usize {
+        for i in 0..S {
+            if self.c_str[i] == 0 {
+                return i;
+            }
+        }
+
+        S
     }
 
     pub fn set_str(&mut self, string: &str) -> Result<()> {
@@ -235,7 +259,7 @@ impl<const S: usize> CString16<S> {
     }
 
     pub fn get_string(&self) -> Result<String> {
-        Self::read_string_from(&self.c_str as *const _ as *const u16, S)
+        Self::read_string_from(&self.c_str as *const _ as *const u16, self.len())
     }
 }
 

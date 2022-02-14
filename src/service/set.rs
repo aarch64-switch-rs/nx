@@ -1,5 +1,6 @@
 use crate::result::*;
 use crate::ipc::sf;
+use crate::ipc::sf::mii;
 use crate::service;
 
 pub use crate::ipc::sf::set::*;
@@ -16,7 +17,8 @@ impl sf::IObject for SystemSettingsServer {
     fn get_command_table(&self) -> sf::CommandMetadataTable {
         vec! [
             ipc_cmif_interface_make_command_meta!(get_firmware_version: 3),
-            ipc_cmif_interface_make_command_meta!(get_firmware_version_2: 4)
+            ipc_cmif_interface_make_command_meta!(get_firmware_version_2: 4),
+            ipc_cmif_interface_make_command_meta!(get_mii_author_id: 90)
         ]
     }
 }
@@ -34,6 +36,10 @@ impl ISystemSettingsServer for SystemSettingsServer {
 
     fn get_firmware_version_2(&mut self, out_version: sf::OutFixedPointerBuffer<FirmwareVersion>) -> Result<()> {
         ipc_client_send_request_command!([self.session.object_info; 4] (out_version) => ())
+    }
+
+    fn get_mii_author_id(&mut self) -> Result<mii::CreateId> {
+        ipc_client_send_request_command!([self.session.object_info; 90] () => (id: mii::CreateId))
     }
 }
 

@@ -1,6 +1,6 @@
 // Note: this is a slightly modified version of libbio's CRT0 (https://github.com/biosphere-switch/libbio)
 
-.section .text.jmp, "ax"
+.section .text.rrt0, "ax"
 
 .global _start
 _start:
@@ -22,28 +22,25 @@ __module_header:
 .section .text, "ax"
 
 __default_entry:
-	// Get pointer to MOD0 struct (contains offsets to important places)
-    adr x28, __module_header
+	// Clean BSS first
+	adrp x5, __bss_start
+	add x5, x5, #:lo12:__bss_start
+	adrp x6, __bss_end
+	add x6, x6, #:lo12:__bss_end
+__clean_bss_loop:
+	cmp x5, x6
+	b.eq __default_entry_start
+	str xzr, [x5]
+	add x5, x5, 8
+	b __clean_bss_loop
 
-    // Calculate BSS address/size
-    ldp  w8, w9, [x28, #8] // load BSS start/end offset from MOD0
-    sub  w9, w9, w8        // calculate BSS size
-    add  w9, w9, #7        // round up to 8
-    bic  w9, w9, #7        // ^
-    add  x8, x28, x8       // fixup the start pointer
-
-    // Clear the BSS in 8-byte units
-__clear_bss_loop:
-    subs w9, w9, #8
-    str  xzr, [x8], #8
-    bne  __clear_bss_loop
-	
+__default_entry_start:
 	// Set aslr base address as 3rd argument
-	adrp x2, _start
+	adr x2, _start
 
 	// Set loader return address as 4th argument
 	mov x3, x30
-	
+
 	// Call the normal entrypoint (implemented in Rust)
 	b __nx_rrt0_entry
 
