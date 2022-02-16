@@ -35,14 +35,14 @@ impl Allocator for LinkedListAllocator {
     fn allocate(&mut self, layout: Layout) -> Result<*mut u8> {
         match self.allocate_first_fit(layout) {
             Ok(non_null_addr) => Ok(non_null_addr.as_ptr()),
-            Err(_) => Err(ResultCode::new(0xbb))
+            Err(_) => Err(results::lib::alloc::ResultOutOfMemory::make())
         }
     }
 
     fn release(&mut self, addr: *mut u8, layout: Layout) {
         if !addr.is_null() {
             unsafe {
-                self.deallocate(ptr::NonNull::new_unchecked(addr), layout)
+                self.deallocate(ptr::NonNull::new_unchecked(addr), layout);
             }
         }
     }
@@ -54,7 +54,7 @@ unsafe impl<A: Allocator> GlobalAlloc for sync::Locked<A> {
     }
 
     unsafe fn dealloc(&self, addr: *mut u8, layout: Layout) {
-        self.get().release(addr, layout)
+        self.get().release(addr, layout);
     }
 }
 

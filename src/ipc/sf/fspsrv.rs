@@ -40,16 +40,17 @@ bit_enum! {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 pub enum DirectoryEntryType {
+    #[default]
     Directory = 0,
     File = 1
 }
 
 pub type Path = util::CString<0x301>;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct DirectoryEntry {
     pub name: Path,

@@ -1,4 +1,3 @@
-use crate::mem::Shared;
 use crate::result::*;
 use crate::ipc::sf;
 use crate::mem;
@@ -1042,6 +1041,8 @@ impl CoreData {
         self.data[info.byte_offset as usize] = new_val;
     }
 
+    // TODO: order these?
+
     #[inline]
     pub fn get_hair_type(&self) -> HairType {
         unsafe { core::mem::transmute(self.get_value(get_element_info(CoreDataElement::HairType)) as u8) }
@@ -1587,6 +1588,62 @@ impl CoreData {
 
         Ok(core_data)
     }
+
+    pub fn to_charinfo(&self) -> Result<CharInfo> {
+        let mut charinfo: CharInfo = Default::default();
+
+        charinfo.name.set_string(self.name.get_string()?)?;
+        charinfo.font_region = self.get_font_region();
+        charinfo.favorite_color = self.get_favorite_color();
+        charinfo.gender = self.get_gender();
+        charinfo.height = self.get_height();
+        charinfo.build = self.get_build();
+        charinfo.type_val = self.get_type();
+        charinfo.region_move = self.get_region_move();
+        charinfo.faceline_type = self.get_faceline_type();
+        charinfo.faceline_color = self.get_faceline_color();
+        charinfo.faceline_make = self.get_faceline_make();
+        charinfo.hair_type = self.get_hair_type();
+        charinfo.hair_color = self.get_hair_color();
+        charinfo.hair_flip = self.get_hair_flip();
+        charinfo.eye_type = self.get_eye_type();
+        charinfo.eye_color = self.get_eye_color();
+        charinfo.eye_scale = self.get_eye_scale();
+        charinfo.eye_aspect = self.get_eye_aspect();
+        charinfo.eye_rotate = self.get_eye_rotate();
+        charinfo.eye_x = self.get_eye_x();
+        charinfo.eye_y = self.get_eye_y();
+        charinfo.eyebrow_type = self.get_eyebrow_type();
+        charinfo.eyebrow_color = self.get_eyebrow_color();
+        charinfo.eyebrow_scale = self.get_eye_scale();
+        charinfo.eyebrow_aspect = self.get_eye_aspect();
+        charinfo.eyebrow_rotate = self.get_eye_rotate();
+        charinfo.eyebrow_x = self.get_eyebrow_x();
+        charinfo.eyebrow_y = self.get_eyebrow_y();
+        charinfo.nose_type = self.get_nose_type();
+        charinfo.nose_scale = self.get_nose_scale();
+        charinfo.nose_y = self.get_nose_y();
+        charinfo.mouth_type = self.get_mouth_type();
+        charinfo.mouth_color = self.get_mouth_color();
+        charinfo.mouth_scale = self.get_mouth_scale();
+        charinfo.mouth_aspect = self.get_mouth_aspect();
+        charinfo.mouth_y = self.get_mouth_y();
+        charinfo.beard_type = self.get_beard_type();
+        charinfo.beard_color = self.get_beard_color();
+        charinfo.mustache_type = self.get_mustache_type();
+        charinfo.mustache_scale = self.get_mustache_scale();
+        charinfo.mustache_y = self.get_mustache_y();
+        charinfo.glass_type = self.get_glass_type();
+        charinfo.glass_color = self.get_glass_color();
+        charinfo.glass_scale = self.get_glass_scale();
+        charinfo.glass_y = self.get_glass_y();
+        charinfo.mole_type = self.get_mole_type();
+        charinfo.mole_scale = self.get_mouth_scale();
+        charinfo.mole_x = self.get_mole_x();
+        charinfo.mole_y = self.get_mole_y();
+
+        Ok(charinfo)
+    }
 }
 
 pub fn compute_crc16(data_buf: *const u8, data_size: usize, base_crc: u16, reverse_endianess: bool) -> u16 {
@@ -1619,7 +1676,7 @@ pub fn compute_crc16(data_buf: *const u8, data_size: usize, base_crc: u16, rever
 
 #[inline]
 pub fn get_device_id() -> Result<CreateId> {
-    let mut set_sys: Shared<set::SystemSettingsServer> = service::new_service_object()?;
+    let mut set_sys: mem::Shared<set::SystemSettingsServer> = service::new_service_object()?;
     set_sys.get_mii_author_id()
 }
 
@@ -1663,6 +1720,13 @@ impl StoreData {
         else {
             false
         }
+    }
+
+    #[inline]
+    pub fn to_charinfo(&self) -> Result<CharInfo> {
+        let mut charinfo = self.core_data.to_charinfo()?;
+        charinfo.id = self.id;
+        Ok(charinfo)
     }
 }
 
