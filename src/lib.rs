@@ -9,10 +9,8 @@
 #![feature(coerce_unsized)]
 #![feature(linkage)]
 #![feature(unsize)]
-#![feature(const_fn_fn_ptr_basics)]
 #![feature(const_mut_refs)]
 #![feature(derive_default_enum)]
-#![feature(const_fn_trait_bound)]
 #![feature(fn_traits)]
 #![macro_use]
 
