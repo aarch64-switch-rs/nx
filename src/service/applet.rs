@@ -34,11 +34,11 @@ impl IStorageAccessor for StorageAccessor {
         ipc_client_send_request_command!([self.session.object_info; 0] () => (size: usize))
     }
 
-    fn write(&mut self, offset: usize, buf: sf::InAutoSelectBuffer) -> Result<()> {
+    fn write(&mut self, offset: usize, buf: sf::InAutoSelectBuffer<u8>) -> Result<()> {
         ipc_client_send_request_command!([self.session.object_info; 10] (offset, buf) => ())
     }
 
-    fn read(&mut self, offset: usize, buf: sf::OutAutoSelectBuffer) -> Result<()> {
+    fn read(&mut self, offset: usize, buf: sf::OutAutoSelectBuffer<u8>) -> Result<()> {
         ipc_client_send_request_command!([self.session.object_info; 11] (offset, buf) => ())
     }
 }
@@ -259,7 +259,7 @@ impl service::IClientObject for AllSystemAppletProxiesService {
 }
 
 impl IAllSystemAppletProxiesService for AllSystemAppletProxiesService {
-    fn open_library_applet_proxy(&mut self, process_id: sf::ProcessId, self_process_handle: sf::CopyHandle, applet_attribute: sf::InMapAliasBuffer) -> Result<mem::Shared<dyn sf::IObject>> {
+    fn open_library_applet_proxy(&mut self, process_id: sf::ProcessId, self_process_handle: sf::CopyHandle, applet_attribute: sf::InMapAliasBuffer<AppletAttribute>) -> Result<mem::Shared<dyn sf::IObject>> {
         ipc_client_send_request_command!([self.session.object_info; 201] (process_id, self_process_handle, applet_attribute) => (library_applet_proxy: mem::Shared<LibraryAppletProxy>))
     }
 }

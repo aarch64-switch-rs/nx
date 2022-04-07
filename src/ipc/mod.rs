@@ -655,9 +655,11 @@ impl CommandContext {
         }
     }
 
-    pub fn add_buffer<const A: BufferAttribute, const S: usize>(&mut self, buffer: sf::Buffer<A, S>) -> Result<()> {
+    pub fn add_buffer<const A: BufferAttribute, T>(&mut self, buffer: &sf::Buffer<A, T>) -> Result<()> {
         let is_in = A.contains(BufferAttribute::In());
         let is_out = A.contains(BufferAttribute::Out());
+        let buf_addr = buffer.get_address();
+        let buf_size = buffer.get_size();
 
         if A.contains(BufferAttribute::AutoSelect()) {
             if self.pointer_buffer.is_null() {
@@ -668,30 +670,30 @@ impl CommandContext {
             let mut buffer_in_static = false;
             if pointer_buf_size > 0 {
                 let left_size = pointer_buf_size - self.in_pointer_buffer_offset;
-                buffer_in_static = buffer.size <= left_size;
+                buffer_in_static = buf_size <= left_size;
             }
             if buffer_in_static {
-                self.in_pointer_buffer_offset += buffer.size;
+                self.in_pointer_buffer_offset += buf_size;
             }
             
             if is_in {
                 if buffer_in_static {
                     self.add_send_buffer(BufferDescriptor::new(ptr::null(), 0, BufferFlags::Normal))?;
-                    self.add_send_static(SendStaticDescriptor::new(buffer.buf, buffer.size, self.send_statics.len() as u32))?;
+                    self.add_send_static(SendStaticDescriptor::new(buf_addr, buf_size, self.send_statics.len() as u32))?;
                 }
                 else {
-                    self.add_send_buffer(BufferDescriptor::new(buffer.buf, buffer.size, BufferFlags::Normal))?;
+                    self.add_send_buffer(BufferDescriptor::new(buf_addr, buf_size, BufferFlags::Normal))?;
                     self.add_send_static(SendStaticDescriptor::new(ptr::null(), 0, self.send_statics.len() as u32))?;
                 }
             }
             else if is_out {
                 if buffer_in_static {
                     self.add_receive_buffer(BufferDescriptor::new(ptr::null(), 0, BufferFlags::Normal))?;
-                    self.add_receive_static(ReceiveStaticDescriptor::new(buffer.buf, buffer.size))?;
-                    self.in_params.add_out_pointer_size(buffer.size as u16)?;
+                    self.add_receive_static(ReceiveStaticDescriptor::new(buf_addr, buf_size))?;
+                    self.in_params.add_out_pointer_size(buf_size as u16)?;
                 }
                 else {
-                    self.add_receive_buffer(BufferDescriptor::new(buffer.buf, buffer.size, BufferFlags::Normal))?;
+                    self.add_receive_buffer(BufferDescriptor::new(buf_addr, buf_size, BufferFlags::Normal))?;
                     self.add_receive_static(ReceiveStaticDescriptor::new(ptr::null(), 0))?;
                     self.in_params.add_out_pointer_size(0)?;
                 }
@@ -699,12 +701,12 @@ impl CommandContext {
         }
         else if A.contains(BufferAttribute::Pointer()) {
             if is_in {
-                self.add_send_static(SendStaticDescriptor::new(buffer.buf, buffer.size, self.send_statics.len() as u32))?;
+                self.add_send_static(SendStaticDescriptor::new(buf_addr, buf_size, self.send_statics.len() as u32))?;
             }
             else if is_out {
-                self.add_receive_static(ReceiveStaticDescriptor::new(buffer.buf, buffer.size))?;
+                self.add_receive_static(ReceiveStaticDescriptor::new(buf_addr, buf_size))?;
                 if !A.contains(BufferAttribute::FixedSize()) {
-                    self.in_params.add_out_pointer_size(buffer.size as u16)?;
+                    self.in_params.add_out_pointer_size(buf_size as u16)?;
                 }
             }
         }
@@ -716,7 +718,7 @@ impl CommandContext {
             else if A.contains(BufferAttribute::MapTransferAllowsNonDevice()) {
                 flags = BufferFlags::NonDevice;
             }
-            let buf_desc = BufferDescriptor::new(buffer.buf, buffer.size, flags);
+            let buf_desc = BufferDescriptor::new(buf_addr, buf_size, flags);
             if is_in && is_out {
                 self.add_exchange_buffer(buf_desc)?;
             }
@@ -769,7 +771,7 @@ impl CommandContext {
         }
     }
 
-    pub fn pop_buffer<const A: BufferAttribute, const S: usize>(&mut self, raw_data_walker: &mut DataWalker) -> Result<sf::Buffer<A, S>> {
+    pub fn pop_buffer<const A: BufferAttribute, T>(&mut self, raw_data_walker: &mut DataWalker) -> Result<sf::Buffer<A, T>> {
         let is_in = A.contains(BufferAttribute::In());
         let is_out = A.contains(BufferAttribute::Out());
 
@@ -778,10 +780,10 @@ impl CommandContext {
                 if let Ok(static_desc) = self.pop_send_static() {
                     if let Ok(send_desc) = self.pop_send_buffer() {
                         if !static_desc.get_address().is_null() && (static_desc.get_size() > 0) {
-                            return Ok(sf::Buffer::from_mut(static_desc.get_address(), static_desc.get_size()));
+                            return Ok(sf::Buffer::new(static_desc.get_address(), static_desc.get_size()));
                         }
                         if !send_desc.get_address().is_null() && (send_desc.get_size() > 0) {
-                            return Ok(sf::Buffer::from_mut(send_desc.get_address(), send_desc.get_size()));
+                            return Ok(sf::Buffer::new(send_desc.get_address(), send_desc.get_size()));
                         }
                     }
                 }
@@ -790,10 +792,10 @@ impl CommandContext {
                 if let Ok(static_desc) = self.pop_receive_static() {
                     if let Ok(recv_desc) = self.pop_receive_buffer() {
                         if !static_desc.get_address().is_null() && (static_desc.get_size() > 0) {
-                            return Ok(sf::Buffer::from_mut(static_desc.get_address(), static_desc.get_size()));
+                            return Ok(sf::Buffer::new(static_desc.get_address(), static_desc.get_size()));
                         }
                         if !recv_desc.get_address().is_null() && (recv_desc.get_size() > 0) {
-                            return Ok(sf::Buffer::from_mut(recv_desc.get_address(), recv_desc.get_size()));
+                            return Ok(sf::Buffer::new(recv_desc.get_address(), recv_desc.get_size()));
                         }
                     }
                 }
@@ -802,12 +804,12 @@ impl CommandContext {
         else if A.contains(BufferAttribute::Pointer()) {
             if is_in {
                 if let Ok(static_desc) = self.pop_send_static() {
-                    return Ok(sf::Buffer::from_mut(static_desc.get_address(), static_desc.get_size()));
+                    return Ok(sf::Buffer::new(static_desc.get_address(), static_desc.get_size()));
                 }
             }
             else if is_out {
                 let buf_size = match A.contains(BufferAttribute::FixedSize()) {
-                    true => S,
+                    true => sf::Buffer::<A, T>::get_expected_size(),
                     false => {
                         self.ensure_pointer_size_walker(raw_data_walker);
                         self.pointer_size_walker.advance_get::<u16>() as usize
@@ -816,23 +818,23 @@ impl CommandContext {
 
                 let buf = unsafe { self.pointer_buffer.add(self.out_pointer_buffer_offset) };
                 self.out_pointer_buffer_offset += buf_size;
-                return Ok(sf::Buffer::from_mut(buf, buf_size));
+                return Ok(sf::Buffer::new(buf, buf_size));
             }
         }
         else if A.contains(BufferAttribute::MapAlias()) {
             if is_in && is_out {
                 if let Ok(exch_desc) = self.pop_exchange_buffer() {
-                    return Ok(sf::Buffer::from_mut(exch_desc.get_address(), exch_desc.get_size()));
+                    return Ok(sf::Buffer::new(exch_desc.get_address(), exch_desc.get_size()));
                 }
             }
             else if is_in {
                 if let Ok(send_desc) = self.pop_send_buffer() {
-                    return Ok(sf::Buffer::from_mut(send_desc.get_address(), send_desc.get_size()));
+                    return Ok(sf::Buffer::new(send_desc.get_address(), send_desc.get_size()));
                 }
             }
             else if is_out {
                 if let Ok(recv_desc) = self.pop_receive_buffer() {
-                    return Ok(sf::Buffer::from_mut(recv_desc.get_address(), recv_desc.get_size()));
+                    return Ok(sf::Buffer::new(recv_desc.get_address(), recv_desc.get_size()));
                 }
             }
         }

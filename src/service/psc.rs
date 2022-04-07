@@ -32,7 +32,7 @@ impl service::IClientObject for PmModule {
 }
 
 impl IPmModule for PmModule {
-    fn initialize(&mut self, id: ModuleId, dependencies: sf::InMapAliasBuffer) -> Result<sf::CopyHandle> {
+    fn initialize(&mut self, id: ModuleId, dependencies: sf::InMapAliasBuffer<ModuleId>) -> Result<sf::CopyHandle> {
         ipc_client_send_request_command!([self.session.object_info; 0] (id, dependencies) => (event_handle: sf::CopyHandle))
     }
 

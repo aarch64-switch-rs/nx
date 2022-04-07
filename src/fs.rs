@@ -78,11 +78,11 @@ impl ProxyFile {
 
 impl File for ProxyFile {
     fn read(&mut self, offset: usize, out_buf: *mut u8, out_buf_size: usize, option: FileReadOption) -> Result<usize> {
-        self.file_obj.get().read(option, offset, out_buf_size, sf::Buffer::from_mut(out_buf, out_buf_size))
+        self.file_obj.get().read(option, offset, out_buf_size, sf::Buffer::from_mut_ptr(out_buf, out_buf_size))
     }
 
     fn write(&mut self, offset: usize, buf: *const u8, buf_size: usize, option: FileWriteOption) -> Result<()> {
-        self.file_obj.get().write(option, offset, buf_size, sf::Buffer::from_const(buf, buf_size))
+        self.file_obj.get().write(option, offset, buf_size, sf::Buffer::from_ptr(buf, buf_size))
     }
 
     fn flush(&mut self) -> Result<()> {
@@ -102,7 +102,7 @@ impl File for ProxyFile {
     }
 
     fn operate_range_with_buffer(&mut self, operation_id: OperationId, offset: usize, size: usize, in_buf: *const u8, in_buf_size: usize, out_buf: *mut u8, out_buf_size: usize) -> Result<()> {
-        self.file_obj.get().operate_range_with_buffer(operation_id, offset, size, sf::Buffer::from_const(in_buf, in_buf_size), sf::Buffer::from_mut(out_buf, out_buf_size))
+        self.file_obj.get().operate_range_with_buffer(operation_id, offset, size, sf::Buffer::from_ptr(in_buf, in_buf_size), sf::Buffer::from_mut_ptr(out_buf, out_buf_size))
     }
 }
 
@@ -221,7 +221,7 @@ impl FileSystem for ProxyFileSystem {
 
     fn query_entry(&mut self, path: String, query_id: QueryId, in_buf: *const u8, in_buf_size: usize, out_buf: *mut u8, out_buf_size: usize) -> Result<()> {
         let sf_path = fspsrv::Path::from_string(path)?;
-        self.fs_obj.get().query_entry(sf::Buffer::from_var(&sf_path), query_id, sf::Buffer::from_const(in_buf, in_buf_size), sf::Buffer::from_mut(out_buf, out_buf_size))
+        self.fs_obj.get().query_entry(sf::Buffer::from_var(&sf_path), query_id, sf::Buffer::from_ptr(in_buf, in_buf_size), sf::Buffer::from_mut_ptr(out_buf, out_buf_size))
     }
 }
 

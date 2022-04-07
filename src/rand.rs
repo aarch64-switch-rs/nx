@@ -30,6 +30,6 @@ impl SplCsrngGenerator {
 
 impl RandomGenerator for SplCsrngGenerator {
     fn random_bytes(&mut self, buf: *mut u8, size: usize) -> Result<()> {
-        self.csrng.get().generate_random_bytes(sf::Buffer::from_mut(buf, size))
+        self.csrng.get().generate_random_bytes(sf::Buffer::from_mut_ptr(buf, size))
     }
 }

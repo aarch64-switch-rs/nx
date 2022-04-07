@@ -765,11 +765,11 @@ impl<VS: IRootService + service::IService + 'static, NS: INvDrvService + service
         let transfer_mem_handle = svc::create_transfer_memory(transfer_mem.ptr, transfer_mem_size, svc::MemoryPermission::None())?;
         nvdrv_srv.get().initialize(transfer_mem_size as u32, sf::Handle::from(svc::CURRENT_PROCESS_PSEUDO_HANDLE), sf::Handle::from(transfer_mem_handle))?;
 
-        let (nvhost_fd, nvhost_err) = nvdrv_srv.get().open(sf::Buffer::from_const(NVHOST_PATH.as_ptr(), NVHOST_PATH.len()))?;
+        let (nvhost_fd, nvhost_err) = nvdrv_srv.get().open(sf::Buffer::from_array(NVHOST_PATH.as_bytes()))?;
         nv::convert_error_code(nvhost_err)?;
-        let (nvmap_fd, nvmap_err) = nvdrv_srv.get().open(sf::Buffer::from_const(NVMAP_PATH.as_ptr(), NVMAP_PATH.len()))?;
+        let (nvmap_fd, nvmap_err) = nvdrv_srv.get().open(sf::Buffer::from_array(NVMAP_PATH.as_bytes()))?;
         nv::convert_error_code(nvmap_err)?;
-        let (nvhostctrl_fd, nvhostctrl_err) = nvdrv_srv.get().open(sf::Buffer::from_const(NVHOSTCTRL_PATH.as_ptr(), NVHOSTCTRL_PATH.len()))?;
+        let (nvhostctrl_fd, nvhostctrl_err) = nvdrv_srv.get().open(sf::Buffer::from_array(NVHOSTCTRL_PATH.as_bytes()))?;
         nv::convert_error_code(nvhostctrl_err)?;
         
         let application_display_srv = vi_srv.get().get_display_service(vi::DisplayServiceMode::Privileged)?.to::<vi::ApplicationDisplayService>();
@@ -813,7 +813,7 @@ impl<VS: IRootService + service::IService + 'static, NS: INvDrvService + service
     pub fn create_stray_layer_surface(&mut self, display_name: &str, buffer_count: u32, color_fmt: ColorFormat, pixel_fmt: PixelFormat, layout: Layout) -> Result<surface::Surface<NS>> {
         let display_id = self.application_display_service.get().open_display(vi::DisplayName::from_str(display_name)?)?;
         let native_window = parcel::ParcelPayload::new();
-        let (layer_id, _) = self.application_display_service.get().create_stray_layer(vi::LayerFlags::Default(), display_id, sf::Buffer::from_var(&native_window))?;
+        let (layer_id, _) = self.application_display_service.get().create_stray_layer(vi::LayerFlags::Default(), display_id, sf::Buffer::from_other_var(&native_window))?;
 
         self.create_surface_impl(buffer_count, display_id, layer_id, 1280, 720, color_fmt, pixel_fmt, layout, Self::stray_layer_destroy, native_window)
     }
@@ -843,7 +843,7 @@ impl<VS: IRootService + service::IService + 'static, NS: INvDrvService + service
         let native_window = parcel::ParcelPayload::new();
 
         let layer_id = manager_display_service.get().create_managed_layer(layer_flags, display_id, aruid)?;
-        self.application_display_service.get().open_layer(display_name_v, layer_id, sf::ProcessId::from(aruid), sf::Buffer::from_var(&native_window))?;
+        self.application_display_service.get().open_layer(display_name_v, layer_id, sf::ProcessId::from(aruid), sf::Buffer::from_other_var(&native_window))?;
         Self::set_layer_position_impl(layer_id, x, y, system_display_service.clone())?;
         Self::set_layer_size_impl(layer_id, width, height, system_display_service.clone())?;
         Self::set_layer_z_impl(display_id, layer_id, z, system_display_service)?;

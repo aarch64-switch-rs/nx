@@ -144,11 +144,11 @@ impl IApplicationDisplayService for ApplicationDisplayService {
         ipc_client_send_request_command!([self.session.object_info; 1020] (display_id) => ())
     }
 
-    fn open_layer(&mut self, name: DisplayName, id: LayerId, aruid: sf::ProcessId, out_native_window: sf::OutMapAliasBuffer) -> Result<usize> {
+    fn open_layer(&mut self, name: DisplayName, id: LayerId, aruid: sf::ProcessId, out_native_window: sf::OutMapAliasBuffer<u8>) -> Result<usize> {
         ipc_client_send_request_command!([self.session.object_info; 2020] (name, id, aruid, out_native_window) => (native_window_size: usize))
     }
 
-    fn create_stray_layer(&mut self, flags: LayerFlags, display_id: DisplayId, out_native_window: sf::OutMapAliasBuffer) -> Result<(LayerId, usize)> {
+    fn create_stray_layer(&mut self, flags: LayerFlags, display_id: DisplayId, out_native_window: sf::OutMapAliasBuffer<u8>) -> Result<(LayerId, usize)> {
         ipc_client_send_request_command!([self.session.object_info; 2030] (flags, display_id, out_native_window) => (id: LayerId, native_window_size: usize))
     }
 

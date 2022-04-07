@@ -42,7 +42,7 @@ pub trait IAppletResource {
 pub trait IHidServer {
     ipc_cmif_interface_define_command!(create_applet_resource: (aruid: sf::ProcessId) => (applet_resource: mem::Shared<dyn sf::IObject>));
     ipc_cmif_interface_define_command!(set_supported_npad_style_set: (aruid: sf::ProcessId, npad_style_tag: NpadStyleTag) => ());
-    ipc_cmif_interface_define_command!(set_supported_npad_id_type: (aruid: sf::ProcessId, controllers: sf::InPointerBuffer) => ());
+    ipc_cmif_interface_define_command!(set_supported_npad_id_type: (aruid: sf::ProcessId, controllers: sf::InPointerBuffer<ControllerId>) => ());
     ipc_cmif_interface_define_command!(activate_npad: (aruid: sf::ProcessId) => ());
     ipc_cmif_interface_define_command!(deactivate_npad: (aruid: sf::ProcessId) => ());
     ipc_cmif_interface_define_command!(set_npad_joy_assignment_mode_single: (aruid: sf::ProcessId, controller: ControllerId, joy_type: NpadJoyDeviceType) => ());

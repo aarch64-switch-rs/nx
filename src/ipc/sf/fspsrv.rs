@@ -106,41 +106,41 @@ pub enum OperationId {
 }
 
 pub trait IFile {
-    ipc_cmif_interface_define_command!(read: (option: FileReadOption, offset: usize, size: usize, out_buf: sf::OutNonSecureMapAliasBuffer) => (read_size: usize));
-    ipc_cmif_interface_define_command!(write: (option: FileWriteOption, offset: usize, size: usize, buf: sf::InNonSecureMapAliasBuffer) => ());
+    ipc_cmif_interface_define_command!(read: (option: FileReadOption, offset: usize, size: usize, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) => (read_size: usize));
+    ipc_cmif_interface_define_command!(write: (option: FileWriteOption, offset: usize, size: usize, buf: sf::InNonSecureMapAliasBuffer<u8>) => ());
     ipc_cmif_interface_define_command!(flush: () => ());
     ipc_cmif_interface_define_command!(set_size: (size: usize) => ());
     ipc_cmif_interface_define_command!(get_size: () => (size: usize));
     ipc_cmif_interface_define_command!(operate_range: (operation_id: OperationId, offset: usize, size: usize) => (info: FileQueryRangeInfo));
-    ipc_cmif_interface_define_command!(operate_range_with_buffer: (operation_id: OperationId, offset: usize, size: usize, in_buf: sf::InNonSecureMapAliasBuffer, out_buf: sf::OutNonSecureMapAliasBuffer) => ());
+    ipc_cmif_interface_define_command!(operate_range_with_buffer: (operation_id: OperationId, offset: usize, size: usize, in_buf: sf::InNonSecureMapAliasBuffer<u8>, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) => ());
 }
 
 pub trait IDirectory {
-    ipc_cmif_interface_define_command!(read: (out_entries: sf::OutMapAliasBuffer) => (read_count: u64));
+    ipc_cmif_interface_define_command!(read: (out_entries: sf::OutMapAliasBuffer<DirectoryEntry>) => (read_count: u64));
     ipc_cmif_interface_define_command!(get_entry_count: () => (count: u64));
 }
 
 pub trait IFileSystem {
-    ipc_cmif_interface_define_command!(create_file: (attribute: FileAttribute, size: usize, path_buf: sf::InPointerBuffer) => ());
-    ipc_cmif_interface_define_command!(delete_file: (path_buf: sf::InPointerBuffer) => ());
-    ipc_cmif_interface_define_command!(create_directory: (path_buf: sf::InPointerBuffer) => ());
-    ipc_cmif_interface_define_command!(delete_directory: (path_buf: sf::InPointerBuffer) => ());
-    ipc_cmif_interface_define_command!(delete_directory_recursively: (path_buf: sf::InPointerBuffer) => ());
-    ipc_cmif_interface_define_command!(rename_file: (old_path_buf: sf::InPointerBuffer, new_path_buf: sf::InPointerBuffer) => ());
-    ipc_cmif_interface_define_command!(rename_directory: (old_path_buf: sf::InPointerBuffer, new_path_buf: sf::InPointerBuffer) => ());
-    ipc_cmif_interface_define_command!(get_entry_type: (path_buf: sf::InPointerBuffer) => (entry_type: DirectoryEntryType));
-    ipc_cmif_interface_define_command!(open_file: (mode: FileOpenMode, path_buf: sf::InPointerBuffer) => (file: mem::Shared<dyn sf::IObject>));
-    ipc_cmif_interface_define_command!(open_directory: (mode: DirectoryOpenMode, path_buf: sf::InPointerBuffer) => (dir: mem::Shared<dyn sf::IObject>));
+    ipc_cmif_interface_define_command!(create_file: (attribute: FileAttribute, size: usize, path_buf: sf::InPointerBuffer<Path>) => ());
+    ipc_cmif_interface_define_command!(delete_file: (path_buf: sf::InPointerBuffer<Path>) => ());
+    ipc_cmif_interface_define_command!(create_directory: (path_buf: sf::InPointerBuffer<Path>) => ());
+    ipc_cmif_interface_define_command!(delete_directory: (path_buf: sf::InPointerBuffer<Path>) => ());
+    ipc_cmif_interface_define_command!(delete_directory_recursively: (path_buf: sf::InPointerBuffer<Path>) => ());
+    ipc_cmif_interface_define_command!(rename_file: (old_path_buf: sf::InPointerBuffer<Path>, new_path_buf: sf::InPointerBuffer<Path>) => ());
+    ipc_cmif_interface_define_command!(rename_directory: (old_path_buf: sf::InPointerBuffer<Path>, new_path_buf: sf::InPointerBuffer<Path>) => ());
+    ipc_cmif_interface_define_command!(get_entry_type: (path_buf: sf::InPointerBuffer<Path>) => (entry_type: DirectoryEntryType));
+    ipc_cmif_interface_define_command!(open_file: (mode: FileOpenMode, path_buf: sf::InPointerBuffer<Path>) => (file: mem::Shared<dyn sf::IObject>));
+    ipc_cmif_interface_define_command!(open_directory: (mode: DirectoryOpenMode, path_buf: sf::InPointerBuffer<Path>) => (dir: mem::Shared<dyn sf::IObject>));
     ipc_cmif_interface_define_command!(commit: () => ());
-    ipc_cmif_interface_define_command!(get_free_space_size: (path_buf: sf::InPointerBuffer) => (size: usize));
-    ipc_cmif_interface_define_command!(get_total_space_size: (path_buf: sf::InPointerBuffer) => (size: usize));
-    ipc_cmif_interface_define_command!(clean_directory_recursively: (path_buf: sf::InPointerBuffer) => ());
-    ipc_cmif_interface_define_command!(get_file_time_stamp_raw: (path_buf: sf::InPointerBuffer) => (time_stamp: FileTimeStampRaw));
-    ipc_cmif_interface_define_command!(query_entry: (path_buf: sf::InPointerBuffer, query_id: QueryId, in_buf: sf::InNonSecureMapAliasBuffer, out_buf: sf::OutNonSecureMapAliasBuffer) => ());
+    ipc_cmif_interface_define_command!(get_free_space_size: (path_buf: sf::InPointerBuffer<Path>) => (size: usize));
+    ipc_cmif_interface_define_command!(get_total_space_size: (path_buf: sf::InPointerBuffer<Path>) => (size: usize));
+    ipc_cmif_interface_define_command!(clean_directory_recursively: (path_buf: sf::InPointerBuffer<Path>) => ());
+    ipc_cmif_interface_define_command!(get_file_time_stamp_raw: (path_buf: sf::InPointerBuffer<Path>) => (time_stamp: FileTimeStampRaw));
+    ipc_cmif_interface_define_command!(query_entry: (path_buf: sf::InPointerBuffer<Path>, query_id: QueryId, in_buf: sf::InNonSecureMapAliasBuffer<u8>, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) => ());
 }
 
 pub trait IFileSystemProxy {
     ipc_cmif_interface_define_command!(set_current_process: (process_id: sf::ProcessId) => ());
     ipc_cmif_interface_define_command!(open_sd_card_filesystem: () => (sd_filesystem: mem::Shared<dyn sf::IObject>));
-    ipc_cmif_interface_define_command!(output_access_log_to_sd_card: (access_log: sf::InMapAliasBuffer) => ());
+    ipc_cmif_interface_define_command!(output_access_log_to_sd_card: (log_buf: sf::InMapAliasBuffer<u8>) => ());
 }

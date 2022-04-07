@@ -9,7 +9,7 @@ pub enum IoctlFd {
     NvHostCtrl,
 }
 
-pub trait Ioctl {
+pub trait Ioctl: Copy {
     fn get_id() -> nv::IoctlId;
     fn get_fd() -> IoctlFd;
 }

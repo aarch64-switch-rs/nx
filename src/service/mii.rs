@@ -44,7 +44,7 @@ impl IDatabaseService for DatabaseService {
         ipc_client_send_request_command!([self.session.object_info; 2] (flag) => (count: u32))
     }
 
-    fn get_1(&mut self, flag: SourceFlag, out_char_infos: sf::OutMapAliasBuffer) -> Result<u32> {
+    fn get_1(&mut self, flag: SourceFlag, out_char_infos: sf::OutMapAliasBuffer<CharInfo>) -> Result<u32> {
         ipc_client_send_request_command!([self.session.object_info; 4] (flag, out_char_infos) => (count: u32))
     }
 

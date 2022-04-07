@@ -2,74 +2,128 @@ use super::*;
 use crate::svc;
 use crate::version;
 use core::mem;
+use core::ptr;
 use alloc::vec::Vec;
 use alloc::string::String;
 
-#[derive(Clone)]
-pub struct Buffer<const A: BufferAttribute, const S: usize> {
-    pub buf: *const u8,
-    pub size: usize
+pub struct Buffer<const A: BufferAttribute, T> {
+    buf: *mut T,
+    count: usize
 }
 
-impl<const A: BufferAttribute, const S: usize> Buffer<A, S> {
-    pub const fn new() -> Self {
-        Self { buf: ptr::null_mut(), size: 0 }
+impl<const A: BufferAttribute, T> Buffer<A, T> {
+    pub const fn get_expected_size() -> usize {
+        mem::size_of::<T>()
     }
 
-    pub const fn from_other<const B: BufferAttribute, const Z: usize>(other: &Buffer<B, Z>) -> Self {
-        Self { buf: other.buf, size: other.size }
+    pub const fn empty() -> Self {
+        Self {
+            buf: ptr::null_mut(),
+            count: 0
+        }
+    }
+
+    // TODO: ensure that sizeof(T) is a multiple of size
+
+    pub const fn new(addr: *mut u8, size: usize) -> Self {
+        Self {
+            buf: addr as *mut T,
+            count: size / Self::get_expected_size()
+        }
     }
     
-    pub const fn from_const<T>(buf: *const T, size: usize) -> Self {
-        Self { buf: buf as *const u8, size }
+    pub const fn from_ptr(buf: *const T, count: usize) -> Self {
+        Self {
+            buf: buf as *mut T,
+            count
+        }
     }
 
-    pub const fn from_mut<T>(buf: *mut T, size: usize) -> Self {
-        Self { buf: buf as *const u8, size }
+    pub const fn from_mut_ptr(buf: *mut T, count: usize) -> Self {
+        Self {
+            buf,
+            count
+        }
     }
 
-    pub const fn from_var<T>(var: &T) -> Self {
-        Self::from_const(var as *const T, mem::size_of::<T>())
+    pub const fn from_var(var: &T) -> Self {
+        Self::from_ptr(var as *const T, 1)
     }
 
-    pub const fn from_array<T>(arr: &[T]) -> Self {
-        Self::from_const(arr.as_ptr(), arr.len() * mem::size_of::<T>())
+    pub const fn from_mut_var(var: &mut T) -> Self {
+        Self::from_mut_ptr(var as *mut T, 1)
     }
 
-    pub const fn get_as<T>(&self) -> &T {
+    // TODO: ensure sizeof(T) is a multiple of sizeof(U)
+
+    pub const fn from_other_var<U>(var: &U) -> Self {
+        Self::from_ptr(var as *const U as *const T, mem::size_of::<U>() / Self::get_expected_size())
+    }
+
+    pub const fn from_other_mut_var<U>(var: &mut U) -> Self {
+        Self::from_mut_ptr(var as *mut U as *mut T, mem::size_of::<U>() / Self::get_expected_size())
+    }
+
+    pub const fn from_array(arr: &[T]) -> Self {
+        Self::from_ptr(arr.as_ptr(), arr.len())
+    }
+
+    pub const fn from_mut_array(arr: &mut [T]) -> Self {
+        Self::from_mut_ptr(arr.as_mut_ptr(), arr.len())
+    }
+
+    pub const fn from_other<const A2: BufferAttribute, U>(other: &Buffer<A2, U>) -> Self {
+        Self::new(other.get_address(), other.get_size())
+    }
+
+    pub const fn get_address(&self) -> *mut u8 {
+        self.buf as *mut u8
+    }
+
+    pub const fn get_size(&self) -> usize {
+        self.count * Self::get_expected_size()
+    }
+
+    pub const fn get_count(&self) -> usize {
+        self.count
+    }
+
+    pub const fn get_var(&self) -> &T {
         unsafe {
             &*(self.buf as *const T)
         }
     }
 
-    pub fn get_mut_as<T>(&self) -> &mut T {
+    pub fn get_mut_var(&self) -> &mut T {
         unsafe {
-            &mut *(self.buf as *mut T)
+            &mut *self.buf
         }
     }
 
-    pub fn set_as<T>(&mut self, t: T) {
+    pub fn set_var(&mut self, t: T) {
         unsafe {
-            *(self.buf as *mut T) = t;
+            *self.buf = t;
         }
     }
 
-    pub fn get_slice<T>(&self) -> &[T] {
+    pub fn get_slice(&self) -> &[T] {
         unsafe {
-            core::slice::from_raw_parts(self.buf as *const T, self.size / mem::size_of::<T>())
+            core::slice::from_raw_parts(self.buf as *const T, self.count)
         }
     }
 
-    pub fn get_mut_slice<T>(&self) -> &mut [T] {
+    pub fn get_mut_slice(&self) -> &mut [T] {
         unsafe {
-            core::slice::from_raw_parts_mut(self.buf as *mut T, self.size / mem::size_of::<T>())
+            core::slice::from_raw_parts_mut(self.buf, self.count)
         }
     }
+}
 
+impl<const A: BufferAttribute> Buffer<A, u8> {
     pub fn get_string(&self) -> String {
         unsafe {
-            let mut string = String::with_capacity(self.size);
-            for i in 0..self.size {
+            let mut string = String::with_capacity(self.count);
+            for i in 0..self.count {
                 let cur_char = *self.buf.add(i) as char;
                 if cur_char == '\0' {
                     break;
@@ -83,24 +137,22 @@ impl<const A: BufferAttribute, const S: usize> Buffer<A, S> {
     pub fn set_string(&mut self, string: String) {
         unsafe {
             // First memset to zero so that it will be a valid nul-terminated string
-            core::ptr::write_bytes(self.buf as *mut u8, 0, self.size);
-            core::ptr::copy(string.as_ptr(), self.buf as *mut u8, core::cmp::min(self.size - 1, string.len()));
+            core::ptr::write_bytes(self.buf as *mut u8, 0, self.count);
+            core::ptr::copy(string.as_ptr(), self.buf as *mut u8, core::cmp::min(self.count - 1, string.len()));
         }
     }
 }
 
-// TODO: sf::TypedBuffer<T> as just T or array of Ts... (maybe buffer trait, or just default a type on buffer?)
-
-pub type InMapAliasBuffer = Buffer<{bit_group!{ BufferAttribute [In, MapAlias] }}, 0>;
-pub type OutMapAliasBuffer = Buffer<{bit_group!{ BufferAttribute [Out, MapAlias] }}, 0>;
-pub type InNonSecureMapAliasBuffer = Buffer<{bit_group!{ BufferAttribute [In, MapAlias, MapTransferAllowsNonSecure] }}, 0>;
-pub type OutNonSecureMapAliasBuffer = Buffer<{bit_group!{ BufferAttribute [Out, MapAlias, MapTransferAllowsNonSecure] }}, 0>;
-pub type InAutoSelectBuffer = Buffer<{bit_group!{ BufferAttribute [In, AutoSelect] }}, 0>;
-pub type OutAutoSelectBuffer = Buffer<{bit_group!{ BufferAttribute [Out, AutoSelect] }}, 0>;
-pub type InPointerBuffer = Buffer<{bit_group!{ BufferAttribute [In, Pointer] }}, 0>;
-pub type OutPointerBuffer = Buffer<{bit_group!{ BufferAttribute [Out, Pointer] }}, 0>;
-pub type InFixedPointerBuffer<T> = Buffer<{bit_group!{ BufferAttribute [In, Pointer, FixedSize] }}, {mem::size_of::<T>()}>;
-pub type OutFixedPointerBuffer<T> = Buffer<{bit_group!{ BufferAttribute [Out, Pointer, FixedSize] }}, {mem::size_of::<T>()}>;
+pub type InMapAliasBuffer<T> = Buffer<{bit_group!{ BufferAttribute [In, MapAlias] }}, T>;
+pub type OutMapAliasBuffer<T> = Buffer<{bit_group!{ BufferAttribute [Out, MapAlias] }}, T>;
+pub type InNonSecureMapAliasBuffer<T> = Buffer<{bit_group!{ BufferAttribute [In, MapAlias, MapTransferAllowsNonSecure] }}, T>;
+pub type OutNonSecureMapAliasBuffer<T> = Buffer<{bit_group!{ BufferAttribute [Out, MapAlias, MapTransferAllowsNonSecure] }}, T>;
+pub type InAutoSelectBuffer<T> = Buffer<{bit_group!{ BufferAttribute [In, AutoSelect] }}, T>;
+pub type OutAutoSelectBuffer<T> = Buffer<{bit_group!{ BufferAttribute [Out, AutoSelect] }}, T>;
+pub type InPointerBuffer<T> = Buffer<{bit_group!{ BufferAttribute [In, Pointer] }}, T>;
+pub type OutPointerBuffer<T> = Buffer<{bit_group!{ BufferAttribute [Out, Pointer] }}, T>;
+pub type InFixedPointerBuffer<T> = Buffer<{bit_group!{ BufferAttribute [In, Pointer, FixedSize] }}, T>;
+pub type OutFixedPointerBuffer<T> = Buffer<{bit_group!{ BufferAttribute [Out, Pointer, FixedSize] }}, T>;
 
 #[derive(Clone)]
 pub struct Handle<const M: HandleMode> {

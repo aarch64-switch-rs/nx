@@ -78,7 +78,7 @@ impl Binder {
 
     fn transact_parcel_impl(&mut self, transaction_id: dispdrv::ParcelTransactionId, payload: parcel::ParcelPayload) -> Result<parcel::Parcel> {
         let response_payload = parcel::ParcelPayload::new();
-        self.hos_binder_driver.get().transact_parcel(self.handle, transaction_id, 0, sf::Buffer::from_var(&payload), sf::Buffer::from_var(&response_payload))?;
+        self.hos_binder_driver.get().transact_parcel(self.handle, transaction_id, 0, sf::Buffer::from_other_var(&payload), sf::Buffer::from_other_var(&response_payload))?;
         
         let mut parcel = parcel::Parcel::new();
         parcel.load_from(response_payload);

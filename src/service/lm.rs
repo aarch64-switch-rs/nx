@@ -29,7 +29,7 @@ impl service::IClientObject for Logger {
 }
 
 impl ILogger for Logger {
-    fn log(&mut self, log_buf: sf::InAutoSelectBuffer) -> Result<()> {
+    fn log(&mut self, log_buf: sf::InAutoSelectBuffer<u8>) -> Result<()> {
         ipc_client_send_request_command!([self.session.object_info; 0] (log_buf) => ())
     }
 

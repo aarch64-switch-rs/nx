@@ -44,8 +44,8 @@ pub trait IApplicationDisplayService {
     ipc_cmif_interface_define_command!(get_manager_display_service: () => (relay_service: mem::Shared<dyn sf::IObject>));
     ipc_cmif_interface_define_command!(open_display: (name: DisplayName) => (id: DisplayId));
     ipc_cmif_interface_define_command!(close_display: (id: DisplayId) => ());
-    ipc_cmif_interface_define_command!(open_layer: (name: DisplayName, id: LayerId, aruid: sf::ProcessId, out_native_window: sf::OutMapAliasBuffer) => (native_window_size: usize));
-    ipc_cmif_interface_define_command!(create_stray_layer: (flags: LayerFlags, display_id: DisplayId, out_native_window: sf::OutMapAliasBuffer) => (id: LayerId, native_window_size: usize));
+    ipc_cmif_interface_define_command!(open_layer: (name: DisplayName, id: LayerId, aruid: sf::ProcessId, out_native_window: sf::OutMapAliasBuffer<u8>) => (native_window_size: usize));
+    ipc_cmif_interface_define_command!(create_stray_layer: (flags: LayerFlags, display_id: DisplayId, out_native_window: sf::OutMapAliasBuffer<u8>) => (id: LayerId, native_window_size: usize));
     ipc_cmif_interface_define_command!(destroy_stray_layer: (id: LayerId) => ());
     ipc_cmif_interface_define_command!(get_display_vsync_event: (id: DisplayId) => (event_handle: sf::CopyHandle));
 }

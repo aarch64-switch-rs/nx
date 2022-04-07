@@ -51,14 +51,15 @@ impl<T: Copy> CommandParameter<T> for T {
     }
 }
 
-impl<const A: BufferAttribute, const S: usize> CommandParameter<sf::Buffer<A, S>> for sf::Buffer<A, S> {
+impl<const A: BufferAttribute, T> CommandParameter<sf::Buffer<A, T>> for sf::Buffer<A, T> {
     fn after_request_read(ctx: &mut ServerContext) -> Result<Self> {
         let buf = ctx.ctx.pop_buffer(&mut ctx.raw_data_walker)?;
 
         if A.contains(BufferAttribute::Out()) && A.contains(BufferAttribute::Pointer()) {
             // For Out(Fixed)Pointer buffers, we need to send them back as InPointer
             // Note: since buffers can't be out params in this command param system, we need to send them back this way
-            ctx.ctx.add_buffer(sf::InPointerBuffer::from_other(&buf))?;
+            let in_ptr_buf = sf::InPointerBuffer::<u8>::from_other(&buf);
+            ctx.ctx.add_buffer(&in_ptr_buf)?;
         }
 
         Ok(buf)

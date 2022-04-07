@@ -58,7 +58,7 @@ impl<NS: nv::INvDrvService> Surface<NS> {
             ioctl::IoctlFd::NvHostCtrl => self.nvhostctrl_fd,
         };
 
-        let err = self.nvdrv_srv.get().ioctl(fd, I::get_id(), sf::Buffer::from_var(i), sf::Buffer::from_var(i))?;
+        let err = self.nvdrv_srv.get().ioctl(fd, I::get_id(), sf::Buffer::from_other_var(i), sf::Buffer::from_other_var(i))?;
         nv::convert_error_code(err)
     }
 

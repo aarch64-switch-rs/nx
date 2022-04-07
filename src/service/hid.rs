@@ -70,7 +70,7 @@ impl IHidServer for HidServer {
         ipc_client_send_request_command!([self.session.object_info; 100] (npad_style_tag, aruid) => ())
     }
 
-    fn set_supported_npad_id_type(&mut self, aruid: sf::ProcessId, controllers: sf::InPointerBuffer) -> Result<()> {
+    fn set_supported_npad_id_type(&mut self, aruid: sf::ProcessId, controllers: sf::InPointerBuffer<ControllerId>) -> Result<()> {
         ipc_client_send_request_command!([self.session.object_info; 102] (aruid, controllers) => ())
     }
 

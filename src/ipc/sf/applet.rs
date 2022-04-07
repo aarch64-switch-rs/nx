@@ -76,13 +76,13 @@ pub enum LibraryAppletMode {
     Background,
     NoUi,
     BackgroundIndirectDisplay,
-    AllForegroundInitiallyHidden,
+    AllForegroundInitiallyHidden
 }
 
 pub trait IStorageAccessor {
     ipc_cmif_interface_define_command!(get_size: () => (size: usize));
-    ipc_cmif_interface_define_command!(write: (offset: usize, buf: sf::InAutoSelectBuffer) => ());
-    ipc_cmif_interface_define_command!(read: (offset: usize, buf: sf::OutAutoSelectBuffer) => ());
+    ipc_cmif_interface_define_command!(write: (offset: usize, buf: sf::InAutoSelectBuffer<u8>) => ());
+    ipc_cmif_interface_define_command!(read: (offset: usize, buf: sf::OutAutoSelectBuffer<u8>) => ());
 }
 
 pub trait IStorage {
@@ -115,5 +115,5 @@ pub trait ILibraryAppletProxy {
 }
 
 pub trait IAllSystemAppletProxiesService {
-    ipc_cmif_interface_define_command!(open_library_applet_proxy: (process_id: sf::ProcessId, self_process_handle: sf::CopyHandle, applet_attribute: sf::InMapAliasBuffer) => (library_applet_proxy: mem::Shared<dyn sf::IObject>));
+    ipc_cmif_interface_define_command!(open_library_applet_proxy: (process_id: sf::ProcessId, self_process_handle: sf::CopyHandle, applet_attribute: sf::InMapAliasBuffer<AppletAttribute>) => (library_applet_proxy: mem::Shared<dyn sf::IObject>));
 }

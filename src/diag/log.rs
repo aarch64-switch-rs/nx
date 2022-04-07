@@ -85,7 +85,7 @@ impl Logger for FsAccessLogLogger {
         let msg = format_plain_string_log_impl(metadata, "FsAccessLog");
         match self.service {
             Ok(ref mut fspsrv) => {
-                let _ = fspsrv.get().output_access_log_to_sd_card(sf::Buffer::from_const(msg.as_ptr(), msg.len()));
+                let _ = fspsrv.get().output_access_log_to_sd_card(sf::Buffer::from_array(msg.as_bytes()));
             },
             _ => {}
         }
@@ -140,7 +140,7 @@ impl Logger for LmLogger {
                     };
                     log_packet.set_thread_name(String::from(thread_name));
                     for packet in log_packet.encode_packet() {
-                        let _ = logger.get().log(sf::Buffer::from_const(packet.as_ptr(), packet.len()));
+                        let _ = logger.get().log(sf::Buffer::from_array(&packet));
                     }
                 },
                 _ => {}

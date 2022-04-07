@@ -8,6 +8,14 @@ use crate::ipc::sf::mii;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
+pub struct McuVersionData {
+    pub version: u64,
+    pub reserved: [u8; 0x18]
+}
+const_assert!(core::mem::size_of::<McuVersionData>() == 0x20);
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[repr(C)]
 pub struct DeviceHandle {
     pub id: u32,
     pub reserved: [u8; 4]
@@ -149,19 +157,19 @@ pub struct RegisterInfoPrivate {
 const_assert!(core::mem::size_of::<RegisterInfoPrivate>() == 0x100);
 
 pub trait IUser {
-    ipc_cmif_interface_define_command!(initialize: (aruid: applet::AppletResourceUserId, process_id: sf::ProcessId, mcu_data: sf::InMapAliasBuffer) => ());
+    ipc_cmif_interface_define_command!(initialize: (aruid: applet::AppletResourceUserId, process_id: sf::ProcessId, mcu_data: sf::InMapAliasBuffer<McuVersionData>) => ());
     ipc_cmif_interface_define_command!(finalize: () => ());
-    ipc_cmif_interface_define_command!(list_devices: (out_devices: sf::OutPointerBuffer) => (count: u32));
+    ipc_cmif_interface_define_command!(list_devices: (out_devices: sf::OutPointerBuffer<DeviceHandle>) => (count: u32));
     ipc_cmif_interface_define_command!(start_detection: (device_handle: DeviceHandle) => ());
     ipc_cmif_interface_define_command!(stop_detection: (device_handle: DeviceHandle) => ());
     ipc_cmif_interface_define_command!(mount: (device_handle: DeviceHandle, model_type: ModelType, mount_target: MountTarget) => ());
     ipc_cmif_interface_define_command!(unmount: (device_handle: DeviceHandle) => ());
     ipc_cmif_interface_define_command!(open_application_area: (device_handle: DeviceHandle, access_id: AccessId) => ());
-    ipc_cmif_interface_define_command!(get_application_area: (device_handle: DeviceHandle, out_data: sf::OutMapAliasBuffer) => (size: u32));
-    ipc_cmif_interface_define_command!(set_application_area: (device_handle: DeviceHandle, data: sf::InMapAliasBuffer) => ());
+    ipc_cmif_interface_define_command!(get_application_area: (device_handle: DeviceHandle, out_data: sf::OutMapAliasBuffer<u8>) => (size: u32));
+    ipc_cmif_interface_define_command!(set_application_area: (device_handle: DeviceHandle, data: sf::InMapAliasBuffer<u8>) => ());
     ipc_cmif_interface_define_command!(flush: (device_handle: DeviceHandle) => ());
     ipc_cmif_interface_define_command!(restore: (device_handle: DeviceHandle) => ());
-    ipc_cmif_interface_define_command!(create_application_area: (device_handle: DeviceHandle, access_id: AccessId, data: sf::InMapAliasBuffer) => ());
+    ipc_cmif_interface_define_command!(create_application_area: (device_handle: DeviceHandle, access_id: AccessId, data: sf::InMapAliasBuffer<u8>) => ());
     ipc_cmif_interface_define_command!(get_tag_info: (device_handle: DeviceHandle, out_tag_info: sf::OutFixedPointerBuffer<TagInfo>) => ());
     ipc_cmif_interface_define_command!(get_register_info: (device_handle: DeviceHandle, out_register_info: sf::OutFixedPointerBuffer<RegisterInfo>) => ());
     ipc_cmif_interface_define_command!(get_common_info: (device_handle: DeviceHandle, out_common_info: sf::OutFixedPointerBuffer<CommonInfo>) => ());
@@ -173,7 +181,7 @@ pub trait IUser {
     ipc_cmif_interface_define_command!(get_npad_id: (device_handle: DeviceHandle) => (npad_id: u32));
     ipc_cmif_interface_define_command!(get_application_area_size: (device_handle: DeviceHandle) => (size: u32));
     ipc_cmif_interface_define_command!(attach_availability_change_event: () => (availability_change_event: sf::CopyHandle));
-    ipc_cmif_interface_define_command!(recreate_application_area: (device_handle: DeviceHandle, access_id: AccessId, data: sf::InMapAliasBuffer) => ());
+    ipc_cmif_interface_define_command!(recreate_application_area: (device_handle: DeviceHandle, access_id: AccessId, data: sf::InMapAliasBuffer<u8>) => ());
 }
 
 pub trait IUserManager {
@@ -181,9 +189,9 @@ pub trait IUserManager {
 }
 
 pub trait ISystem {
-    ipc_cmif_interface_define_command!(initialize_system: (aruid: applet::AppletResourceUserId, process_id: sf::ProcessId, mcu_data: sf::InMapAliasBuffer) => ());
+    ipc_cmif_interface_define_command!(initialize_system: (aruid: applet::AppletResourceUserId, process_id: sf::ProcessId, mcu_data: sf::InMapAliasBuffer<McuVersionData>) => ());
     ipc_cmif_interface_define_command!(finalize_system: () => ());
-    ipc_cmif_interface_define_command!(list_devices: (out_devices: sf::OutPointerBuffer) => (count: u32));
+    ipc_cmif_interface_define_command!(list_devices: (out_devices: sf::OutPointerBuffer<DeviceHandle>) => (count: u32));
     ipc_cmif_interface_define_command!(start_detection: (device_handle: DeviceHandle) => ());
     ipc_cmif_interface_define_command!(stop_detection: (device_handle: DeviceHandle) => ());
     ipc_cmif_interface_define_command!(mount: (device_handle: DeviceHandle, model_type: ModelType, mount_target: MountTarget) => ());
@@ -214,19 +222,19 @@ pub trait ISystemManager {
 }
 
 pub trait IDebug {
-    ipc_cmif_interface_define_command!(initialize_debug: (aruid: applet::AppletResourceUserId, process_id: sf::ProcessId, mcu_data: sf::InMapAliasBuffer) => ());
+    ipc_cmif_interface_define_command!(initialize_debug: (aruid: applet::AppletResourceUserId, process_id: sf::ProcessId, mcu_data: sf::InMapAliasBuffer<McuVersionData>) => ());
     ipc_cmif_interface_define_command!(finalize_debug: () => ());
-    ipc_cmif_interface_define_command!(list_devices: (out_devices: sf::OutPointerBuffer) => (count: u32));
+    ipc_cmif_interface_define_command!(list_devices: (out_devices: sf::OutPointerBuffer<DeviceHandle>) => (count: u32));
     ipc_cmif_interface_define_command!(start_detection: (device_handle: DeviceHandle) => ());
     ipc_cmif_interface_define_command!(stop_detection: (device_handle: DeviceHandle) => ());
     ipc_cmif_interface_define_command!(mount: (device_handle: DeviceHandle, model_type: ModelType, mount_target: MountTarget) => ());
     ipc_cmif_interface_define_command!(unmount: (device_handle: DeviceHandle) => ());
     ipc_cmif_interface_define_command!(open_application_area: (device_handle: DeviceHandle, access_id: AccessId) => ());
-    ipc_cmif_interface_define_command!(get_application_area: (device_handle: DeviceHandle, out_data: sf::OutMapAliasBuffer) => (size: u32));
-    ipc_cmif_interface_define_command!(set_application_area: (device_handle: DeviceHandle, data: sf::InMapAliasBuffer) => ());
+    ipc_cmif_interface_define_command!(get_application_area: (device_handle: DeviceHandle, out_data: sf::OutMapAliasBuffer<u8>) => (size: u32));
+    ipc_cmif_interface_define_command!(set_application_area: (device_handle: DeviceHandle, data: sf::InMapAliasBuffer<u8>) => ());
     ipc_cmif_interface_define_command!(flush: (device_handle: DeviceHandle) => ());
     ipc_cmif_interface_define_command!(restore: (device_handle: DeviceHandle) => ());
-    ipc_cmif_interface_define_command!(create_application_area: (device_handle: DeviceHandle, access_id: AccessId, data: sf::InMapAliasBuffer) => ());
+    ipc_cmif_interface_define_command!(create_application_area: (device_handle: DeviceHandle, access_id: AccessId, data: sf::InMapAliasBuffer<u8>) => ());
     ipc_cmif_interface_define_command!(get_tag_info: (device_handle: DeviceHandle, out_tag_info: sf::OutFixedPointerBuffer<TagInfo>) => ());
     ipc_cmif_interface_define_command!(get_register_info: (device_handle: DeviceHandle, out_register_info: sf::OutFixedPointerBuffer<RegisterInfo>) => ());
     ipc_cmif_interface_define_command!(get_common_info: (device_handle: DeviceHandle, out_common_info: sf::OutFixedPointerBuffer<CommonInfo>) => ());
@@ -238,7 +246,7 @@ pub trait IDebug {
     ipc_cmif_interface_define_command!(get_npad_id: (device_handle: DeviceHandle) => (npad_id: u32));
     ipc_cmif_interface_define_command!(get_application_area_size: (device_handle: DeviceHandle) => (size: u32));
     ipc_cmif_interface_define_command!(attach_availability_change_event: () => (availability_change_event: sf::CopyHandle));
-    ipc_cmif_interface_define_command!(recreate_application_area: (device_handle: DeviceHandle, access_id: AccessId, data: sf::InMapAliasBuffer) => ());
+    ipc_cmif_interface_define_command!(recreate_application_area: (device_handle: DeviceHandle, access_id: AccessId, data: sf::InMapAliasBuffer<u8>) => ());
     ipc_cmif_interface_define_command!(format: (device_handle: DeviceHandle) => ());
     ipc_cmif_interface_define_command!(get_admin_info: (device_handle: DeviceHandle, out_admin_info: sf::OutFixedPointerBuffer<AdminInfo>) => ());
     ipc_cmif_interface_define_command!(get_register_info_private: (device_handle: DeviceHandle, out_register_info_private: sf::OutFixedPointerBuffer<RegisterInfoPrivate>) => ());

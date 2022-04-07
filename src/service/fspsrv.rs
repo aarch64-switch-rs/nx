@@ -29,7 +29,7 @@ impl service::IClientObject for Directory {
 }
 
 impl IDirectory for Directory {
-    fn read(&mut self, out_entries: sf::OutMapAliasBuffer) -> Result<u64> {
+    fn read(&mut self, out_entries: sf::OutMapAliasBuffer<DirectoryEntry>) -> Result<u64> {
         ipc_client_send_request_command!([self.session.object_info; 0] (out_entries) => (read_count: u64))
     }
 
@@ -67,11 +67,11 @@ impl service::IClientObject for File {
 }
 
 impl IFile for File {
-    fn read(&mut self, option: FileReadOption, offset: usize, size: usize, buf: sf::OutNonSecureMapAliasBuffer) -> Result<usize> {
+    fn read(&mut self, option: FileReadOption, offset: usize, size: usize, buf: sf::OutNonSecureMapAliasBuffer<u8>) -> Result<usize> {
         ipc_client_send_request_command!([self.session.object_info; 0] (option, offset, size, buf) => (read_size: usize))
     }
 
-    fn write(&mut self, option: FileWriteOption, offset: usize, size: usize, buf: sf::InNonSecureMapAliasBuffer) -> Result<()> {
+    fn write(&mut self, option: FileWriteOption, offset: usize, size: usize, buf: sf::InNonSecureMapAliasBuffer<u8>) -> Result<()> {
         ipc_client_send_request_command!([self.session.object_info; 1] (option, offset, size, buf) => ())
     }
 
@@ -91,7 +91,7 @@ impl IFile for File {
         ipc_client_send_request_command!([self.session.object_info; 5] (operation_id, offset, size) => (info: FileQueryRangeInfo))
     }
 
-    fn operate_range_with_buffer(&mut self, operation_id: OperationId, offset: usize, size: usize, in_buf: sf::InNonSecureMapAliasBuffer, out_buf: sf::OutNonSecureMapAliasBuffer) -> Result<()> {
+    fn operate_range_with_buffer(&mut self, operation_id: OperationId, offset: usize, size: usize, in_buf: sf::InNonSecureMapAliasBuffer<u8>, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) -> Result<()> {
         ipc_client_send_request_command!([self.session.object_info; 6] (operation_id, offset, size, in_buf, out_buf) => ())
     }
 }
@@ -134,43 +134,43 @@ impl service::IClientObject for FileSystem {
 }
 
 impl IFileSystem for FileSystem {
-    fn create_file(&mut self, attribute: FileAttribute, size: usize, path_buf: sf::InPointerBuffer) -> Result<()> {
+    fn create_file(&mut self, attribute: FileAttribute, size: usize, path_buf: sf::InPointerBuffer<Path>) -> Result<()> {
         ipc_client_send_request_command!([self.session.object_info; 0] (attribute, size, path_buf) => ())
     }
 
-    fn delete_file(&mut self, path_buf: sf::InPointerBuffer) -> Result<()> {
+    fn delete_file(&mut self, path_buf: sf::InPointerBuffer<Path>) -> Result<()> {
         ipc_client_send_request_command!([self.session.object_info; 1] (path_buf) => ())
     }
 
-    fn create_directory(&mut self, path_buf: sf::InPointerBuffer) -> Result<()> {
+    fn create_directory(&mut self, path_buf: sf::InPointerBuffer<Path>) -> Result<()> {
         ipc_client_send_request_command!([self.session.object_info; 2] (path_buf) => ())
     }
     
-    fn delete_directory(&mut self, path_buf: sf::InPointerBuffer) -> Result<()> {
+    fn delete_directory(&mut self, path_buf: sf::InPointerBuffer<Path>) -> Result<()> {
         ipc_client_send_request_command!([self.session.object_info; 3] (path_buf) => ())
     }
 
-    fn delete_directory_recursively(&mut self, path_buf: sf::InPointerBuffer) -> Result<()> {
+    fn delete_directory_recursively(&mut self, path_buf: sf::InPointerBuffer<Path>) -> Result<()> {
         ipc_client_send_request_command!([self.session.object_info; 4] (path_buf) => ())
     }
 
-    fn rename_file(&mut self, old_path_buf: sf::InPointerBuffer, new_path_buf: sf::InPointerBuffer) -> Result<()> {
+    fn rename_file(&mut self, old_path_buf: sf::InPointerBuffer<Path>, new_path_buf: sf::InPointerBuffer<Path>) -> Result<()> {
         ipc_client_send_request_command!([self.session.object_info; 5] (old_path_buf, new_path_buf) => ())
     }
 
-    fn rename_directory(&mut self, old_path_buf: sf::InPointerBuffer, new_path_buf: sf::InPointerBuffer) -> Result<()> {
+    fn rename_directory(&mut self, old_path_buf: sf::InPointerBuffer<Path>, new_path_buf: sf::InPointerBuffer<Path>) -> Result<()> {
         ipc_client_send_request_command!([self.session.object_info; 6] (old_path_buf, new_path_buf) => ())
     }
 
-    fn get_entry_type(&mut self, path_buf: sf::InPointerBuffer) -> Result<DirectoryEntryType> {
+    fn get_entry_type(&mut self, path_buf: sf::InPointerBuffer<Path>) -> Result<DirectoryEntryType> {
         ipc_client_send_request_command!([self.session.object_info; 7] (path_buf) => (entry_type: DirectoryEntryType))
     }
     
-    fn open_file(&mut self, mode: FileOpenMode, path_buf: sf::InPointerBuffer) -> Result<mem::Shared<dyn sf::IObject>> {
+    fn open_file(&mut self, mode: FileOpenMode, path_buf: sf::InPointerBuffer<Path>) -> Result<mem::Shared<dyn sf::IObject>> {
         ipc_client_send_request_command!([self.session.object_info; 8] (mode, path_buf) => (file: mem::Shared<File>))
     }
 
-    fn open_directory(&mut self, mode: DirectoryOpenMode, path_buf: sf::InPointerBuffer) -> Result<mem::Shared<dyn sf::IObject>> {
+    fn open_directory(&mut self, mode: DirectoryOpenMode, path_buf: sf::InPointerBuffer<Path>) -> Result<mem::Shared<dyn sf::IObject>> {
         ipc_client_send_request_command!([self.session.object_info; 9] (mode, path_buf) => (dir: mem::Shared<Directory>))
     }
 
@@ -178,23 +178,23 @@ impl IFileSystem for FileSystem {
         ipc_client_send_request_command!([self.session.object_info; 10] () => ())
     }
 
-    fn get_free_space_size(&mut self, path_buf: sf::InPointerBuffer) -> Result<usize> {
+    fn get_free_space_size(&mut self, path_buf: sf::InPointerBuffer<Path>) -> Result<usize> {
         ipc_client_send_request_command!([self.session.object_info; 11] (path_buf) => (size: usize))
     }
 
-    fn get_total_space_size(&mut self, path_buf: sf::InPointerBuffer) -> Result<usize> {
+    fn get_total_space_size(&mut self, path_buf: sf::InPointerBuffer<Path>) -> Result<usize> {
         ipc_client_send_request_command!([self.session.object_info; 12] (path_buf) => (size: usize))
     }
 
-    fn clean_directory_recursively(&mut self, path_buf: sf::InPointerBuffer) -> Result<()> {
+    fn clean_directory_recursively(&mut self, path_buf: sf::InPointerBuffer<Path>) -> Result<()> {
         ipc_client_send_request_command!([self.session.object_info; 13] (path_buf) => ())
     }
 
-    fn get_file_time_stamp_raw(&mut self, path_buf: sf::InPointerBuffer) -> Result<FileTimeStampRaw> {
+    fn get_file_time_stamp_raw(&mut self, path_buf: sf::InPointerBuffer<Path>) -> Result<FileTimeStampRaw> {
         ipc_client_send_request_command!([self.session.object_info; 14] (path_buf) => (time_stamp: FileTimeStampRaw))
     }
 
-    fn query_entry(&mut self, path_buf: sf::InPointerBuffer, query_id: QueryId, in_buf: sf::InNonSecureMapAliasBuffer, out_buf: sf::OutNonSecureMapAliasBuffer) -> Result<()> {
+    fn query_entry(&mut self, path_buf: sf::InPointerBuffer<Path>, query_id: QueryId, in_buf: sf::InNonSecureMapAliasBuffer<u8>, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) -> Result<()> {
         ipc_client_send_request_command!([self.session.object_info; 15] (path_buf, query_id, in_buf, out_buf) => ())
     }
 }
@@ -232,7 +232,7 @@ impl IFileSystemProxy for FileSystemProxy {
         ipc_client_send_request_command!([self.session.object_info; 18] () => (sd_filesystem: mem::Shared<FileSystem>))
     }
 
-    fn output_access_log_to_sd_card(&mut self, access_log: sf::InMapAliasBuffer) -> Result<()> {
+    fn output_access_log_to_sd_card(&mut self, access_log: sf::InMapAliasBuffer<u8>) -> Result<()> {
         ipc_client_send_request_command!([self.session.object_info; 1006] (access_log) => ())
     }
 }

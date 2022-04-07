@@ -1734,7 +1734,7 @@ pub trait IDatabaseService {
     ipc_cmif_interface_define_command!(is_updated: (flag: SourceFlag) => (updated: bool));
     ipc_cmif_interface_define_command!(is_full: () => (full: bool));
     ipc_cmif_interface_define_command!(get_count: (flag: SourceFlag) => (count: u32));
-    ipc_cmif_interface_define_command!(get_1: (flag: SourceFlag, out_char_infos: sf::OutMapAliasBuffer) => (count: u32));
+    ipc_cmif_interface_define_command!(get_1: (flag: SourceFlag, out_char_infos: sf::OutMapAliasBuffer<CharInfo>) => (count: u32));
     ipc_cmif_interface_define_command!(build_random: (age: sf::EnumAsPrimitiveType<Age, u32>, gender: sf::EnumAsPrimitiveType<Gender, u32>, race: sf::EnumAsPrimitiveType<Race, u32>) => (char_info: CharInfo));
 }
 

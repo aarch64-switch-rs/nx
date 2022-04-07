@@ -35,11 +35,11 @@ pub fn convert_error_code(err: ErrorCode) -> Result<()> {
 pub trait NvDrvService: service::IClientObject {}
 
 impl<S: NvDrvService> INvDrvService for S {
-    fn open(&mut self, path: sf::InMapAliasBuffer) -> Result<(Fd, ErrorCode)> {
+    fn open(&mut self, path: sf::InMapAliasBuffer<u8>) -> Result<(Fd, ErrorCode)> {
         ipc_client_send_request_command!([self.get_info(); 0] (path) => (fd: Fd, error_code: ErrorCode))
     }
 
-    fn ioctl(&mut self, fd: Fd, id: IoctlId, in_buf: sf::InAutoSelectBuffer, out_buf: sf::OutAutoSelectBuffer) -> Result<ErrorCode> {
+    fn ioctl(&mut self, fd: Fd, id: IoctlId, in_buf: sf::InAutoSelectBuffer<u8>, out_buf: sf::OutAutoSelectBuffer<u8>) -> Result<ErrorCode> {
         ipc_client_send_request_command!([self.get_info(); 1] (fd, id, in_buf, out_buf) => (error_code: ErrorCode))
     }
 

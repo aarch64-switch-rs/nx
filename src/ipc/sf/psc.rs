@@ -20,7 +20,7 @@ pub enum State {
 }
 
 pub trait IPmModule {
-    ipc_cmif_interface_define_command!(initialize: (id: ModuleId, dependencies: sf::InMapAliasBuffer) => (event_handle: sf::CopyHandle));
+    ipc_cmif_interface_define_command!(initialize: (id: ModuleId, dependencies: sf::InMapAliasBuffer<ModuleId>) => (event_handle: sf::CopyHandle));
     ipc_cmif_interface_define_command!(get_request: () => (state: State, flags: u32));
     ipc_cmif_interface_define_command!(acknowledge: () => ());
     ipc_cmif_interface_define_command!(finalize: () => ());
