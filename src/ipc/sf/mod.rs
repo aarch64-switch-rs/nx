@@ -89,6 +89,8 @@ impl<const A: BufferAttribute, const S: usize> Buffer<A, S> {
     }
 }
 
+// TODO: sf::TypedBuffer<T> as just T or array of Ts... (maybe buffer trait, or just default a type on buffer?)
+
 pub type InMapAliasBuffer = Buffer<{bit_group!{ BufferAttribute [In, MapAlias] }}, 0>;
 pub type OutMapAliasBuffer = Buffer<{bit_group!{ BufferAttribute [Out, MapAlias] }}, 0>;
 pub type InNonSecureMapAliasBuffer = Buffer<{bit_group!{ BufferAttribute [In, MapAlias, MapTransferAllowsNonSecure] }}, 0>;

@@ -149,6 +149,14 @@ impl<T> ops::DerefMut for Shared<T> {
     }
 }
 
+impl<T: ?Sized> PartialEq for Shared<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.object == other.object
+    }
+}
+
+impl<T: ?Sized> Eq for Shared<T> {}
+
 #[inline(always)]
 pub fn flush_data_cache(address: *mut u8, size: usize) {
     extern "C" {

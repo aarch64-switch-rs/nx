@@ -62,10 +62,57 @@ pub struct DirectoryEntry {
 }
 const_assert!(core::mem::size_of::<DirectoryEntry>() == 0x310);
 
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[repr(C)]
+pub struct FileTimeStampRaw {
+    pub create: i64,
+    pub modify: i64,
+    pub access: i64,
+    pub is_local_time: bool,
+    pub pad: [u8; 7]
+}
+const_assert!(core::mem::size_of::<FileTimeStampRaw>() == 0x20);
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[repr(u32)]
+pub enum QueryId {
+    SetConcatenationFileAttribute = 0,
+    UpdateMac = 1,
+    IsSignedSystemPartitionOnSdCardValid = 2,
+    QueryUnpreparedFileInformation = 3
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[repr(C)]
+pub struct FileQueryRangeInfo {
+    pub aes_ctr_key_type: u32,
+    pub speed_emulation_type: u32,
+    pub reserved_1: [u8; 0x20],
+    pub reserved_2: [u8; 0x18]
+}
+const_assert!(core::mem::size_of::<FileQueryRangeInfo>() == 0x40);
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[repr(u32)]
+pub enum OperationId {
+    FillZero = 0,
+    DestroySignature = 1,
+    Invalidate = 2,
+    QueryRange = 3,
+    QueryUnpreparedRange = 4,
+    QueryLazyLoadCompletionRate = 5,
+    SetLazyLoadPriority = 6,
+    ReadLazyLoadFileForciblyForDebug = 10001
+}
+
 pub trait IFile {
-    ipc_cmif_interface_define_command!(read: (option: FileReadOption, offset: usize, size: usize, buf: sf::OutNonSecureMapAliasBuffer) => (read_size: usize));
+    ipc_cmif_interface_define_command!(read: (option: FileReadOption, offset: usize, size: usize, out_buf: sf::OutNonSecureMapAliasBuffer) => (read_size: usize));
     ipc_cmif_interface_define_command!(write: (option: FileWriteOption, offset: usize, size: usize, buf: sf::InNonSecureMapAliasBuffer) => ());
+    ipc_cmif_interface_define_command!(flush: () => ());
+    ipc_cmif_interface_define_command!(set_size: (size: usize) => ());
     ipc_cmif_interface_define_command!(get_size: () => (size: usize));
+    ipc_cmif_interface_define_command!(operate_range: (operation_id: OperationId, offset: usize, size: usize) => (info: FileQueryRangeInfo));
+    ipc_cmif_interface_define_command!(operate_range_with_buffer: (operation_id: OperationId, offset: usize, size: usize, in_buf: sf::InNonSecureMapAliasBuffer, out_buf: sf::OutNonSecureMapAliasBuffer) => ());
 }
 
 pub trait IDirectory {
@@ -79,9 +126,17 @@ pub trait IFileSystem {
     ipc_cmif_interface_define_command!(create_directory: (path_buf: sf::InPointerBuffer) => ());
     ipc_cmif_interface_define_command!(delete_directory: (path_buf: sf::InPointerBuffer) => ());
     ipc_cmif_interface_define_command!(delete_directory_recursively: (path_buf: sf::InPointerBuffer) => ());
+    ipc_cmif_interface_define_command!(rename_file: (old_path_buf: sf::InPointerBuffer, new_path_buf: sf::InPointerBuffer) => ());
+    ipc_cmif_interface_define_command!(rename_directory: (old_path_buf: sf::InPointerBuffer, new_path_buf: sf::InPointerBuffer) => ());
     ipc_cmif_interface_define_command!(get_entry_type: (path_buf: sf::InPointerBuffer) => (entry_type: DirectoryEntryType));
     ipc_cmif_interface_define_command!(open_file: (mode: FileOpenMode, path_buf: sf::InPointerBuffer) => (file: mem::Shared<dyn sf::IObject>));
     ipc_cmif_interface_define_command!(open_directory: (mode: DirectoryOpenMode, path_buf: sf::InPointerBuffer) => (dir: mem::Shared<dyn sf::IObject>));
+    ipc_cmif_interface_define_command!(commit: () => ());
+    ipc_cmif_interface_define_command!(get_free_space_size: (path_buf: sf::InPointerBuffer) => (size: usize));
+    ipc_cmif_interface_define_command!(get_total_space_size: (path_buf: sf::InPointerBuffer) => (size: usize));
+    ipc_cmif_interface_define_command!(clean_directory_recursively: (path_buf: sf::InPointerBuffer) => ());
+    ipc_cmif_interface_define_command!(get_file_time_stamp_raw: (path_buf: sf::InPointerBuffer) => (time_stamp: FileTimeStampRaw));
+    ipc_cmif_interface_define_command!(query_entry: (path_buf: sf::InPointerBuffer, query_id: QueryId, in_buf: sf::InNonSecureMapAliasBuffer, out_buf: sf::OutNonSecureMapAliasBuffer) => ());
 }
 
 pub trait IFileSystemProxy {
