@@ -12,7 +12,6 @@
 #![feature(const_mut_refs)]
 #![feature(derive_default_enum)]
 #![feature(fn_traits)]
-#![feature(negative_impls)]
 #![macro_use]
 
 use core::arch::global_asm;
@@ -80,4 +79,4 @@ pub use paste;
 
 pub mod rand;
 
-// pub mod crypto;
+pub mod crypto;

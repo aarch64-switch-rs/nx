@@ -1,0 +1,287 @@
+use core::mem;
+use core::ptr;
+use core::arch::asm;
+use core::arch::aarch64;
+
+pub const BLOCK_SIZE: usize = 0x40;
+pub const HASH_SIZE: usize = 0x20;
+pub const HASH_SIZE_32: usize = HASH_SIZE / mem::size_of::<u32>();
+
+pub struct Context {
+    intermediate_hash: [u32; HASH_SIZE_32],
+    buf: [u8; BLOCK_SIZE],
+    bits_consumed: usize,
+    buffered_size: usize,
+    finalized: bool
+}
+
+const ROUND_CONSTANTS: [u32; 0x40] = [
+    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
+    0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+    0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3,
+    0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+    0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc,
+    0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+    0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7,
+    0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+    0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13,
+    0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+    0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3,
+    0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+    0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5,
+    0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+    0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
+    0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
+];
+
+const H_0: [u32; HASH_SIZE_32] = [
+    0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
+    0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19
+];
+
+impl Context {
+    pub fn new() -> Self {
+        Self {
+            intermediate_hash: H_0,
+            buf: [0; BLOCK_SIZE],
+            bits_consumed: 0,
+            buffered_size: 0,
+            finalized: false
+        }
+    }
+
+    unsafe fn process_blocks(&mut self, data: *const u8, block_count: usize) {
+        let mut prev_hash0 = aarch64::vld1q_u32(self.intermediate_hash.as_ptr());
+        let mut prev_hash1 = aarch64::vld1q_u32(self.intermediate_hash.as_ptr().offset(4));
+        let mut cur_hash0 = aarch64::vdupq_n_u32(0);
+        let mut cur_hash1 = aarch64::vdupq_n_u32(0);
+
+        for _ in 0..block_count {
+            let mut round_constant0 = aarch64::vdupq_n_u32(0);
+            let mut round_constant1 = aarch64::vdupq_n_u32(0);
+            let mut data0 = aarch64::vdupq_n_u32(0);
+            let mut data1 = aarch64::vdupq_n_u32(0);
+            let mut data2 = aarch64::vdupq_n_u32(0);
+            let mut data3 = aarch64::vdupq_n_u32(0);
+            let mut tmp0 = aarch64::vdupq_n_u32(0);
+            let mut tmp1 = aarch64::vdupq_n_u32(0);
+            let mut tmp2 = aarch64::vdupq_n_u32(0);
+            let mut tmp3 = aarch64::vdupq_n_u32(0);
+            let mut tmp_hash = aarch64::vdupq_n_u32(0);
+
+            asm!(
+                "ldp {data0:q}, {data1:q}, [{data}], #0x20",
+                "ldp {data2:q}, {data3:q}, [{data}], #0x20",
+                "add {cur_hash0}.4s, {cur_hash0}.4s, {prev_hash0}.4s",
+                "ldp {round_constant0:q}, {round_constant1:q}, [{round_constants}, 0x00]",
+                "add {cur_hash1}.4s, {cur_hash1}.4s, {prev_hash1}.4s",
+                "rev32 {data0}.16b, {data0}.16b",
+                "rev32 {data1}.16b, {data1}.16b",
+                "rev32 {data2}.16b, {data2}.16b",
+                "rev32 {data3}.16b, {data3}.16b",
+                "add {tmp0}.4s, {data0}.4s, {round_constant0}.4s",
+                "add {tmp1}.4s, {data1}.4s, {round_constant1}.4s",
+                "ldp {round_constant0:q}, {round_constant1:q}, [{round_constants}, 0x20]",
+                "sha256su0 {data0}.4s, {data1}.4s",
+                "mov {prev_hash0}.16b, {cur_hash0}.16b",
+                "sha256h {cur_hash0:q}, {cur_hash1:q}, {tmp0}.4s",
+                "mov {prev_hash1}.16b, {cur_hash1}.16b",
+                "sha256h2 {cur_hash1:q}, {prev_hash0:q}, {tmp0}.4s",
+                "sha256su0 {data1}.4s, {data2}.4s",
+                "sha256su1 {data0}.4s, {data2}.4s, {data3}.4s",
+                "add {tmp2}.4s, {data2}.4s, {round_constant0}.4s",
+                "mov {tmp_hash}.16b, {cur_hash0}.16b",
+                "sha256h {cur_hash0:q}, {cur_hash1:q}, {tmp1}.4s",
+                "sha256h2 {cur_hash1:q}, {tmp_hash:q}, {tmp1}.4s",
+                "sha256su0 {data2}.4s, {data3}.4s",
+                "sha256su1 {data1}.4s, {data3}.4s, {data0}.4s",
+                "add {tmp3}.4s, {data3}.4s, {round_constant1}.4s",
+                "mov {tmp_hash}.16b, {cur_hash0}.16b",
+                "ldp {round_constant0:q}, {round_constant1:q}, [{round_constants}, 0x40]",
+                "sha256h {cur_hash0:q}, {cur_hash1:q}, {tmp2}.4s",
+                "sha256h2 {cur_hash1:q}, {tmp_hash:q}, {tmp2}.4s",
+                "sha256su0 {data3}.4s, {data0}.4s",
+                "sha256su1 {data2}.4s, {data0}.4s, {data1}.4s",
+                "add {tmp0}.4s, {data0}.4s, {round_constant0}.4s",
+                "mov {tmp_hash}.16b, {cur_hash0}.16b",
+                "sha256h {cur_hash0:q}, {cur_hash1:q}, {tmp3}.4s",
+                "sha256h2 {cur_hash1:q}, {tmp_hash:q}, {tmp3}.4s",
+                "sha256su0 {data0}.4s, {data1}.4s",
+                "sha256su1 {data3}.4s, {data1}.4s, {data2}.4s",
+                "add {tmp1}.4s, {data1}.4s, {round_constant1}.4s",
+                "mov {tmp_hash}.16b, {cur_hash0}.16b",
+                "ldp {round_constant0:q}, {round_constant1:q}, [{round_constants}, 0x60]",
+                "sha256h {cur_hash0:q}, {cur_hash1:q}, {tmp0}.4s",
+                "sha256h2 {cur_hash1:q}, {tmp_hash:q}, {tmp0}.4s",
+                "sha256su0 {data1}.4s, {data2}.4s",
+                "sha256su1 {data0}.4s, {data2}.4s, {data3}.4s",
+                "add {tmp2}.4s, {data2}.4s, {round_constant0}.4s",
+                "mov {tmp_hash}.16b, {cur_hash0}.16b",
+                "sha256h {cur_hash0:q}, {cur_hash1:q}, {tmp1}.4s",
+                "sha256h2 {cur_hash1:q}, {tmp_hash:q}, {tmp1}.4s",
+                "sha256su0 {data2}.4s, {data3}.4s",
+                "sha256su1 {data1}.4s, {data3}.4s, {data0}.4s",
+                "add {tmp3}.4s, {data3}.4s, {round_constant1}.4s",
+                "mov {tmp_hash}.16b, {cur_hash0}.16b",
+                "ldp {round_constant0:q}, {round_constant1:q}, [{round_constants}, 0x80]",
+                "sha256h {cur_hash0:q}, {cur_hash1:q}, {tmp2}.4s",
+                "sha256h2 {cur_hash1:q}, {tmp_hash:q}, {tmp2}.4s",
+                "sha256su0 {data3}.4s, {data0}.4s",
+                "sha256su1 {data2}.4s, {data0}.4s, {data1}.4s",
+                "add {tmp0}.4s, {data0}.4s, {round_constant0}.4s",
+                "mov {tmp_hash}.16b, {cur_hash0}.16b",
+                "sha256h {cur_hash0:q}, {cur_hash1:q}, {tmp3}.4s",
+                "sha256h2 {cur_hash1:q}, {tmp_hash:q}, {tmp3}.4s",
+                "sha256su0 {data0}.4s, {data1}.4s",
+                "sha256su1 {data3}.4s, {data1}.4s, {data2}.4s",
+                "add {tmp1}.4s, {data1}.4s, {round_constant1}.4s",
+                "mov {tmp_hash}.16b, {cur_hash0}.16b",
+                "ldp {round_constant0:q}, {round_constant1:q}, [{round_constants}, 0xA0]",
+                "sha256h {cur_hash0:q}, {cur_hash1:q}, {tmp0}.4s",
+                "sha256h2 {cur_hash1:q}, {tmp_hash:q}, {tmp0}.4s",
+                "sha256su0 {data1}.4s, {data2}.4s",
+                "sha256su1 {data0}.4s, {data2}.4s, {data3}.4s",
+                "add {tmp2}.4s, {data2}.4s, {round_constant0}.4s",
+                "mov {tmp_hash}.16b, {cur_hash0}.16b",
+                "sha256h {cur_hash0:q}, {cur_hash1:q}, {tmp1}.4s",
+                "sha256h2 {cur_hash1:q}, {tmp_hash:q}, {tmp1}.4s",
+                "sha256su0 {data2}.4s, {data3}.4s",
+                "sha256su1 {data1}.4s, {data3}.4s, {data0}.4s",
+                "add {tmp3}.4s, {data3}.4s, {round_constant1}.4s",
+                "mov {tmp_hash}.16b, {cur_hash0}.16b",
+                "ldp {round_constant0:q}, {round_constant1:q}, [{round_constants}, 0xC0]",
+                "sha256h {cur_hash0:q}, {cur_hash1:q}, {tmp2}.4s",
+                "sha256h2 {cur_hash1:q}, {tmp_hash:q}, {tmp2}.4s",
+                "sha256su0 {data3}.4s, {data0}.4s",
+                "sha256su1 {data2}.4s, {data0}.4s, {data1}.4s",
+                "add {tmp0}.4s, {data0}.4s, {round_constant0}.4s",
+                "mov {tmp_hash}.16b, {cur_hash0}.16b",
+                "sha256h {cur_hash0:q}, {cur_hash1:q}, {tmp3}.4s",
+                "sha256h2 {cur_hash1:q}, {tmp_hash:q}, {tmp3}.4s",
+                "sha256su1 {data3}.4s, {data1}.4s, {data2}.4s",
+                "add {tmp1}.4s, {data1}.4s, {round_constant1}.4s",
+                "mov {tmp_hash}.16b, {cur_hash0}.16b",
+                "ldp {round_constant0:q}, {round_constant1:q}, [{round_constants}, 0xE0]",
+                "sha256h {cur_hash0:q}, {cur_hash1:q}, {tmp0}.4s",
+                "sha256h2 {cur_hash1:q}, {tmp_hash:q}, {tmp0}.4s",
+                "add {tmp2}.4s, {data2}.4s, {round_constant0}.4s",
+                "mov {tmp_hash}.16b, {cur_hash0}.16b",
+                "sha256h {cur_hash0:q}, {cur_hash1:q}, {tmp1}.4s",
+                "sha256h2 {cur_hash1:q}, {tmp_hash:q}, {tmp1}.4s",
+                "add {tmp3}.4s, {data3}.4s, {round_constant1}.4s",
+                "mov {tmp_hash}.16b, {cur_hash0}.16b",
+                "sha256h {cur_hash0:q}, {cur_hash1:q}, {tmp2}.4s",
+                "sha256h2 {cur_hash1:q}, {tmp_hash:q}, {tmp2}.4s",
+                "mov {tmp_hash}.16b, {cur_hash0}.16b",
+                "sha256h {cur_hash0:q}, {cur_hash1:q}, {tmp3}.4s",
+                "sha256h2 {cur_hash1:q}, {tmp_hash:q}, {tmp3}.4s",
+                data0 = inout(vreg) data0,
+                data1 = inout(vreg) data1,
+                data2 = inout(vreg) data2,
+                data3 = inout(vreg) data3,
+                data = in(reg) data,
+                tmp0 = inout(vreg) tmp0,
+                tmp1 = inout(vreg) tmp1,
+                tmp2 = inout(vreg) tmp2,
+                tmp3 = inout(vreg) tmp3,
+                round_constant0 = inout(vreg) round_constant0,
+                round_constant1 = inout(vreg) round_constant1,
+                cur_hash0 = inout(vreg) cur_hash0,
+                cur_hash1 = inout(vreg) cur_hash1,
+                prev_hash0 = inout(vreg) prev_hash0,
+                prev_hash1 = inout(vreg) prev_hash1,
+                tmp_hash = inout(vreg) tmp_hash,
+                round_constants = in(reg) ROUND_CONSTANTS.as_ptr()
+            );
+        }
+
+        cur_hash0 = aarch64::vaddq_u32(prev_hash0, cur_hash0);
+        cur_hash1 = aarch64::vaddq_u32(prev_hash1, cur_hash1);
+        aarch64::vst1q_u32(self.intermediate_hash.as_mut_ptr(), cur_hash0);
+        aarch64::vst1q_u32(self.intermediate_hash.as_mut_ptr().offset(4), cur_hash1);
+    }
+
+    pub fn update(&mut self, data: &[u8]) {
+        self.bits_consumed += (((self.buffered_size + data.len()) / BLOCK_SIZE) * BLOCK_SIZE) * 8;
+        let mut data_offset: usize = 0;
+        let mut cur_size = data.len();
+
+        if self.buffered_size > 0 {
+            let needed = BLOCK_SIZE - self.buffered_size;
+
+            let copyable = needed.min(cur_size);
+            unsafe {
+                ptr::copy(data.as_ptr().offset(data_offset as isize), self.buf.as_mut_ptr().offset(self.buffered_size as isize), copyable);
+            }
+            data_offset += copyable;
+            cur_size -= copyable;
+
+            if self.buffered_size == BLOCK_SIZE {
+                unsafe {
+                    self.process_blocks(self.buf.as_ptr(), 1);
+                }
+                self.buffered_size = 0;
+            }
+        }
+
+        if cur_size >= BLOCK_SIZE {
+            let block_count = cur_size / BLOCK_SIZE;
+            unsafe {
+                self.process_blocks(data.as_ptr().offset(data_offset as isize), block_count);
+            }
+            let blocks_size = BLOCK_SIZE * block_count;
+            data_offset += blocks_size;
+            cur_size -= blocks_size;
+        }
+
+        if cur_size > 0 {
+            unsafe {
+                ptr::copy(data.as_ptr().offset(data_offset as isize), self.buf.as_mut_ptr(), cur_size);
+            }
+            self.buffered_size = cur_size;
+        }
+    }
+
+    pub fn get_hash(&mut self, out_hash: &mut [u8]) {
+        if !self.finalized {
+            // Process last block, if necessary
+            self.bits_consumed += 8 * self.buffered_size;
+            self.buf[self.buffered_size] = 0x80;
+            self.buffered_size += 1;
+
+            let last_block_max_size = BLOCK_SIZE - mem::size_of::<u64>();
+            unsafe {
+                if self.buffered_size <= last_block_max_size {
+                    ptr::write_bytes(self.buf.as_mut_ptr().offset(self.buffered_size as isize), 0, last_block_max_size - self.buffered_size);
+                }
+                else {
+                    ptr::write_bytes(self.buf.as_mut_ptr().offset(self.buffered_size as isize), 0, BLOCK_SIZE - self.buffered_size);
+                    self.process_blocks(self.buf.as_ptr(), 1);
+
+                    ptr::write_bytes(self.buf.as_mut_ptr(), 0, last_block_max_size);
+                }
+
+                let be_bits_consumed = self.bits_consumed.swap_bytes();
+                *(self.buf.as_mut_ptr().offset(last_block_max_size as isize) as *mut usize) = be_bits_consumed;
+                self.process_blocks(self.buf.as_ptr(), 1);
+            }
+            self.finalized = true;
+        }
+
+        // TODO: assert out_hash.len() == HASH_SIZE?
+
+        unsafe {
+            let out_hash_buf_32 = out_hash.as_mut_ptr() as *mut u32;
+            for i in 0..HASH_SIZE_32 {
+                *out_hash_buf_32.offset(i as isize) = self.intermediate_hash[i].swap_bytes();
+            }
+        }
+    }
+}
+
+#[inline]
+pub fn calculate_hash(data: &[u8], out_hash: &mut [u8]) {
+    let mut ctx = Context::new();
+    ctx.update(data);
+    ctx.get_hash(out_hash);
+}
