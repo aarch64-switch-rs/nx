@@ -4,6 +4,7 @@ use core::arch::asm;
 use core::arch::aarch64;
 
 pub const BLOCK_SIZE: usize = 0x40;
+pub const BLOCK_SIZE_32: usize = BLOCK_SIZE / mem::size_of::<u32>();
 pub const HASH_SIZE: usize = 0x20;
 pub const HASH_SIZE_32: usize = HASH_SIZE / mem::size_of::<u32>();
 
@@ -48,6 +49,10 @@ impl Context {
             buffered_size: 0,
             finalized: false
         }
+    }
+
+    pub fn reset(&mut self) {
+        *self = Self::new();
     }
 
     unsafe fn process_blocks(&mut self, data: *const u8, block_count: usize) {
@@ -201,17 +206,19 @@ impl Context {
         aarch64::vst1q_u32(self.intermediate_hash.as_mut_ptr().offset(4), cur_hash1);
     }
 
-    pub fn update(&mut self, data: &[u8]) {
-        self.bits_consumed += (((self.buffered_size + data.len()) / BLOCK_SIZE) * BLOCK_SIZE) * 8;
+    pub fn update<T>(&mut self, data: &[T]) {
+        let data_size = data.len() * mem::size_of::<T>();
+        let data_start = data.as_ptr() as *const u8;
+        self.bits_consumed += (((self.buffered_size + data_size) / BLOCK_SIZE) * BLOCK_SIZE) * 8;
         let mut data_offset: usize = 0;
-        let mut cur_size = data.len();
+        let mut cur_size = data_size;
 
         if self.buffered_size > 0 {
             let needed = BLOCK_SIZE - self.buffered_size;
 
             let copyable = needed.min(cur_size);
             unsafe {
-                ptr::copy(data.as_ptr().offset(data_offset as isize), self.buf.as_mut_ptr().offset(self.buffered_size as isize), copyable);
+                ptr::copy(data_start.offset(data_offset as isize), self.buf.as_mut_ptr().offset(self.buffered_size as isize), copyable);
             }
             data_offset += copyable;
             cur_size -= copyable;
@@ -227,7 +234,7 @@ impl Context {
         if cur_size >= BLOCK_SIZE {
             let block_count = cur_size / BLOCK_SIZE;
             unsafe {
-                self.process_blocks(data.as_ptr().offset(data_offset as isize), block_count);
+                self.process_blocks(data_start.offset(data_offset as isize), block_count);
             }
             let blocks_size = BLOCK_SIZE * block_count;
             data_offset += blocks_size;
@@ -236,13 +243,13 @@ impl Context {
 
         if cur_size > 0 {
             unsafe {
-                ptr::copy(data.as_ptr().offset(data_offset as isize), self.buf.as_mut_ptr(), cur_size);
+                ptr::copy(data_start.offset(data_offset as isize), self.buf.as_mut_ptr(), cur_size);
             }
             self.buffered_size = cur_size;
         }
     }
 
-    pub fn get_hash(&mut self, out_hash: &mut [u8]) {
+    pub fn get_hash<T>(&mut self, out_hash: &mut [T]) {
         if !self.finalized {
             // Process last block, if necessary
             self.bits_consumed += 8 * self.buffered_size;
@@ -268,12 +275,13 @@ impl Context {
             self.finalized = true;
         }
 
-        // TODO: assert out_hash.len() == HASH_SIZE?
-
-        unsafe {
-            let out_hash_buf_32 = out_hash.as_mut_ptr() as *mut u32;
-            for i in 0..HASH_SIZE_32 {
-                *out_hash_buf_32.offset(i as isize) = self.intermediate_hash[i].swap_bytes();
+        // TODO: assert this?
+        if (out_hash.len() * mem::size_of::<T>()) >= HASH_SIZE {
+            unsafe {
+                let out_hash_buf_32 = out_hash.as_mut_ptr() as *mut u32;
+                for i in 0..HASH_SIZE_32 {
+                    *out_hash_buf_32.offset(i as isize) = self.intermediate_hash[i].swap_bytes();
+                }
             }
         }
     }
