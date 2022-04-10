@@ -9,6 +9,11 @@ FN_START __nx_arm_cache_flush
 	bic x8, x0, x10
 	mov x10, x1
 
+	// Set flag at TLR[0x104] for kernel
+	mov w1, #1
+	mrs x0, tpidrro_el0
+	strb w1, [x0, #0x104] 
+
 armDCacheFlush_L0:
 	dc  civac, x8
 	add x8, x8, x9
@@ -16,5 +21,9 @@ armDCacheFlush_L0:
 	bcc armDCacheFlush_L0
 
 	dsb sy
+
+	// Unset flag at TLR[0x104] for kernel
+	strb wzr, [x0, #0x104]
+
 	ret
 FN_END

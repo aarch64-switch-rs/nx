@@ -2,6 +2,8 @@
 
 pub mod client;
 
+pub mod sf;
+
 #[macro_export]
 macro_rules! ipc_cmif_interface_define_command {
     ($name:ident: ( $( $in_param_name:ident: $in_param_type:ty ),* ) => ( $( $out_param_name:ident: $out_param_type:ty ),* )) => {

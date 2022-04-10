@@ -12,18 +12,18 @@ pub struct LogMetadata {
     pub msg: String,
     pub file_name: &'static str,
     pub fn_name: &'static str,
-    pub line_no: u32
+    pub line_number: u32
 }
 
 impl LogMetadata {
-    pub fn new(severity: LogSeverity, verbosity: bool, msg: String, file_name: &'static str, fn_name: &'static str, line_no: u32) -> Self {
+    pub fn new(severity: LogSeverity, verbosity: bool, msg: String, file_name: &'static str, fn_name: &'static str, line_number: u32) -> Self {
         Self {
             severity,
             verbosity,
             msg,
             file_name,
             fn_name,
-            line_no,
+            line_number,
         }
     }
 }
@@ -50,7 +50,7 @@ fn format_plain_string_log_impl(metadata: &LogMetadata, log_type: &str) -> Strin
         Ok(name) => name,
         _ => "<unknown>",
     };
-    format!("[ {} (severity: {}, verbosity: {}) from {} in thread {}, at {}:{} ] {}", log_type, severity_str, metadata.verbosity, metadata.fn_name, thread_name, metadata.file_name, metadata.line_no, metadata.msg)
+    format!("[ {} (severity: {}, verbosity: {}) from {} in thread {}, at {}:{} ] {}", log_type, severity_str, metadata.verbosity, metadata.fn_name, thread_name, metadata.file_name, metadata.line_number, metadata.msg)
 }
 
 use crate::svc;
@@ -131,7 +131,7 @@ impl Logger for LmLogger {
 
                     log_packet.set_file_name(String::from(metadata.file_name));
                     log_packet.set_function_name(String::from(metadata.fn_name));
-                    log_packet.set_line_number(metadata.line_no);
+                    log_packet.set_line_number(metadata.line_number);
                     log_packet.set_module_name(String::from("aarch64-switch-rs"));
                     log_packet.set_text_log(metadata.msg.clone());
                     let thread_name = match cur_thread.name.get_str() {

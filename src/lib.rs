@@ -75,8 +75,8 @@ pub mod fs;
 
 pub mod version;
 
-pub use paste;
-
 pub mod rand;
 
 pub mod crypto;
+
+pub use paste;

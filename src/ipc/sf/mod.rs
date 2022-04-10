@@ -395,3 +395,5 @@ pub mod mii;
 pub mod set;
 
 pub mod spl;
+
+pub mod usb;
