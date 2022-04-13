@@ -350,13 +350,6 @@ pub trait IObject {
     }
 }
 
-// Simple helper type for out objects
-
-pub struct OutObject<I: IObject + ?Sized, S: IObject> {
-    i: core::marker::PhantomData<I>,
-    s: core::marker::PhantomData<S>
-}
-
 pub mod sm;
 
 pub mod psm;

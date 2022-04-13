@@ -295,7 +295,7 @@ pub fn str_copy<'a>(dst_str: &'a str, src_str: &'a str) -> &'a str {
 }
 
 pub fn raw_transmute<T: Copy, U: Copy>(t: T) -> U {
-    // Lord forgive me... but sometimes core::mem:transmute ain't enough
+    // Lord forgive me... but sometimes core::mem::transmute ain't enough
     unsafe {
         union RawTransmuteUnion<T: Copy, U: Copy> {
             t: T,

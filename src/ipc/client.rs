@@ -92,8 +92,6 @@ impl<S: sf::IObject + ?Sized> RequestCommandParameter for mem::Shared<S> {
 impl<S: service::IClientObject + 'static + Sized> ResponseCommandParameter<mem::Shared<S>> for mem::Shared<S> {
     fn after_response_read(_walker: &mut DataWalker, ctx: &mut CommandContext) -> Result<Self> {
         let object_info = ctx.pop_object()?;
-        let ss = "Pre-crash...";
-        let _ = svc::output_debug_string(ss.as_ptr(), ss.len());
         Ok(mem::Shared::new(S::new(sf::Session::from(object_info))))
     }
 }

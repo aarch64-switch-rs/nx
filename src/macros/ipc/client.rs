@@ -80,7 +80,7 @@ macro_rules! ipc_client_send_control_command {
             walker.reset_with(ctx.out_params.data_offset);
             $( let $out_param = <$out_param_type as $crate::ipc::client::ResponseCommandParameter<_>>::after_response_read(&mut walker, &mut ctx)?; )*
 
-            Ok(( $( $out_param ),* ))
+            Ok(( $( $out_param as _ ),* ))
         };
         rc
     }};

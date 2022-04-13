@@ -71,6 +71,8 @@ impl<const A: BufferAttribute, T> RequestCommandParameter<sf::Buffer<A, T>> for 
     }
 }
 
+impl<const A: BufferAttribute, T> !ResponseCommandParameter for sf::Buffer<A, T> {}
+
 impl<const M: HandleMode> RequestCommandParameter<sf::Handle<M>> for sf::Handle<M> {
     fn after_request_read(ctx: &mut ServerContext) -> Result<Self> {
         ctx.ctx.in_params.pop_handle::<M>()
@@ -99,6 +101,8 @@ impl RequestCommandParameter<sf::ProcessId> for sf::ProcessId {
         }
     }
 }
+
+impl !ResponseCommandParameter for sf::ProcessId {}
 
 impl<S: sf::IObject + ?Sized> RequestCommandParameter<mem::Shared<S>> for mem::Shared<S> {
     fn after_request_read(_ctx: &mut ServerContext) -> Result<Self> {
@@ -475,8 +479,9 @@ impl<const P: usize> ServerManager<P> {
                     for command in target_server.get().get_command_metadata_table() {
                         if command.matches(rq_id) {
                             command_found = true;
+                            let protocol = ctx.object_info.protocol;
                             let mut server_ctx = ServerContext::new(ctx, DataWalker::empty(), domain_table_clone.clone(), &mut new_sessions);
-                            if let Err(rc) = target_server.get().call_self_command(command.command_fn, CommandProtocol::Cmif, &mut server_ctx) {
+                            if let Err(rc) = target_server.get().call_self_command(command.command_fn, protocol, &mut server_ctx) {
                                 if server_holder.is_mitm_service && results::sm::mitm::ResultShouldForwardToSession::matches(rc) {
                                     if let Err(rc) = send_to_forward_handle() {
                                         cmif::server::write_request_command_response_on_msg_buffer(ctx, rc, command_type);
@@ -543,6 +548,8 @@ impl<const P: usize> ServerManager<P> {
                         let mut unused_new_sessions: Vec<ServerHolder> = Vec::new();
                         let unused_domain_table = mem::Shared::empty();
                         let mut server_ctx = ServerContext::new(ctx, DataWalker::empty(), unused_domain_table, &mut unused_new_sessions);
+                        // Control commands only exist in CMIF...
+                        // TODO: assert ctx.object_info.protocol == CommandProtocol::Cmif?
                         if let Err(rc) = hipc_manager.call_self_command(command.command_fn, CommandProtocol::Cmif, &mut server_ctx) {
                             cmif::server::write_control_command_response_on_msg_buffer(ctx, rc, command_type);
                         }
