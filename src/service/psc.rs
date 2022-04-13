@@ -1,3 +1,4 @@
+use crate::ipc::sf::sm;
 use crate::result::*;
 use crate::ipc::sf;
 use crate::service;
@@ -14,21 +15,7 @@ impl sf::IObject for PmModule {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(initialize: 0),
-            ipc_cmif_interface_make_command_meta!(get_request: 1),
-            ipc_cmif_interface_make_command_meta!(acknowledge: 2),
-            ipc_cmif_interface_make_command_meta!(finalize: 3),
-            ipc_cmif_interface_make_command_meta!(acknowledge_ex: 4)
-        ]
-    }
-}
-
-impl service::IClientObject for PmModule {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
+    ipc_sf_object_impl_default_command_metadata!();
 }
 
 impl IPmModule for PmModule {
@@ -53,6 +40,12 @@ impl IPmModule for PmModule {
     }
 }
 
+impl service::IClientObject for PmModule {
+    fn new(session: sf::Session) -> Self {
+        Self { session }
+    }
+}
+
 pub struct PmService {
     session: sf::Session
 }
@@ -62,10 +55,12 @@ impl sf::IObject for PmService {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(get_pm_module: 0)
-        ]
+    ipc_sf_object_impl_default_command_metadata!();
+}
+
+impl IPmService for PmService {
+    fn get_pm_module(&mut self) -> Result<mem::Shared<dyn IPmModule>> {
+        ipc_client_send_request_command!([self.session.object_info; 0] () => (pm_module: mem::Shared<PmModule>))
     }
 }
 
@@ -75,15 +70,9 @@ impl service::IClientObject for PmService {
     }
 }
 
-impl IPmService for PmService {
-    fn get_pm_module(&mut self) -> Result<mem::Shared<dyn sf::IObject>> {
-        ipc_client_send_request_command!([self.session.object_info; 0] () => (pm_module: mem::Shared<PmModule>))
-    }
-}
-
 impl service::IService for PmService {
-    fn get_name() -> &'static str {
-        nul!("psc:m")
+    fn get_name() -> sm::ServiceName {
+        sm::ServiceName::new("psc:m")
     }
 
     fn as_domain() -> bool {

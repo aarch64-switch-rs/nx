@@ -5,6 +5,7 @@ use crate::svc;
 pub enum FunctionId {
     Invalid = 0,
     GenerateRandomBytes = 0xC3000006
+    // TODO: more
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -40,13 +41,14 @@ pub struct Output {
     pub result: Result,
     pub arguments: [u64; 7],
 }
-const_assert!(core::mem::size_of::<Output>() == 0x40);
+const_assert!(core::mem::size_of::<Output>() == core::mem::size_of::<Input>());
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct Arguments {
     pub arguments: [u64; 8]
 }
+const_assert!(core::mem::size_of::<Arguments>() == core::mem::size_of::<Output>());
 
 impl Arguments {
     pub fn from_input(input: Input) -> Self {

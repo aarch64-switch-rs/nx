@@ -1,5 +1,5 @@
 use crate::result::*;
-use crate::ipc::sf;
+use crate::ipc::sf::{self, sm};
 use crate::service;
 
 pub use crate::ipc::sf::fatal::*;
@@ -13,10 +13,12 @@ impl sf::IObject for Service {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(throw_with_policy: 1)
-        ]
+    ipc_sf_object_impl_default_command_metadata!();
+}
+
+impl IService for Service {
+    fn throw_with_policy(&mut self, rc: ResultCode, policy: Policy, process_id: sf::ProcessId) -> Result<()> {
+        ipc_client_send_request_command!([self.session.object_info; 1] (rc, policy, process_id) => ())
     }
 }
 
@@ -26,15 +28,9 @@ impl service::IClientObject for Service {
     }
 }
 
-impl IService for Service {
-    fn throw_with_policy(&mut self, rc: ResultCode, policy: Policy, process_id: sf::ProcessId) -> Result<()> {
-        ipc_client_send_request_command!([self.session.object_info; 1] (rc, policy, process_id) => ())
-    }
-}
-
 impl service::IService for Service {
-    fn get_name() -> &'static str {
-        nul!("fatal:u")
+    fn get_name() -> sm::ServiceName {
+        sm::ServiceName::new("fatal:u")
     }
 
     fn as_domain() -> bool {

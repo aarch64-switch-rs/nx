@@ -107,12 +107,10 @@ macro_rules! read_bits {
     };
 }
 
-// Note: adding so many null characters since service names need to have a length of (at least) 8, in order to guarantee this
-
 #[macro_export]
 macro_rules! nul {
     ($lit:expr) => {
-        concat!($lit, "\0\0\0\0\0\0\0\0")
+        concat!($lit, "\0")
     };
 }
 
@@ -120,7 +118,7 @@ macro_rules! nul {
 macro_rules! cur_fn_name {
     () => {{
         fn dummy_fn() {}
-        const DUMMY_FN_EXTRA_SIZE: usize = 10; // "::dummy_fn"
+        const DUMMY_FN_EXTRA_SIZE: usize = "::dummy_fn".len();
 
         fn type_name_of<T>(_: T) -> &'static str {
             core::any::type_name::<T>()

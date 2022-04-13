@@ -10,7 +10,7 @@ macro_rules! ipc_client_send_request_command {
             $(
                 {
                     let in_v = &$in_param;
-                    $crate::ipc::client::CommandParameter::<_>::before_request_write(in_v, &mut walker, &mut ctx)?;
+                    $crate::ipc::client::RequestCommandParameter::before_request_write(in_v, &mut walker, &mut ctx)?;
                 }
             )*
             ctx.in_params.data_size = walker.get_offset() as u32;
@@ -24,7 +24,7 @@ macro_rules! ipc_client_send_request_command {
             $(
                 {
                     let in_v = &$in_param;
-                    $crate::ipc::client::CommandParameter::<_>::before_send_sync_request(in_v, &mut walker, &mut ctx)?;
+                    $crate::ipc::client::RequestCommandParameter::before_send_sync_request(in_v, &mut walker, &mut ctx)?;
                 }
             )*
 
@@ -36,9 +36,9 @@ macro_rules! ipc_client_send_request_command {
             };
 
             walker.reset_with(ctx.out_params.data_offset);
-            $( let $out_param = <$out_param_type as $crate::ipc::client::CommandParameter<_>>::after_response_read(&mut walker, &mut ctx)?; )*
+            $( let $out_param = <$out_param_type as $crate::ipc::client::ResponseCommandParameter<_>>::after_response_read(&mut walker, &mut ctx)?; )*
 
-            Ok(( $( $out_param ),* ))
+            Ok(( $( $out_param as _ ),* ))
         };
         rc
     }};
@@ -58,7 +58,7 @@ macro_rules! ipc_client_send_control_command {
             $(
                 {
                     let in_v = &$in_param;
-                    $crate::ipc::client::CommandParameter::<_>::before_request_write(in_v, &mut walker, &mut ctx)?;
+                    $crate::ipc::client::RequestCommandParameter::before_request_write(in_v, &mut walker, &mut ctx)?;
                 }
             )*
             ctx.in_params.data_size = walker.get_offset() as u32;
@@ -69,7 +69,7 @@ macro_rules! ipc_client_send_control_command {
             $(
                 {
                     let in_v = &$in_param;
-                    $crate::ipc::client::CommandParameter::<_>::before_send_sync_request(in_v, &mut walker, &mut ctx)?;
+                    $crate::ipc::client::RequestCommandParameter::before_send_sync_request(in_v, &mut walker, &mut ctx)?;
                 }
             )*
 
@@ -78,7 +78,7 @@ macro_rules! ipc_client_send_control_command {
             $crate::ipc::cmif::client::read_control_command_response_from_msg_buffer(&mut ctx)?;
 
             walker.reset_with(ctx.out_params.data_offset);
-            $( let $out_param = <$out_param_type as $crate::ipc::client::CommandParameter<_>>::after_response_read(&mut walker, &mut ctx)?; )*
+            $( let $out_param = <$out_param_type as $crate::ipc::client::ResponseCommandParameter<_>>::after_response_read(&mut walker, &mut ctx)?; )*
 
             Ok(( $( $out_param ),* ))
         };

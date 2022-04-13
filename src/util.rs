@@ -74,6 +74,10 @@ impl<const S: usize> CString<S> {
         Self { c_str: [0; S] }
     }
 
+    pub const fn from_raw(raw_bytes: [u8; S]) -> Self {
+        Self { c_str: raw_bytes }
+    }
+
     pub fn from_str(string: &str) -> Result<Self> {
         let mut cstr = Self::new();
         cstr.set_str(string)?;
@@ -287,6 +291,18 @@ pub fn str_copy<'a>(dst_str: &'a str, src_str: &'a str) -> &'a str {
 
         let dst_slice = core::slice::from_raw_parts_mut(dst_buf, dst_str_len);
         core::str::from_utf8_unchecked(dst_slice)
+    }
+}
+
+pub fn raw_transmute<T: Copy, U: Copy>(t: T) -> U {
+    // Lord forgive me... but sometimes core::mem:transmute ain't enough
+    unsafe {
+        union RawTransmuteUnion<T: Copy, U: Copy> {
+            t: T,
+            u: U
+        }
+        let tmp = RawTransmuteUnion::<T, U> { t };
+        tmp.u
     }
 }
 

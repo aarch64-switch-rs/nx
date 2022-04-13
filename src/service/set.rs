@@ -1,5 +1,5 @@
 use crate::result::*;
-use crate::ipc::sf;
+use crate::ipc::sf::{self, sm};
 use crate::ipc::sf::mii;
 use crate::service;
 
@@ -14,19 +14,7 @@ impl sf::IObject for SystemSettingsServer {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(get_firmware_version: 3),
-            ipc_cmif_interface_make_command_meta!(get_firmware_version_2: 4),
-            ipc_cmif_interface_make_command_meta!(get_mii_author_id: 90)
-        ]
-    }
-}
-
-impl service::IClientObject for SystemSettingsServer {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
+    ipc_sf_object_impl_default_command_metadata!();
 }
 
 impl ISystemSettingsServer for SystemSettingsServer {
@@ -43,9 +31,15 @@ impl ISystemSettingsServer for SystemSettingsServer {
     }
 }
 
+impl service::IClientObject for SystemSettingsServer {
+    fn new(session: sf::Session) -> Self {
+        Self { session }
+    }
+}
+
 impl service::IService for SystemSettingsServer {
-    fn get_name() -> &'static str {
-        nul!("set:sys")
+    fn get_name() -> sm::ServiceName {
+        sm::ServiceName::new("set:sys")
     }
 
     fn as_domain() -> bool {

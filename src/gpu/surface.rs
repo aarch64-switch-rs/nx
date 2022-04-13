@@ -13,12 +13,12 @@ use core::mem as cmem;
 
 const MAX_BUFFERS: usize = 8;
 
-pub type LayerDestroyFn = fn(vi::LayerId, mem::Shared<vi::ApplicationDisplayService>) -> Result<()>;
+pub type LayerDestroyFn = fn(vi::LayerId, mem::Shared<dyn vi::IApplicationDisplayService>) -> Result<()>;
 
-pub struct Surface<NS: nv::INvDrvService + 'static> {
+pub struct Surface {
     binder: binder::Binder,
-    nvdrv_srv: mem::Shared<NS>,
-    application_display_service: mem::Shared<vi::ApplicationDisplayService>,
+    nvdrv_srv: mem::Shared<dyn nv::INvDrvServices>,
+    application_display_service: mem::Shared<dyn vi::IApplicationDisplayService>,
     width: u32,
     height: u32,
     buffer_data: alloc::Buffer<u8>,
@@ -39,8 +39,8 @@ pub struct Surface<NS: nv::INvDrvService + 'static> {
     buffer_event_handle: svc::Handle
 }
 
-impl<NS: nv::INvDrvService> Surface<NS> {
-    pub fn new(binder_handle: i32, nvdrv_srv: mem::Shared<NS>, application_display_service: mem::Shared<vi::ApplicationDisplayService>, nvhost_fd: u32, nvmap_fd: u32, nvhostctrl_fd: u32, hos_binder_driver: mem::Shared<dispdrv::HOSBinderDriver>, buffer_count: u32, display_id: vi::DisplayId, layer_id: vi::LayerId, width: u32, height: u32, color_fmt: ColorFormat, pixel_fmt: PixelFormat, layout: Layout, layer_destroy_fn: LayerDestroyFn) -> Result<Self> {
+impl Surface {
+    pub fn new(binder_handle: i32, nvdrv_srv: mem::Shared<dyn nv::INvDrvServices>, application_display_service: mem::Shared<dyn vi::IApplicationDisplayService>, nvhost_fd: u32, nvmap_fd: u32, nvhostctrl_fd: u32, hos_binder_driver: mem::Shared<dyn dispdrv::IHOSBinderDriver>, buffer_count: u32, display_id: vi::DisplayId, layer_id: vi::LayerId, width: u32, height: u32, color_fmt: ColorFormat, pixel_fmt: PixelFormat, layout: Layout, layer_destroy_fn: LayerDestroyFn) -> Result<Self> {
         let mut binder = binder::Binder::new(binder_handle, hos_binder_driver)?;
         binder.increase_refcounts()?;
         let _ = binder.connect(ConnectionApi::Cpu, false)?;
@@ -213,7 +213,7 @@ impl<NS: nv::INvDrvService> Surface<NS> {
     }
 
     pub fn set_visible(&mut self, visible: bool) -> Result<()> {
-        let system_display_service = self.application_display_service.get().get_system_display_service()?.to::<vi::SystemDisplayService>();
+        let system_display_service = self.application_display_service.get().get_system_display_service()?;
         system_display_service.get().set_layer_visibility(visible, self.layer_id)
     }
 
@@ -245,7 +245,7 @@ impl<NS: nv::INvDrvService> Surface<NS> {
     }
 }
 
-impl<NS: nv::INvDrvService> Drop for Surface<NS> {
+impl Drop for Surface {
     fn drop(&mut self) {
         let _ = self.finalize();
     }

@@ -14,41 +14,7 @@ impl sf::IObject for User {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(initialize: 0),
-            ipc_cmif_interface_make_command_meta!(finalize: 1),
-            ipc_cmif_interface_make_command_meta!(list_devices: 2),
-            ipc_cmif_interface_make_command_meta!(start_detection: 3),
-            ipc_cmif_interface_make_command_meta!(stop_detection: 4),
-            ipc_cmif_interface_make_command_meta!(mount: 5),
-            ipc_cmif_interface_make_command_meta!(unmount: 6),
-            ipc_cmif_interface_make_command_meta!(open_application_area: 7),
-            ipc_cmif_interface_make_command_meta!(get_application_area: 8),
-            ipc_cmif_interface_make_command_meta!(set_application_area: 9),
-            ipc_cmif_interface_make_command_meta!(flush: 10),
-            ipc_cmif_interface_make_command_meta!(restore: 11),
-            ipc_cmif_interface_make_command_meta!(create_application_area: 12),
-            ipc_cmif_interface_make_command_meta!(get_tag_info: 13),
-            ipc_cmif_interface_make_command_meta!(get_register_info: 14),
-            ipc_cmif_interface_make_command_meta!(get_common_info: 15),
-            ipc_cmif_interface_make_command_meta!(get_model_info: 16),
-            ipc_cmif_interface_make_command_meta!(attach_activate_event: 17),
-            ipc_cmif_interface_make_command_meta!(attach_deactivate_event: 18),
-            ipc_cmif_interface_make_command_meta!(get_state: 19),
-            ipc_cmif_interface_make_command_meta!(get_device_state: 20),
-            ipc_cmif_interface_make_command_meta!(get_npad_id: 21),
-            ipc_cmif_interface_make_command_meta!(get_application_area_size: 22),
-            ipc_cmif_interface_make_command_meta!(attach_availability_change_event: 23, [(3, 0, 0) =>]),
-            ipc_cmif_interface_make_command_meta!(recreate_application_area: 24, [(3, 0, 0) =>])
-        ]
-    }
-}
-
-impl service::IClientObject for User {
-    fn new(session: sf::Session) -> Self {
-        Self { session: session }
-    }
+    ipc_sf_object_impl_default_command_metadata!();
 }
 
 impl IUser for User {
@@ -101,4 +67,10 @@ impl IUser for User {
     }
 
     // TODO: finish
+}
+
+impl service::IClientObject for User {
+    fn new(session: sf::Session) -> Self {
+        Self { session }
+    }
 }

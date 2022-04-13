@@ -2,6 +2,7 @@ use crate::result::*;
 use crate::ipc::sf;
 use crate::ipc::sf::mii;
 use crate::util;
+use crate::version;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
@@ -21,8 +22,10 @@ pub struct FirmwareVersion {
 }
 const_assert!(core::mem::size_of::<FirmwareVersion>() == 0x100);
 
-pub trait ISystemSettingsServer {
-    ipc_cmif_interface_define_command!(get_firmware_version: (out_version: sf::OutFixedPointerBuffer<FirmwareVersion>) => ());
-    ipc_cmif_interface_define_command!(get_firmware_version_2: (out_version: sf::OutFixedPointerBuffer<FirmwareVersion>) => ());
-    ipc_cmif_interface_define_command!(get_mii_author_id: () => (id: mii::CreateId));
+ipc_sf_define_interface_trait! {
+    trait ISystemSettingsServer {
+        get_firmware_version [3, version::VersionInterval::all()]: (out_version: sf::OutFixedPointerBuffer<FirmwareVersion>) => ();
+        get_firmware_version_2 [4, version::VersionInterval::from(version::Version::new(3,0,0))]: (out_version: sf::OutFixedPointerBuffer<FirmwareVersion>) => ();
+        get_mii_author_id [90, version::VersionInterval::all()]: () => (id: mii::CreateId);
+    }
 }

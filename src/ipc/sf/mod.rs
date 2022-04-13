@@ -283,50 +283,38 @@ impl Drop for Session {
     }
 }
 
-pub type CommandFn = fn(&mut dyn IObject, &mut server::ServerContext) -> Result<()>;
-pub type CommandSpecificFn<T> = fn(&mut T, &mut server::ServerContext) -> Result<()>;
+pub type CommandFn = fn(&mut dyn IObject, CommandProtocol, &mut server::ServerContext) -> Result<()>;
+pub type CommandSpecificFn<T> = fn(&mut T, CommandProtocol, &mut server::ServerContext) -> Result<()>;
 
 pub struct CommandMetadata {
-    pub protocol: CommandProtocol,
     pub rq_id: u32,
     pub command_fn: CommandFn,
-    pub min_ver: Option<version::Version>,
-    pub max_ver: Option<version::Version>
+    pub ver_intv: version::VersionInterval
 }
 
 pub type CommandMetadataTable = Vec<CommandMetadata>;
 
 impl CommandMetadata {
-    pub fn new(protocol: CommandProtocol, rq_id: u32, command_fn: CommandFn, min_ver: Option<version::Version>, max_ver: Option<version::Version>) -> Self {
-        Self { protocol, rq_id, command_fn, min_ver, max_ver }
+    pub fn new(rq_id: u32, command_fn: CommandFn, ver_intv: version::VersionInterval) -> Self {
+        Self {
+            rq_id,
+            command_fn,
+            ver_intv
+        }
     }
 
-    pub fn validate_version(&self) -> bool {
-        let ver = version::get_version();
-        if let Some(min_v) = self.min_ver {
-            if ver < min_v {
-                return false;
-            }
-        }
-        if let Some(max_v) = self.max_ver {
-            if ver > max_v {
-                return false;
-            }
-        }
-        true
-    }
-
-    pub fn matches(&self, protocol: CommandProtocol, rq_id: u32) -> bool {
-        self.validate_version() && (self.protocol == protocol) && (self.rq_id == rq_id)
+    pub fn matches(&self, rq_id: u32) -> bool {
+        let cur_ver = version::get_version();
+        (self.rq_id == rq_id) && self.ver_intv.matches(cur_ver)
     }
 }
 
-// This trait is analogous to N's IServiceObject type - the base for any kind of IPC interface
+// This trait is analogous to N's nn::sf::IServiceObject type - the base trait for any kind of IPC interface
 // IClientObject (on service module) and IServerObject (on server module) are wrappers for some specific kind of objects
 
 pub trait IObject {
     fn get_session(&mut self) -> &mut Session;
-    fn get_command_table(&self) -> CommandMetadataTable;
+    fn get_command_metadata_table(&self) -> CommandMetadataTable;
 
     fn get_info(&mut self) -> ObjectInfo {
         self.get_session().object_info
@@ -340,7 +328,7 @@ pub trait IObject {
         self.get_session().convert_to_domain()
     }
 
-    fn query_pointer_buffer_size(&mut self) -> Result<u16> {
+    fn query_own_pointer_buffer_size(&mut self) -> Result<u16> {
         self.get_info().query_pointer_buffer_size()
     }
 
@@ -356,10 +344,17 @@ pub trait IObject {
         self.get_info().is_domain()
     }
 
-    fn call_self_command(&mut self, command_fn: CommandFn, ctx: &mut server::ServerContext) -> Result<()> {
+    fn call_self_command(&mut self, command_fn: CommandFn, protocol: CommandProtocol, ctx: &mut server::ServerContext) -> Result<()> {
         let original_fn: CommandSpecificFn<Self> = unsafe { mem::transmute(command_fn) };
-        (original_fn)(self, ctx)
+        (original_fn)(self, protocol, ctx)
     }
+}
+
+// Simple helper type for out objects
+
+pub struct OutObject<I: IObject + ?Sized, S: IObject> {
+    i: core::marker::PhantomData<I>,
+    s: core::marker::PhantomData<S>
 }
 
 pub mod sm;

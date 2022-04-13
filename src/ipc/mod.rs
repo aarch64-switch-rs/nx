@@ -434,7 +434,7 @@ pub fn get_aligned_data_offset(data_words_offset: *mut u8, base_offset: *mut u8)
     (data_offset + base_offset as usize) as *mut u8
 }
 
-pub struct CommandIn {
+pub struct CommandContent {
     pub send_process_id: bool,
     pub process_id: u64,
     pub data_size: u32,
@@ -447,7 +447,7 @@ pub struct CommandIn {
     out_pointer_sizes: ArrayVec<[u16; MAX_COUNT]>,
 }
 
-impl CommandIn {
+impl CommandContent {
     pub fn empty() -> Self {
         Self { send_process_id: false, process_id: 0, data_size: 0, data_offset: ptr::null_mut(), data_words_offset: ptr::null_mut(), objects_offset: ptr::null_mut(), copy_handles: ArrayVec::new(), move_handles: ArrayVec::new(), objects: ArrayVec::new(), out_pointer_sizes: ArrayVec::new() }
     }
@@ -495,24 +495,7 @@ impl CommandIn {
             Err(_) => Err(results::lib::ipc::ResultPointerSizesFull::make())
         }
     }
-}
 
-pub struct CommandOut {
-    pub send_process_id: bool,
-    pub process_id: u64,
-    pub data_size: u32,
-    pub data_offset: *mut u8,
-    pub data_words_offset: *mut u8,
-    copy_handles: ArrayVec<[svc::Handle; MAX_COUNT]>,
-    move_handles: ArrayVec<[svc::Handle; MAX_COUNT]>,
-    objects: ArrayVec<[cmif::DomainObjectId; MAX_COUNT]>
-}
-
-impl CommandOut {
-    pub fn empty() -> Self {
-        Self { send_process_id: false, process_id: 0, data_size: 0, data_offset: ptr::null_mut(), data_words_offset: ptr::null_mut(), copy_handles: ArrayVec::new(), move_handles: ArrayVec::new(), objects: ArrayVec::new() }
-    }
-    
     pub fn pop_copy_handle(&mut self) -> Result<svc::Handle> {
         match self.copy_handles.pop_at(0) {
             Some(handle) => Ok(handle),
@@ -573,8 +556,8 @@ impl CommandOut {
 
 pub struct CommandContext {
     pub object_info: ObjectInfo,
-    pub in_params: CommandIn,
-    pub out_params: CommandOut,
+    pub in_params: CommandContent,
+    pub out_params: CommandContent,
     send_statics: ArrayVec<[SendStaticDescriptor; MAX_COUNT]>,
     receive_statics: ArrayVec<[ReceiveStaticDescriptor; MAX_COUNT]>,
     send_buffers: ArrayVec<[BufferDescriptor; MAX_COUNT]>,
@@ -589,7 +572,7 @@ pub struct CommandContext {
 
 impl CommandContext {
     pub fn empty() -> Self {
-        Self { object_info: ObjectInfo::new(), in_params: CommandIn::empty(), out_params: CommandOut::empty(), send_statics: ArrayVec::new(), receive_statics: ArrayVec::new(), send_buffers: ArrayVec::new(), receive_buffers: ArrayVec::new(), exchange_buffers: ArrayVec::new(), pointer_buffer: core::ptr::null_mut(), in_pointer_buffer_offset: 0, out_pointer_buffer_offset: 0, pointer_size_walker: DataWalker::empty(), pointer_size_walker_initialized: false }
+        Self { object_info: ObjectInfo::new(), in_params: CommandContent::empty(), out_params: CommandContent::empty(), send_statics: ArrayVec::new(), receive_statics: ArrayVec::new(), send_buffers: ArrayVec::new(), receive_buffers: ArrayVec::new(), exchange_buffers: ArrayVec::new(), pointer_buffer: core::ptr::null_mut(), in_pointer_buffer_offset: 0, out_pointer_buffer_offset: 0, pointer_size_walker: DataWalker::empty(), pointer_size_walker_initialized: false }
     }
 
     pub fn new_client(object_info: ObjectInfo) -> Self {

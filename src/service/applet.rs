@@ -1,3 +1,4 @@
+use crate::ipc::sf::sm;
 use crate::result::*;
 use crate::ipc::sf;
 use crate::service;
@@ -14,19 +15,7 @@ impl sf::IObject for StorageAccessor {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(get_size: 0),
-            ipc_cmif_interface_make_command_meta!(write: 10),
-            ipc_cmif_interface_make_command_meta!(read: 11)
-        ]
-    }
-}
-
-impl service::IClientObject for StorageAccessor {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
+    ipc_sf_object_impl_default_command_metadata!();
 }
 
 impl IStorageAccessor for StorageAccessor {
@@ -43,6 +32,12 @@ impl IStorageAccessor for StorageAccessor {
     }
 }
 
+impl service::IClientObject for StorageAccessor {
+    fn new(session: sf::Session) -> Self {
+        Self { session }
+    }
+}
+
 pub struct Storage {
     session: sf::Session
 }
@@ -52,22 +47,18 @@ impl sf::IObject for Storage {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(open: 0)
-        ]
+    ipc_sf_object_impl_default_command_metadata!();
+}
+
+impl IStorage for Storage {
+    fn open(&mut self) -> Result<mem::Shared<dyn IStorageAccessor>> {
+        ipc_client_send_request_command!([self.session.object_info; 0] () => (storage_accessor: mem::Shared<StorageAccessor>))
     }
 }
 
 impl service::IClientObject for Storage {
     fn new(session: sf::Session) -> Self {
         Self { session }
-    }
-}
-
-impl IStorage for Storage {
-    fn open(&mut self) -> Result<mem::Shared<dyn sf::IObject>> {
-        ipc_client_send_request_command!([self.session.object_info; 0] () => (storage_accessor: mem::Shared<StorageAccessor>))
     }
 }
 
@@ -80,19 +71,7 @@ impl sf::IObject for LibraryAppletAccessor {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(get_applet_state_changed_event: 0),
-            ipc_cmif_interface_make_command_meta!(start: 10),
-            ipc_cmif_interface_make_command_meta!(push_in_data: 100)
-        ]
-    }
-}
-
-impl service::IClientObject for LibraryAppletAccessor {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
+    ipc_sf_object_impl_default_command_metadata!();
 }
 
 impl ILibraryAppletAccessor for LibraryAppletAccessor {
@@ -104,8 +83,14 @@ impl ILibraryAppletAccessor for LibraryAppletAccessor {
         ipc_client_send_request_command!([self.session.object_info; 10] () => ())
     }
 
-    fn push_in_data(&mut self, storage: mem::Shared<dyn sf::IObject>) -> Result<()> {
+    fn push_in_data(&mut self, storage: mem::Shared<dyn IStorage>) -> Result<()> {
         ipc_client_send_request_command!([self.session.object_info; 100] (storage) => ())
+    }
+}
+
+impl service::IClientObject for LibraryAppletAccessor {
+    fn new(session: sf::Session) -> Self {
+        Self { session }
     }
 }
 
@@ -118,27 +103,22 @@ impl sf::IObject for LibraryAppletCreator {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(create_library_applet: 0),
-            ipc_cmif_interface_make_command_meta!(create_storage: 10)
-        ]
+    ipc_sf_object_impl_default_command_metadata!();
+}
+
+impl ILibraryAppletCreator for LibraryAppletCreator {
+    fn create_library_applet(&mut self, id: AppletId, mode: LibraryAppletMode) -> Result<mem::Shared<dyn ILibraryAppletAccessor>> {
+        ipc_client_send_request_command!([self.session.object_info; 0] (id, mode) => (library_applet_accessor: mem::Shared<LibraryAppletAccessor>))
+    }
+
+    fn create_storage(&mut self, size: usize) -> Result<mem::Shared<dyn IStorage>> {
+        ipc_client_send_request_command!([self.session.object_info; 10] (size) => (storage: mem::Shared<Storage>))
     }
 }
 
 impl service::IClientObject for LibraryAppletCreator {
     fn new(session: sf::Session) -> Self {
         Self { session }
-    }
-}
-
-impl ILibraryAppletCreator for LibraryAppletCreator {
-    fn create_library_applet(&mut self, id: AppletId, mode: LibraryAppletMode) -> Result<mem::Shared<dyn sf::IObject>> {
-        ipc_client_send_request_command!([self.session.object_info; 0] (id, mode) => (library_applet_accessor: mem::Shared<LibraryAppletAccessor>))
-    }
-
-    fn create_storage(&mut self, size: usize) -> Result<mem::Shared<dyn sf::IObject>> {
-        ipc_client_send_request_command!([self.session.object_info; 10] (size) => (storage: mem::Shared<Storage>))
     }
 }
 
@@ -151,22 +131,18 @@ impl sf::IObject for WindowController {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(acquire_foreground_rights: 10)
-        ]
+    ipc_sf_object_impl_default_command_metadata!();
+}
+
+impl IWindowController for WindowController {
+    fn acquire_foreground_rights(&mut self) -> Result<()> {
+        ipc_client_send_request_command!([self.session.object_info; 10] () => ())
     }
 }
 
 impl service::IClientObject for WindowController {
     fn new(session: sf::Session) -> Self {
         Self { session }
-    }
-}
-
-impl IWindowController for WindowController {
-    fn acquire_foreground_rights(&mut self) -> Result<()> {
-        ipc_client_send_request_command!([self.session.object_info; 10] () => ())
     }
 }
 
@@ -179,22 +155,18 @@ impl sf::IObject for SelfController {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(set_screenshot_permission: 10)
-        ]
+    ipc_sf_object_impl_default_command_metadata!();
+}
+
+impl ISelfController for SelfController {
+    fn set_screenshot_permission(&mut self, permission: ScreenShotPermission) -> Result<()> {
+        ipc_client_send_request_command!([self.session.object_info; 10] (permission) => ())
     }
 }
 
 impl service::IClientObject for SelfController {
     fn new(session: sf::Session) -> Self {
         Self { session }
-    }
-}
-
-impl ISelfController for SelfController {
-    fn set_screenshot_permission(&mut self, permission: ScreenShotPermission) -> Result<()> {
-        ipc_client_send_request_command!([self.session.object_info; 10] (permission) => ())
     }
 }
 
@@ -207,32 +179,26 @@ impl sf::IObject for LibraryAppletProxy {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(get_self_controller: 1),
-            ipc_cmif_interface_make_command_meta!(get_window_controller: 2),
-            ipc_cmif_interface_make_command_meta!(get_library_applet_creator: 11)
-        ]
+    ipc_sf_object_impl_default_command_metadata!();
+}
+
+impl ILibraryAppletProxy for LibraryAppletProxy {
+    fn get_self_controller(&mut self) -> Result<mem::Shared<dyn ISelfController>> {
+        ipc_client_send_request_command!([self.session.object_info; 1] () => (self_controller: mem::Shared<SelfController>))
+    }
+
+    fn get_window_controller(&mut self) -> Result<mem::Shared<dyn IWindowController>> {
+        ipc_client_send_request_command!([self.session.object_info; 2] () => (window_controller: mem::Shared<WindowController>))
+    }
+
+    fn get_library_applet_creator(&mut self) -> Result<mem::Shared<dyn ILibraryAppletCreator>> {
+        ipc_client_send_request_command!([self.session.object_info; 11] () => (library_applet_creator: mem::Shared<LibraryAppletCreator>))
     }
 }
 
 impl service::IClientObject for LibraryAppletProxy {
     fn new(session: sf::Session) -> Self {
         Self { session }
-    }
-}
-
-impl ILibraryAppletProxy for LibraryAppletProxy {
-    fn get_self_controller(&mut self) -> Result<mem::Shared<dyn sf::IObject>> {
-        ipc_client_send_request_command!([self.session.object_info; 1] () => (self_controller: mem::Shared<SelfController>))
-    }
-
-    fn get_window_controller(&mut self) -> Result<mem::Shared<dyn sf::IObject>> {
-        ipc_client_send_request_command!([self.session.object_info; 2] () => (window_controller: mem::Shared<WindowController>))
-    }
-
-    fn get_library_applet_creator(&mut self) -> Result<mem::Shared<dyn sf::IObject>> {
-        ipc_client_send_request_command!([self.session.object_info; 11] () => (library_applet_creator: mem::Shared<LibraryAppletCreator>))
     }
 }
 
@@ -245,10 +211,12 @@ impl sf::IObject for AllSystemAppletProxiesService {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(open_library_applet_proxy: 201)
-        ]
+    ipc_sf_object_impl_default_command_metadata!();
+}
+
+impl IAllSystemAppletProxiesService for AllSystemAppletProxiesService {
+    fn open_library_applet_proxy(&mut self, process_id: sf::ProcessId, self_process_handle: sf::CopyHandle, applet_attribute: sf::InMapAliasBuffer<AppletAttribute>) -> Result<mem::Shared<dyn ILibraryAppletProxy>> {
+        ipc_client_send_request_command!([self.session.object_info; 201] (process_id, self_process_handle, applet_attribute) => (library_applet_proxy: mem::Shared<LibraryAppletProxy>))
     }
 }
 
@@ -258,15 +226,9 @@ impl service::IClientObject for AllSystemAppletProxiesService {
     }
 }
 
-impl IAllSystemAppletProxiesService for AllSystemAppletProxiesService {
-    fn open_library_applet_proxy(&mut self, process_id: sf::ProcessId, self_process_handle: sf::CopyHandle, applet_attribute: sf::InMapAliasBuffer<AppletAttribute>) -> Result<mem::Shared<dyn sf::IObject>> {
-        ipc_client_send_request_command!([self.session.object_info; 201] (process_id, self_process_handle, applet_attribute) => (library_applet_proxy: mem::Shared<LibraryAppletProxy>))
-    }
-}
-
 impl service::IService for AllSystemAppletProxiesService {
-    fn get_name() -> &'static str {
-        nul!("appletAE")
+    fn get_name() -> sm::ServiceName {
+        sm::ServiceName::new("appletAE")
     }
 
     fn as_domain() -> bool {

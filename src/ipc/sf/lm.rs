@@ -1,6 +1,7 @@
 use crate::result::*;
 use crate::ipc::sf;
 use crate::mem;
+use crate::version;
 
 bit_enum! {
     LogDestination (u32) {
@@ -11,11 +12,15 @@ bit_enum! {
     }
 }
 
-pub trait ILogger {
-    ipc_cmif_interface_define_command!(log: (log_buf: sf::InAutoSelectBuffer<u8>) => ());
-    ipc_cmif_interface_define_command!(set_destination: (log_destination: LogDestination) => ());
+ipc_sf_define_interface_trait! {
+    trait ILogger {
+        log [0, version::VersionInterval::all()]: (log_buf: sf::InAutoSelectBuffer<u8>) => ();
+        set_destination [1, version::VersionInterval::from(version::Version::new(3,0,0))]: (log_destination: LogDestination) => ();
+    }
 }
 
-pub trait ILogService {
-    ipc_cmif_interface_define_command!(open_logger: (process_id: sf::ProcessId) => (logger: mem::Shared<dyn sf::IObject>));
+ipc_sf_define_interface_trait! {
+    trait ILogService {
+        open_logger [0, version::VersionInterval::all()]: (process_id: sf::ProcessId) => (logger: mem::Shared<dyn ILogger>);
+    }
 }

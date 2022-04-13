@@ -2,6 +2,7 @@ use crate::result::*;
 use crate::ipc::sf;
 use crate::mem;
 use crate::util;
+use crate::version;
 
 bit_enum! {
     FileOpenMode (u32) {
@@ -105,42 +106,50 @@ pub enum OperationId {
     ReadLazyLoadFileForciblyForDebug = 10001
 }
 
-pub trait IFile {
-    ipc_cmif_interface_define_command!(read: (option: FileReadOption, offset: usize, size: usize, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) => (read_size: usize));
-    ipc_cmif_interface_define_command!(write: (option: FileWriteOption, offset: usize, size: usize, buf: sf::InNonSecureMapAliasBuffer<u8>) => ());
-    ipc_cmif_interface_define_command!(flush: () => ());
-    ipc_cmif_interface_define_command!(set_size: (size: usize) => ());
-    ipc_cmif_interface_define_command!(get_size: () => (size: usize));
-    ipc_cmif_interface_define_command!(operate_range: (operation_id: OperationId, offset: usize, size: usize) => (info: FileQueryRangeInfo));
-    ipc_cmif_interface_define_command!(operate_range_with_buffer: (operation_id: OperationId, offset: usize, size: usize, in_buf: sf::InNonSecureMapAliasBuffer<u8>, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) => ());
+ipc_sf_define_interface_trait!{
+    trait IFile {
+        read [0, version::VersionInterval::all()]: (option: FileReadOption, offset: usize, size: usize, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) => (read_size: usize);
+        write [1, version::VersionInterval::all()]: (option: FileWriteOption, offset: usize, size: usize, buf: sf::InNonSecureMapAliasBuffer<u8>) => ();
+        flush [2, version::VersionInterval::all()]: () => ();
+        set_size [3, version::VersionInterval::all()]: (size: usize) => ();
+        get_size [4, version::VersionInterval::all()]: () => (size: usize);
+        operate_range [5, version::VersionInterval::from(version::Version::new(4,0,0))]: (operation_id: OperationId, offset: usize, size: usize) => (info: FileQueryRangeInfo);
+        operate_range_with_buffer [6, version::VersionInterval::from(version::Version::new(12,0,0))]: (operation_id: OperationId, offset: usize, size: usize, in_buf: sf::InNonSecureMapAliasBuffer<u8>, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) => ();
+    }
 }
 
-pub trait IDirectory {
-    ipc_cmif_interface_define_command!(read: (out_entries: sf::OutMapAliasBuffer<DirectoryEntry>) => (read_count: u64));
-    ipc_cmif_interface_define_command!(get_entry_count: () => (count: u64));
+ipc_sf_define_interface_trait!{
+    trait IDirectory {
+        read [0, version::VersionInterval::all()]: (out_entries: sf::OutMapAliasBuffer<DirectoryEntry>) => (read_count: u64);
+        get_entry_count [1, version::VersionInterval::all()]: () => (count: u64);
+    }
 }
 
-pub trait IFileSystem {
-    ipc_cmif_interface_define_command!(create_file: (attribute: FileAttribute, size: usize, path_buf: sf::InPointerBuffer<Path>) => ());
-    ipc_cmif_interface_define_command!(delete_file: (path_buf: sf::InPointerBuffer<Path>) => ());
-    ipc_cmif_interface_define_command!(create_directory: (path_buf: sf::InPointerBuffer<Path>) => ());
-    ipc_cmif_interface_define_command!(delete_directory: (path_buf: sf::InPointerBuffer<Path>) => ());
-    ipc_cmif_interface_define_command!(delete_directory_recursively: (path_buf: sf::InPointerBuffer<Path>) => ());
-    ipc_cmif_interface_define_command!(rename_file: (old_path_buf: sf::InPointerBuffer<Path>, new_path_buf: sf::InPointerBuffer<Path>) => ());
-    ipc_cmif_interface_define_command!(rename_directory: (old_path_buf: sf::InPointerBuffer<Path>, new_path_buf: sf::InPointerBuffer<Path>) => ());
-    ipc_cmif_interface_define_command!(get_entry_type: (path_buf: sf::InPointerBuffer<Path>) => (entry_type: DirectoryEntryType));
-    ipc_cmif_interface_define_command!(open_file: (mode: FileOpenMode, path_buf: sf::InPointerBuffer<Path>) => (file: mem::Shared<dyn sf::IObject>));
-    ipc_cmif_interface_define_command!(open_directory: (mode: DirectoryOpenMode, path_buf: sf::InPointerBuffer<Path>) => (dir: mem::Shared<dyn sf::IObject>));
-    ipc_cmif_interface_define_command!(commit: () => ());
-    ipc_cmif_interface_define_command!(get_free_space_size: (path_buf: sf::InPointerBuffer<Path>) => (size: usize));
-    ipc_cmif_interface_define_command!(get_total_space_size: (path_buf: sf::InPointerBuffer<Path>) => (size: usize));
-    ipc_cmif_interface_define_command!(clean_directory_recursively: (path_buf: sf::InPointerBuffer<Path>) => ());
-    ipc_cmif_interface_define_command!(get_file_time_stamp_raw: (path_buf: sf::InPointerBuffer<Path>) => (time_stamp: FileTimeStampRaw));
-    ipc_cmif_interface_define_command!(query_entry: (path_buf: sf::InPointerBuffer<Path>, query_id: QueryId, in_buf: sf::InNonSecureMapAliasBuffer<u8>, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) => ());
+ipc_sf_define_interface_trait!{
+    trait IFileSystem {
+        create_file [0, version::VersionInterval::all()]: (attribute: FileAttribute, size: usize, path_buf: sf::InPointerBuffer<Path>) => ();
+        delete_file [1, version::VersionInterval::all()]: (path_buf: sf::InPointerBuffer<Path>) => ();
+        create_directory [2, version::VersionInterval::all()]: (path_buf: sf::InPointerBuffer<Path>) => ();
+        delete_directory [3, version::VersionInterval::all()]: (path_buf: sf::InPointerBuffer<Path>) => ();
+        delete_directory_recursively [4, version::VersionInterval::all()]: (path_buf: sf::InPointerBuffer<Path>) => ();
+        rename_file [5, version::VersionInterval::all()]: (old_path_buf: sf::InPointerBuffer<Path>, new_path_buf: sf::InPointerBuffer<Path>) => ();
+        rename_directory [6, version::VersionInterval::all()]: (old_path_buf: sf::InPointerBuffer<Path>, new_path_buf: sf::InPointerBuffer<Path>) => ();
+        get_entry_type [7, version::VersionInterval::all()]: (path_buf: sf::InPointerBuffer<Path>) => (entry_type: DirectoryEntryType);
+        open_file [8, version::VersionInterval::all()]: (mode: FileOpenMode, path_buf: sf::InPointerBuffer<Path>) => (file: mem::Shared<dyn IFile>);
+        open_directory [9, version::VersionInterval::all()]: (mode: DirectoryOpenMode, path_buf: sf::InPointerBuffer<Path>) => (dir: mem::Shared<dyn IDirectory>);
+        commit [10, version::VersionInterval::all()]: () => ();
+        get_free_space_size [11, version::VersionInterval::all()]: (path_buf: sf::InPointerBuffer<Path>) => (size: usize);
+        get_total_space_size [12, version::VersionInterval::all()]: (path_buf: sf::InPointerBuffer<Path>) => (size: usize);
+        clean_directory_recursively [13, version::VersionInterval::from(version::Version::new(3,0,0))]: (path_buf: sf::InPointerBuffer<Path>) => ();
+        get_file_time_stamp_raw [14, version::VersionInterval::from(version::Version::new(3,0,0))]: (path_buf: sf::InPointerBuffer<Path>) => (time_stamp: FileTimeStampRaw);
+        query_entry [15, version::VersionInterval::from(version::Version::new(4,0,0))]: (path_buf: sf::InPointerBuffer<Path>, query_id: QueryId, in_buf: sf::InNonSecureMapAliasBuffer<u8>, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) => ();
+    }
 }
 
-pub trait IFileSystemProxy {
-    ipc_cmif_interface_define_command!(set_current_process: (process_id: sf::ProcessId) => ());
-    ipc_cmif_interface_define_command!(open_sd_card_filesystem: () => (sd_filesystem: mem::Shared<dyn sf::IObject>));
-    ipc_cmif_interface_define_command!(output_access_log_to_sd_card: (log_buf: sf::InMapAliasBuffer<u8>) => ());
+ipc_sf_define_interface_trait!{
+    trait IFileSystemProxy {
+        set_current_process [1, version::VersionInterval::all()]: (process_id: sf::ProcessId) => ();
+        open_sd_card_filesystem [18, version::VersionInterval::all()]: () => (sd_filesystem: mem::Shared<dyn IFileSystem>);
+        output_access_log_to_sd_card [1006, version::VersionInterval::all()]: (log_buf: sf::InMapAliasBuffer<u8>) => ();
+    }
 }

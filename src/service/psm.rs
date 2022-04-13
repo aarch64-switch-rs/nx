@@ -1,5 +1,5 @@
 use crate::result::*;
-use crate::ipc::sf;
+use crate::ipc::sf::{self, sm};
 use crate::service;
 
 pub use crate::ipc::sf::psm::*;
@@ -13,10 +13,12 @@ impl sf::IObject for PsmServer {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(get_battery_charge_percentage: 0)
-        ]
+    ipc_sf_object_impl_default_command_metadata!();
+}
+
+impl IPsmServer for PsmServer {
+    fn get_battery_charge_percentage(&mut self) -> Result<u32> {
+        ipc_client_send_request_command!([self.session.object_info; 0] () => (charge: u32))
     }
 }
 
@@ -26,15 +28,9 @@ impl service::IClientObject for PsmServer {
     }
 }
 
-impl IPsmServer for PsmServer {
-    fn get_battery_charge_percentage(&mut self) -> Result<u32> {
-        ipc_client_send_request_command!([self.session.object_info; 0] () => (charge: u32))
-    }
-}
-
 impl service::IService for PsmServer {
-    fn get_name() -> &'static str {
-        nul!("psm")
+    fn get_name() -> sm::ServiceName {
+        sm::ServiceName::new("psm")
     }
 
     fn as_domain() -> bool {

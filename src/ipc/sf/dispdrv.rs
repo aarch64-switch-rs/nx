@@ -1,11 +1,12 @@
 use crate::result::*;
 use crate::ipc::sf;
+use crate::version;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
 pub enum RefcountType {
     Weak,
-    Strong,
+    Strong
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -24,7 +25,7 @@ pub enum ParcelTransactionId {
     Disconnect = 11,
     SetSidebandStream = 12,
     AllocateBuffers = 13,
-    SetPreallocatedBuffer = 14,
+    SetPreallocatedBuffer = 14
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -35,9 +36,11 @@ pub enum NativeHandleType {
 
 pub type BinderHandle = i32;
 
-pub trait IHOSBinderDriver {
-    ipc_cmif_interface_define_command!(transact_parcel: (binder_handle: BinderHandle, transaction_id: ParcelTransactionId, flags: u32, in_parcel: sf::InMapAliasBuffer<u8>, out_parcel: sf::OutMapAliasBuffer<u8>) => ());
-    ipc_cmif_interface_define_command!(adjust_refcount: (binder_handle: BinderHandle, add_value: i32, refcount_type: RefcountType) => ());
-    ipc_cmif_interface_define_command!(get_native_handle: (binder_handle: BinderHandle, handle_type: NativeHandleType) => (native_handle: sf::CopyHandle));
-    ipc_cmif_interface_define_command!(transact_parcel_auto: (binder_handle: BinderHandle, transaction_id: ParcelTransactionId, flags: u32, in_parcel: sf::InAutoSelectBuffer<u8>, out_parcel: sf::OutAutoSelectBuffer<u8>) => ());
+ipc_sf_define_interface_trait! { 
+    trait IHOSBinderDriver {
+        transact_parcel [0, version::VersionInterval::all()]: (binder_handle: BinderHandle, transaction_id: ParcelTransactionId, flags: u32, in_parcel: sf::InMapAliasBuffer<u8>, out_parcel: sf::OutMapAliasBuffer<u8>) => ();
+        adjust_refcount [1, version::VersionInterval::all()]: (binder_handle: BinderHandle, add_value: i32, refcount_type: RefcountType) => ();
+        get_native_handle [2, version::VersionInterval::all()]: (binder_handle: BinderHandle, handle_type: NativeHandleType) => (native_handle: sf::CopyHandle);
+        transact_parcel_auto [3, version::VersionInterval::from(version::Version::new(3,0,0))]: (binder_handle: BinderHandle, transaction_id: ParcelTransactionId, flags: u32, in_parcel: sf::InAutoSelectBuffer<u8>, out_parcel: sf::OutAutoSelectBuffer<u8>) => ();
+    }
 }

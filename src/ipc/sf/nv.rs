@@ -1,5 +1,6 @@
 use crate::result::*;
 use crate::ipc::sf;
+use crate::version;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u32)]
@@ -41,9 +42,11 @@ pub enum IoctlId {
 
 pub type Fd = u32;
 
-pub trait INvDrvService {
-    ipc_cmif_interface_define_command!(open: (path: sf::InMapAliasBuffer<u8>) => (fd: Fd, error_code: ErrorCode));
-    ipc_cmif_interface_define_command!(ioctl: (fd: Fd, id: IoctlId, in_buf: sf::InAutoSelectBuffer<u8>, out_buf: sf::OutAutoSelectBuffer<u8>) => (error_code: ErrorCode));
-    ipc_cmif_interface_define_command!(close: (fd: Fd) => (error_code: ErrorCode));
-    ipc_cmif_interface_define_command!(initialize: (transfer_mem_size: u32, self_process_handle: sf::CopyHandle, transfer_mem_handle: sf::CopyHandle) => (error_code: ErrorCode));
+ipc_sf_define_interface_trait! {
+    trait INvDrvServices {
+        open [0, version::VersionInterval::all()]: (path: sf::InMapAliasBuffer<u8>) => (fd: Fd, error_code: ErrorCode);
+        ioctl [1, version::VersionInterval::all()]: (fd: Fd, id: IoctlId, in_buf: sf::InAutoSelectBuffer<u8>, out_buf: sf::OutAutoSelectBuffer<u8>) => (error_code: ErrorCode);
+        close [2, version::VersionInterval::all()]: (fd: Fd) => (error_code: ErrorCode);
+        initialize [3, version::VersionInterval::all()]: (transfer_mem_size: u32, self_process_handle: sf::CopyHandle, transfer_mem_handle: sf::CopyHandle) => (error_code: ErrorCode);
+    }
 }

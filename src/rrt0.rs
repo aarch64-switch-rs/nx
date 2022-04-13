@@ -16,7 +16,8 @@ use crate::service::set;
 use crate::service::set::ISystemSettingsServer;
 use core::ptr;
 
-// These functions must be implemented by any executable homebrew project using this crate
+// These functions must be implemented by any binary using this crate
+
 extern "Rust" {
     fn main() -> Result<()>;
     fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize;
@@ -183,7 +184,7 @@ unsafe extern "C" fn __nx_rrt0_entry(abi_ptr: *const hbl::AbiConfigEntry, raw_ma
     // Initialize version support
     initialize_version(hos_version);
 
-    // TODO: finish implementing CRT0
+    // TODO: extend this (init more stuff, etc.)?
 
     // Unwrap main(), which will trigger a panic if it didn't succeed
     main().unwrap();

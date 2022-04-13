@@ -15,45 +15,7 @@ impl sf::IObject for UserInterface {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(register_client: 0),
-            ipc_cmif_interface_make_command_meta!(get_service_handle: 1),
-            ipc_cmif_interface_make_command_meta!(register_service: 2),
-            ipc_cmif_interface_make_command_meta!(unregister_service: 3),
-            ipc_cmif_interface_make_command_meta!(detach_client: 4),
-            ipc_cmif_interface_make_command_meta!(atmosphere_install_mitm: 65000),
-            ipc_cmif_interface_make_command_meta!(atmosphere_uninstall_mitm: 65001),
-            ipc_cmif_interface_make_command_meta!(atmosphere_acknowledge_mitm_session: 65003),
-            ipc_cmif_interface_make_command_meta!(atmosphere_has_mitm: 65004),
-            ipc_cmif_interface_make_command_meta!(atmosphere_wait_mitm: 64005),
-            ipc_cmif_interface_make_command_meta!(atmosphere_declare_future_mitm: 65006),
-            ipc_cmif_interface_make_command_meta!(atmosphere_clear_future_mitm: 65007),
-            ipc_cmif_interface_make_command_meta!(atmosphere_has_service: 65100),
-            ipc_cmif_interface_make_command_meta!(atmosphere_wait_service: 65101),
-
-            ipc_tipc_interface_make_command_meta!(register_client: 0),
-            ipc_tipc_interface_make_command_meta!(get_service_handle: 1),
-            ipc_tipc_interface_make_command_meta!(register_service: 2),
-            ipc_tipc_interface_make_command_meta!(unregister_service: 3),
-            ipc_tipc_interface_make_command_meta!(detach_client: 4),
-            ipc_tipc_interface_make_command_meta!(atmosphere_install_mitm: 65000),
-            ipc_tipc_interface_make_command_meta!(atmosphere_uninstall_mitm: 65001),
-            ipc_tipc_interface_make_command_meta!(atmosphere_acknowledge_mitm_session: 65003),
-            ipc_tipc_interface_make_command_meta!(atmosphere_has_mitm: 65004),
-            ipc_tipc_interface_make_command_meta!(atmosphere_wait_mitm: 64005),
-            ipc_tipc_interface_make_command_meta!(atmosphere_declare_future_mitm: 65006),
-            ipc_tipc_interface_make_command_meta!(atmosphere_clear_future_mitm: 65007),
-            ipc_tipc_interface_make_command_meta!(atmosphere_has_service: 65100),
-            ipc_tipc_interface_make_command_meta!(atmosphere_wait_service: 65101)
-        ]
-    }
-}
-
-impl service::IClientObject for UserInterface {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
+    ipc_sf_object_impl_default_command_metadata!();
 }
 
 impl IUserInterface for UserInterface {
@@ -117,15 +79,22 @@ impl IUserInterface for UserInterface {
     }
 }
 
+impl service::IClientObject for UserInterface {
+    fn new(session: sf::Session) -> Self {
+        Self { session }
+    }
+}
+
 impl service::INamedPort for UserInterface {
     fn get_name() -> &'static str {
         nul!("sm:")
     }
 
     fn post_initialize(&mut self) -> Result<()> {
-        if version::get_version() >= version::Version::new(12, 0, 0) {
+        if version::get_version() >= version::Version::new(12,0,0) {
             self.session.object_info.protocol = ipc::CommandProtocol::Tipc;
         }
+
         self.register_client(sf::ProcessId::new())
     }
 }

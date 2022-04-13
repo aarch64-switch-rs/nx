@@ -223,8 +223,8 @@ impl Player {
 
 #[allow(dead_code)]
 pub struct InputContext {
-    hid_service: mem::Shared<hid::HidServer>,
-    applet_resource: mem::Shared<hid::AppletResource>,
+    hid_service: mem::Shared<dyn IHidServer>,
+    applet_resource: mem::Shared<dyn IAppletResource>,
     shared_mem_handle: svc::Handle,
     aruid: applet::AppletResourceUserId,
     shared_mem_data: *const SharedMemoryData
@@ -251,7 +251,7 @@ fn get_index_for_controller(controller: hid::ControllerId) -> Result<usize> {
 impl InputContext {
     pub fn new(aruid: applet::AppletResourceUserId, supported_tags: hid::NpadStyleTag, controllers: &[hid::ControllerId]) -> Result<Self> {
         let hid_srv = service::new_service_object::<hid::HidServer>()?;
-        let applet_res = hid_srv.get().create_applet_resource(sf::ProcessId::from(aruid))?.to::<hid::AppletResource>();
+        let applet_res = hid_srv.get().create_applet_resource(sf::ProcessId::from(aruid))?;
         let shmem_handle = applet_res.get().get_shared_memory_handle()?;
         let shmem_size = cmem::size_of::<SharedMemoryData>();
         let shmem_address = vmem::allocate(shmem_size)?;

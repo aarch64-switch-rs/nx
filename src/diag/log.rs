@@ -97,53 +97,49 @@ use crate::service::lm::ILogService;
 use crate::service::lm::ILogger;
 
 pub struct LmLogger {
-    service: Result<mem::Shared<lm::LogService>>,
-    logger: Result<mem::Shared<lm::Logger>>
+    logger: Option<mem::Shared<dyn ILogger>>
 }
 
 impl Logger for LmLogger {
     fn new() -> Self {
-        let mut service = service::new_service_object::<lm::LogService>();
-        let logger = match service {
-            Ok(ref mut service_obj) => match service_obj.get().open_logger(sf::ProcessId::new()) {
-                Ok(logger_obj) => Ok(logger_obj.to::<lm::Logger>()),
-                Err(rc) => Err(rc),
+        let logger = match service::new_service_object::<lm::LogService>() {
+            Ok(log_srv) => {
+                match log_srv.get().open_logger(sf::ProcessId::new()) {
+                    Ok(logger_obj) => Some(logger_obj),
+                    Err(_) => None
+                }
             },
-            Err(rc) => Err(rc),
+            Err(_) => None
         };
-        Self { service, logger }
+
+        Self { logger }
     }
 
     fn log(&mut self, metadata: &LogMetadata) {
-        if self.service.is_ok() && self.logger.is_ok() {
-            match &mut self.logger {
-                Ok(ref mut logger) => {
-                    let mut log_packet = logpacket::LogPacket::new();
+        if let Some(logger_obj) = &self.logger {
+            let mut log_packet = logpacket::LogPacket::new();
 
-                    if let Ok(process_id) = svc::get_process_id(svc::CURRENT_PROCESS_PSEUDO_HANDLE) {
-                        log_packet.set_process_id(process_id);
-                    }
+            if let Ok(process_id) = svc::get_process_id(svc::CURRENT_PROCESS_PSEUDO_HANDLE) {
+                log_packet.set_process_id(process_id);
+            }
 
-                    let cur_thread = thread::get_current_thread();
-                    if let Ok(thread_id) = cur_thread.get_id() {
-                        log_packet.set_thread_id(thread_id);
-                    }
+            let cur_thread = thread::get_current_thread();
+            if let Ok(thread_id) = cur_thread.get_id() {
+                log_packet.set_thread_id(thread_id);
+            }
 
-                    log_packet.set_file_name(String::from(metadata.file_name));
-                    log_packet.set_function_name(String::from(metadata.fn_name));
-                    log_packet.set_line_number(metadata.line_number);
-                    log_packet.set_module_name(String::from("aarch64-switch-rs"));
-                    log_packet.set_text_log(metadata.msg.clone());
-                    let thread_name = match cur_thread.name.get_str() {
-                        Ok(name) => name,
-                        _ => "<unknown>",
-                    };
-                    log_packet.set_thread_name(String::from(thread_name));
-                    for packet in log_packet.encode_packet() {
-                        let _ = logger.get().log(sf::Buffer::from_array(&packet));
-                    }
-                },
-                _ => {}
+            log_packet.set_file_name(String::from(metadata.file_name));
+            log_packet.set_function_name(String::from(metadata.fn_name));
+            log_packet.set_line_number(metadata.line_number);
+            log_packet.set_module_name(String::from("aarch64-switch-rs"));
+            log_packet.set_text_log(metadata.msg.clone());
+            let thread_name = match cur_thread.name.get_str() {
+                Ok(name) => name,
+                _ => "<unknown>",
+            };
+            log_packet.set_thread_name(String::from(thread_name));
+            for packet in log_packet.encode_packet() {
+                let _ = logger_obj.get().log(sf::Buffer::from_array(&packet));
             }
         }
     }

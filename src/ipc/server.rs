@@ -29,17 +29,22 @@ impl<'a> ServerContext<'a> {
     }
 }
 
-pub trait CommandParameter<O> {
+pub trait RequestCommandParameter<O> {
     fn after_request_read(ctx: &mut ServerContext) -> Result<O>;
+}
+
+pub trait ResponseCommandParameter {
     fn before_response_write(var: &Self, ctx: &mut ServerContext) -> Result<()>;
     fn after_response_write(var: &Self, ctx: &mut ServerContext) -> Result<()>;
 }
 
-impl<T: Copy> CommandParameter<T> for T {
+impl<T: Copy> RequestCommandParameter<T> for T {
     default fn after_request_read(ctx: &mut ServerContext) -> Result<Self> {
         Ok(ctx.raw_data_walker.advance_get())
     }
+}
 
+impl<T: Copy> ResponseCommandParameter for T {
     default fn before_response_write(_raw: &Self, ctx: &mut ServerContext) -> Result<()> {
         ctx.raw_data_walker.advance::<Self>();
         Ok(())
@@ -51,7 +56,7 @@ impl<T: Copy> CommandParameter<T> for T {
     }
 }
 
-impl<const A: BufferAttribute, T> CommandParameter<sf::Buffer<A, T>> for sf::Buffer<A, T> {
+impl<const A: BufferAttribute, T> RequestCommandParameter<sf::Buffer<A, T>> for sf::Buffer<A, T> {
     fn after_request_read(ctx: &mut ServerContext) -> Result<Self> {
         let buf = ctx.ctx.pop_buffer(&mut ctx.raw_data_walker)?;
 
@@ -64,22 +69,15 @@ impl<const A: BufferAttribute, T> CommandParameter<sf::Buffer<A, T>> for sf::Buf
 
         Ok(buf)
     }
+}
 
-    fn before_response_write(_buffer: &Self, _ctx: &mut ServerContext) -> Result<()> {
-        Err(results::hipc::ResultUnsupportedOperation::make())
-    }
-
-    fn after_response_write(_buffer: &Self, _ctx: &mut ServerContext) -> Result<()> {
-        Err(results::hipc::ResultUnsupportedOperation::make())
+impl<const M: HandleMode> RequestCommandParameter<sf::Handle<M>> for sf::Handle<M> {
+    fn after_request_read(ctx: &mut ServerContext) -> Result<Self> {
+        ctx.ctx.in_params.pop_handle::<M>()
     }
 }
 
-impl<const M: HandleMode> CommandParameter<sf::Handle<M>> for sf::Handle<M> {
-    fn after_request_read(_ctx: &mut ServerContext) -> Result<Self> {
-        // TODO: pop copy/move
-        Err(results::hipc::ResultUnsupportedOperation::make())
-    }
-
+impl<const M: HandleMode> ResponseCommandParameter for sf::Handle<M> {
     fn before_response_write(handle: &Self, ctx: &mut ServerContext) -> Result<()> {
         ctx.ctx.out_params.push_handle(handle.clone())
     }
@@ -89,7 +87,7 @@ impl<const M: HandleMode> CommandParameter<sf::Handle<M>> for sf::Handle<M> {
     }
 }
 
-impl CommandParameter<sf::ProcessId> for sf::ProcessId {
+impl RequestCommandParameter<sf::ProcessId> for sf::ProcessId {
     fn after_request_read(ctx: &mut ServerContext) -> Result<Self> {
         if ctx.ctx.in_params.send_process_id {
             // TODO: is this really how process ID works? (is the in raw u64 just placeholder data, is it always present...?)
@@ -100,34 +98,30 @@ impl CommandParameter<sf::ProcessId> for sf::ProcessId {
             Err(results::hipc::ResultUnsupportedOperation::make())
         }
     }
+}
 
-    fn before_response_write(_process_id: &Self, _ctx: &mut ServerContext) -> Result<()> {
-        Err(results::hipc::ResultUnsupportedOperation::make())
-    }
-
-    fn after_response_write(_process_id: &Self, _ctx: &mut ServerContext) -> Result<()> {
+impl<S: sf::IObject + ?Sized> RequestCommandParameter<mem::Shared<S>> for mem::Shared<S> {
+    fn after_request_read(_ctx: &mut ServerContext) -> Result<Self> {
+        // TODO: implement this (added this placeholder impl for interfaces to actually be valid)
         Err(results::hipc::ResultUnsupportedOperation::make())
     }
 }
 
-impl CommandParameter<mem::Shared<dyn sf::IObject>> for mem::Shared<dyn sf::IObject> {
-    fn after_request_read(_ctx: &mut ServerContext) -> Result<Self> {
-        Err(results::hipc::ResultUnsupportedOperation::make())
-    }
-
+impl<S: sf::IObject + ?Sized> ResponseCommandParameter for mem::Shared<S> {
     fn before_response_write(session: &Self, ctx: &mut ServerContext) -> Result<()> {
+        let session_copy = session.copy().to::<dyn sf::IObject>();
         if ctx.ctx.object_info.is_domain() {
             let domain_object_id = ctx.domain_table.get().allocate_id()?;
             ctx.ctx.out_params.push_domain_object(domain_object_id)?;
             session.get().set_info(ObjectInfo::new());
-            ctx.domain_table.get().domains.push(ServerHolder::new_domain_session(0, domain_object_id, session.clone()));
+            ctx.domain_table.get().domains.push(ServerHolder::new_domain_session(0, domain_object_id, session_copy));
             Ok(())
         }
         else {
             let (server_handle, client_handle) = svc::create_session(false, 0)?;
             ctx.ctx.out_params.push_handle(sf::MoveHandle::from(client_handle))?;
             session.get().set_info(ObjectInfo::new());
-            ctx.new_sessions.push(ServerHolder::new_session(server_handle, session.clone()));
+            ctx.new_sessions.push(ServerHolder::new_session(server_handle, session_copy));
             Ok(())
         }
     }
@@ -381,15 +375,7 @@ impl<'a> sf::IObject for HipcManager<'a> {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(convert_current_object_to_domain: 0),
-            ipc_cmif_interface_make_command_meta!(copy_from_current_domain: 1),
-            ipc_cmif_interface_make_command_meta!(clone_current_object: 2),
-            ipc_cmif_interface_make_command_meta!(query_pointer_buffer_size: 3),
-            ipc_cmif_interface_make_command_meta!(clone_current_object_ex: 4)
-        ]
-    }
+    ipc_sf_object_impl_default_command_metadata!();
 }
 
 pub struct MitmQueryServer<S: IMitmService> {
@@ -408,11 +394,7 @@ impl<S: IMitmService> sf::IObject for MitmQueryServer<S> {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(should_mitm: 65000)
-        ]
-    }
+    ipc_sf_object_impl_default_command_metadata!();
 }
 
 impl<S: IMitmService> IServerObject for MitmQueryServer<S> {
@@ -422,12 +404,12 @@ impl<S: IMitmService> IServerObject for MitmQueryServer<S> {
 }
 
 pub trait IService: IServerObject {
-    fn get_name() -> &'static str;
+    fn get_name() -> sm::ServiceName;
     fn get_max_sesssions() -> i32;
 }
 
 pub trait IMitmService: IMitmServerObject {
-    fn get_name() -> &'static str;
+    fn get_name() -> sm::ServiceName;
     fn should_mitm(info: sm::MitmProcessInfo) -> bool;
 }
 
@@ -490,11 +472,11 @@ impl<const P: usize> ServerManager<P> {
                     };
                     // Nothing done on success here, as if the command succeeds it will automatically respond by itself.
                     let mut command_found = false;
-                    for command in target_server.get().get_command_table() {
-                        if command.matches(ctx.object_info.protocol, rq_id) {
+                    for command in target_server.get().get_command_metadata_table() {
+                        if command.matches(rq_id) {
                             command_found = true;
                             let mut server_ctx = ServerContext::new(ctx, DataWalker::empty(), domain_table_clone.clone(), &mut new_sessions);
-                            if let Err(rc) = target_server.get().call_self_command(command.command_fn, &mut server_ctx) {
+                            if let Err(rc) = target_server.get().call_self_command(command.command_fn, CommandProtocol::Cmif, &mut server_ctx) {
                                 if server_holder.is_mitm_service && results::sm::mitm::ResultShouldForwardToSession::matches(rc) {
                                     if let Err(rc) = send_to_forward_handle() {
                                         cmif::server::write_request_command_response_on_msg_buffer(ctx, rc, command_type);
@@ -555,13 +537,13 @@ impl<const P: usize> ServerManager<P> {
                 let mut hipc_manager = HipcManager::new(server_holder, P);
                 // Nothing done on success here, as if the command succeeds it will automatically respond by itself.
                 let mut command_found = false;
-                for command in hipc_manager.get_command_table() {
-                    if command.matches(CommandProtocol::Cmif, rq_id) {
+                for command in hipc_manager.get_command_metadata_table() {
+                    if command.matches(rq_id) {
                         command_found = true;
                         let mut unused_new_sessions: Vec<ServerHolder> = Vec::new();
                         let unused_domain_table = mem::Shared::empty();
                         let mut server_ctx = ServerContext::new(ctx, DataWalker::empty(), unused_domain_table, &mut unused_new_sessions);
-                        if let Err(rc) = hipc_manager.call_self_command(command.command_fn, &mut server_ctx) {
+                        if let Err(rc) = hipc_manager.call_self_command(command.command_fn, CommandProtocol::Cmif, &mut server_ctx) {
                             cmif::server::write_control_command_response_on_msg_buffer(ctx, rc, command_type);
                         }
                     }
@@ -733,7 +715,7 @@ impl<const P: usize> ServerManager<P> {
     }
     
     pub fn register_service_server<S: IService + 'static>(&mut self) -> Result<()> {
-        let service_name = sm::ServiceName::new(S::get_name());
+        let service_name = S::get_name();
         
         let sm = service::new_named_port_object::<sm::UserInterface>()?;
         let service_handle = sm.get().register_service(service_name, false, S::get_max_sesssions())?;
@@ -743,7 +725,7 @@ impl<const P: usize> ServerManager<P> {
     }
     
     pub fn register_mitm_service_server<S: IMitmService + 'static>(&mut self) -> Result<()> {
-        let service_name = sm::ServiceName::new(S::get_name());
+        let service_name = S::get_name();
 
         let sm = service::new_named_port_object::<sm::UserInterface>()?;
         let (mitm_handle, query_handle) = sm.get().atmosphere_install_mitm(service_name)?;

@@ -1,5 +1,5 @@
 use crate::result::*;
-use crate::ipc::sf;
+use crate::ipc::sf::{self, sm};
 use crate::service;
 
 pub use crate::ipc::sf::spl::*;
@@ -13,10 +13,12 @@ impl sf::IObject for RandomInterface {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(generate_random_bytes: 0)
-        ]
+    ipc_sf_object_impl_default_command_metadata!();
+}
+
+impl IRandomInterface for RandomInterface {
+    fn generate_random_bytes(&mut self, out_buf: sf::OutMapAliasBuffer<u8>) -> Result<()> {
+        ipc_client_send_request_command!([self.session.object_info; 0] (out_buf) => ())
     }
 }
 
@@ -26,15 +28,9 @@ impl service::IClientObject for RandomInterface {
     }
 }
 
-impl IRandomInterface for RandomInterface {
-    fn generate_random_bytes(&mut self, out_buf: sf::OutMapAliasBuffer<u8>) -> Result<()> {
-        ipc_client_send_request_command!([self.session.object_info; 0] (out_buf) => ())
-    }
-}
-
 impl service::IService for RandomInterface {
-    fn get_name() -> &'static str {
-        nul!("csrng")
+    fn get_name() -> sm::ServiceName {
+        sm::ServiceName::new("csrng")
     }
 
     fn as_domain() -> bool {

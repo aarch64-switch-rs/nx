@@ -1,6 +1,6 @@
 use crate::{result::*, util};
 use crate::ipc::sf;
-use crate::mem;
+use crate::version;
 
 bit_enum! {
     DeviceFilterFlags (u16) {
@@ -75,12 +75,20 @@ pub struct InterfaceQueryOutput {
 }
 const_assert!(core::mem::size_of::<InterfaceQueryOutput>() == 0x228);
 
-pub trait IClientRootSession {
-    ipc_cmif_interface_define_command!(bind_client_process: (self_process_handle: sf::CopyHandle) => ());
-    ipc_cmif_interface_define_command!(create_interface_available_event: (event_id: InterfaceAvailableEventId, filter: DeviceFilter) => (event_handle: sf::CopyHandle));
-    ipc_cmif_interface_define_command!(destroy_interface_available_event: (event_id: InterfaceAvailableEventId) => ());
-    ipc_cmif_interface_define_command!(query_all_interfaces: (filter: DeviceFilter, out_intfs: sf::OutMapAliasBuffer<InterfaceQueryOutput>) => (count: u32));
-    ipc_cmif_interface_define_command!(query_available_interfaces: (filter: DeviceFilter, out_intfs: sf::OutMapAliasBuffer<InterfaceQueryOutput>) => (count: u32));
-    ipc_cmif_interface_define_command!(query_acquired_interfaces: (out_intfs: sf::OutMapAliasBuffer<InterfaceQueryOutput>) => (count: u32));
-    ipc_cmif_interface_define_command!(get_interface_state_change_event: () => (event_handle: sf::CopyHandle));
+ipc_sf_define_interface_trait! {
+    trait IClientRootSession {
+        bind_client_process [0, version::VersionInterval::from(version::Version::new(2,0,0))]: (self_process_handle: sf::CopyHandle) => ();
+        query_all_interfaces_deprecated [0, version::VersionInterval::to(version::Version::new(1,0,0))]: (filter: DeviceFilter, out_intfs: sf::OutMapAliasBuffer<InterfaceQueryOutput>) => (count: u32);
+        query_all_interfaces [1, version::VersionInterval::from(version::Version::new(2,0,0))]: (filter: DeviceFilter, out_intfs: sf::OutMapAliasBuffer<InterfaceQueryOutput>) => (count: u32);
+        query_available_interfaces_deprecated [1, version::VersionInterval::to(version::Version::new(1,0,0))]: (filter: DeviceFilter, out_intfs: sf::OutMapAliasBuffer<InterfaceQueryOutput>) => (count: u32);
+        query_available_interfaces [2, version::VersionInterval::from(version::Version::new(2,0,0))]: (filter: DeviceFilter, out_intfs: sf::OutMapAliasBuffer<InterfaceQueryOutput>) => (count: u32);
+        query_acquired_interfaces_deprecated [2, version::VersionInterval::to(version::Version::new(1,0,0))]: (out_intfs: sf::OutMapAliasBuffer<InterfaceQueryOutput>) => (count: u32);
+        query_acquired_interfaces [3, version::VersionInterval::from(version::Version::new(2,0,0))]: (out_intfs: sf::OutMapAliasBuffer<InterfaceQueryOutput>) => (count: u32);
+        create_interface_available_event_deprecated [3, version::VersionInterval::to(version::Version::new(1,0,0))]: (event_id: InterfaceAvailableEventId, filter: DeviceFilter) => (event_handle: sf::CopyHandle);
+        create_interface_available_event [4, version::VersionInterval::from(version::Version::new(2,0,0))]: (event_id: InterfaceAvailableEventId, filter: DeviceFilter) => (event_handle: sf::CopyHandle);
+        destroy_interface_available_event_deprecated [4, version::VersionInterval::to(version::Version::new(1,0,0))]: (event_id: InterfaceAvailableEventId) => ();
+        destroy_interface_available_event [5, version::VersionInterval::from(version::Version::new(2,0,0))]: (event_id: InterfaceAvailableEventId) => ();
+        get_interface_state_change_event_deprecated [5, version::VersionInterval::to(version::Version::new(1,0,0))]: () => (event_handle: sf::CopyHandle);
+        get_interface_state_change_event [6, version::VersionInterval::from(version::Version::new(2,0,0))]: () => (event_handle: sf::CopyHandle);
+    }
 }

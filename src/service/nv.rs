@@ -1,3 +1,4 @@
+use crate::ipc::sf::sm;
 use crate::result::*;
 use crate::results;
 use crate::ipc::sf;
@@ -31,10 +32,10 @@ pub fn convert_error_code(err: ErrorCode) -> Result<()> {
     }
 }
 
-// NvDrvService is the base trait for all the different services, since the only difference is their service names :P
+// NvDrvService is the base trait for all the different services, since the only difference is their service names
 pub trait NvDrvService: service::IClientObject {}
 
-impl<S: NvDrvService> INvDrvService for S {
+impl<S: NvDrvService> INvDrvServices for S {
     fn open(&mut self, path: sf::InMapAliasBuffer<u8>) -> Result<(Fd, ErrorCode)> {
         ipc_client_send_request_command!([self.get_info(); 0] (path) => (fd: Fd, error_code: ErrorCode))
     }
@@ -52,6 +53,40 @@ impl<S: NvDrvService> INvDrvService for S {
     }
 }
 
+pub struct ApplicationNvDrvService {
+    session: sf::Session
+}
+
+impl sf::IObject for ApplicationNvDrvService {
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
+    }
+
+    ipc_sf_object_impl_default_command_metadata!();
+}
+
+impl NvDrvService for ApplicationNvDrvService {}
+
+impl service::IClientObject for ApplicationNvDrvService {
+    fn new(session: sf::Session) -> Self {
+        Self { session }
+    }
+}
+
+impl service::IService for ApplicationNvDrvService {
+    fn get_name() -> sm::ServiceName {
+        sm::ServiceName::new("nvdrv")
+    }
+
+    fn as_domain() -> bool {
+        false
+    }
+
+    fn post_initialize(&mut self) -> Result<()> {
+        Ok(())
+    }
+}
+
 pub struct AppletNvDrvService {
     session: sf::Session
 }
@@ -61,15 +96,10 @@ impl sf::IObject for AppletNvDrvService {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(open: 0),
-            ipc_cmif_interface_make_command_meta!(ioctl: 1),
-            ipc_cmif_interface_make_command_meta!(close: 2),
-            ipc_cmif_interface_make_command_meta!(initialize: 3)
-        ]
-    }
+    ipc_sf_object_impl_default_command_metadata!();
 }
+
+impl NvDrvService for AppletNvDrvService {}
 
 impl service::IClientObject for AppletNvDrvService {
     fn new(session: sf::Session) -> Self {
@@ -77,11 +107,9 @@ impl service::IClientObject for AppletNvDrvService {
     }
 }
 
-impl NvDrvService for AppletNvDrvService {}
-
 impl service::IService for AppletNvDrvService {
-    fn get_name() -> &'static str {
-        nul!("nvdrv:a")
+    fn get_name() -> sm::ServiceName {
+        sm::ServiceName::new("nvdrv:a")
     }
 
     fn as_domain() -> bool {
@@ -102,15 +130,10 @@ impl sf::IObject for SystemNvDrvService {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(open: 0),
-            ipc_cmif_interface_make_command_meta!(ioctl: 1),
-            ipc_cmif_interface_make_command_meta!(close: 2),
-            ipc_cmif_interface_make_command_meta!(initialize: 3)
-        ]
-    }
+    ipc_sf_object_impl_default_command_metadata!();
 }
+
+impl NvDrvService for SystemNvDrvService {}
 
 impl service::IClientObject for SystemNvDrvService {
     fn new(session: sf::Session) -> Self {
@@ -118,11 +141,9 @@ impl service::IClientObject for SystemNvDrvService {
     }
 }
 
-impl NvDrvService for SystemNvDrvService {}
-
 impl service::IService for SystemNvDrvService {
-    fn get_name() -> &'static str {
-        nul!("nvdrv:s")
+    fn get_name() -> sm::ServiceName {
+        sm::ServiceName::new("nvdrv:s")
     }
 
     fn as_domain() -> bool {

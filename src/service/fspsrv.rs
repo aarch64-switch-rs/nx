@@ -1,3 +1,4 @@
+use crate::ipc::sf::sm;
 use crate::result::*;
 use crate::ipc::sf;
 use crate::service;
@@ -14,18 +15,7 @@ impl sf::IObject for Directory {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(read: 0),
-            ipc_cmif_interface_make_command_meta!(get_entry_count: 1)
-        ]
-    }
-}
-
-impl service::IClientObject for Directory {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
+    ipc_sf_object_impl_default_command_metadata!();
 }
 
 impl IDirectory for Directory {
@@ -38,6 +28,12 @@ impl IDirectory for Directory {
     }
 }
 
+impl service::IClientObject for Directory {
+    fn new(session: sf::Session) -> Self {
+        Self { session }
+    }
+}
+
 pub struct File {
     session: sf::Session
 }
@@ -47,23 +43,7 @@ impl sf::IObject for File {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(read: 0),
-            ipc_cmif_interface_make_command_meta!(write: 1),
-            ipc_cmif_interface_make_command_meta!(flush: 2),
-            ipc_cmif_interface_make_command_meta!(set_size: 3),
-            ipc_cmif_interface_make_command_meta!(get_size: 4),
-            ipc_cmif_interface_make_command_meta!(operate_range: 5, [(4, 0, 0) =>]),
-            ipc_cmif_interface_make_command_meta!(operate_range_with_buffer: 6, [(12, 0, 0) =>])
-        ]
-    }
-}
-
-impl service::IClientObject for File {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
+    ipc_sf_object_impl_default_command_metadata!();
 }
 
 impl IFile for File {
@@ -96,6 +76,12 @@ impl IFile for File {
     }
 }
 
+impl service::IClientObject for File {
+    fn new(session: sf::Session) -> Self {
+        Self { session }
+    }
+}
+
 pub struct FileSystem {
     session: sf::Session
 }
@@ -105,32 +91,7 @@ impl sf::IObject for FileSystem {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(create_file: 0),
-            ipc_cmif_interface_make_command_meta!(delete_file: 1),
-            ipc_cmif_interface_make_command_meta!(create_directory: 2),
-            ipc_cmif_interface_make_command_meta!(delete_directory: 3),
-            ipc_cmif_interface_make_command_meta!(delete_directory_recursively: 4),
-            ipc_cmif_interface_make_command_meta!(rename_file: 5),
-            ipc_cmif_interface_make_command_meta!(rename_directory: 6),
-            ipc_cmif_interface_make_command_meta!(get_entry_type: 7),
-            ipc_cmif_interface_make_command_meta!(open_file: 8),
-            ipc_cmif_interface_make_command_meta!(open_directory: 9),
-            ipc_cmif_interface_make_command_meta!(commit: 10),
-            ipc_cmif_interface_make_command_meta!(get_free_space_size: 11),
-            ipc_cmif_interface_make_command_meta!(get_total_space_size: 12),
-            ipc_cmif_interface_make_command_meta!(clean_directory_recursively: 13, [(3, 0, 0) =>]),
-            ipc_cmif_interface_make_command_meta!(get_file_time_stamp_raw: 14, [(3, 0, 0) =>]),
-            ipc_cmif_interface_make_command_meta!(query_entry: 15, [(4, 0, 0) =>])
-        ]
-    }
-}
-
-impl service::IClientObject for FileSystem {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
+    ipc_sf_object_impl_default_command_metadata!();
 }
 
 impl IFileSystem for FileSystem {
@@ -166,11 +127,11 @@ impl IFileSystem for FileSystem {
         ipc_client_send_request_command!([self.session.object_info; 7] (path_buf) => (entry_type: DirectoryEntryType))
     }
     
-    fn open_file(&mut self, mode: FileOpenMode, path_buf: sf::InPointerBuffer<Path>) -> Result<mem::Shared<dyn sf::IObject>> {
+    fn open_file(&mut self, mode: FileOpenMode, path_buf: sf::InPointerBuffer<Path>) -> Result<mem::Shared<dyn IFile>> {
         ipc_client_send_request_command!([self.session.object_info; 8] (mode, path_buf) => (file: mem::Shared<File>))
     }
 
-    fn open_directory(&mut self, mode: DirectoryOpenMode, path_buf: sf::InPointerBuffer<Path>) -> Result<mem::Shared<dyn sf::IObject>> {
+    fn open_directory(&mut self, mode: DirectoryOpenMode, path_buf: sf::InPointerBuffer<Path>) -> Result<mem::Shared<dyn IDirectory>> {
         ipc_client_send_request_command!([self.session.object_info; 9] (mode, path_buf) => (dir: mem::Shared<Directory>))
     }
 
@@ -199,6 +160,12 @@ impl IFileSystem for FileSystem {
     }
 }
 
+impl service::IClientObject for FileSystem {
+    fn new(session: sf::Session) -> Self {
+        Self { session }
+    }
+}
+
 pub struct FileSystemProxy {
     session: sf::Session
 }
@@ -208,12 +175,20 @@ impl sf::IObject for FileSystemProxy {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(set_current_process: 1),
-            ipc_cmif_interface_make_command_meta!(open_sd_card_filesystem: 18),
-            ipc_cmif_interface_make_command_meta!(output_access_log_to_sd_card: 1006)
-        ]
+    ipc_sf_object_impl_default_command_metadata!();
+}
+
+impl IFileSystemProxy for FileSystemProxy {
+    fn set_current_process(&mut self, process_id: sf::ProcessId) -> Result<()> {
+        ipc_client_send_request_command!([self.session.object_info; 1] (process_id) => ())
+    }
+
+    fn open_sd_card_filesystem(&mut self) -> Result<mem::Shared<dyn IFileSystem>> {
+        ipc_client_send_request_command!([self.session.object_info; 18] () => (sd_filesystem: mem::Shared<FileSystem>))
+    }
+
+    fn output_access_log_to_sd_card(&mut self, access_log: sf::InMapAliasBuffer<u8>) -> Result<()> {
+        ipc_client_send_request_command!([self.session.object_info; 1006] (access_log) => ())
     }
 }
 
@@ -223,23 +198,9 @@ impl service::IClientObject for FileSystemProxy {
     }
 }
 
-impl IFileSystemProxy for FileSystemProxy {
-    fn set_current_process(&mut self, process_id: sf::ProcessId) -> Result<()> {
-        ipc_client_send_request_command!([self.session.object_info; 1] (process_id) => ())
-    }
-
-    fn open_sd_card_filesystem(&mut self) -> Result<mem::Shared<dyn sf::IObject>> {
-        ipc_client_send_request_command!([self.session.object_info; 18] () => (sd_filesystem: mem::Shared<FileSystem>))
-    }
-
-    fn output_access_log_to_sd_card(&mut self, access_log: sf::InMapAliasBuffer<u8>) -> Result<()> {
-        ipc_client_send_request_command!([self.session.object_info; 1006] (access_log) => ())
-    }
-}
-
 impl service::IService for FileSystemProxy {
-    fn get_name() -> &'static str {
-        nul!("fsp-srv")
+    fn get_name() -> sm::ServiceName {
+        sm::ServiceName::new("fsp-srv")
     }
 
     fn as_domain() -> bool {

@@ -1,6 +1,7 @@
 use crate::result::*;
 use crate::ipc::sf;
 use crate::mem;
+use crate::version;
 
 bit_enum! {
     NpadStyleTag (u32) {
@@ -35,16 +36,20 @@ pub enum ControllerId {
     Handheld = 0x20
 }
 
-pub trait IAppletResource {
-    ipc_cmif_interface_define_command!(get_shared_memory_handle: () => (shmem_handle: sf::CopyHandle));
+ipc_sf_define_interface_trait! {
+    trait IAppletResource {
+        get_shared_memory_handle [1, version::VersionInterval::all()]: () => (shmem_handle: sf::CopyHandle);
+    }
 }
 
-pub trait IHidServer {
-    ipc_cmif_interface_define_command!(create_applet_resource: (aruid: sf::ProcessId) => (applet_resource: mem::Shared<dyn sf::IObject>));
-    ipc_cmif_interface_define_command!(set_supported_npad_style_set: (aruid: sf::ProcessId, npad_style_tag: NpadStyleTag) => ());
-    ipc_cmif_interface_define_command!(set_supported_npad_id_type: (aruid: sf::ProcessId, controllers: sf::InPointerBuffer<ControllerId>) => ());
-    ipc_cmif_interface_define_command!(activate_npad: (aruid: sf::ProcessId) => ());
-    ipc_cmif_interface_define_command!(deactivate_npad: (aruid: sf::ProcessId) => ());
-    ipc_cmif_interface_define_command!(set_npad_joy_assignment_mode_single: (aruid: sf::ProcessId, controller: ControllerId, joy_type: NpadJoyDeviceType) => ());
-    ipc_cmif_interface_define_command!(set_npad_joy_assignment_mode_dual: (aruid: sf::ProcessId, controller: ControllerId) => ());
+ipc_sf_define_interface_trait! {
+    trait IHidServer {
+        create_applet_resource [0, version::VersionInterval::all()]: (aruid: sf::ProcessId) => (applet_resource: mem::Shared<dyn IAppletResource>);
+        set_supported_npad_style_set [100, version::VersionInterval::all()]: (aruid: sf::ProcessId, npad_style_tag: NpadStyleTag) => ();
+        set_supported_npad_id_type [102, version::VersionInterval::all()]: (aruid: sf::ProcessId, controllers: sf::InPointerBuffer<ControllerId>) => ();
+        activate_npad [103, version::VersionInterval::all()]: (aruid: sf::ProcessId) => ();
+        deactivate_npad [104, version::VersionInterval::all()]: (aruid: sf::ProcessId) => ();
+        set_npad_joy_assignment_mode_single [123, version::VersionInterval::all()]: (aruid: sf::ProcessId, controller: ControllerId, joy_type: NpadJoyDeviceType) => ();
+        set_npad_joy_assignment_mode_dual [124, version::VersionInterval::all()]: (aruid: sf::ProcessId, controller: ControllerId) => ();
+    }
 }

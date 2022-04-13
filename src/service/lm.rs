@@ -1,3 +1,4 @@
+use crate::ipc::sf::sm;
 use crate::result::*;
 use crate::ipc::sf;
 use crate::service;
@@ -14,18 +15,7 @@ impl sf::IObject for Logger {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(log: 0),
-            ipc_cmif_interface_make_command_meta!(set_destination: 1)
-        ]
-    }
-}
-
-impl service::IClientObject for Logger {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
+    ipc_sf_object_impl_default_command_metadata!();
 }
 
 impl ILogger for Logger {
@@ -38,6 +28,12 @@ impl ILogger for Logger {
     }
 }
 
+impl service::IClientObject for Logger {
+    fn new(session: sf::Session) -> Self {
+        Self { session }
+    }
+}
+
 pub struct LogService {
     session: sf::Session
 }
@@ -47,10 +43,12 @@ impl sf::IObject for LogService {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(open_logger: 0)
-        ]
+    ipc_sf_object_impl_default_command_metadata!();
+}
+
+impl ILogService for LogService {
+    fn open_logger(&mut self, process_id: sf::ProcessId) -> Result<mem::Shared<dyn ILogger>> {
+        ipc_client_send_request_command!([self.session.object_info; 0] (process_id) => (logger: mem::Shared<Logger>))
     }
 }
 
@@ -60,15 +58,9 @@ impl service::IClientObject for LogService {
     }
 }
 
-impl ILogService for LogService {
-    fn open_logger(&mut self, process_id: sf::ProcessId) -> Result<mem::Shared<dyn sf::IObject>> {
-        ipc_client_send_request_command!([self.session.object_info; 0] (process_id) => (logger: mem::Shared<Logger>))
-    }
-}
-
 impl service::IService for LogService {
-    fn get_name() -> &'static str {
-        nul!("lm")
+    fn get_name() -> sm::ServiceName {
+        sm::ServiceName::new("lm")
     }
 
     fn as_domain() -> bool {

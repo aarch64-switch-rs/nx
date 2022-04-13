@@ -18,7 +18,7 @@ use crate::service::spl::IRandomInterface;
 use crate::mem;
 
 pub struct SplCsrngGenerator {
-    csrng: mem::Shared<spl::RandomInterface>
+    csrng: mem::Shared<dyn IRandomInterface>
 }
 
 impl SplCsrngGenerator {

@@ -5,6 +5,7 @@ use crate::util;
 use crate::service;
 use crate::service::set;
 use crate::service::set::ISystemSettingsServer;
+use crate::version;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
@@ -1730,14 +1731,18 @@ impl StoreData {
     }
 }
 
-pub trait IDatabaseService {
-    ipc_cmif_interface_define_command!(is_updated: (flag: SourceFlag) => (updated: bool));
-    ipc_cmif_interface_define_command!(is_full: () => (full: bool));
-    ipc_cmif_interface_define_command!(get_count: (flag: SourceFlag) => (count: u32));
-    ipc_cmif_interface_define_command!(get_1: (flag: SourceFlag, out_char_infos: sf::OutMapAliasBuffer<CharInfo>) => (count: u32));
-    ipc_cmif_interface_define_command!(build_random: (age: sf::EnumAsPrimitiveType<Age, u32>, gender: sf::EnumAsPrimitiveType<Gender, u32>, race: sf::EnumAsPrimitiveType<Race, u32>) => (char_info: CharInfo));
+ipc_sf_define_interface_trait! {
+    trait IDatabaseService {
+        is_updated [0, version::VersionInterval::all()]: (flag: SourceFlag) => (updated: bool);
+        is_full [1, version::VersionInterval::all()]: () => (full: bool);
+        get_count [2, version::VersionInterval::all()]: (flag: SourceFlag) => (count: u32);
+        get_1 [4, version::VersionInterval::all()]: (flag: SourceFlag, out_char_infos: sf::OutMapAliasBuffer<CharInfo>) => (count: u32);
+        build_random [6, version::VersionInterval::all()]: (age: sf::EnumAsPrimitiveType<Age, u32>, gender: sf::EnumAsPrimitiveType<Gender, u32>, race: sf::EnumAsPrimitiveType<Race, u32>) => (char_info: CharInfo);
+    }
 }
 
-pub trait IStaticService {
-    ipc_cmif_interface_define_command!(get_database_service: (key_code: SpecialKeyCode) => (database_service: mem::Shared<dyn sf::IObject>));
+ipc_sf_define_interface_trait! {
+    trait IStaticService {
+        get_database_service [0, version::VersionInterval::all()]: (key_code: SpecialKeyCode) => (database_service: mem::Shared<dyn IDatabaseService>);
+    }
 }

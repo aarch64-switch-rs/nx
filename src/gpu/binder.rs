@@ -3,8 +3,6 @@ use crate::results;
 use crate::ipc::sf;
 use crate::gpu::parcel;
 use crate::service::dispdrv;
-use crate::service::dispdrv::IHOSBinderDriver;
-use crate::mem;
 use super::*;
 
 pub const INTERFACE_TOKEN: &str = "android.gui.IGraphicBufferProducer";
@@ -58,11 +56,11 @@ pub fn convert_error_code(err: ErrorCode) -> Result<()> {
 
 pub struct Binder {
     handle: dispdrv::BinderHandle,
-    hos_binder_driver: mem::Shared<dispdrv::HOSBinderDriver>,
+    hos_binder_driver: mem::Shared<dyn dispdrv::IHOSBinderDriver>,
 }
 
 impl Binder {
-    pub fn new(handle: dispdrv::BinderHandle, hos_binder_driver: mem::Shared<dispdrv::HOSBinderDriver>) -> Result<Self> {
+    pub fn new(handle: dispdrv::BinderHandle, hos_binder_driver: mem::Shared<dyn dispdrv::IHOSBinderDriver>) -> Result<Self> {
         Ok(Self { handle, hos_binder_driver })
     }
 
@@ -94,7 +92,7 @@ impl Binder {
         self.handle
     }
 
-    pub fn get_hos_binder_driver(&mut self) -> mem::Shared<dispdrv::HOSBinderDriver> {
+    pub fn get_hos_binder_driver(&mut self) -> mem::Shared<dyn dispdrv::IHOSBinderDriver> {
         self.hos_binder_driver.clone()
     }
 

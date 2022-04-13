@@ -1,3 +1,4 @@
+use crate::ipc::sf::sm;
 use crate::result::*;
 use crate::ipc::sf;
 use crate::service;
@@ -14,22 +15,18 @@ impl sf::IObject for AppletResource {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(get_shared_memory_handle: 1)
-        ]
+    ipc_sf_object_impl_default_command_metadata!();
+}
+
+impl IAppletResource for AppletResource {
+    fn get_shared_memory_handle(&mut self) -> Result<sf::CopyHandle> {
+        ipc_client_send_request_command!([self.session.object_info; 0] () => (shmem_handle: sf::CopyHandle))
     }
 }
 
 impl service::IClientObject for AppletResource {
     fn new(session: sf::Session) -> Self {
         Self { session }
-    }
-}
-
-impl IAppletResource for AppletResource {
-    fn get_shared_memory_handle(&mut self) -> Result<sf::CopyHandle> {
-        ipc_client_send_request_command!([self.session.object_info; 0] () => (shmem_handle: sf::CopyHandle))
     }
 }
 
@@ -42,27 +39,11 @@ impl sf::IObject for HidServer {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(create_applet_resource: 0),
-            ipc_cmif_interface_make_command_meta!(set_supported_npad_style_set: 100),
-            ipc_cmif_interface_make_command_meta!(set_supported_npad_id_type: 102),
-            ipc_cmif_interface_make_command_meta!(activate_npad: 103),
-            ipc_cmif_interface_make_command_meta!(deactivate_npad: 104),
-            ipc_cmif_interface_make_command_meta!(set_npad_joy_assignment_mode_single: 123),
-            ipc_cmif_interface_make_command_meta!(set_npad_joy_assignment_mode_dual: 124)
-        ]
-    }
-}
-
-impl service::IClientObject for HidServer {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
+    ipc_sf_object_impl_default_command_metadata!();
 }
 
 impl IHidServer for HidServer {
-    fn create_applet_resource(&mut self, aruid: sf::ProcessId) -> Result<mem::Shared<dyn sf::IObject>> {
+    fn create_applet_resource(&mut self, aruid: sf::ProcessId) -> Result<mem::Shared<dyn IAppletResource>> {
         ipc_client_send_request_command!([self.session.object_info; 0] (aruid) => (applet_resource: mem::Shared<AppletResource>))
     }
 
@@ -91,9 +72,15 @@ impl IHidServer for HidServer {
     }
 }
 
+impl service::IClientObject for HidServer {
+    fn new(session: sf::Session) -> Self {
+        Self { session }
+    }
+}
+
 impl service::IService for HidServer {
-    fn get_name() -> &'static str {
-        nul!("hid")
+    fn get_name() -> sm::ServiceName {
+        sm::ServiceName::new("hid")
     }
 
     fn as_domain() -> bool {

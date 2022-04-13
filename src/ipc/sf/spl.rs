@@ -1,6 +1,9 @@
 use crate::result::*;
 use crate::ipc::sf;
+use crate::version;
 
-pub trait IRandomInterface {
-    ipc_cmif_interface_define_command!(generate_random_bytes: (out_buf: sf::OutMapAliasBuffer<u8>) => ());
+ipc_sf_define_interface_trait! {
+    trait IRandomInterface {
+        generate_random_bytes [0, version::VersionInterval::all()]: (out_buf: sf::OutMapAliasBuffer<u8>) => ();
+    }
 }

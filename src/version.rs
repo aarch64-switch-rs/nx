@@ -58,6 +58,56 @@ impl fmt::Display for Version {
     }
 }
 
+pub struct VersionInterval {
+    min: Option<Version>,
+    max: Option<Version>
+}
+
+impl VersionInterval {
+    pub fn all() -> Self {
+        Self {
+            min: None,
+            max: None
+        }
+    }
+
+    pub fn from(min: Version) -> Self {
+        Self {
+            min: Some(min),
+            max: None
+        }
+    }
+
+    pub fn to(max: Version) -> Self {
+        Self {
+            min: None,
+            max: Some(max)
+        }
+    }
+
+    pub fn from_to(min: Version, max: Version) -> Self {
+        Self {
+            min: Some(min),
+            max: Some(max)
+        }
+    }
+
+    pub fn matches(&self, ver: Version) -> bool {
+        if let Some(min_v) = self.min {
+            if ver < min_v {
+                return false;
+            }
+        }
+        if let Some(max_v) = self.max {
+            if ver > max_v {
+                return false;
+            }
+        }
+
+        true
+    }
+}
+
 static mut G_VERSION: sync::Locked<Version> = sync::Locked::new(false, Version::empty());
 
 pub fn set_version(version: Version) {

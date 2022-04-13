@@ -1,5 +1,5 @@
 use crate::result::*;
-use crate::ipc::sf;
+use crate::ipc::sf::{self, sm};
 use crate::service;
 
 pub use crate::ipc::sf::dispdrv::*;
@@ -13,20 +13,7 @@ impl sf::IObject for HOSBinderDriver {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(transact_parcel: 0),
-            ipc_cmif_interface_make_command_meta!(adjust_refcount: 1),
-            ipc_cmif_interface_make_command_meta!(get_native_handle: 2),
-            ipc_cmif_interface_make_command_meta!(transact_parcel_auto: 3)
-        ]
-    }
-}
-
-impl service::IClientObject for HOSBinderDriver {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
+    ipc_sf_object_impl_default_command_metadata!();
 }
 
 impl IHOSBinderDriver for HOSBinderDriver {
@@ -47,9 +34,15 @@ impl IHOSBinderDriver for HOSBinderDriver {
     }
 }
 
+impl service::IClientObject for HOSBinderDriver {
+    fn new(session: sf::Session) -> Self {
+        Self { session }
+    }
+}
+
 impl service::IService for HOSBinderDriver {
-    fn get_name() -> &'static str {
-        nul!("dispdrv")
+    fn get_name() -> sm::ServiceName {
+        sm::ServiceName::new("dispdrv")
     }
 
     fn as_domain() -> bool {

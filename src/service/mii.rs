@@ -1,3 +1,4 @@
+use crate::ipc::sf::sm;
 use crate::result::*;
 use crate::ipc::sf;
 use crate::service;
@@ -14,21 +15,7 @@ impl sf::IObject for DatabaseService {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(is_updated: 0),
-            ipc_cmif_interface_make_command_meta!(is_full: 1),
-            ipc_cmif_interface_make_command_meta!(get_count: 2),
-            ipc_cmif_interface_make_command_meta!(get_1: 4),
-            ipc_cmif_interface_make_command_meta!(build_random: 6)
-        ]
-    }
-}
-
-impl service::IClientObject for DatabaseService {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
+    ipc_sf_object_impl_default_command_metadata!();
 }
 
 impl IDatabaseService for DatabaseService {
@@ -53,6 +40,12 @@ impl IDatabaseService for DatabaseService {
     }
 }
 
+impl service::IClientObject for DatabaseService {
+    fn new(session: sf::Session) -> Self {
+        Self { session }
+    }
+}
+
 pub struct StaticService {
     session: sf::Session
 }
@@ -62,10 +55,12 @@ impl sf::IObject for StaticService {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(get_database_service: 0)
-        ]
+    ipc_sf_object_impl_default_command_metadata!();
+}
+
+impl IStaticService for StaticService {
+    fn get_database_service(&mut self, key_code: SpecialKeyCode) -> Result<mem::Shared<dyn IDatabaseService>> {
+        ipc_client_send_request_command!([self.session.object_info; 0] (key_code) => (database_service: mem::Shared<DatabaseService>))
     }
 }
 
@@ -75,15 +70,9 @@ impl service::IClientObject for StaticService {
     }
 }
 
-impl IStaticService for StaticService {
-    fn get_database_service(&mut self, key_code: SpecialKeyCode) -> Result<mem::Shared<dyn sf::IObject>> {
-        ipc_client_send_request_command!([self.session.object_info; 0] (key_code) => (database_service: mem::Shared<DatabaseService>))
-    }
-}
-
 impl service::IService for StaticService {
-    fn get_name() -> &'static str {
-        nul!("mii:e")
+    fn get_name() -> sm::ServiceName {
+        sm::ServiceName::new("mii:e")
     }
 
     fn as_domain() -> bool {

@@ -1,3 +1,4 @@
+use crate::ipc::sf::sm;
 use crate::result::*;
 use crate::ipc::sf;
 use crate::service;
@@ -16,18 +17,7 @@ impl sf::IObject for ManagerDisplayService {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(create_managed_layer: 2010),
-            ipc_cmif_interface_make_command_meta!(destroy_managed_layer: 2011)
-        ]
-    }
-}
-
-impl service::IClientObject for ManagerDisplayService {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
+    ipc_sf_object_impl_default_command_metadata!();
 }
 
 impl IManagerDisplayService for ManagerDisplayService {
@@ -40,6 +30,11 @@ impl IManagerDisplayService for ManagerDisplayService {
     }
 }
 
+impl service::IClientObject for ManagerDisplayService {
+    fn new(session: sf::Session) -> Self {
+        Self { session }
+    }
+}
 pub struct SystemDisplayService {
     session: sf::Session
 }
@@ -49,22 +44,7 @@ impl sf::IObject for SystemDisplayService {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(get_z_order_count_min: 1200),
-            ipc_cmif_interface_make_command_meta!(get_z_order_count_max: 1202),
-            ipc_cmif_interface_make_command_meta!(set_layer_position: 2201),
-            ipc_cmif_interface_make_command_meta!(set_layer_size: 2203),
-            ipc_cmif_interface_make_command_meta!(set_layer_z: 2205),
-            ipc_cmif_interface_make_command_meta!(set_layer_visibility: 2207)
-        ]
-    }
-}
-
-impl service::IClientObject for SystemDisplayService {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
+    ipc_sf_object_impl_default_command_metadata!();
 }
 
 impl ISystemDisplayService for SystemDisplayService {
@@ -93,6 +73,12 @@ impl ISystemDisplayService for SystemDisplayService {
     }
 }
 
+impl service::IClientObject for SystemDisplayService {
+    fn new(session: sf::Session) -> Self {
+        Self { session }
+    }
+}
+
 pub struct ApplicationDisplayService {
     session: sf::Session
 }
@@ -102,37 +88,19 @@ impl sf::IObject for ApplicationDisplayService {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(get_relay_service: 100),
-            ipc_cmif_interface_make_command_meta!(get_system_display_service: 101),
-            ipc_cmif_interface_make_command_meta!(get_manager_display_service: 102),
-            ipc_cmif_interface_make_command_meta!(open_display: 1010),
-            ipc_cmif_interface_make_command_meta!(close_display: 1020),
-            ipc_cmif_interface_make_command_meta!(open_layer: 2020),
-            ipc_cmif_interface_make_command_meta!(create_stray_layer: 2030),
-            ipc_cmif_interface_make_command_meta!(destroy_stray_layer: 2031),
-            ipc_cmif_interface_make_command_meta!(get_display_vsync_event: 5202)
-        ]
-    }
-}
-
-impl service::IClientObject for ApplicationDisplayService {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
+    ipc_sf_object_impl_default_command_metadata!();
 }
 
 impl IApplicationDisplayService for ApplicationDisplayService {
-    fn get_relay_service(&mut self) -> Result<mem::Shared<dyn sf::IObject>> {
+    fn get_relay_service(&mut self) -> Result<mem::Shared<dyn dispdrv::IHOSBinderDriver>> {
         ipc_client_send_request_command!([self.session.object_info; 100] () => (relay_service: mem::Shared<dispdrv::HOSBinderDriver>))
     }
 
-    fn get_system_display_service(&mut self) -> Result<mem::Shared<dyn sf::IObject>> {
+    fn get_system_display_service(&mut self) -> Result<mem::Shared<dyn ISystemDisplayService>> {
         ipc_client_send_request_command!([self.session.object_info; 101] () => (relay_service: mem::Shared<SystemDisplayService>))
     }
 
-    fn get_manager_display_service(&mut self) -> Result<mem::Shared<dyn sf::IObject>> {
+    fn get_manager_display_service(&mut self) -> Result<mem::Shared<dyn IManagerDisplayService>> {
         ipc_client_send_request_command!([self.session.object_info; 102] () => (relay_service: mem::Shared<ManagerDisplayService>))
     }
 
@@ -161,6 +129,50 @@ impl IApplicationDisplayService for ApplicationDisplayService {
     }
 }
 
+impl service::IClientObject for ApplicationDisplayService {
+    fn new(session: sf::Session) -> Self {
+        Self { session }
+    }
+}
+
+pub struct ApplicationRootService {
+    session: sf::Session
+}
+
+impl sf::IObject for ApplicationRootService {
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
+    }
+
+    ipc_sf_object_impl_default_command_metadata!();
+}
+
+impl IApplicationRootService for ApplicationRootService {
+    fn get_display_service(&mut self, mode: DisplayServiceMode) -> Result<mem::Shared<dyn IApplicationDisplayService>> {
+        ipc_client_send_request_command!([self.session.object_info; 0] (mode) => (display_service: mem::Shared<ApplicationDisplayService>))
+    }
+}
+
+impl service::IClientObject for ApplicationRootService {
+    fn new(session: sf::Session) -> Self {
+        Self { session }
+    }
+}
+
+impl service::IService for ApplicationRootService {
+    fn get_name() -> sm::ServiceName {
+        sm::ServiceName::new("vi:u")
+    }
+
+    fn as_domain() -> bool {
+        true
+    }
+
+    fn post_initialize(&mut self) -> Result<()> {
+        Ok(())
+    }
+}
+
 pub struct SystemRootService {
     session: sf::Session
 }
@@ -170,10 +182,12 @@ impl sf::IObject for SystemRootService {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(get_display_service: 1)
-        ]
+    ipc_sf_object_impl_default_command_metadata!();
+}
+
+impl ISystemRootService for SystemRootService {
+    fn get_display_service(&mut self, mode: DisplayServiceMode) -> Result<mem::Shared<dyn IApplicationDisplayService>> {
+        ipc_client_send_request_command!([self.session.object_info; 1] (mode) => (display_service: mem::Shared<ApplicationDisplayService>))
     }
 }
 
@@ -183,15 +197,9 @@ impl service::IClientObject for SystemRootService {
     }
 }
 
-impl IRootService for SystemRootService {
-    fn get_display_service(&mut self, mode: DisplayServiceMode) -> Result<mem::Shared<dyn sf::IObject>> {
-        ipc_client_send_request_command!([self.session.object_info; 1] (mode) => (display_service: mem::Shared<ApplicationDisplayService>))
-    }
-}
-
 impl service::IService for SystemRootService {
-    fn get_name() -> &'static str {
-        nul!("vi:s")
+    fn get_name() -> sm::ServiceName {
+        sm::ServiceName::new("vi:s")
     }
 
     fn as_domain() -> bool {
@@ -212,10 +220,12 @@ impl sf::IObject for ManagerRootService {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(get_display_service: 2)
-        ]
+    ipc_sf_object_impl_default_command_metadata!();
+}
+
+impl IManagerRootService for ManagerRootService {
+    fn get_display_service(&mut self, mode: DisplayServiceMode) -> Result<mem::Shared<dyn IApplicationDisplayService>> {
+        ipc_client_send_request_command!([self.session.object_info; 2] (mode) => (display_service: mem::Shared<ApplicationDisplayService>))
     }
 }
 
@@ -225,15 +235,9 @@ impl service::IClientObject for ManagerRootService {
     }
 }
 
-impl IRootService for ManagerRootService {
-    fn get_display_service(&mut self, mode: DisplayServiceMode) -> Result<mem::Shared<dyn sf::IObject>> {
-        ipc_client_send_request_command!([self.session.object_info; 2] (mode) => (display_service: mem::Shared<ApplicationDisplayService>))
-    }
-}
-
 impl service::IService for ManagerRootService {
-    fn get_name() -> &'static str {
-        nul!("vi:m")
+    fn get_name() -> sm::ServiceName {
+        sm::ServiceName::new("vi:m")
     }
 
     fn as_domain() -> bool {

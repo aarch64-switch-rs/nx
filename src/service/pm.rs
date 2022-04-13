@@ -1,5 +1,5 @@
 use crate::result::*;
-use crate::ipc::sf;
+use crate::ipc::sf::{self, sm};
 use crate::service;
 
 pub use crate::ipc::sf::pm::*;
@@ -13,10 +13,12 @@ impl sf::IObject for InformationInterface {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(get_program_id: 0)
-        ]
+    ipc_sf_object_impl_default_command_metadata!();
+}
+
+impl IInformationInterface for InformationInterface {
+    fn get_program_id(&mut self, process_id: u64) -> Result<u64> {
+        ipc_client_send_request_command!([self.session.object_info; 0] (process_id) => (program_id: u64))
     }
 }
 
@@ -26,15 +28,9 @@ impl service::IClientObject for InformationInterface {
     }
 }
 
-impl IInformationInterface for InformationInterface {
-    fn get_program_id(&mut self, process_id: u64) -> Result<u64> {
-        ipc_client_send_request_command!([self.session.object_info; 0] (process_id) => (program_id: u64))
-    }
-}
-
 impl service::IService for InformationInterface {
-    fn get_name() -> &'static str {
-        nul!("pm:info")
+    fn get_name() -> sm::ServiceName {
+        sm::ServiceName::new("pm:info")
     }
 
     fn as_domain() -> bool {
@@ -55,10 +51,16 @@ impl sf::IObject for DebugMonitorInterface {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(get_application_process_id: 5)
-        ]
+    ipc_sf_object_impl_default_command_metadata!();
+}
+
+impl IDebugMonitorInterface for DebugMonitorInterface {
+    fn get_application_process_id_deprecated(&mut self) -> Result<u64> {
+        ipc_client_send_request_command!([self.session.object_info; 5] () => (process_id: u64))
+    }
+
+    fn get_application_process_id(&mut self) -> Result<u64> {
+        ipc_client_send_request_command!([self.session.object_info; 4] () => (process_id: u64))
     }
 }
 
@@ -68,15 +70,9 @@ impl service::IClientObject for DebugMonitorInterface {
     }
 }
 
-impl IDebugMonitorInterface for DebugMonitorInterface {
-    fn get_application_process_id(&mut self) -> Result<u64> {
-        ipc_client_send_request_command!([self.session.object_info; 5] () => (process_id: u64))
-    }
-}
-
 impl service::IService for DebugMonitorInterface {
-    fn get_name() -> &'static str {
-        nul!("pm:dmnt")
+    fn get_name() -> sm::ServiceName {
+        sm::ServiceName::new("pm:dmnt")
     }
 
     fn as_domain() -> bool {

@@ -1,6 +1,8 @@
 use crate::result::*;
-// use crate::ipc::sf;
+use crate::version;
 
-pub trait IPsmServer {
-    ipc_cmif_interface_define_command!(get_battery_charge_percentage: () => (charge: u32));
+ipc_sf_define_interface_trait! {
+    trait IPsmServer {
+        get_battery_charge_percentage [0, version::VersionInterval::all()]: () => (charge: u32);   
+    }
 }

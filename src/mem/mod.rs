@@ -5,6 +5,8 @@ use core::ptr;
 use core::mem;
 use core::marker;
 
+use crate::util;
+
 pub mod alloc;
 
 #[derive(Copy, Clone)]
@@ -97,9 +99,9 @@ impl<T: ?Sized> Shared<T> {
     pub fn use_count(&self) -> i64 {
         self.refcount.use_count()
     }
-    
-    pub fn to<U>(&self) -> Shared<U> {
-        let mut new_shared = Shared::<U> { object: self.object as *mut U, refcount: self.refcount };
+
+    pub fn to<U: ?Sized>(&self) -> Shared<U> {
+        let mut new_shared = Shared::<U> { object: util::raw_transmute(self.object), refcount: self.refcount };
         new_shared.acquire(new_shared.object);
         new_shared
     }
@@ -129,9 +131,7 @@ impl<T: ?Sized> Drop for Shared<T> {
 
 impl<T: ?Sized> Clone for Shared<T> {
     fn clone(&self) -> Self {
-        let mut new_shared = Self { object: self.object, refcount: self.refcount };
-        new_shared.acquire(new_shared.object);
-        new_shared
+        self.copy()
     }
 }
 

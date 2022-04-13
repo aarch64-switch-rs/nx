@@ -1,5 +1,6 @@
 use crate::result::*;
 use crate::ipc::sf;
+use crate::version;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
@@ -9,6 +10,8 @@ pub enum Policy {
     ErrorScreen,
 }
 
-pub trait IService {
-    ipc_cmif_interface_define_command!(throw_with_policy: (rc: ResultCode, policy: Policy, process_id: sf::ProcessId) => ());
+ipc_sf_define_interface_trait! {
+    trait IService {
+        throw_with_policy [1, version::VersionInterval::all()]: (rc: ResultCode, policy: Policy, process_id: sf::ProcessId) => ();
+    }
 }

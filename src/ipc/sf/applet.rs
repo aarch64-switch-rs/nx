@@ -1,6 +1,7 @@
 use crate::result::*;
 use crate::ipc::sf;
 use crate::mem;
+use crate::version;
 
 pub type AppletResourceUserId = u64;
 
@@ -79,41 +80,57 @@ pub enum LibraryAppletMode {
     AllForegroundInitiallyHidden
 }
 
-pub trait IStorageAccessor {
-    ipc_cmif_interface_define_command!(get_size: () => (size: usize));
-    ipc_cmif_interface_define_command!(write: (offset: usize, buf: sf::InAutoSelectBuffer<u8>) => ());
-    ipc_cmif_interface_define_command!(read: (offset: usize, buf: sf::OutAutoSelectBuffer<u8>) => ());
+ipc_sf_define_interface_trait! {
+    trait IStorageAccessor {
+        get_size [0, version::VersionInterval::all()]: () => (size: usize);
+        write [10, version::VersionInterval::all()]: (offset: usize, buf: sf::InAutoSelectBuffer<u8>) => ();
+        read [11, version::VersionInterval::all()]: (offset: usize, buf: sf::OutAutoSelectBuffer<u8>) => ();
+    }
 }
 
-pub trait IStorage {
-    ipc_cmif_interface_define_command!(open: () => (storage_accessor: mem::Shared<dyn sf::IObject>));
+ipc_sf_define_interface_trait! {
+    trait IStorage {
+        open [0, version::VersionInterval::all()]: () => (storage_accessor: mem::Shared<dyn IStorageAccessor>);
+    }
 }
 
-pub trait ILibraryAppletAccessor {
-    ipc_cmif_interface_define_command!(get_applet_state_changed_event: () => (applet_state_changed_event: sf::CopyHandle));
-    ipc_cmif_interface_define_command!(start: () => ());
-    ipc_cmif_interface_define_command!(push_in_data: (storage: mem::Shared<dyn sf::IObject>) => ());
+ipc_sf_define_interface_trait! {
+    trait ILibraryAppletAccessor {
+        get_applet_state_changed_event [0, version::VersionInterval::all()]: () => (applet_state_changed_event: sf::CopyHandle);
+        start [10, version::VersionInterval::all()]: () => ();
+        push_in_data [100, version::VersionInterval::all()]: (storage: mem::Shared<dyn IStorage>) => ();
+    }
 }
 
-pub trait ILibraryAppletCreator {
-    ipc_cmif_interface_define_command!(create_library_applet: (applet_id: AppletId, applet_mode: LibraryAppletMode) => (library_applet_accessor: mem::Shared<dyn sf::IObject>));
-    ipc_cmif_interface_define_command!(create_storage: (size: usize) => (storage: mem::Shared<dyn sf::IObject>));
+ipc_sf_define_interface_trait! {
+    trait ILibraryAppletCreator {
+        create_library_applet [0, version::VersionInterval::all()]: (applet_id: AppletId, applet_mode: LibraryAppletMode) => (library_applet_accessor: mem::Shared<dyn ILibraryAppletAccessor>);
+        create_storage [10, version::VersionInterval::all()]: (size: usize) => (storage: mem::Shared<dyn IStorage>);
+    }
 }
 
-pub trait IWindowController {
-    ipc_cmif_interface_define_command!(acquire_foreground_rights: () => ());
+ipc_sf_define_interface_trait! {
+    trait IWindowController {
+        acquire_foreground_rights [10, version::VersionInterval::all()]: () => ();
+    }
 }
 
-pub trait ISelfController {
-    ipc_cmif_interface_define_command!(set_screenshot_permission: (permission: ScreenShotPermission) => ());
+ipc_sf_define_interface_trait! {
+    trait ISelfController {
+        set_screenshot_permission [10, version::VersionInterval::all()]: (permission: ScreenShotPermission) => ();
+    }
 }
 
-pub trait ILibraryAppletProxy {
-    ipc_cmif_interface_define_command!(get_self_controller: () => (self_controller: mem::Shared<dyn sf::IObject>));
-    ipc_cmif_interface_define_command!(get_window_controller: () => (window_controller: mem::Shared<dyn sf::IObject>));
-    ipc_cmif_interface_define_command!(get_library_applet_creator: () => (library_applet_creator: mem::Shared<dyn sf::IObject>));
+ipc_sf_define_interface_trait! {
+    trait ILibraryAppletProxy {
+        get_self_controller [1, version::VersionInterval::all()]: () => (self_controller: mem::Shared<dyn ISelfController>);
+        get_window_controller [2, version::VersionInterval::all()]: () => (window_controller: mem::Shared<dyn IWindowController>);
+        get_library_applet_creator [11, version::VersionInterval::all()]: () => (library_applet_creator: mem::Shared<dyn ILibraryAppletCreator>);
+    }
 }
 
-pub trait IAllSystemAppletProxiesService {
-    ipc_cmif_interface_define_command!(open_library_applet_proxy: (process_id: sf::ProcessId, self_process_handle: sf::CopyHandle, applet_attribute: sf::InMapAliasBuffer<AppletAttribute>) => (library_applet_proxy: mem::Shared<dyn sf::IObject>));
+ipc_sf_define_interface_trait! {
+    trait IAllSystemAppletProxiesService {
+        open_library_applet_proxy [201, version::VersionInterval::from(version::Version::new(3,0,0))]: (process_id: sf::ProcessId, self_process_handle: sf::CopyHandle, applet_attribute: sf::InMapAliasBuffer<AppletAttribute>) => (library_applet_proxy: mem::Shared<dyn ILibraryAppletProxy>);
+    }
 }

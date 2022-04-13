@@ -12,6 +12,8 @@
 #![feature(const_mut_refs)]
 #![feature(derive_default_enum)]
 #![feature(fn_traits)]
+#![feature(untagged_unions)]
+#![feature(negative_impls)]
 #![macro_use]
 
 use core::arch::global_asm;
