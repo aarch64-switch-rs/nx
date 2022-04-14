@@ -29,7 +29,7 @@ pub enum Layout {
     Invalid = 0,
     Pitch = 1,
     Tiled = 2,
-    BlockLinear = 3,
+    BlockLinear = 3
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -37,7 +37,7 @@ pub enum Layout {
 pub enum DisplayScanFormat {
     #[default]
     Progressive = 0,
-    Interlaced = 1,
+    Interlaced = 1
 }
 
 #[allow(non_camel_case_types)]
@@ -277,7 +277,7 @@ pub enum Kind {
     X8C24 = 0xfc,
     PitchNoSwizzle = 0xfd,
     Generic_16BX2 = 0xfe,
-    Invalid = 0xff,
+    Invalid = 0xff
 }
 
 #[allow(non_camel_case_types)]
@@ -514,7 +514,7 @@ pub enum ColorFormat {
     X2Bayer14GBRG = 0x1309210B10,
     X4Bayer12GBRG = 0x1309210C10,
     X6Bayer10GBRG = 0x1309210D10,
-    XYZ = 0x140A886640,
+    XYZ = 0x140A886640
 }
 
 #[allow(non_camel_case_types)]
@@ -537,7 +537,7 @@ pub enum PixelFormat {
     YCBCR_420_888 = 35,
     Y8 = 0x20203859,
     Y16 = 0x20363159,
-    YV12 = 0x32315659,
+    YV12 = 0x32315659
 }
 
 bit_enum! {
@@ -578,7 +578,7 @@ pub enum ConnectionApi {
     EGL = 1,
     Cpu = 2,
     Media = 3,
-    Camera = 4,
+    Camera = 4
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -586,7 +586,7 @@ pub enum ConnectionApi {
 pub enum DisconnectMode {
     #[default]
     Api,
-    AllLocal,
+    AllLocal
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -635,7 +635,7 @@ pub struct GraphicBufferHeader {
     pub pid: u32,
     pub refcount: u32,
     pub fd_count: u32,
-    pub buffer_size: u32,
+    pub buffer_size: u32
 }
 
 pub const GRAPHIC_BUFFER_HEADER_MAGIC: u32 = u32::from_be_bytes(*b"GBFR");
@@ -696,7 +696,7 @@ pub enum Transform {
     FlipV = 2,
     Rotate90 = 4,
     Rotate180 = 3,
-    Rotate270 = 7,
+    Rotate270 = 7
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -744,8 +744,14 @@ pub enum LayerZ {
     Value(i64)
 }
 
-pub enum Permission {
-    User,
+pub enum NvDrvServiceKind {
+    Application,
+    Applet,
+    System
+}
+
+pub enum ViServiceKind {
+    Application,
     System,
     Manager
 }
@@ -763,30 +769,39 @@ pub struct Context {
 }
 
 impl Context {
-    pub fn new(perm: Permission, transfer_mem_size: usize) -> Result<Self> {
+    pub fn new(nv_kind: NvDrvServiceKind, vi_kind: ViServiceKind, transfer_mem_size: usize) -> Result<Self> {
         // Note: need to store a reference of the vi-service since it works as a domain, thus closing the original handle leaves all opened interfaces unusable
         // Storing it as a IObject shared-ptr since different vi services have different base interfaces...
-        let (vi_srv, application_display_srv, nvdrv_srv) = match perm {
-            Permission::Manager => {
+        let (vi_srv, application_display_srv) = match vi_kind {
+            ViServiceKind::Manager => {
                 let vi_srv = service::new_service_object::<vi::ManagerRootService>()?;
-                let nv_srv: mem::Shared<dyn INvDrvServices> = service::new_service_object::<nv::SystemNvDrvService>()?;
                 let app_disp_srv: mem::Shared<dyn IApplicationDisplayService> = vi_srv.get().get_display_service(vi::DisplayServiceMode::Privileged)?;
 
-                (vi_srv as mem::Shared<dyn sf::IObject>, app_disp_srv, nv_srv)
+                (vi_srv as mem::Shared<dyn sf::IObject>, app_disp_srv)
             },
-            Permission::System => {
+            ViServiceKind::System => {
                 let vi_srv = service::new_service_object::<vi::SystemRootService>()?;
-                let nv_srv: mem::Shared<dyn INvDrvServices> = service::new_service_object::<nv::AppletNvDrvService>()?;
                 let app_disp_srv: mem::Shared<dyn IApplicationDisplayService> = vi_srv.get().get_display_service(vi::DisplayServiceMode::Privileged)?;
 
-                (vi_srv as mem::Shared<dyn sf::IObject>, app_disp_srv, nv_srv)
+                (vi_srv as mem::Shared<dyn sf::IObject>, app_disp_srv)
             },
-            Permission::User => {
+            ViServiceKind::Application => {
                 let vi_srv = service::new_service_object::<vi::ApplicationRootService>()?;
-                let nv_srv: mem::Shared<dyn INvDrvServices> = service::new_service_object::<nv::ApplicationNvDrvService>()?;
                 let app_disp_srv: mem::Shared<dyn IApplicationDisplayService> = vi_srv.get().get_display_service(vi::DisplayServiceMode::User)?;
 
-                (vi_srv as mem::Shared<dyn sf::IObject>, app_disp_srv, nv_srv)
+                (vi_srv as mem::Shared<dyn sf::IObject>, app_disp_srv)
+            }
+        };
+
+        let nvdrv_srv = match nv_kind {
+            NvDrvServiceKind::Application => {
+                service::new_service_object::<nv::ApplicationNvDrvService>()? as mem::Shared<dyn INvDrvServices>
+            },
+            NvDrvServiceKind::Applet => {
+                service::new_service_object::<nv::AppletNvDrvService>()? as mem::Shared<dyn INvDrvServices>
+            },
+            NvDrvServiceKind::System => {
+                service::new_service_object::<nv::SystemNvDrvService>()? as mem::Shared<dyn INvDrvServices>
             }
         };
 
