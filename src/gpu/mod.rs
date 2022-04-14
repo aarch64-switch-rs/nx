@@ -751,6 +751,7 @@ pub enum Permission {
 }
 
 pub struct Context {
+    vi_service: mem::Shared<dyn sf::IObject>,
     nvdrv_service: mem::Shared<dyn INvDrvServices>,
     application_display_service: mem::Shared<dyn IApplicationDisplayService>,
     hos_binder_driver: mem::Shared<dyn dispdrv::IHOSBinderDriver>,
@@ -763,34 +764,36 @@ pub struct Context {
 
 impl Context {
     pub fn new(perm: Permission, transfer_mem_size: usize) -> Result<Self> {
-        let (application_display_srv, nvdrv_srv) = match perm {
+        // Note: need to store a reference of the vi-service since it works as a domain, thus closing the original handle leaves all opened interfaces unusable
+        // Storing it as a IObject shared-ptr since different vi services have different base interfaces...
+        let (vi_srv, application_display_srv, nvdrv_srv) = match perm {
             Permission::Manager => {
                 let vi_srv = service::new_service_object::<vi::ManagerRootService>()?;
                 let nv_srv: mem::Shared<dyn INvDrvServices> = service::new_service_object::<nv::SystemNvDrvService>()?;
                 let app_disp_srv: mem::Shared<dyn IApplicationDisplayService> = vi_srv.get().get_display_service(vi::DisplayServiceMode::Privileged)?;
 
-                (app_disp_srv, nv_srv)
+                (vi_srv as mem::Shared<dyn sf::IObject>, app_disp_srv, nv_srv)
             },
             Permission::System => {
                 let vi_srv = service::new_service_object::<vi::SystemRootService>()?;
                 let nv_srv: mem::Shared<dyn INvDrvServices> = service::new_service_object::<nv::AppletNvDrvService>()?;
                 let app_disp_srv: mem::Shared<dyn IApplicationDisplayService> = vi_srv.get().get_display_service(vi::DisplayServiceMode::Privileged)?;
 
-                (app_disp_srv, nv_srv)
+                (vi_srv as mem::Shared<dyn sf::IObject>, app_disp_srv, nv_srv)
             },
             Permission::User => {
                 let vi_srv = service::new_service_object::<vi::ApplicationRootService>()?;
                 let nv_srv: mem::Shared<dyn INvDrvServices> = service::new_service_object::<nv::ApplicationNvDrvService>()?;
                 let app_disp_srv: mem::Shared<dyn IApplicationDisplayService> = vi_srv.get().get_display_service(vi::DisplayServiceMode::User)?;
 
-                (app_disp_srv, nv_srv)
+                (vi_srv as mem::Shared<dyn sf::IObject>, app_disp_srv, nv_srv)
             }
         };
 
-        Self::from(application_display_srv, nvdrv_srv, transfer_mem_size)
+        Self::from(vi_srv, application_display_srv, nvdrv_srv, transfer_mem_size)
     }
 
-    pub fn from(application_display_srv: mem::Shared<dyn IApplicationDisplayService>, nvdrv_srv: mem::Shared<dyn INvDrvServices>, transfer_mem_size: usize) -> Result<Self> {
+    pub fn from(vi_srv: mem::Shared<dyn sf::IObject>, application_display_srv: mem::Shared<dyn IApplicationDisplayService>, nvdrv_srv: mem::Shared<dyn INvDrvServices>, transfer_mem_size: usize) -> Result<Self> {
         let transfer_mem = alloc::Buffer::new(alloc::PAGE_ALIGNMENT, transfer_mem_size)?;
         let transfer_mem_handle = svc::create_transfer_memory(transfer_mem.ptr, transfer_mem_size, svc::MemoryPermission::None())?;
         nvdrv_srv.get().initialize(transfer_mem_size as u32, sf::Handle::from(svc::CURRENT_PROCESS_PSEUDO_HANDLE), sf::Handle::from(transfer_mem_handle))?;
@@ -803,7 +806,7 @@ impl Context {
         nv::convert_error_code(nvhostctrl_err)?;
         
         let hos_binder_drv = application_display_srv.get().get_relay_service()?;
-        Ok(Self { nvdrv_service: nvdrv_srv, application_display_service: application_display_srv, hos_binder_driver: hos_binder_drv, transfer_mem, transfer_mem_handle, nvhost_fd, nvmap_fd, nvhostctrl_fd })
+        Ok(Self { vi_service: vi_srv, nvdrv_service: nvdrv_srv, application_display_service: application_display_srv, hos_binder_driver: hos_binder_drv, transfer_mem, transfer_mem_handle, nvhost_fd, nvmap_fd, nvhostctrl_fd })
     }
 
     pub fn get_nvdrv_service(&self) -> mem::Shared<dyn INvDrvServices> {
@@ -879,6 +882,7 @@ impl Context {
 
 impl Drop for Context {
     fn drop(&mut self) {
+        let _ = self.vi_service; // Avoid "dead code" warnings
         let _ = self.nvdrv_service.get().close(self.nvhost_fd);
         let _ = self.nvdrv_service.get().close(self.nvmap_fd);
         let _ = self.nvdrv_service.get().close(self.nvhostctrl_fd);

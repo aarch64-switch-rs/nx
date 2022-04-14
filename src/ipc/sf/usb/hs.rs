@@ -21,17 +21,17 @@ bit_enum! {
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct DeviceFilter {
-    flags: DeviceFilterFlags,
-    vendor_id: u16,
-    product_id: u16,
-    device_min_bcd: u16,
-    device_max_bcd: u16,
-    device_class: u8,
-    device_subclass: u8,
-    device_protocol: u8,
-    interface_class: u8,
-    interface_subclass: u8,
-    interface_protocol: u8
+    pub flags: DeviceFilterFlags,
+    pub vendor_id: u16,
+    pub product_id: u16,
+    pub device_min_bcd: u16,
+    pub device_max_bcd: u16,
+    pub device_class: super::ClassCode,
+    pub device_subclass: u8,
+    pub device_protocol: u8,
+    pub interface_class: super::ClassCode,
+    pub interface_subclass: u8,
+    pub interface_protocol: u8
 }
 const_assert!(core::mem::size_of::<DeviceFilter>() == 0x10);
 
@@ -46,51 +46,51 @@ pub enum InterfaceAvailableEventId {
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C, packed)]
 pub struct InterfaceProfile {
-    id: u32,
-    device_id: u32,
-    unk: [u8; 0x4],
-    interface_descriptor: super::InterfaceDescriptor,
-    pad_1: [u8; 0x7],
-    output_endpoint_descriptors: [super::EndPointDescriptor; 15],
-    pad_2: [u8; 0x7],
-    input_endpoint_descriptors: [super::EndPointDescriptor; 15],
-    pad_3: [u8; 0x6],
-    output_ss_endpoint_companion_descriptors: [super::SsEndPointCompanionDescriptor; 15],
-    pad_4: [u8; 0x6],
-    input_ss_endpoint_companion_descriptors: [super::SsEndPointCompanionDescriptor; 15],
-    pad_5: [u8; 0x3]
+    pub id: u32,
+    pub device_id: u32,
+    pub unk: [u8; 0x4],
+    pub interface_descriptor: super::InterfaceDescriptor,
+    pub pad_1: [u8; 0x7],
+    pub output_endpoint_descriptors: [super::EndPointDescriptor; 15],
+    pub pad_2: [u8; 0x7],
+    pub input_endpoint_descriptors: [super::EndPointDescriptor; 15],
+    pub pad_3: [u8; 0x6],
+    pub output_ss_endpoint_companion_descriptors: [super::SsEndPointCompanionDescriptor; 15],
+    pub pad_4: [u8; 0x6],
+    pub input_ss_endpoint_companion_descriptors: [super::SsEndPointCompanionDescriptor; 15],
+    pub pad_5: [u8; 0x3]
 }
 const_assert!(core::mem::size_of::<InterfaceProfile>() == 0x1B8);
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]
 pub struct InterfaceInfo {
-    unk_str: util::CString<0x40>,
-    bus_id: u32,
-    device_id: u32,
-    device_descriptor: super::DeviceDescriptor,
-    config_descriptor: super::ConfigDescriptor,
-    pad: [u8; 0x5],
-    unk_maybe_timestamp: u64
+    pub unk_str: util::CString<0x40>,
+    pub bus_id: u32,
+    pub device_id: u32,
+    pub device_descriptor: super::DeviceDescriptor,
+    pub config_descriptor: super::ConfigDescriptor,
+    pub pad: [u8; 0x5],
+    pub unk_maybe_timestamp: u64
 }
 const_assert!(core::mem::size_of::<InterfaceInfo>() == 0x70);
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]
 pub struct InterfaceQueryOutput {
-    profile: InterfaceProfile,
-    info: InterfaceInfo
+    pub profile: InterfaceProfile,
+    pub info: InterfaceInfo
 }
 const_assert!(core::mem::size_of::<InterfaceQueryOutput>() == 0x228);
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]
 pub struct XferReport {
-    xfer_id: u32,
-    result: ResultCode,
-    requested_size: u32,
-    transferred_size: u32,
-    unk: [u8; 8]
+    pub xfer_id: u32,
+    pub result: ResultCode,
+    pub requested_size: u32,
+    pub transferred_size: u32,
+    pub unk: [u8; 8]
 }
 const_assert!(core::mem::size_of::<XferReport>() == 0x18);
 

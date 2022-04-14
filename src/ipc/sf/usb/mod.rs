@@ -18,9 +18,10 @@ pub enum DescriptorType {
     SsEndPointCompanion = 0x30
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 pub enum ClassCode {
+    #[default]
     PerInterface = 0x0,
     Audio = 0x1,
     Comm = 0x2,
