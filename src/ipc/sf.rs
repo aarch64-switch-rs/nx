@@ -356,3 +356,5 @@ pub mod set;
 pub mod spl;
 
 pub mod usb;
+
+pub mod ldr;

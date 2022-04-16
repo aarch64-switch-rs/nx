@@ -225,10 +225,6 @@ pub struct ServerHolder {
 }
 
 impl ServerHolder {
-    pub fn new_server_session<S: IServerObject + 'static>(handle: svc::Handle) -> Self {
-        Self { server: mem::Shared::new(S::new()), info: ObjectInfo::from_handle(handle), new_server_fn: None, new_mitm_server_fn: None, handle_type: WaitHandleType::Session, mitm_forward_info: ObjectInfo::new(), is_mitm_service: false, service_name: sm::ServiceName::empty(), domain_table: mem::Shared::empty() } 
-    }
-
     pub fn new_session(handle: svc::Handle, object: mem::Shared<dyn ISessionObject>) -> Self {
         Self { server: object, info: ObjectInfo::from_handle(handle), new_server_fn: None, new_mitm_server_fn: None, handle_type: WaitHandleType::Session, mitm_forward_info: ObjectInfo::new(), is_mitm_service: false, service_name: sm::ServiceName::empty(), domain_table: mem::Shared::empty() } 
     }
@@ -715,8 +711,8 @@ impl<const P: usize> ServerManager<P> {
         self.server_holders.push(ServerHolder::new_mitm_server::<S>(handle, service_name));
     }
     
-    pub fn register_session<S: IServerObject + 'static>(&mut self, handle: svc::Handle) {
-        self.server_holders.push(ServerHolder::new_server_session::<S>(handle));
+    pub fn register_session<S: ISessionObject + 'static>(&mut self, handle: svc::Handle, session_obj: mem::Shared<S>) {
+        self.server_holders.push(ServerHolder::new_session(handle, session_obj));
     }
     
     pub fn register_service_server<S: IService + 'static>(&mut self) -> Result<()> {
@@ -736,7 +732,9 @@ impl<const P: usize> ServerManager<P> {
         let (mitm_handle, query_handle) = sm.get().atmosphere_install_mitm(service_name)?;
 
         self.register_mitm_server::<S>(mitm_handle.handle, service_name);
-        self.register_session::<MitmQueryServer<S>>(query_handle.handle);
+
+        let mitm_query_srv = mem::Shared::new(MitmQueryServer::<S>::new());
+        self.register_session(query_handle.handle, mitm_query_srv);
 
         sm.get().atmosphere_clear_future_mitm(service_name)?;
         sm.get().detach_client(sf::ProcessId::new())?;
