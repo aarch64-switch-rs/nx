@@ -16,7 +16,7 @@ ipc_sf_define_control_interface_trait! {
 }
 
 ipc_sf_define_interface_trait! {
-    trait IMitmQueryServer {
+    trait IMitmQueryService {
         should_mitm [65000, version::VersionInterval::all()]: (info: sm::MitmProcessInfo) => (should_mitm: bool);
     }
 }

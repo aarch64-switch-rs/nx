@@ -4,7 +4,7 @@ use crate::svc;
 use crate::wait;
 use crate::ipc::sf::IObject;
 use crate::ipc::sf::hipc::IHipcManager;
-use crate::ipc::sf::hipc::IMitmQueryServer;
+use crate::ipc::sf::hipc::IMitmQueryService;
 use crate::service;
 use crate::service::sm;
 use crate::service::sm::IUserInterface;
@@ -379,27 +379,27 @@ impl<'a> IHipcManager for HipcManager<'a> {
 
 impl<'a> ISessionObject for HipcManager<'a> {}
 
-pub struct MitmQueryServer<S: IMitmService> {
+pub struct MitmQueryService<S: IMitmService> {
     phantom: core::marker::PhantomData<S>
 }
 
-impl<S: IMitmService> sf::IObject for MitmQueryServer<S> {
+impl<S: IMitmService> MitmQueryService<S> {
+    pub fn new() -> Self {
+        Self { phantom: core::marker::PhantomData }
+    }
+}
+
+impl<S: IMitmService> sf::IObject for MitmQueryService<S> {
     ipc_sf_object_impl_default_command_metadata!();
 }
 
-impl<S: IMitmService> IMitmQueryServer for MitmQueryServer<S> {
+impl<S: IMitmService> IMitmQueryService for MitmQueryService<S> {
     fn should_mitm(&mut self, info: sm::MitmProcessInfo) -> Result<bool> {
         Ok(S::should_mitm(info))
     }
 }
 
-impl<S: IMitmService> ISessionObject for MitmQueryServer<S> {}
-
-impl<S: IMitmService> IServerObject for MitmQueryServer<S> {
-    fn new() -> Self {
-        Self { phantom: core::marker::PhantomData }
-    }
-}
+impl<S: IMitmService> ISessionObject for MitmQueryService<S> {}
 
 pub trait INamedPort: IServerObject {
     fn get_port_name() -> &'static str;
@@ -733,7 +733,7 @@ impl<const P: usize> ServerManager<P> {
 
         self.register_mitm_server::<S>(mitm_handle.handle, service_name);
 
-        let mitm_query_srv = mem::Shared::new(MitmQueryServer::<S>::new());
+        let mitm_query_srv = mem::Shared::new(MitmQueryService::<S>::new());
         self.register_session(query_handle.handle, mitm_query_srv);
 
         sm.get().atmosphere_clear_future_mitm(service_name)?;
