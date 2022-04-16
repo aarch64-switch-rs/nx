@@ -1,5 +1,6 @@
 use crate::result::*;
 use crate::ipc::sf::{self, sm};
+use crate::ipc::client;
 use crate::service;
 use crate::mem;
 use crate::ipc::sf::usb;
@@ -11,10 +12,6 @@ pub struct ClientEpSession {
 }
 
 impl sf::IObject for ClientEpSession {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
@@ -80,9 +77,13 @@ impl IClientEpSession for ClientEpSession {
     }
 }
 
-impl service::IClientObject for ClientEpSession {
+impl client::IClientObject for ClientEpSession {
     fn new(session: sf::Session) -> Self {
         Self { session }
+    }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
     }
 }
 
@@ -91,10 +92,6 @@ pub struct ClientIfSession {
 }
 
 impl sf::IObject for ClientIfSession {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
@@ -156,9 +153,13 @@ impl IClientIfSession for ClientIfSession {
     }
 }
 
-impl service::IClientObject for ClientIfSession {
+impl client::IClientObject for ClientIfSession {
     fn new(session: sf::Session) -> Self {
         Self { session }
+    }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
     }
 }
 
@@ -167,10 +168,6 @@ pub struct ClientRootSession {
 }
 
 impl sf::IObject for ClientRootSession {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
@@ -244,9 +241,13 @@ impl IClientRootSession for ClientRootSession {
     }
 }
 
-impl service::IClientObject for ClientRootSession {
+impl client::IClientObject for ClientRootSession {
     fn new(session: sf::Session) -> Self {
         Self { session }
+    }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
     }
 }
 

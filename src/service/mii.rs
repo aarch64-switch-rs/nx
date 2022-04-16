@@ -1,6 +1,7 @@
 use crate::ipc::sf::sm;
 use crate::result::*;
 use crate::ipc::sf;
+use crate::ipc::client;
 use crate::service;
 use crate::mem;
 
@@ -11,10 +12,6 @@ pub struct DatabaseService {
 }
 
 impl sf::IObject for DatabaseService {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
@@ -40,9 +37,13 @@ impl IDatabaseService for DatabaseService {
     }
 }
 
-impl service::IClientObject for DatabaseService {
+impl client::IClientObject for DatabaseService {
     fn new(session: sf::Session) -> Self {
         Self { session }
+    }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
     }
 }
 
@@ -51,10 +52,6 @@ pub struct StaticService {
 }
 
 impl sf::IObject for StaticService {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
@@ -64,9 +61,13 @@ impl IStaticService for StaticService {
     }
 }
 
-impl service::IClientObject for StaticService {
+impl client::IClientObject for StaticService {
     fn new(session: sf::Session) -> Self {
         Self { session }
+    }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
     }
 }
 

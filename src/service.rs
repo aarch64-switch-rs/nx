@@ -1,3 +1,4 @@
+use crate::ipc::client;
 use crate::ipc::sf;
 use crate::mem;
 use crate::svc;
@@ -6,16 +7,12 @@ use crate::result::*;
 pub mod sm;
 use crate::service::sm::IUserInterface;
 
-pub trait IClientObject: sf::IObject {
-    fn new(session: sf::Session) -> Self where Self: Sized;
-}
-
-pub trait INamedPort: IClientObject {
+pub trait INamedPort: client::IClientObject {
     fn get_name() -> &'static str;
     fn post_initialize(&mut self) -> Result<()>;
 }
 
-pub trait IService: IClientObject {
+pub trait IService: client::IClientObject {
     fn get_name() -> sm::ServiceName;
     fn as_domain() -> bool;
     fn post_initialize(&mut self) -> Result<()>;

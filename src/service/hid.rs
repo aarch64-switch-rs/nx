@@ -1,6 +1,7 @@
 use crate::ipc::sf::sm;
 use crate::result::*;
 use crate::ipc::sf;
+use crate::ipc::client;
 use crate::service;
 use crate::mem;
 
@@ -11,10 +12,6 @@ pub struct AppletResource {
 }
 
 impl sf::IObject for AppletResource {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
@@ -24,9 +21,13 @@ impl IAppletResource for AppletResource {
     }
 }
 
-impl service::IClientObject for AppletResource {
+impl client::IClientObject for AppletResource {
     fn new(session: sf::Session) -> Self {
         Self { session }
+    }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
     }
 }
 
@@ -35,10 +36,6 @@ pub struct HidServer {
 }
 
 impl sf::IObject for HidServer {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
@@ -72,9 +69,13 @@ impl IHidServer for HidServer {
     }
 }
 
-impl service::IClientObject for HidServer {
+impl client::IClientObject for HidServer {
     fn new(session: sf::Session) -> Self {
         Self { session }
+    }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
     }
 }
 

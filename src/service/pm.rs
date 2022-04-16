@@ -1,5 +1,6 @@
 use crate::result::*;
 use crate::ipc::sf::{self, sm};
+use crate::ipc::client;
 use crate::service;
 
 pub use crate::ipc::sf::pm::*;
@@ -9,10 +10,6 @@ pub struct InformationInterface {
 }
 
 impl sf::IObject for InformationInterface {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
@@ -22,9 +19,13 @@ impl IInformationInterface for InformationInterface {
     }
 }
 
-impl service::IClientObject for InformationInterface {
+impl client::IClientObject for InformationInterface {
     fn new(session: sf::Session) -> Self {
         Self { session }
+    }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
     }
 }
 
@@ -47,10 +48,6 @@ pub struct DebugMonitorInterface {
 }
 
 impl sf::IObject for DebugMonitorInterface {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
@@ -64,9 +61,13 @@ impl IDebugMonitorInterface for DebugMonitorInterface {
     }
 }
 
-impl service::IClientObject for DebugMonitorInterface {
+impl client::IClientObject for DebugMonitorInterface {
     fn new(session: sf::Session) -> Self {
         Self { session }
+    }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
     }
 }
 

@@ -1,6 +1,7 @@
 use crate::ipc::sf::sm;
 use crate::result::*;
 use crate::ipc::sf;
+use crate::ipc::client;
 use crate::service;
 use crate::mem;
 use crate::service::dispdrv;
@@ -13,10 +14,6 @@ pub struct ManagerDisplayService {
 }
 
 impl sf::IObject for ManagerDisplayService {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
@@ -30,20 +27,21 @@ impl IManagerDisplayService for ManagerDisplayService {
     }
 }
 
-impl service::IClientObject for ManagerDisplayService {
+impl client::IClientObject for ManagerDisplayService {
     fn new(session: sf::Session) -> Self {
         Self { session }
     }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
+    }
 }
+
 pub struct SystemDisplayService {
     session: sf::Session
 }
 
 impl sf::IObject for SystemDisplayService {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
@@ -73,9 +71,13 @@ impl ISystemDisplayService for SystemDisplayService {
     }
 }
 
-impl service::IClientObject for SystemDisplayService {
+impl client::IClientObject for SystemDisplayService {
     fn new(session: sf::Session) -> Self {
         Self { session }
+    }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
     }
 }
 
@@ -84,10 +86,6 @@ pub struct ApplicationDisplayService {
 }
 
 impl sf::IObject for ApplicationDisplayService {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
@@ -129,9 +127,13 @@ impl IApplicationDisplayService for ApplicationDisplayService {
     }
 }
 
-impl service::IClientObject for ApplicationDisplayService {
+impl client::IClientObject for ApplicationDisplayService {
     fn new(session: sf::Session) -> Self {
         Self { session }
+    }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
     }
 }
 
@@ -140,10 +142,6 @@ pub struct ApplicationRootService {
 }
 
 impl sf::IObject for ApplicationRootService {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
@@ -153,9 +151,13 @@ impl IApplicationRootService for ApplicationRootService {
     }
 }
 
-impl service::IClientObject for ApplicationRootService {
+impl client::IClientObject for ApplicationRootService {
     fn new(session: sf::Session) -> Self {
         Self { session }
+    }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
     }
 }
 
@@ -178,10 +180,6 @@ pub struct SystemRootService {
 }
 
 impl sf::IObject for SystemRootService {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
@@ -191,9 +189,13 @@ impl ISystemRootService for SystemRootService {
     }
 }
 
-impl service::IClientObject for SystemRootService {
+impl client::IClientObject for SystemRootService {
     fn new(session: sf::Session) -> Self {
         Self { session }
+    }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
     }
 }
 
@@ -216,10 +218,6 @@ pub struct ManagerRootService {
 }
 
 impl sf::IObject for ManagerRootService {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
@@ -229,9 +227,13 @@ impl IManagerRootService for ManagerRootService {
     }
 }
 
-impl service::IClientObject for ManagerRootService {
+impl client::IClientObject for ManagerRootService {
     fn new(session: sf::Session) -> Self {
         Self { session }
+    }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
     }
 }
 

@@ -8,7 +8,7 @@ use crate::service::fspsrv::IFileSystem;
 use crate::service::fspsrv::IFile;
 use crate::service::fspsrv::IDirectory;
 use crate::sync;
-use crate::ipc::sf;
+use crate::ipc::sf as ipc_sf;
 use alloc::vec::Vec;
 use alloc::string::String;
 use core::mem as cmem;
@@ -78,11 +78,11 @@ impl ProxyFile {
 
 impl File for ProxyFile {
     fn read(&mut self, offset: usize, out_buf: *mut u8, out_buf_size: usize, option: FileReadOption) -> Result<usize> {
-        self.file_obj.get().read(option, offset, out_buf_size, sf::Buffer::from_mut_ptr(out_buf, out_buf_size))
+        self.file_obj.get().read(option, offset, out_buf_size, ipc_sf::Buffer::from_mut_ptr(out_buf, out_buf_size))
     }
 
     fn write(&mut self, offset: usize, buf: *const u8, buf_size: usize, option: FileWriteOption) -> Result<()> {
-        self.file_obj.get().write(option, offset, buf_size, sf::Buffer::from_ptr(buf, buf_size))
+        self.file_obj.get().write(option, offset, buf_size, ipc_sf::Buffer::from_ptr(buf, buf_size))
     }
 
     fn flush(&mut self) -> Result<()> {
@@ -102,7 +102,7 @@ impl File for ProxyFile {
     }
 
     fn operate_range_with_buffer(&mut self, operation_id: OperationId, offset: usize, size: usize, in_buf: *const u8, in_buf_size: usize, out_buf: *mut u8, out_buf_size: usize) -> Result<()> {
-        self.file_obj.get().operate_range_with_buffer(operation_id, offset, size, sf::Buffer::from_ptr(in_buf, in_buf_size), sf::Buffer::from_mut_ptr(out_buf, out_buf_size))
+        self.file_obj.get().operate_range_with_buffer(operation_id, offset, size, ipc_sf::Buffer::from_ptr(in_buf, in_buf_size), ipc_sf::Buffer::from_mut_ptr(out_buf, out_buf_size))
     }
 }
 
@@ -120,7 +120,7 @@ impl ProxyDirectory {
 
 impl Directory for ProxyDirectory {
     fn read(&mut self, out_entries: &mut [DirectoryEntry]) -> Result<u64> {
-        self.dir_obj.get().read(sf::Buffer::from_array(out_entries))
+        self.dir_obj.get().read(ipc_sf::Buffer::from_array(out_entries))
     }
 
     fn get_entry_count(&mut self) -> Result<u64> {
@@ -143,55 +143,55 @@ impl ProxyFileSystem {
 impl FileSystem for ProxyFileSystem {
     fn create_file(&mut self, path: String, attribute: FileAttribute, size: usize) -> Result<()> {
         let sf_path = fspsrv::Path::from_string(path)?;
-        self.fs_obj.get().create_file(attribute, size, sf::Buffer::from_var(&sf_path))
+        self.fs_obj.get().create_file(attribute, size, ipc_sf::Buffer::from_var(&sf_path))
     }
 
     fn delete_file(&mut self, path: String) -> Result<()> {
         let sf_path = fspsrv::Path::from_string(path)?;
-        self.fs_obj.get().delete_file(sf::Buffer::from_var(&sf_path))
+        self.fs_obj.get().delete_file(ipc_sf::Buffer::from_var(&sf_path))
     }
 
     fn create_directory(&mut self, path: String) -> Result<()> {
         let sf_path = fspsrv::Path::from_string(path)?;
-        self.fs_obj.get().create_directory(sf::Buffer::from_var(&sf_path))
+        self.fs_obj.get().create_directory(ipc_sf::Buffer::from_var(&sf_path))
     }
 
     fn delete_directory(&mut self, path: String) -> Result<()> {
         let sf_path = fspsrv::Path::from_string(path)?;
-        self.fs_obj.get().delete_directory(sf::Buffer::from_var(&sf_path))
+        self.fs_obj.get().delete_directory(ipc_sf::Buffer::from_var(&sf_path))
     }
 
     fn delete_directory_recursively(&mut self, path: String) -> Result<()> {
         let sf_path = fspsrv::Path::from_string(path)?;
-        self.fs_obj.get().delete_directory_recursively(sf::Buffer::from_var(&sf_path))
+        self.fs_obj.get().delete_directory_recursively(ipc_sf::Buffer::from_var(&sf_path))
     }
 
     fn get_entry_type(&mut self, path: String) -> Result<DirectoryEntryType> {
         let sf_path = fspsrv::Path::from_string(path)?;
-        self.fs_obj.get().get_entry_type(sf::Buffer::from_var(&sf_path))
+        self.fs_obj.get().get_entry_type(ipc_sf::Buffer::from_var(&sf_path))
     }
 
     fn rename_file(&mut self, old_path: String, new_path: String) -> Result<()> {
         let sf_old_path = fspsrv::Path::from_string(old_path)?;
         let sf_new_path = fspsrv::Path::from_string(new_path)?;
-        self.fs_obj.get().rename_file(sf::Buffer::from_var(&sf_old_path), sf::Buffer::from_var(&sf_new_path))
+        self.fs_obj.get().rename_file(ipc_sf::Buffer::from_var(&sf_old_path), ipc_sf::Buffer::from_var(&sf_new_path))
     }
 
     fn rename_directory(&mut self, old_path: String, new_path: String) -> Result<()> {
         let sf_old_path = fspsrv::Path::from_string(old_path)?;
         let sf_new_path = fspsrv::Path::from_string(new_path)?;
-        self.fs_obj.get().rename_directory(sf::Buffer::from_var(&sf_old_path), sf::Buffer::from_var(&sf_new_path))
+        self.fs_obj.get().rename_directory(ipc_sf::Buffer::from_var(&sf_old_path), ipc_sf::Buffer::from_var(&sf_new_path))
     }
 
     fn open_file(&mut self, path: String, mode: FileOpenMode) -> Result<mem::Shared<dyn File>> {
         let sf_path = fspsrv::Path::from_string(path)?;
-        let file_obj = self.fs_obj.get().open_file(mode, sf::Buffer::from_var(&sf_path))?;
+        let file_obj = self.fs_obj.get().open_file(mode, ipc_sf::Buffer::from_var(&sf_path))?;
         Ok(mem::Shared::new(ProxyFile::new(file_obj)))
     }
 
     fn open_directory(&mut self, path: String, mode: DirectoryOpenMode) -> Result<mem::Shared<dyn Directory>> {
         let sf_path = fspsrv::Path::from_string(path)?;
-        let dir_obj = self.fs_obj.get().open_directory(mode, sf::Buffer::from_var(&sf_path))?;
+        let dir_obj = self.fs_obj.get().open_directory(mode, ipc_sf::Buffer::from_var(&sf_path))?;
         Ok(mem::Shared::new(ProxyDirectory::new(dir_obj)))
     }
 
@@ -201,27 +201,27 @@ impl FileSystem for ProxyFileSystem {
 
     fn get_free_space_size(&mut self, path: String) -> Result<usize> {
         let sf_path = fspsrv::Path::from_string(path)?;
-        self.fs_obj.get().get_free_space_size(sf::Buffer::from_var(&sf_path))
+        self.fs_obj.get().get_free_space_size(ipc_sf::Buffer::from_var(&sf_path))
     }
 
     fn get_total_space_size(&mut self, path: String) -> Result<usize> {
         let sf_path = fspsrv::Path::from_string(path)?;
-        self.fs_obj.get().get_total_space_size(sf::Buffer::from_var(&sf_path))
+        self.fs_obj.get().get_total_space_size(ipc_sf::Buffer::from_var(&sf_path))
     }
 
     fn clean_directory_recursively(&mut self, path: String) -> Result<()> {
         let sf_path = fspsrv::Path::from_string(path)?;
-        self.fs_obj.get().clean_directory_recursively(sf::Buffer::from_var(&sf_path))
+        self.fs_obj.get().clean_directory_recursively(ipc_sf::Buffer::from_var(&sf_path))
     }
 
     fn get_file_time_stamp_raw(&mut self, path: String) -> Result<FileTimeStampRaw> {
         let sf_path = fspsrv::Path::from_string(path)?;
-        self.fs_obj.get().get_file_time_stamp_raw(sf::Buffer::from_var(&sf_path))
+        self.fs_obj.get().get_file_time_stamp_raw(ipc_sf::Buffer::from_var(&sf_path))
     }
 
     fn query_entry(&mut self, path: String, query_id: QueryId, in_buf: *const u8, in_buf_size: usize, out_buf: *mut u8, out_buf_size: usize) -> Result<()> {
         let sf_path = fspsrv::Path::from_string(path)?;
-        self.fs_obj.get().query_entry(sf::Buffer::from_var(&sf_path), query_id, sf::Buffer::from_ptr(in_buf, in_buf_size), sf::Buffer::from_mut_ptr(out_buf, out_buf_size))
+        self.fs_obj.get().query_entry(ipc_sf::Buffer::from_var(&sf_path), query_id, ipc_sf::Buffer::from_ptr(in_buf, in_buf_size), ipc_sf::Buffer::from_mut_ptr(out_buf, out_buf_size))
     }
 }
 
@@ -435,6 +435,7 @@ fn get_fspsrv_session_ref() -> &'static mut mem::Shared<dyn IFileSystemProxy> {
 
 bit_enum! {
     FileOpenOption (u32) {
+        None = 0,
         Create = bit!(0),
         Read = bit!(1),
         Write = bit!(2),
@@ -553,7 +554,7 @@ pub fn get_entry_type(path: String) -> Result<DirectoryEntryType> {
     fs.get().get_entry_type(processed_path)
 }
 
-fn convert_file_open_option_to_mode(option: FileOpenOption) -> FileOpenMode {
+pub fn convert_file_open_option_to_mode(option: FileOpenOption) -> FileOpenMode {
     let mut mode = FileOpenMode::None();
     if option.contains(FileOpenOption::Read()) {
         mode |= FileOpenMode::Read();
@@ -565,6 +566,36 @@ fn convert_file_open_option_to_mode(option: FileOpenOption) -> FileOpenMode {
         mode |= FileOpenMode::Append();
     }
     mode
+}
+
+pub fn convert_file_open_mode_to_option(mode: FileOpenMode) -> FileOpenOption {
+    let mut option = FileOpenOption::None();
+    if mode.contains(FileOpenMode::Read()) {
+        option |= FileOpenOption::Read();
+    }
+    if mode.contains(FileOpenMode::Write()) {
+        option |= FileOpenOption::Write();
+    }
+    if mode.contains(FileOpenMode::Append()) {
+        option |= FileOpenOption::Append();
+    }
+    option
+}
+
+pub fn rename_file(old_path: String, new_path: String) -> Result<()> {
+    let (old_fs, processed_old_path) = format_path(old_path)?;
+    let (new_fs, processed_new_path) = format_path(new_path)?;
+    result_return_unless!(old_fs == new_fs, 0xBABA);
+
+    old_fs.get().rename_file(processed_old_path, processed_new_path)
+}
+
+pub fn rename_directory(old_path: String, new_path: String) -> Result<()> {
+    let (old_fs, processed_old_path) = format_path(old_path)?;
+    let (new_fs, processed_new_path) = format_path(new_path)?;
+    result_return_unless!(old_fs == new_fs, 0xBABA);
+
+    old_fs.get().rename_directory(processed_old_path, processed_new_path)
 }
 
 pub fn rename(old_path: String, new_path: String) -> Result<()> {
@@ -614,6 +645,12 @@ pub fn open_directory(path: String, mode: DirectoryOpenMode) -> Result<Directory
     Ok(DirectoryAccessor::new(dir))
 }
 
+pub fn commit(path: String) -> Result<()> {
+    let unpacked_path = unpack_path(path)?;
+    let fs = find_device_by_name(unpacked_path.first().unwrap())?;
+    fs.get().commit()
+}
+
 pub fn get_free_space_size(path: String) -> Result<usize> {
     let (fs, processed_path) = format_path(path)?;
 
@@ -632,8 +669,21 @@ pub fn get_file_time_stamp_raw(path: String) -> Result<FileTimeStampRaw> {
     fs.get().get_file_time_stamp_raw(processed_path)
 }
 
-pub fn set_concatenation_file_attribute(path: String) -> Result<()> {
+pub fn query_entry(path: String, query_id: QueryId, in_buf: *const u8, in_buf_size: usize, out_buf: *mut u8, out_buf_size: usize) -> Result<()> {
     let (fs, processed_path) = format_path(path)?;
 
-    fs.get().query_entry(processed_path, QueryId::SetConcatenationFileAttribute, ptr::null(), 0, ptr::null_mut(), 0)
+    fs.get().query_entry(processed_path, query_id, in_buf, in_buf_size, out_buf, out_buf_size)
 }
+
+#[inline]
+pub fn set_concatenation_file_attribute(path: String) -> Result<()> {
+    query_entry(path, QueryId::SetConcatenationFileAttribute, ptr::null(), 0, ptr::null_mut(), 0)
+}
+
+pub mod sf;
+
+pub mod subdir;
+
+pub mod pfs0;
+
+pub mod nca;

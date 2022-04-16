@@ -1,6 +1,7 @@
 use crate::result::*;
 use crate::ipc;
 use crate::ipc::sf;
+use crate::ipc::client;
 use crate::service;
 use crate::version;
 
@@ -11,10 +12,6 @@ pub struct UserInterface {
 }
 
 impl sf::IObject for UserInterface {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
@@ -79,9 +76,13 @@ impl IUserInterface for UserInterface {
     }
 }
 
-impl service::IClientObject for UserInterface {
+impl client::IClientObject for UserInterface {
     fn new(session: sf::Session) -> Self {
         Self { session }
+    }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
     }
 }
 

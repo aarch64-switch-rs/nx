@@ -1,5 +1,6 @@
 use crate::result::*;
 use crate::ipc::sf::{self, sm};
+use crate::ipc::client;
 use crate::service;
 
 pub use crate::ipc::sf::spl::*;
@@ -9,10 +10,6 @@ pub struct RandomInterface {
 }
 
 impl sf::IObject for RandomInterface {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
@@ -22,9 +19,13 @@ impl IRandomInterface for RandomInterface {
     }
 }
 
-impl service::IClientObject for RandomInterface {
+impl client::IClientObject for RandomInterface {
     fn new(session: sf::Session) -> Self {
         Self { session }
+    }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
     }
 }
 

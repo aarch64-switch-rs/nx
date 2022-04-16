@@ -1,6 +1,7 @@
 use crate::ipc::sf::sm;
 use crate::result::*;
 use crate::ipc::sf;
+use crate::ipc::client;
 use crate::service;
 use crate::mem;
 
@@ -11,10 +12,6 @@ pub struct StorageAccessor {
 }
 
 impl sf::IObject for StorageAccessor {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
@@ -32,9 +29,13 @@ impl IStorageAccessor for StorageAccessor {
     }
 }
 
-impl service::IClientObject for StorageAccessor {
+impl client::IClientObject for StorageAccessor {
     fn new(session: sf::Session) -> Self {
         Self { session }
+    }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
     }
 }
 
@@ -43,10 +44,6 @@ pub struct Storage {
 }
 
 impl sf::IObject for Storage {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
@@ -56,9 +53,13 @@ impl IStorage for Storage {
     }
 }
 
-impl service::IClientObject for Storage {
+impl client::IClientObject for Storage {
     fn new(session: sf::Session) -> Self {
         Self { session }
+    }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
     }
 }
 
@@ -67,10 +68,6 @@ pub struct LibraryAppletAccessor {
 }
 
 impl sf::IObject for LibraryAppletAccessor {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
@@ -88,9 +85,13 @@ impl ILibraryAppletAccessor for LibraryAppletAccessor {
     }
 }
 
-impl service::IClientObject for LibraryAppletAccessor {
+impl client::IClientObject for LibraryAppletAccessor {
     fn new(session: sf::Session) -> Self {
         Self { session }
+    }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
     }
 }
 
@@ -99,10 +100,6 @@ pub struct LibraryAppletCreator {
 }
 
 impl sf::IObject for LibraryAppletCreator {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
@@ -116,9 +113,13 @@ impl ILibraryAppletCreator for LibraryAppletCreator {
     }
 }
 
-impl service::IClientObject for LibraryAppletCreator {
+impl client::IClientObject for LibraryAppletCreator {
     fn new(session: sf::Session) -> Self {
         Self { session }
+    }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
     }
 }
 
@@ -127,10 +128,6 @@ pub struct WindowController {
 }
 
 impl sf::IObject for WindowController {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
@@ -140,9 +137,13 @@ impl IWindowController for WindowController {
     }
 }
 
-impl service::IClientObject for WindowController {
+impl client::IClientObject for WindowController {
     fn new(session: sf::Session) -> Self {
         Self { session }
+    }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
     }
 }
 
@@ -151,10 +152,6 @@ pub struct SelfController {
 }
 
 impl sf::IObject for SelfController {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
@@ -164,9 +161,13 @@ impl ISelfController for SelfController {
     }
 }
 
-impl service::IClientObject for SelfController {
+impl client::IClientObject for SelfController {
     fn new(session: sf::Session) -> Self {
         Self { session }
+    }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
     }
 }
 
@@ -175,10 +176,6 @@ pub struct LibraryAppletProxy {
 }
 
 impl sf::IObject for LibraryAppletProxy {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
@@ -196,9 +193,13 @@ impl ILibraryAppletProxy for LibraryAppletProxy {
     }
 }
 
-impl service::IClientObject for LibraryAppletProxy {
+impl client::IClientObject for LibraryAppletProxy {
     fn new(session: sf::Session) -> Self {
         Self { session }
+    }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
     }
 }
 
@@ -207,10 +208,6 @@ pub struct AllSystemAppletProxiesService {
 }
 
 impl sf::IObject for AllSystemAppletProxiesService {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
@@ -220,9 +217,13 @@ impl IAllSystemAppletProxiesService for AllSystemAppletProxiesService {
     }
 }
 
-impl service::IClientObject for AllSystemAppletProxiesService {
+impl client::IClientObject for AllSystemAppletProxiesService {
     fn new(session: sf::Session) -> Self {
         Self { session }
+    }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
     }
 }
 

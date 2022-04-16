@@ -1,6 +1,5 @@
 use super::*;
 use crate::ipc::sf;
-use crate::service;
 use crate::mem;
 
 pub trait RequestCommandParameter {
@@ -81,7 +80,7 @@ impl !ResponseCommandParameter<sf::ProcessId> for sf::ProcessId {}
 
 impl<S: sf::IObject + ?Sized> RequestCommandParameter for mem::Shared<S> {
     fn before_request_write(session: &Self, _walker: &mut DataWalker, ctx: &mut CommandContext) -> Result<()> {
-        ctx.in_params.add_object(session.get().get_info())
+        ctx.in_params.add_object(session.to::<dyn IClientObject>().get().get_info())
     }
 
     fn before_send_sync_request(_session: &Self, _walker: &mut DataWalker, _ctx: &mut CommandContext) -> Result<()> {
@@ -89,9 +88,43 @@ impl<S: sf::IObject + ?Sized> RequestCommandParameter for mem::Shared<S> {
     }
 }
 
-impl<S: service::IClientObject + 'static + Sized> ResponseCommandParameter<mem::Shared<S>> for mem::Shared<S> {
+impl<S: IClientObject + 'static + Sized> ResponseCommandParameter<mem::Shared<S>> for mem::Shared<S> {
     fn after_response_read(_walker: &mut DataWalker, ctx: &mut CommandContext) -> Result<Self> {
         let object_info = ctx.pop_object()?;
         Ok(mem::Shared::new(S::new(sf::Session::from(object_info))))
+    }
+}
+
+pub trait IClientObject: sf::IObject {
+    fn new(session: sf::Session) -> Self where Self: Sized;
+
+    fn get_session(&mut self) -> &mut sf::Session;
+
+    fn get_info(&mut self) -> ObjectInfo {
+        self.get_session().object_info
+    }
+
+    fn set_info(&mut self, info: ObjectInfo) {
+        self.get_session().set_info(info);
+    }
+
+    fn convert_to_domain(&mut self) -> Result<()> {
+        self.get_session().convert_to_domain()
+    }
+
+    fn query_own_pointer_buffer_size(&mut self) -> Result<u16> {
+        self.get_info().query_pointer_buffer_size()
+    }
+
+    fn close_session(&mut self) {
+        self.get_session().close()
+    }
+
+    fn is_valid(&mut self) -> bool {
+        self.get_info().is_valid()
+    }
+    
+    fn is_domain(&mut self) -> bool {
+        self.get_info().is_domain()
     }
 }

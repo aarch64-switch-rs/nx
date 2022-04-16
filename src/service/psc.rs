@@ -1,6 +1,7 @@
 use crate::ipc::sf::sm;
 use crate::result::*;
 use crate::ipc::sf;
+use crate::ipc::client;
 use crate::service;
 use crate::mem;
 
@@ -11,10 +12,6 @@ pub struct PmModule {
 }
 
 impl sf::IObject for PmModule {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
@@ -40,9 +37,13 @@ impl IPmModule for PmModule {
     }
 }
 
-impl service::IClientObject for PmModule {
+impl client::IClientObject for PmModule {
     fn new(session: sf::Session) -> Self {
         Self { session }
+    }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
     }
 }
 
@@ -51,10 +52,6 @@ pub struct PmService {
 }
 
 impl sf::IObject for PmService {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
@@ -64,9 +61,13 @@ impl IPmService for PmService {
     }
 }
 
-impl service::IClientObject for PmService {
+impl client::IClientObject for PmService {
     fn new(session: sf::Session) -> Self {
         Self { session }
+    }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
     }
 }
 

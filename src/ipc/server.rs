@@ -12,7 +12,7 @@ use crate::mem;
 use super::*;
 use alloc::vec::Vec;
 
-// TODO: tipc support, implement remaining control commands
+// TODO: TIPC support, implement remaining control commands
 
 const MAX_COUNT: usize = wait::MAX_OBJECT_COUNT as usize;
 
@@ -28,6 +28,9 @@ impl<'a> ServerContext<'a> {
         Self { ctx, raw_data_walker, domain_table, new_sessions }
     }
 }
+
+pub type CommandFn = fn(&mut dyn IObject, CommandProtocol, &mut ServerContext) -> Result<()>;
+pub type CommandSpecificFn<T> = fn(&mut T, CommandProtocol, &mut ServerContext) -> Result<()>;
 
 pub trait RequestCommandParameter<O> {
     fn after_request_read(ctx: &mut ServerContext) -> Result<O>;
@@ -113,18 +116,16 @@ impl<S: sf::IObject + ?Sized> RequestCommandParameter<mem::Shared<S>> for mem::S
 
 impl<S: sf::IObject + ?Sized> ResponseCommandParameter for mem::Shared<S> {
     fn before_response_write(session: &Self, ctx: &mut ServerContext) -> Result<()> {
-        let session_copy = session.copy().to::<dyn sf::IObject>();
+        let session_copy = session.copy().to::<dyn ISessionObject>();
         if ctx.ctx.object_info.is_domain() {
             let domain_object_id = ctx.domain_table.get().allocate_id()?;
             ctx.ctx.out_params.push_domain_object(domain_object_id)?;
-            session.get().set_info(ObjectInfo::new());
             ctx.domain_table.get().domains.push(ServerHolder::new_domain_session(0, domain_object_id, session_copy));
             Ok(())
         }
         else {
             let (server_handle, client_handle) = svc::create_session(false, 0)?;
             ctx.ctx.out_params.push_handle(sf::MoveHandle::from(client_handle))?;
-            session.get().set_info(ObjectInfo::new());
             ctx.new_sessions.push(ServerHolder::new_session(server_handle, session_copy));
             Ok(())
         }
@@ -135,24 +136,27 @@ impl<S: sf::IObject + ?Sized> ResponseCommandParameter for mem::Shared<S> {
     }
 }
 
-pub trait IServerObject: sf::IObject {
+pub trait ISessionObject: sf::IObject {}
+
+pub trait IServerObject: ISessionObject {
     fn new() -> Self where Self: Sized;
 }
 
-pub trait IMitmServerObject: sf::IObject {
+pub trait IMitmServerObject: ISessionObject {
     fn new(info: sm::MitmProcessInfo) -> Self where Self: Sized;
 }
 
-fn create_server_object_impl<S: IServerObject + 'static>() -> mem::Shared<dyn sf::IObject> {
+pub type NewServerFn = fn() -> mem::Shared<dyn ISessionObject>;
+
+fn create_server_object_impl<S: IServerObject + 'static>() -> mem::Shared<dyn ISessionObject> {
     mem::Shared::new(S::new())
 }
 
-fn create_mitm_server_object_impl<S: IMitmServerObject + 'static>(info: sm::MitmProcessInfo) -> mem::Shared<dyn sf::IObject> {
+pub type NewMitmServerFn = fn(sm::MitmProcessInfo) -> mem::Shared<dyn ISessionObject>;
+
+fn create_mitm_server_object_impl<S: IMitmServerObject + 'static>(info: sm::MitmProcessInfo) -> mem::Shared<dyn ISessionObject> {
     mem::Shared::new(S::new(info))
 }
-
-pub type NewServerFn = fn() -> mem::Shared<dyn sf::IObject>;
-pub type NewMitmServerFn = fn(sm::MitmProcessInfo) -> mem::Shared<dyn sf::IObject>;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u8)]
@@ -192,7 +196,7 @@ impl DomainTable {
         Err(results::lib::ipc::ResultObjectIdAlreadyAllocated::make())
     }
 
-    pub fn find_domain(&mut self, id: cmif::DomainObjectId) -> Result<mem::Shared<dyn sf::IObject>> {
+    pub fn find_domain(&mut self, id: cmif::DomainObjectId) -> Result<mem::Shared<dyn ISessionObject>> {
         for holder in &self.domains {
             if holder.info.domain_object_id == id {
                 return Ok(holder.server.clone());
@@ -209,7 +213,7 @@ impl DomainTable {
 }
 
 pub struct ServerHolder {
-    pub server: mem::Shared<dyn sf::IObject>,
+    pub server: mem::Shared<dyn ISessionObject>,
     pub info: ObjectInfo,
     pub new_server_fn: Option<NewServerFn>,
     pub new_mitm_server_fn: Option<NewMitmServerFn>,
@@ -225,11 +229,11 @@ impl ServerHolder {
         Self { server: mem::Shared::new(S::new()), info: ObjectInfo::from_handle(handle), new_server_fn: None, new_mitm_server_fn: None, handle_type: WaitHandleType::Session, mitm_forward_info: ObjectInfo::new(), is_mitm_service: false, service_name: sm::ServiceName::empty(), domain_table: mem::Shared::empty() } 
     }
 
-    pub fn new_session(handle: svc::Handle, object: mem::Shared<dyn sf::IObject>) -> Self {
+    pub fn new_session(handle: svc::Handle, object: mem::Shared<dyn ISessionObject>) -> Self {
         Self { server: object, info: ObjectInfo::from_handle(handle), new_server_fn: None, new_mitm_server_fn: None, handle_type: WaitHandleType::Session, mitm_forward_info: ObjectInfo::new(), is_mitm_service: false, service_name: sm::ServiceName::empty(), domain_table: mem::Shared::empty() } 
     }
 
-    pub fn new_domain_session(handle: svc::Handle, domain_object_id: cmif::DomainObjectId, object: mem::Shared<dyn sf::IObject>) -> Self {
+    pub fn new_domain_session(handle: svc::Handle, domain_object_id: cmif::DomainObjectId, object: mem::Shared<dyn ISessionObject>) -> Self {
         Self { server: object, info: ObjectInfo::from_domain_object_id(handle, domain_object_id), new_server_fn: None, new_mitm_server_fn: None, handle_type: WaitHandleType::Session, mitm_forward_info: ObjectInfo::new(), is_mitm_service: false, service_name: sm::ServiceName::empty(), domain_table: mem::Shared::empty() } 
     }
     
@@ -319,7 +323,6 @@ impl Drop for ServerHolder {
 }
 
 pub struct HipcManager<'a> {
-    session: sf::Session,
     server_holder: &'a mut ServerHolder,
     pointer_buf_size: usize,
     pub cloned_object_server_handle: svc::Handle,
@@ -328,7 +331,7 @@ pub struct HipcManager<'a> {
 
 impl<'a> HipcManager<'a> {
     pub fn new(server_holder: &'a mut ServerHolder, pointer_buf_size: usize) -> Self {
-        Self { session: sf::Session::new(), server_holder, pointer_buf_size, cloned_object_server_handle: 0, cloned_object_forward_handle: 0 }
+        Self { server_holder, pointer_buf_size, cloned_object_server_handle: 0, cloned_object_forward_handle: 0 }
     }
 
     pub fn has_cloned_object(&self) -> bool {
@@ -338,6 +341,10 @@ impl<'a> HipcManager<'a> {
     pub fn clone_object(&self) -> Result<ServerHolder> {
         self.server_holder.clone_self(self.cloned_object_server_handle, self.cloned_object_forward_handle)
     }
+}
+
+impl<'a> sf::IObject for HipcManager<'a> {
+    ipc_sf_object_impl_default_command_metadata!();
 }
 
 impl<'a> IHipcManager for HipcManager<'a> {
@@ -374,17 +381,14 @@ impl<'a> IHipcManager for HipcManager<'a> {
     }
 }
 
-impl<'a> sf::IObject for HipcManager<'a> {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
-    ipc_sf_object_impl_default_command_metadata!();
-}
+impl<'a> ISessionObject for HipcManager<'a> {}
 
 pub struct MitmQueryServer<S: IMitmService> {
-    session: sf::Session,
     phantom: core::marker::PhantomData<S>
+}
+
+impl<S: IMitmService> sf::IObject for MitmQueryServer<S> {
+    ipc_sf_object_impl_default_command_metadata!();
 }
 
 impl<S: IMitmService> IMitmQueryServer for MitmQueryServer<S> {
@@ -393,18 +397,17 @@ impl<S: IMitmService> IMitmQueryServer for MitmQueryServer<S> {
     }
 }
 
-impl<S: IMitmService> sf::IObject for MitmQueryServer<S> {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
-    ipc_sf_object_impl_default_command_metadata!();
-}
+impl<S: IMitmService> ISessionObject for MitmQueryServer<S> {}
 
 impl<S: IMitmService> IServerObject for MitmQueryServer<S> {
     fn new() -> Self {
-        Self { session: sf::Session::new(), phantom: core::marker::PhantomData }
+        Self { phantom: core::marker::PhantomData }
     }
+}
+
+pub trait INamedPort: IServerObject {
+    fn get_port_name() -> &'static str;
+    fn get_max_sesssions() -> i32;
 }
 
 pub trait IService: IServerObject {
@@ -415,11 +418,6 @@ pub trait IService: IServerObject {
 pub trait IMitmService: IMitmServerObject {
     fn get_name() -> sm::ServiceName;
     fn should_mitm(info: sm::MitmProcessInfo) -> bool;
-}
-
-pub trait INamedPort: IServerObject {
-    fn get_port_name() -> &'static str;
-    fn get_max_sesssions() -> i32;
 }
 
 // TODO: use const generics to reduce memory usage, like libstratosphere does?
@@ -481,7 +479,7 @@ impl<const P: usize> ServerManager<P> {
                             command_found = true;
                             let protocol = ctx.object_info.protocol;
                             let mut server_ctx = ServerContext::new(ctx, DataWalker::empty(), domain_table_clone.clone(), &mut new_sessions);
-                            if let Err(rc) = target_server.get().call_self_command(command.command_fn, protocol, &mut server_ctx) {
+                            if let Err(rc) = target_server.get().call_self_server_command(command.command_fn, protocol, &mut server_ctx) {
                                 if server_holder.is_mitm_service && results::sm::mitm::ResultShouldForwardToSession::matches(rc) {
                                     if let Err(rc) = send_to_forward_handle() {
                                         cmif::server::write_request_command_response_on_msg_buffer(ctx, rc, command_type);
@@ -550,7 +548,7 @@ impl<const P: usize> ServerManager<P> {
                         let mut server_ctx = ServerContext::new(ctx, DataWalker::empty(), unused_domain_table, &mut unused_new_sessions);
                         // Control commands only exist in CMIF...
                         // TODO: assert ctx.object_info.protocol == CommandProtocol::Cmif?
-                        if let Err(rc) = hipc_manager.call_self_command(command.command_fn, CommandProtocol::Cmif, &mut server_ctx) {
+                        if let Err(rc) = hipc_manager.call_self_server_command(command.command_fn, CommandProtocol::Cmif, &mut server_ctx) {
                             cmif::server::write_control_command_response_on_msg_buffer(ctx, rc, command_type);
                         }
                     }

@@ -1,5 +1,6 @@
 use crate::result::*;
 use crate::ipc::sf::{self, sm};
+use crate::ipc::client;
 use crate::service;
 
 pub use crate::ipc::sf::fatal::*;
@@ -9,10 +10,6 @@ pub struct Service {
 }
 
 impl sf::IObject for Service {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
@@ -22,9 +19,13 @@ impl IService for Service {
     }
 }
 
-impl service::IClientObject for Service {
+impl client::IClientObject for Service {
     fn new(session: sf::Session) -> Self {
         Self { session }
+    }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
     }
 }
 

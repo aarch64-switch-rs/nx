@@ -1,6 +1,7 @@
 use crate::ipc::sf::sm;
 use crate::result::*;
 use crate::ipc::sf;
+use crate::ipc::client;
 use crate::service;
 use crate::mem;
 
@@ -11,10 +12,6 @@ pub struct Directory {
 }
 
 impl sf::IObject for Directory {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
@@ -28,9 +25,13 @@ impl IDirectory for Directory {
     }
 }
 
-impl service::IClientObject for Directory {
+impl client::IClientObject for Directory {
     fn new(session: sf::Session) -> Self {
         Self { session }
+    }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
     }
 }
 
@@ -39,10 +40,6 @@ pub struct File {
 }
 
 impl sf::IObject for File {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
@@ -76,9 +73,13 @@ impl IFile for File {
     }
 }
 
-impl service::IClientObject for File {
+impl client::IClientObject for File {
     fn new(session: sf::Session) -> Self {
         Self { session }
+    }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
     }
 }
 
@@ -87,10 +88,6 @@ pub struct FileSystem {
 }
 
 impl sf::IObject for FileSystem {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
@@ -160,9 +157,13 @@ impl IFileSystem for FileSystem {
     }
 }
 
-impl service::IClientObject for FileSystem {
+impl client::IClientObject for FileSystem {
     fn new(session: sf::Session) -> Self {
         Self { session }
+    }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
     }
 }
 
@@ -171,10 +172,6 @@ pub struct FileSystemProxy {
 }
 
 impl sf::IObject for FileSystemProxy {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
@@ -192,9 +189,13 @@ impl IFileSystemProxy for FileSystemProxy {
     }
 }
 
-impl service::IClientObject for FileSystemProxy {
+impl client::IClientObject for FileSystemProxy {
     fn new(session: sf::Session) -> Self {
         Self { session }
+    }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
     }
 }
 

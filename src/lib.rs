@@ -14,6 +14,7 @@
 #![feature(fn_traits)]
 #![feature(untagged_unions)]
 #![feature(negative_impls)]
+#![feature(trait_upcasting)]
 #![macro_use]
 
 use core::arch::global_asm;

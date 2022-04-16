@@ -1,6 +1,7 @@
 use crate::ipc::sf::sm;
 use crate::result::*;
 use crate::ipc::sf;
+use crate::ipc::client;
 use crate::service;
 use crate::mem;
 
@@ -11,10 +12,6 @@ pub struct Logger {
 }
 
 impl sf::IObject for Logger {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
@@ -28,9 +25,13 @@ impl ILogger for Logger {
     }
 }
 
-impl service::IClientObject for Logger {
+impl client::IClientObject for Logger {
     fn new(session: sf::Session) -> Self {
         Self { session }
+    }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
     }
 }
 
@@ -39,10 +40,6 @@ pub struct LogService {
 }
 
 impl sf::IObject for LogService {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
@@ -52,9 +49,13 @@ impl ILogService for LogService {
     }
 }
 
-impl service::IClientObject for LogService {
+impl client::IClientObject for LogService {
     fn new(session: sf::Session) -> Self {
         Self { session }
+    }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
     }
 }
 

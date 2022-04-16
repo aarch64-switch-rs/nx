@@ -109,6 +109,7 @@ macro_rules! ipc_sf_define_control_interface_trait {
 macro_rules! ipc_sf_object_impl_default_command_metadata {
     () => {
         fn get_command_metadata_table(&self) -> $crate::ipc::sf::CommandMetadataTable {
+            // Provided by the interface being implemented by this object
             self.get_sf_command_metadata_table()
         }
     };

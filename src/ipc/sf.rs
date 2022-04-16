@@ -283,19 +283,16 @@ impl Drop for Session {
     }
 }
 
-pub type CommandFn = fn(&mut dyn IObject, CommandProtocol, &mut server::ServerContext) -> Result<()>;
-pub type CommandSpecificFn<T> = fn(&mut T, CommandProtocol, &mut server::ServerContext) -> Result<()>;
-
 pub struct CommandMetadata {
     pub rq_id: u32,
-    pub command_fn: CommandFn,
+    pub command_fn: server::CommandFn,
     pub ver_intv: version::VersionInterval
 }
 
 pub type CommandMetadataTable = Vec<CommandMetadata>;
 
 impl CommandMetadata {
-    pub fn new(rq_id: u32, command_fn: CommandFn, ver_intv: version::VersionInterval) -> Self {
+    pub fn new(rq_id: u32, command_fn: server::CommandFn, ver_intv: version::VersionInterval) -> Self {
         Self {
             rq_id,
             command_fn,
@@ -310,42 +307,16 @@ impl CommandMetadata {
 }
 
 // This trait is analogous to N's nn::sf::IServiceObject type - the base trait for any kind of IPC interface
-// IClientObject (on service module) and IServerObject (on server module) are wrappers for some specific kind of objects
+// IClientObject / {IService, INamedPort} (on client module) and ISessionObject / {IServerObject, IMitmServerObject} (on server module) are superior types for specific kind of objects
+
+// TODO: make use of the command metadata on client side too (for instance for checking if the command is valid on the current system version, etc.)
+// TODO: think of a proper way to migrate call_self_server_command / command_fn stuff to server and avoid it being on every single IObject?
 
 pub trait IObject {
-    fn get_session(&mut self) -> &mut Session;
     fn get_command_metadata_table(&self) -> CommandMetadataTable;
 
-    fn get_info(&mut self) -> ObjectInfo {
-        self.get_session().object_info
-    }
-
-    fn set_info(&mut self, info: ObjectInfo) {
-        self.get_session().set_info(info);
-    }
-
-    fn convert_to_domain(&mut self) -> Result<()> {
-        self.get_session().convert_to_domain()
-    }
-
-    fn query_own_pointer_buffer_size(&mut self) -> Result<u16> {
-        self.get_info().query_pointer_buffer_size()
-    }
-
-    fn close_session(&mut self) {
-        self.get_session().close()
-    }
-
-    fn is_valid(&mut self) -> bool {
-        self.get_info().is_valid()
-    }
-    
-    fn is_domain(&mut self) -> bool {
-        self.get_info().is_domain()
-    }
-
-    fn call_self_command(&mut self, command_fn: CommandFn, protocol: CommandProtocol, ctx: &mut server::ServerContext) -> Result<()> {
-        let original_fn: CommandSpecificFn<Self> = unsafe { mem::transmute(command_fn) };
+    fn call_self_server_command(&mut self, command_fn: server::CommandFn, protocol: CommandProtocol, ctx: &mut server::ServerContext) -> Result<()> {
+        let original_fn: server::CommandSpecificFn<Self> = unsafe { core::mem::transmute(command_fn) };
         (original_fn)(self, protocol, ctx)
     }
 }

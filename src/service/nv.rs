@@ -1,39 +1,13 @@
 use crate::ipc::sf::sm;
 use crate::result::*;
-use crate::results;
 use crate::ipc::sf;
+use crate::ipc::client;
 use crate::service;
 
 pub use crate::ipc::sf::nv::*;
 
-#[allow(unreachable_patterns)]
-pub fn convert_error_code(err: ErrorCode) -> Result<()> {
-    match err {
-        ErrorCode::Success => Ok(()),
-        ErrorCode::NotImplemented => Err(results::lib::gpu::ResultNvErrorCodeNotImplemented::make()),
-        ErrorCode::NotSupported => Err(results::lib::gpu::ResultNvErrorCodeNotSupported::make()),
-        ErrorCode::NotInitialized => Err(results::lib::gpu::ResultNvErrorCodeNotInitialized::make()),
-        ErrorCode::InvalidParameter => Err(results::lib::gpu::ResultNvErrorCodeInvalidParameter::make()),
-        ErrorCode::TimeOut => Err(results::lib::gpu::ResultNvErrorCodeTimeOut::make()),
-        ErrorCode::InsufficientMemory => Err(results::lib::gpu::ResultNvErrorCodeInsufficientMemory::make()),
-        ErrorCode::ReadOnlyAttribute => Err(results::lib::gpu::ResultNvErrorCodeReadOnlyAttribute::make()),
-        ErrorCode::InvalidState => Err(results::lib::gpu::ResultNvErrorCodeInvalidState::make()),
-        ErrorCode::InvalidAddress => Err(results::lib::gpu::ResultNvErrorCodeInvalidAddress::make()),
-        ErrorCode::InvalidSize => Err(results::lib::gpu::ResultNvErrorCodeInvalidSize::make()),
-        ErrorCode::InvalidValue => Err(results::lib::gpu::ResultNvErrorCodeInvalidValue::make()),
-        ErrorCode::AlreadyAllocated => Err(results::lib::gpu::ResultNvErrorCodeAlreadyAllocated::make()),
-        ErrorCode::Busy => Err(results::lib::gpu::ResultNvErrorCodeBusy::make()),
-        ErrorCode::ResourceError => Err(results::lib::gpu::ResultNvErrorCodeResourceError::make()),
-        ErrorCode::CountMismatch => Err(results::lib::gpu::ResultNvErrorCodeCountMismatch::make()),
-        ErrorCode::SharedMemoryTooSmall => Err(results::lib::gpu::ResultNvErrorCodeSharedMemoryTooSmall::make()),
-        ErrorCode::FileOperationFailed => Err(results::lib::gpu::ResultNvErrorCodeFileOperationFailed::make()),
-        ErrorCode::IoctlFailed => Err(results::lib::gpu::ResultNvErrorCodeIoctlFailed::make()),
-        _ => Err(results::lib::gpu::ResultNvErrorCodeInvalid::make()),
-    }
-}
-
 // NvDrvService is the base trait for all the different services, since the only difference is their service names
-pub trait NvDrvService: service::IClientObject {}
+pub trait NvDrvService: client::IClientObject {}
 
 impl<S: NvDrvService> INvDrvServices for S {
     fn open(&mut self, path: sf::InMapAliasBuffer<u8>) -> Result<(Fd, ErrorCode)> {
@@ -58,18 +32,18 @@ pub struct ApplicationNvDrvService {
 }
 
 impl sf::IObject for ApplicationNvDrvService {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
 impl NvDrvService for ApplicationNvDrvService {}
 
-impl service::IClientObject for ApplicationNvDrvService {
+impl client::IClientObject for ApplicationNvDrvService {
     fn new(session: sf::Session) -> Self {
         Self { session }
+    }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
     }
 }
 
@@ -92,18 +66,18 @@ pub struct AppletNvDrvService {
 }
 
 impl sf::IObject for AppletNvDrvService {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
 impl NvDrvService for AppletNvDrvService {}
 
-impl service::IClientObject for AppletNvDrvService {
+impl client::IClientObject for AppletNvDrvService {
     fn new(session: sf::Session) -> Self {
         Self { session }
+    }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
     }
 }
 
@@ -126,18 +100,18 @@ pub struct SystemNvDrvService {
 }
 
 impl sf::IObject for SystemNvDrvService {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
 impl NvDrvService for SystemNvDrvService {}
 
-impl service::IClientObject for SystemNvDrvService {
+impl client::IClientObject for SystemNvDrvService {
     fn new(session: sf::Session) -> Self {
         Self { session }
+    }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
     }
 }
 
