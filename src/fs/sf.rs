@@ -2,10 +2,10 @@ use crate::ipc::server;
 use crate::result::*;
 use crate::ipc::sf;
 use crate::mem;
-use crate::ipc::sf::fspsrv;
-use crate::ipc::sf::fspsrv::IDirectory;
-use crate::ipc::sf::fspsrv::IFile;
-use crate::ipc::sf::fspsrv::IFileSystem;
+use crate::ipc::sf::fsp;
+use crate::ipc::sf::fsp::IDirectory;
+use crate::ipc::sf::fsp::IFile;
+use crate::ipc::sf::fsp::IFileSystem;
 
 // These types are helper object types to translate from our fs objects to IPC fs objects
 
@@ -24,7 +24,7 @@ impl sf::IObject for Directory {
 }
 
 impl IDirectory for Directory {
-    fn read(&mut self, out_entries: sf::OutMapAliasBuffer<fspsrv::DirectoryEntry>) -> Result<u64> {
+    fn read(&mut self, out_entries: sf::OutMapAliasBuffer<fsp::DirectoryEntry>) -> Result<u64> {
         self.dir_obj.get().read(out_entries.get_mut_slice())
     }
 
@@ -50,11 +50,11 @@ impl sf::IObject for File {
 }
 
 impl IFile for File {
-    fn read(&mut self, option: fspsrv::FileReadOption, offset: usize, size: usize, buf: sf::OutNonSecureMapAliasBuffer<u8>) -> Result<usize> {
+    fn read(&mut self, option: fsp::FileReadOption, offset: usize, size: usize, buf: sf::OutNonSecureMapAliasBuffer<u8>) -> Result<usize> {
         self.file_obj.get().read(offset, buf.get_address(), size.min(buf.get_size()), option)
     }
 
-    fn write(&mut self, option: fspsrv::FileWriteOption, offset: usize, size: usize, buf: sf::InNonSecureMapAliasBuffer<u8>) -> Result<()> {
+    fn write(&mut self, option: fsp::FileWriteOption, offset: usize, size: usize, buf: sf::InNonSecureMapAliasBuffer<u8>) -> Result<()> {
         self.file_obj.get().write(offset, buf.get_address(), size.min(buf.get_size()), option)
     }
 
@@ -70,11 +70,11 @@ impl IFile for File {
         self.file_obj.get().get_size()
     }
 
-    fn operate_range(&mut self, operation_id: fspsrv::OperationId, offset: usize, size: usize) -> Result<fspsrv::FileQueryRangeInfo> {
+    fn operate_range(&mut self, operation_id: fsp::OperationId, offset: usize, size: usize) -> Result<fsp::FileQueryRangeInfo> {
         self.file_obj.get().operate_range(operation_id, offset, size)
     }
 
-    fn operate_range_with_buffer(&mut self, operation_id: fspsrv::OperationId, offset: usize, size: usize, in_buf: sf::InNonSecureMapAliasBuffer<u8>, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) -> Result<()> {
+    fn operate_range_with_buffer(&mut self, operation_id: fsp::OperationId, offset: usize, size: usize, in_buf: sf::InNonSecureMapAliasBuffer<u8>, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) -> Result<()> {
         self.file_obj.get().operate_range_with_buffer(operation_id, offset, size, in_buf.get_address(), in_buf.get_size(), out_buf.get_address(), out_buf.get_size())
     }
 }
@@ -96,55 +96,55 @@ impl sf::IObject for FileSystem {
 }
 
 impl IFileSystem for FileSystem {
-    fn create_file(&mut self, attribute: fspsrv::FileAttribute, size: usize, path_buf: sf::InPointerBuffer<fspsrv::Path>) -> Result<()> {
+    fn create_file(&mut self, attribute: fsp::FileAttribute, size: usize, path_buf: sf::InPointerBuffer<fsp::Path>) -> Result<()> {
         let fs_path = path_buf.get_var().get_string()?;
         self.fs_obj.get().create_file(fs_path, attribute, size)
     }
 
-    fn delete_file(&mut self, path_buf: sf::InPointerBuffer<fspsrv::Path>) -> Result<()> {
+    fn delete_file(&mut self, path_buf: sf::InPointerBuffer<fsp::Path>) -> Result<()> {
         let fs_path = path_buf.get_var().get_string()?;
         self.fs_obj.get().delete_file(fs_path)
     }
 
-    fn create_directory(&mut self, path_buf: sf::InPointerBuffer<fspsrv::Path>) -> Result<()> {
+    fn create_directory(&mut self, path_buf: sf::InPointerBuffer<fsp::Path>) -> Result<()> {
         let fs_path = path_buf.get_var().get_string()?;
         self.fs_obj.get().create_directory(fs_path)
     }
     
-    fn delete_directory(&mut self, path_buf: sf::InPointerBuffer<fspsrv::Path>) -> Result<()> {
+    fn delete_directory(&mut self, path_buf: sf::InPointerBuffer<fsp::Path>) -> Result<()> {
         let fs_path = path_buf.get_var().get_string()?;
         self.fs_obj.get().delete_directory(fs_path)
     }
 
-    fn delete_directory_recursively(&mut self, path_buf: sf::InPointerBuffer<fspsrv::Path>) -> Result<()> {
+    fn delete_directory_recursively(&mut self, path_buf: sf::InPointerBuffer<fsp::Path>) -> Result<()> {
         let fs_path = path_buf.get_var().get_string()?;
         self.fs_obj.get().delete_directory_recursively(fs_path)
     }
 
-    fn rename_file(&mut self, old_path_buf: sf::InPointerBuffer<fspsrv::Path>, new_path_buf: sf::InPointerBuffer<fspsrv::Path>) -> Result<()> {
+    fn rename_file(&mut self, old_path_buf: sf::InPointerBuffer<fsp::Path>, new_path_buf: sf::InPointerBuffer<fsp::Path>) -> Result<()> {
         let old_fs_path = old_path_buf.get_var().get_string()?;
         let new_fs_path = new_path_buf.get_var().get_string()?;
         self.fs_obj.get().rename_file(old_fs_path, new_fs_path)
     }
 
-    fn rename_directory(&mut self, old_path_buf: sf::InPointerBuffer<fspsrv::Path>, new_path_buf: sf::InPointerBuffer<fspsrv::Path>) -> Result<()> {
+    fn rename_directory(&mut self, old_path_buf: sf::InPointerBuffer<fsp::Path>, new_path_buf: sf::InPointerBuffer<fsp::Path>) -> Result<()> {
         let old_fs_path = old_path_buf.get_var().get_string()?;
         let new_fs_path = new_path_buf.get_var().get_string()?;
         self.fs_obj.get().rename_directory(old_fs_path, new_fs_path)
     }
 
-    fn get_entry_type(&mut self, path_buf: sf::InPointerBuffer<fspsrv::Path>) -> Result<fspsrv::DirectoryEntryType> {
+    fn get_entry_type(&mut self, path_buf: sf::InPointerBuffer<fsp::Path>) -> Result<fsp::DirectoryEntryType> {
         let fs_path = path_buf.get_var().get_string()?;
         self.fs_obj.get().get_entry_type(fs_path)
     }
     
-    fn open_file(&mut self, mode: fspsrv::FileOpenMode, path_buf: sf::InPointerBuffer<fspsrv::Path>) -> Result<mem::Shared<dyn fspsrv::IFile>> {
+    fn open_file(&mut self, mode: fsp::FileOpenMode, path_buf: sf::InPointerBuffer<fsp::Path>) -> Result<mem::Shared<dyn fsp::IFile>> {
         let fs_path = path_buf.get_var().get_string()?;
         let file_obj = self.fs_obj.get().open_file(fs_path, mode)?;
         Ok(mem::Shared::new(File::new(file_obj)))
     }
 
-    fn open_directory(&mut self, mode: fspsrv::DirectoryOpenMode, path_buf: sf::InPointerBuffer<fspsrv::Path>) -> Result<mem::Shared<dyn fspsrv::IDirectory>> {
+    fn open_directory(&mut self, mode: fsp::DirectoryOpenMode, path_buf: sf::InPointerBuffer<fsp::Path>) -> Result<mem::Shared<dyn fsp::IDirectory>> {
         let fs_path = path_buf.get_var().get_string()?;
         let dir_obj = self.fs_obj.get().open_directory(fs_path, mode)?;
         Ok(mem::Shared::new(Directory::new(dir_obj)))
@@ -154,27 +154,27 @@ impl IFileSystem for FileSystem {
         self.fs_obj.get().commit()
     }
 
-    fn get_free_space_size(&mut self, path_buf: sf::InPointerBuffer<fspsrv::Path>) -> Result<usize> {
+    fn get_free_space_size(&mut self, path_buf: sf::InPointerBuffer<fsp::Path>) -> Result<usize> {
         let fs_path = path_buf.get_var().get_string()?;
         self.fs_obj.get().get_free_space_size(fs_path)
     }
 
-    fn get_total_space_size(&mut self, path_buf: sf::InPointerBuffer<fspsrv::Path>) -> Result<usize> {
+    fn get_total_space_size(&mut self, path_buf: sf::InPointerBuffer<fsp::Path>) -> Result<usize> {
         let fs_path = path_buf.get_var().get_string()?;
         self.fs_obj.get().get_total_space_size(fs_path)
     }
 
-    fn clean_directory_recursively(&mut self, path_buf: sf::InPointerBuffer<fspsrv::Path>) -> Result<()> {
+    fn clean_directory_recursively(&mut self, path_buf: sf::InPointerBuffer<fsp::Path>) -> Result<()> {
         let fs_path = path_buf.get_var().get_string()?;
         self.fs_obj.get().clean_directory_recursively(fs_path)
     }
 
-    fn get_file_time_stamp_raw(&mut self, path_buf: sf::InPointerBuffer<fspsrv::Path>) -> Result<fspsrv::FileTimeStampRaw> {
+    fn get_file_time_stamp_raw(&mut self, path_buf: sf::InPointerBuffer<fsp::Path>) -> Result<fsp::FileTimeStampRaw> {
         let fs_path = path_buf.get_var().get_string()?;
         self.fs_obj.get().get_file_time_stamp_raw(fs_path)
     }
 
-    fn query_entry(&mut self, path_buf: sf::InPointerBuffer<fspsrv::Path>, query_id: fspsrv::QueryId, in_buf: sf::InNonSecureMapAliasBuffer<u8>, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) -> Result<()> {
+    fn query_entry(&mut self, path_buf: sf::InPointerBuffer<fsp::Path>, query_id: fsp::QueryId, in_buf: sf::InNonSecureMapAliasBuffer<u8>, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) -> Result<()> {
         let fs_path = path_buf.get_var().get_string()?;
         self.fs_obj.get().query_entry(fs_path, query_id, in_buf.get_address(), in_buf.get_size(), out_buf.get_address(), out_buf.get_size())
     }

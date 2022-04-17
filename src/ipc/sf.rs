@@ -333,7 +333,7 @@ pub mod fatal;
 
 pub mod dispdrv;
 
-pub mod fspsrv;
+pub mod fsp;
 
 pub mod hid;
 

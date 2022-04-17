@@ -4,6 +4,8 @@ use crate::mem;
 use crate::util;
 use crate::version;
 
+pub mod rc;
+
 bit_enum! {
     FileOpenMode (u32) {
         None = 0,
@@ -153,3 +155,5 @@ ipc_sf_define_interface_trait!{
         output_access_log_to_sd_card [1006, version::VersionInterval::all()]: (log_buf: sf::InMapAliasBuffer<u8>) => ();
     }
 }
+
+pub mod srv;

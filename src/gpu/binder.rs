@@ -1,9 +1,10 @@
 use crate::result::*;
-use crate::results;
 use crate::ipc::sf;
 use crate::gpu::parcel;
 use crate::service::dispdrv;
 use super::*;
+
+pub mod rc;
 
 pub const INTERFACE_TOKEN: &str = "android.gui.IGraphicBufferProducer";
 
@@ -31,26 +32,26 @@ pub enum ErrorCode {
 }
 
 #[allow(unreachable_patterns)]
-pub fn convert_error_code(err: ErrorCode) -> Result<()> {
+pub fn convert_nv_error_code(err: ErrorCode) -> Result<()> {
     match err {
         ErrorCode::Success => Ok(()),
-        ErrorCode::PermissionDenied => Err(results::lib::gpu::ResultBinderErrorCodePermissionDenied::make()),
-        ErrorCode::NameNotFound => Err(results::lib::gpu::ResultBinderErrorCodeNameNotFound::make()),
-        ErrorCode::WouldBlock => Err(results::lib::gpu::ResultBinderErrorCodeWouldBlock::make()),
-        ErrorCode::NoMemory => Err(results::lib::gpu::ResultBinderErrorCodeNoMemory::make()),
-        ErrorCode::AlreadyExists => Err(results::lib::gpu::ResultBinderErrorCodeAlreadyExists::make()),
-        ErrorCode::NoInit => Err(results::lib::gpu::ResultBinderErrorCodeNoInit::make()),
-        ErrorCode::BadValue => Err(results::lib::gpu::ResultBinderErrorCodeBadValue::make()),
-        ErrorCode::DeadObject => Err(results::lib::gpu::ResultBinderErrorCodeDeadObject::make()),
-        ErrorCode::InvalidOperation => Err(results::lib::gpu::ResultBinderErrorCodeInvalidOperation::make()),
-        ErrorCode::NotEnoughData => Err(results::lib::gpu::ResultBinderErrorCodeNotEnoughData::make()),
-        ErrorCode::UnknownTransaction => Err(results::lib::gpu::ResultBinderErrorCodeUnknownTransaction::make()),
-        ErrorCode::BadIndex => Err(results::lib::gpu::ResultBinderErrorCodeBadIndex::make()),
-        ErrorCode::TimeOut => Err(results::lib::gpu::ResultBinderErrorCodeTimeOut::make()),
-        ErrorCode::FdsNotAllowed => Err(results::lib::gpu::ResultBinderErrorCodeFdsNotAllowed::make()),
-        ErrorCode::FailedTransaction => Err(results::lib::gpu::ResultBinderErrorCodeFailedTransaction::make()),
-        ErrorCode::BadType => Err(results::lib::gpu::ResultBinderErrorCodeBadType::make()),
-        _ => Err(results::lib::gpu::ResultBinderErrorCodeInvalid::make()),
+        ErrorCode::PermissionDenied => Err(rc::ResultErrorCodePermissionDenied::make()),
+        ErrorCode::NameNotFound => Err(rc::ResultErrorCodeNameNotFound::make()),
+        ErrorCode::WouldBlock => Err(rc::ResultErrorCodeWouldBlock::make()),
+        ErrorCode::NoMemory => Err(rc::ResultErrorCodeNoMemory::make()),
+        ErrorCode::AlreadyExists => Err(rc::ResultErrorCodeAlreadyExists::make()),
+        ErrorCode::NoInit => Err(rc::ResultErrorCodeNoInit::make()),
+        ErrorCode::BadValue => Err(rc::ResultErrorCodeBadValue::make()),
+        ErrorCode::DeadObject => Err(rc::ResultErrorCodeDeadObject::make()),
+        ErrorCode::InvalidOperation => Err(rc::ResultErrorCodeInvalidOperation::make()),
+        ErrorCode::NotEnoughData => Err(rc::ResultErrorCodeNotEnoughData::make()),
+        ErrorCode::UnknownTransaction => Err(rc::ResultErrorCodeUnknownTransaction::make()),
+        ErrorCode::BadIndex => Err(rc::ResultErrorCodeBadIndex::make()),
+        ErrorCode::TimeOut => Err(rc::ResultErrorCodeTimeOut::make()),
+        ErrorCode::FdsNotAllowed => Err(rc::ResultErrorCodeFdsNotAllowed::make()),
+        ErrorCode::FailedTransaction => Err(rc::ResultErrorCodeFailedTransaction::make()),
+        ErrorCode::BadType => Err(rc::ResultErrorCodeBadType::make()),
+        _ => Err(rc::ResultErrorCodeInvalid::make()),
     }
 }
 
@@ -70,7 +71,7 @@ impl Binder {
 
     fn transact_parcel_check_err(&mut self, parcel: &mut parcel::Parcel) -> Result<()> {
         let err: ErrorCode = parcel.read()?;
-        convert_error_code(err)?;
+        convert_nv_error_code(err)?;
         Ok(())
     }
 

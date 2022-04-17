@@ -1,32 +1,33 @@
 use crate::result::*;
-use crate::results;
 use crate::mem;
 use crate::service;
-use crate::service::fspsrv;
-use crate::service::fspsrv::IFileSystemProxy;
-use crate::service::fspsrv::IFileSystem;
-use crate::service::fspsrv::IFile;
-use crate::service::fspsrv::IDirectory;
+use crate::service::fsp;
+use crate::service::fsp::IFileSystem;
+use crate::service::fsp::IFile;
+use crate::service::fsp::IDirectory;
+use crate::service::fsp::srv::IFileSystemProxy;
 use crate::sync;
 use crate::ipc::sf as ipc_sf;
 use alloc::vec::Vec;
 use alloc::string::String;
 use core::mem as cmem;
 use core::ptr;
+
+pub mod rc;
  
 // TODO: define this types here and alias them in fsp-srv?
 
-pub type FileReadOption = fspsrv::FileReadOption;
-pub type FileWriteOption = fspsrv::FileWriteOption;
-pub type DirectoryEntry = fspsrv::DirectoryEntry;
-pub type FileAttribute = fspsrv::FileAttribute;
-pub type DirectoryEntryType = fspsrv::DirectoryEntryType;
-pub type FileOpenMode = fspsrv::FileOpenMode;
-pub type DirectoryOpenMode = fspsrv::DirectoryOpenMode;
-pub type FileTimeStampRaw = fspsrv::FileTimeStampRaw;
-pub type QueryId = fspsrv::QueryId;
-pub type OperationId = fspsrv::OperationId;
-pub type FileQueryRangeInfo = fspsrv::FileQueryRangeInfo;
+pub type FileReadOption = fsp::FileReadOption;
+pub type FileWriteOption = fsp::FileWriteOption;
+pub type DirectoryEntry = fsp::DirectoryEntry;
+pub type FileAttribute = fsp::FileAttribute;
+pub type DirectoryEntryType = fsp::DirectoryEntryType;
+pub type FileOpenMode = fsp::FileOpenMode;
+pub type DirectoryOpenMode = fsp::DirectoryOpenMode;
+pub type FileTimeStampRaw = fsp::FileTimeStampRaw;
+pub type QueryId = fsp::QueryId;
+pub type OperationId = fsp::OperationId;
+pub type FileQueryRangeInfo = fsp::FileQueryRangeInfo;
 
 pub trait File {
     fn read(&mut self, offset: usize, out_buf: *mut u8, out_buf_size: usize, option: FileReadOption) -> Result<usize>;
@@ -142,55 +143,55 @@ impl ProxyFileSystem {
 
 impl FileSystem for ProxyFileSystem {
     fn create_file(&mut self, path: String, attribute: FileAttribute, size: usize) -> Result<()> {
-        let sf_path = fspsrv::Path::from_string(path);
+        let sf_path = fsp::Path::from_string(path);
         self.fs_obj.get().create_file(attribute, size, ipc_sf::Buffer::from_var(&sf_path))
     }
 
     fn delete_file(&mut self, path: String) -> Result<()> {
-        let sf_path = fspsrv::Path::from_string(path);
+        let sf_path = fsp::Path::from_string(path);
         self.fs_obj.get().delete_file(ipc_sf::Buffer::from_var(&sf_path))
     }
 
     fn create_directory(&mut self, path: String) -> Result<()> {
-        let sf_path = fspsrv::Path::from_string(path);
+        let sf_path = fsp::Path::from_string(path);
         self.fs_obj.get().create_directory(ipc_sf::Buffer::from_var(&sf_path))
     }
 
     fn delete_directory(&mut self, path: String) -> Result<()> {
-        let sf_path = fspsrv::Path::from_string(path);
+        let sf_path = fsp::Path::from_string(path);
         self.fs_obj.get().delete_directory(ipc_sf::Buffer::from_var(&sf_path))
     }
 
     fn delete_directory_recursively(&mut self, path: String) -> Result<()> {
-        let sf_path = fspsrv::Path::from_string(path);
+        let sf_path = fsp::Path::from_string(path);
         self.fs_obj.get().delete_directory_recursively(ipc_sf::Buffer::from_var(&sf_path))
     }
 
     fn get_entry_type(&mut self, path: String) -> Result<DirectoryEntryType> {
-        let sf_path = fspsrv::Path::from_string(path);
+        let sf_path = fsp::Path::from_string(path);
         self.fs_obj.get().get_entry_type(ipc_sf::Buffer::from_var(&sf_path))
     }
 
     fn rename_file(&mut self, old_path: String, new_path: String) -> Result<()> {
-        let sf_old_path = fspsrv::Path::from_string(old_path);
-        let sf_new_path = fspsrv::Path::from_string(new_path);
+        let sf_old_path = fsp::Path::from_string(old_path);
+        let sf_new_path = fsp::Path::from_string(new_path);
         self.fs_obj.get().rename_file(ipc_sf::Buffer::from_var(&sf_old_path), ipc_sf::Buffer::from_var(&sf_new_path))
     }
 
     fn rename_directory(&mut self, old_path: String, new_path: String) -> Result<()> {
-        let sf_old_path = fspsrv::Path::from_string(old_path);
-        let sf_new_path = fspsrv::Path::from_string(new_path);
+        let sf_old_path = fsp::Path::from_string(old_path);
+        let sf_new_path = fsp::Path::from_string(new_path);
         self.fs_obj.get().rename_directory(ipc_sf::Buffer::from_var(&sf_old_path), ipc_sf::Buffer::from_var(&sf_new_path))
     }
 
     fn open_file(&mut self, path: String, mode: FileOpenMode) -> Result<mem::Shared<dyn File>> {
-        let sf_path = fspsrv::Path::from_string(path);
+        let sf_path = fsp::Path::from_string(path);
         let file_obj = self.fs_obj.get().open_file(mode, ipc_sf::Buffer::from_var(&sf_path))?;
         Ok(mem::Shared::new(ProxyFile::new(file_obj)))
     }
 
     fn open_directory(&mut self, path: String, mode: DirectoryOpenMode) -> Result<mem::Shared<dyn Directory>> {
-        let sf_path = fspsrv::Path::from_string(path);
+        let sf_path = fsp::Path::from_string(path);
         let dir_obj = self.fs_obj.get().open_directory(mode, ipc_sf::Buffer::from_var(&sf_path))?;
         Ok(mem::Shared::new(ProxyDirectory::new(dir_obj)))
     }
@@ -200,27 +201,27 @@ impl FileSystem for ProxyFileSystem {
     }
 
     fn get_free_space_size(&mut self, path: String) -> Result<usize> {
-        let sf_path = fspsrv::Path::from_string(path);
+        let sf_path = fsp::Path::from_string(path);
         self.fs_obj.get().get_free_space_size(ipc_sf::Buffer::from_var(&sf_path))
     }
 
     fn get_total_space_size(&mut self, path: String) -> Result<usize> {
-        let sf_path = fspsrv::Path::from_string(path);
+        let sf_path = fsp::Path::from_string(path);
         self.fs_obj.get().get_total_space_size(ipc_sf::Buffer::from_var(&sf_path))
     }
 
     fn clean_directory_recursively(&mut self, path: String) -> Result<()> {
-        let sf_path = fspsrv::Path::from_string(path);
+        let sf_path = fsp::Path::from_string(path);
         self.fs_obj.get().clean_directory_recursively(ipc_sf::Buffer::from_var(&sf_path))
     }
 
     fn get_file_time_stamp_raw(&mut self, path: String) -> Result<FileTimeStampRaw> {
-        let sf_path = fspsrv::Path::from_string(path);
+        let sf_path = fsp::Path::from_string(path);
         self.fs_obj.get().get_file_time_stamp_raw(ipc_sf::Buffer::from_var(&sf_path))
     }
 
     fn query_entry(&mut self, path: String, query_id: QueryId, in_buf: *const u8, in_buf_size: usize, out_buf: *mut u8, out_buf_size: usize) -> Result<()> {
-        let sf_path = fspsrv::Path::from_string(path);
+        let sf_path = fsp::Path::from_string(path);
         self.fs_obj.get().query_entry(ipc_sf::Buffer::from_var(&sf_path), query_id, ipc_sf::Buffer::from_ptr(in_buf, in_buf_size), ipc_sf::Buffer::from_mut_ptr(out_buf, out_buf_size))
     }
 }
@@ -412,7 +413,7 @@ impl FileSystemDevice {
     }
 }
 
-static mut G_FSPSRV_SESSION: sync::Locked<mem::Shared<dyn IFileSystemProxy>> = sync::Locked::new(false, mem::Shared::<fspsrv::FileSystemProxy>::empty());
+static mut G_FSPSRV_SESSION: sync::Locked<mem::Shared<dyn IFileSystemProxy>> = sync::Locked::new(false, mem::Shared::<fsp::srv::FileSystemProxy>::empty());
 static mut G_DEVICES: sync::Locked<Vec<FileSystemDevice>> = sync::Locked::new(false, Vec::new());
 
 fn find_device_by_name(name: &PathSegment) -> Result<mem::Shared<dyn FileSystem>> {
@@ -422,7 +423,7 @@ fn find_device_by_name(name: &PathSegment) -> Result<mem::Shared<dyn FileSystem>
                 return Ok(device.fs.clone());
             }
         }
-        Err(results::lib::fs::ResultDeviceNotFound::make())
+        Err(rc::ResultDeviceNotFound::make())
     }
 }
 
@@ -445,7 +446,7 @@ bit_enum! {
 
 pub fn initialize_fspsrv_session() -> Result<()> {
     unsafe {
-        G_FSPSRV_SESSION.set(service::new_service_object::<fspsrv::FileSystemProxy>()?);
+        G_FSPSRV_SESSION.set(service::new_service_object::<fsp::srv::FileSystemProxy>()?);
     }
 
     Ok(())
@@ -478,7 +479,7 @@ pub fn mount_fsp_filesystem(name: &str, fs_obj: mem::Shared<dyn IFileSystem>) ->
 }
 
 pub fn mount_sd_card(name: &str) -> Result<()> {
-    result_return_unless!(is_fspsrv_session_initialized(), results::lib::ResultNotInitialized);
+    result_return_unless!(is_fspsrv_session_initialized(), super::rc::ResultNotInitialized);
     
     let sd_fs_obj = get_fspsrv_session_ref().get().open_sd_card_filesystem()?;
     mount_fsp_filesystem(name, sd_fs_obj)
@@ -585,7 +586,7 @@ pub fn convert_file_open_mode_to_option(mode: FileOpenMode) -> FileOpenOption {
 pub fn rename_file(old_path: String, new_path: String) -> Result<()> {
     let (old_fs, processed_old_path) = format_path(old_path)?;
     let (new_fs, processed_new_path) = format_path(new_path)?;
-    result_return_unless!(old_fs == new_fs, 0xBABA);
+    result_return_unless!(old_fs == new_fs, rc::ResultNotInSameFileSystem);
 
     old_fs.get().rename_file(processed_old_path, processed_new_path)
 }
@@ -593,7 +594,7 @@ pub fn rename_file(old_path: String, new_path: String) -> Result<()> {
 pub fn rename_directory(old_path: String, new_path: String) -> Result<()> {
     let (old_fs, processed_old_path) = format_path(old_path)?;
     let (new_fs, processed_new_path) = format_path(new_path)?;
-    result_return_unless!(old_fs == new_fs, 0xBABA);
+    result_return_unless!(old_fs == new_fs, rc::ResultNotInSameFileSystem);
 
     old_fs.get().rename_directory(processed_old_path, processed_new_path)
 }
@@ -601,7 +602,7 @@ pub fn rename_directory(old_path: String, new_path: String) -> Result<()> {
 pub fn rename(old_path: String, new_path: String) -> Result<()> {
     let (old_fs, processed_old_path) = format_path(old_path)?;
     let (new_fs, processed_new_path) = format_path(new_path)?;
-    result_return_unless!(old_fs == new_fs, 0xBABA);
+    result_return_unless!(old_fs == new_fs, rc::ResultNotInSameFileSystem);
 
     let entry_type = old_fs.get().get_entry_type(processed_old_path.clone())?;
     match entry_type {
@@ -617,7 +618,7 @@ pub fn open_file(path: String, option: FileOpenOption) -> Result<FileAccessor> {
     let file = match fs.get().open_file(processed_path.clone(), mode) {
         Ok(file) => file,
         Err(rc) => {
-            if results::fs::ResultPathNotFound::matches(rc) && option.contains(FileOpenOption::Create()) {
+            if fsp::rc::ResultPathNotFound::matches(rc) && option.contains(FileOpenOption::Create()) {
                 // Create the file if it doesn't exist and we were told to do so
                 fs.get().create_file(processed_path.clone(), FileAttribute::None(), 0)?;
                 fs.get().open_file(processed_path, mode)?

@@ -1,6 +1,7 @@
 use crate::result::*;
-use crate::results;
 use core::ptr;
+
+pub mod rc;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(i64)]
@@ -52,12 +53,12 @@ impl Dyn {
         
             while (*self_ptr).tag != Tag::Invalid {
                 if (*self_ptr).tag == tag {
-                    result_return_unless!(found.is_null(), results::lib::elf::ResultDuplicatedDtEntry);
+                    result_return_unless!(found.is_null(), rc::ResultDuplicatedDtEntry);
                     found = &(*self_ptr).val_ptr;
                 }
                 self_ptr = self_ptr.offset(1);
             }
-            result_return_if!(found.is_null(), results::lib::elf::ResultMissingDtEntry);
+            result_return_if!(found.is_null(), rc::ResultMissingDtEntry);
 
             Ok(*found)
         }

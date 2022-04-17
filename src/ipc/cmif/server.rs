@@ -1,5 +1,4 @@
 use crate::result::*;
-use crate::results;
 use super::*;
 use core::mem as cmem;
 
@@ -114,7 +113,7 @@ pub fn read_request_command_from_msg_buffer(ctx: &mut CommandContext) -> Result<
         if ctx.in_params.data_size >= DATA_PADDING {
             ctx.in_params.data_size -= DATA_PADDING;
             if ctx.in_params.data_size >= cmem::size_of::<DataHeader>() as u32 {
-                result_return_unless!((*data_header).magic == IN_DATA_HEADER_MAGIC, results::cmif::ResultInvalidInputHeader);
+                result_return_unless!((*data_header).magic == IN_DATA_HEADER_MAGIC, super::rc::ResultInvalidInputHeader);
 
                 rq_id = (*data_header).value;
                 data_offset = data_header.offset(1) as *mut u8;
@@ -169,7 +168,7 @@ pub fn read_control_command_from_msg_buffer(ctx: &mut CommandContext) -> Result<
         let data_header = data_offset as *mut DataHeader;
         data_offset = data_header.offset(1) as *mut u8;
 
-        result_return_unless!((*data_header).magic == IN_DATA_HEADER_MAGIC, results::cmif::ResultInvalidInputHeader);
+        result_return_unless!((*data_header).magic == IN_DATA_HEADER_MAGIC, super::rc::ResultInvalidInputHeader);
         let control_rq_id = (*data_header).value;
 
         ctx.in_params.data_offset = data_offset;

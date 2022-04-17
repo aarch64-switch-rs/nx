@@ -1,5 +1,4 @@
 use crate::result::*;
-use crate::results;
 use crate::svc;
 use crate::arm;
 
@@ -114,12 +113,12 @@ fn wait_impl<W>(wait_objects: &[W], timeout: i64, wait_fn: WaitFn<W>) -> Result<
         match (wait_fn)(wait_objects, this_timeout) {
             Ok(index) => return Ok(index),
             Err(rc) => {
-                if results::os::ResultTimeout::matches(rc) {
+                if svc::rc::ResultTimedOut::matches(rc) {
                     if has_timeout {
                         return Err(rc);
                     }
                 }
-                else if !results::os::ResultOperationCanceled::matches(rc) {
+                else if !svc::rc::ResultCancelled::matches(rc) {
                     return Err(rc);
                 }
             }

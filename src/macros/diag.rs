@@ -4,7 +4,7 @@
 macro_rules! diag_assert {
     ($desired_level:expr, $cond:expr) => {
         if !$cond {
-            $crate::diag::assert::assert($desired_level, $crate::results::lib::assert::ResultAssertionFailed::make());
+            $crate::diag::assert::assert($desired_level, $crate::diag::assert::rc::ResultAssertionFailed::make());
         }
     };
 }
@@ -50,7 +50,7 @@ macro_rules! diag_log_assert {
                 let metadata = $crate::diag::log::LogMetadata::new($crate::diag::log::LogSeverity::Fatal, false, msg, file!(), cur_fn_name!(), line!());
                 $crate::diag::log::log_with::<$logger>(&metadata);
 
-                $crate::diag::assert::assert($desired_level, $crate::results::lib::assert::ResultAssertionFailed::make());
+                $crate::diag::assert::assert($desired_level, $crate::diag::assert::rc::ResultAssertionFailed::make());
             }
         }
     };

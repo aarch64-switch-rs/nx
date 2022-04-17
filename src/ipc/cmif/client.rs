@@ -1,5 +1,4 @@
 use super::*;
-use crate::results;
 use core::mem as cmem;
 
 #[inline(always)]
@@ -128,7 +127,7 @@ pub fn read_request_command_response_from_msg_buffer(ctx: &mut CommandContext) -
         }
 
         data_offset = data_offset.add(cmem::size_of::<DataHeader>());
-        result_return_unless!((*data_header).magic == OUT_DATA_HEADER_MAGIC, results::cmif::ResultInvalidOutputHeader);
+        result_return_unless!((*data_header).magic == OUT_DATA_HEADER_MAGIC, super::rc::ResultInvalidOutputHeader);
         result_try!(ResultCode::new((*data_header).value));
 
         ctx.out_params.data_offset = data_offset;
@@ -164,7 +163,7 @@ pub fn read_control_command_response_from_msg_buffer(ctx: &mut CommandContext) -
         let data_header = data_offset as *mut DataHeader;
         
         data_offset = data_offset.add(cmem::size_of::<DataHeader>());
-        result_return_unless!((*data_header).magic == OUT_DATA_HEADER_MAGIC, results::cmif::ResultInvalidOutputHeader);
+        result_return_unless!((*data_header).magic == OUT_DATA_HEADER_MAGIC, super::rc::ResultInvalidOutputHeader);
         result_try!(ResultCode::new((*data_header).value));
 
         ctx.out_params.data_offset = data_offset;

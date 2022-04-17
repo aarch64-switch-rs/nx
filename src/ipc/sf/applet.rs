@@ -88,7 +88,7 @@ ipc_sf_define_interface_trait! {
     }
 }
 
-ipc_sf_define_interface_trait! {
+crate::ipc_sf_define_interface_trait! {
     trait IStorage {
         open [0, version::VersionInterval::all()]: () => (storage_accessor: mem::Shared<dyn IStorageAccessor>);
     }

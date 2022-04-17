@@ -18,26 +18,6 @@ const fn unpack_description(value: u32) -> u32 {
     (value >> MODULE_BITS) & !(!DEFAULT_VALUE << DESCRIPTION_BITS)
 }
 
-pub trait ResultBase {
-    fn get_module() -> u32;
-    fn get_description() -> u32;
-
-    #[inline(always)]
-    fn get_value() -> u32 {
-        pack_value(Self::get_module(), Self::get_description())
-    }
-
-    #[inline(always)]
-    fn make() -> ResultCode {
-        ResultCode::new(Self::get_value())
-    }
-
-    #[inline(always)]
-    fn matches(rc: ResultCode) -> bool {
-        rc.get_value() == Self::get_value()
-    }
-}
-
 #[derive(Copy, Clone, PartialEq, Eq, Default)]
 #[repr(C)]
 pub struct ResultCode {
@@ -82,8 +62,6 @@ impl fmt::Display for ResultCode {
     }
 }
 
-result_define!(Success: 0, 0);
-
 pub type Result<T> = result::Result<T, ResultCode>;
 
 #[inline(always)]
@@ -95,3 +73,30 @@ pub fn wrap<T>(rc: ResultCode, value: T) -> Result<T> {
         Err(rc)
     }
 }
+
+pub trait ResultBase {
+    fn get_module() -> u32;
+    fn get_description() -> u32;
+
+    #[inline(always)]
+    fn get_value() -> u32 {
+        pack_value(Self::get_module(), Self::get_description())
+    }
+
+    #[inline(always)]
+    fn make() -> ResultCode {
+        ResultCode::new(Self::get_value())
+    }
+
+    #[inline(always)]
+    fn make_err<T>() -> Result<T> {
+        Err(Self::make())
+    }
+
+    #[inline(always)]
+    fn matches(rc: ResultCode) -> bool {
+        rc.get_value() == Self::get_value()
+    }
+}
+
+result_define!(Success: 0, 0);

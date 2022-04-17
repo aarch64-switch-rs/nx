@@ -1,5 +1,4 @@
 use crate::result::*;
-use crate::results;
 use crate::svc;
 use crate::mem::alloc;
 use crate::dynamic;
@@ -225,7 +224,7 @@ unsafe extern "C" fn __nx_rrt0_entry(abi_ptr: *const hbl::AbiConfigEntry, raw_ma
 #[no_mangle]
 #[linkage = "weak"]
 unsafe extern "C" fn __nx_rrt0_exception_entry(_error_desc: u32, _stack_top: *mut u8) {
-    svc::return_from_exception(results::os::ResultUnhandledException::make());
+    svc::return_from_exception(svc::rc::ResultNotHandled::make());
 }
 
 pub fn exit(rc: ResultCode) -> ! {

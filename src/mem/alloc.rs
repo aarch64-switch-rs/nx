@@ -1,6 +1,5 @@
 use crate::diag::assert;
 use crate::result::*;
-use crate::results;
 use crate::util::PointerAndSize;
 use crate::sync;
 use core::ptr;
@@ -10,6 +9,8 @@ use alloc::alloc::GlobalAlloc;
 pub use alloc::alloc::Layout;
 
 pub const PAGE_ALIGNMENT: usize = 0x1000;
+
+pub mod rc;
 
 // TODO: be able to change the global allocator?
 
@@ -35,7 +36,7 @@ impl Allocator for LinkedListAllocator {
     fn allocate(&mut self, layout: Layout) -> Result<*mut u8> {
         match self.allocate_first_fit(layout) {
             Ok(non_null_addr) => Ok(non_null_addr.as_ptr()),
-            Err(_) => Err(results::lib::alloc::ResultOutOfMemory::make())
+            Err(_) => Err(rc::ResultOutOfMemory::make())
         }
     }
 
@@ -157,7 +158,7 @@ fn alloc_error_handler(_layout: core::alloc::Layout) -> ! {
     set_enabled(false);
 
     // TODO: which desired assert level shall we choose here?
-    assert::assert(assert::AssertLevel::FatalThrow(), results::lib::alloc::ResultOutOfMemory::make());
+    assert::assert(assert::AssertLevel::FatalThrow(), rc::ResultOutOfMemory::make());
 
     loop {}
 }

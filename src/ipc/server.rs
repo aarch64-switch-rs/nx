@@ -1,5 +1,4 @@
 use crate::result::*;
-use crate::results;
 use crate::svc;
 use crate::wait;
 use crate::ipc::sf::IObject;
@@ -11,6 +10,8 @@ use crate::service::sm::IUserInterface;
 use crate::mem;
 use super::*;
 use alloc::vec::Vec;
+
+pub mod rc;
 
 // TODO: TIPC support, implement remaining control commands
 
@@ -100,7 +101,7 @@ impl RequestCommandParameter<sf::ProcessId> for sf::ProcessId {
             Ok(sf::ProcessId::from(ctx.ctx.in_params.process_id)) 
         }
         else {
-            Err(results::hipc::ResultUnsupportedOperation::make())
+            Err(sf::hipc::rc::ResultUnsupportedOperation::make())
         }
     }
 }
@@ -110,7 +111,7 @@ impl !ResponseCommandParameter for sf::ProcessId {}
 impl<S: sf::IObject + ?Sized> RequestCommandParameter<mem::Shared<S>> for mem::Shared<S> {
     fn after_request_read(_ctx: &mut ServerContext) -> Result<Self> {
         // TODO: implement this (added this placeholder impl for interfaces to actually be valid)
-        Err(results::hipc::ResultUnsupportedOperation::make())
+        Err(sf::hipc::rc::ResultUnsupportedOperation::make())
     }
 }
 
@@ -143,7 +144,7 @@ pub trait IServerObject: ISessionObject {
 }
 
 pub trait IMitmServerObject: ISessionObject {
-    fn new(info: sm::MitmProcessInfo) -> Self where Self: Sized;
+    fn new(info: sm::mitm::MitmProcessInfo) -> Self where Self: Sized;
 }
 
 pub type NewServerFn = fn() -> mem::Shared<dyn ISessionObject>;
@@ -152,9 +153,9 @@ fn create_server_object_impl<S: IServerObject + 'static>() -> mem::Shared<dyn IS
     mem::Shared::new(S::new())
 }
 
-pub type NewMitmServerFn = fn(sm::MitmProcessInfo) -> mem::Shared<dyn ISessionObject>;
+pub type NewMitmServerFn = fn(sm::mitm::MitmProcessInfo) -> mem::Shared<dyn ISessionObject>;
 
-fn create_mitm_server_object_impl<S: IMitmServerObject + 'static>(info: sm::MitmProcessInfo) -> mem::Shared<dyn ISessionObject> {
+fn create_mitm_server_object_impl<S: IMitmServerObject + 'static>(info: sm::mitm::MitmProcessInfo) -> mem::Shared<dyn ISessionObject> {
     mem::Shared::new(S::new(info))
 }
 
@@ -193,7 +194,7 @@ impl DomainTable {
             return Ok(specific_domain_object_id);
         }
         
-        Err(results::lib::ipc::ResultObjectIdAlreadyAllocated::make())
+        Err(rc::ResultObjectIdAlreadyAllocated::make())
     }
 
     pub fn find_domain(&mut self, id: cmif::DomainObjectId) -> Result<mem::Shared<dyn ISessionObject>> {
@@ -203,7 +204,7 @@ impl DomainTable {
             }
         }
 
-        Err(results::lib::ipc::ResultDomainNotFound::make())
+        Err(rc::ResultDomainNotFound::make())
     }
     
     pub fn deallocate_domain(&mut self, domain_object_id: cmif::DomainObjectId) {
@@ -246,7 +247,7 @@ impl ServerHolder {
         Ok(Self { server: (new_fn)(), info: ObjectInfo::from_handle(handle), new_server_fn: self.new_server_fn, new_mitm_server_fn: self.new_mitm_server_fn, handle_type: WaitHandleType::Session, mitm_forward_info: ObjectInfo::new(), is_mitm_service: self.is_mitm_service, service_name: sm::ServiceName::empty(), domain_table: mem::Shared::empty() })
     }
 
-    pub fn make_new_mitm_session(&self, handle: svc::Handle, forward_handle: svc::Handle, info: sm::MitmProcessInfo) -> Result<Self> {
+    pub fn make_new_mitm_session(&self, handle: svc::Handle, forward_handle: svc::Handle, info: sm::mitm::MitmProcessInfo) -> Result<Self> {
         let new_mitm_fn = self.get_new_mitm_server_fn()?;
         Ok(Self { server: (new_mitm_fn)(info), info: ObjectInfo::from_handle(handle), new_server_fn: self.new_server_fn, new_mitm_server_fn: self.new_mitm_server_fn, handle_type: WaitHandleType::Session, mitm_forward_info: ObjectInfo::from_handle(forward_handle), is_mitm_service: self.is_mitm_service, service_name: sm::ServiceName::empty(), domain_table: mem::Shared::empty() })
     }
@@ -262,20 +263,20 @@ impl ServerHolder {
     pub fn get_new_server_fn(&self) -> Result<NewServerFn> {
         match self.new_server_fn {
             Some(new_server_fn) => Ok(new_server_fn),
-            None => Err(results::hipc::ResultSessionClosed::make())
+            None => Err(sf::hipc::rc::ResultSessionClosed::make())
         }
     }
 
     pub fn get_new_mitm_server_fn(&self) -> Result<NewMitmServerFn> {
         match self.new_mitm_server_fn {
             Some(new_mitm_server_fn) => Ok(new_mitm_server_fn),
-            None => Err(results::hipc::ResultSessionClosed::make())
+            None => Err(sf::hipc::rc::ResultSessionClosed::make())
         }
     }
 
     pub fn convert_to_domain(&mut self) -> Result<cmif::DomainObjectId> {
         // Check that we're not already a domain
-        result_return_if!(self.info.is_domain(), 0xBADE);
+        result_return_if!(self.info.is_domain(), rc::ResultAlreadyDomain);
 
         // Since we're a base domain object now, create a domain table
         self.domain_table = mem::Shared::new(DomainTable::new());
@@ -350,7 +351,7 @@ impl<'a> IHipcManager for HipcManager<'a> {
 
     fn copy_from_current_domain(&mut self, _domain_object_id: cmif::DomainObjectId) -> Result<sf::MoveHandle> {
         // TODO
-        Err(results::lib::ResultNotImplemented::make())
+        Err(crate::rc::ResultNotImplemented::make())
     }
 
     fn clone_current_object(&mut self) -> Result<sf::MoveHandle> {
@@ -394,7 +395,7 @@ impl<S: IMitmService> sf::IObject for MitmQueryService<S> {
 }
 
 impl<S: IMitmService> IMitmQueryService for MitmQueryService<S> {
-    fn should_mitm(&mut self, info: sm::MitmProcessInfo) -> Result<bool> {
+    fn should_mitm(&mut self, info: sm::mitm::MitmProcessInfo) -> Result<bool> {
         Ok(S::should_mitm(info))
     }
 }
@@ -413,7 +414,7 @@ pub trait IService: IServerObject {
 
 pub trait IMitmService: IMitmServerObject {
     fn get_name() -> sm::ServiceName;
-    fn should_mitm(info: sm::MitmProcessInfo) -> bool;
+    fn should_mitm(info: sm::mitm::MitmProcessInfo) -> bool;
 }
 
 // TODO: use const generics to reduce memory usage, like libstratosphere does?
@@ -476,7 +477,7 @@ impl<const P: usize> ServerManager<P> {
                             let protocol = ctx.object_info.protocol;
                             let mut server_ctx = ServerContext::new(ctx, DataWalker::empty(), domain_table_clone.clone(), &mut new_sessions);
                             if let Err(rc) = target_server.get().call_self_server_command(command.command_fn, protocol, &mut server_ctx) {
-                                if server_holder.is_mitm_service && results::sm::mitm::ResultShouldForwardToSession::matches(rc) {
+                                if server_holder.is_mitm_service && sm::mitm::rc::ResultShouldForwardToSession::matches(rc) {
                                     if let Err(rc) = send_to_forward_handle() {
                                         cmif::server::write_request_command_response_on_msg_buffer(ctx, rc, command_type);
                                     }
@@ -494,7 +495,7 @@ impl<const P: usize> ServerManager<P> {
                             }
                         }
                         else {
-                            cmif::server::write_request_command_response_on_msg_buffer(ctx, results::cmif::ResultInvalidCommandRequestId::make(), command_type);
+                            cmif::server::write_request_command_response_on_msg_buffer(ctx, cmif::rc::ResultInvalidCommandRequestId::make(), command_type);
                         }
                     }
                     break;
@@ -511,7 +512,7 @@ impl<const P: usize> ServerManager<P> {
                 // Invalid command type might mean that the session isn't a domain :P
                 match is_domain {
                     false => do_handle_request()?,
-                    true => return Err(results::lib::ipc::ResultInvalidDomainCommandType::make())
+                    true => return Err(rc::ResultInvalidDomainCommandType::make())
                 };
             },
             cmif::DomainCommandType::SendMessage => do_handle_request()?,
@@ -550,7 +551,7 @@ impl<const P: usize> ServerManager<P> {
                     }
                 }
                 if !command_found {
-                    cmif::server::write_control_command_response_on_msg_buffer(ctx, results::cmif::ResultInvalidCommandRequestId::make(), command_type);
+                    cmif::server::write_control_command_response_on_msg_buffer(ctx, cmif::rc::ResultInvalidCommandRequestId::make(), command_type);
                 }
 
                 if hipc_manager.has_cloned_object() {
@@ -592,7 +593,7 @@ impl<const P: usize> ServerManager<P> {
 
                         match svc::reply_and_receive(&handle, 1, 0, -1) {
                             Err(rc) => {
-                                if results::os::ResultSessionClosed::matches(rc) {
+                                if svc::rc::ResultSessionClosed::matches(rc) {
                                     should_close_session = true;
                                     break;
                                 }
@@ -636,7 +637,7 @@ impl<const P: usize> ServerManager<P> {
                             cmif::CommandType::Close => {
                                 should_close_session = true;
                             },
-                            _ => return Err(results::lib::ipc::ResultInvalidCommandType::make())
+                            _ => return Err(rc::ResultInvalidCommandType::make())
                         }
                     },
                     WaitHandleType::Server => {
@@ -661,7 +662,7 @@ impl<const P: usize> ServerManager<P> {
         let reply_impl = || -> Result<()> {
             match svc::reply_and_receive(&handle, 0, handle, 0) {
                 Err(rc) => {
-                    if results::os::ResultTimeout::matches(rc) || results::os::ResultSessionClosed::matches(rc) {
+                    if svc::rc::ResultTimedOut::matches(rc) || svc::rc::ResultSessionClosed::matches(rc) {
                         Ok(())
                     }
                     else {
@@ -699,7 +700,7 @@ impl<const P: usize> ServerManager<P> {
 
         match server_found {
             true => Ok(()),
-            false => Err(results::lib::ipc::ResultSignaledServerNotFound::make())
+            false => Err(rc::ResultSignaledServerNotFound::make())
         }
     }
     
@@ -763,7 +764,7 @@ impl<const P: usize> ServerManager<P> {
             match self.process() {
                 Err(rc) => {
                     // TODO: handle results properly here
-                    if results::os::ResultOperationCanceled::matches(rc) {
+                    if svc::rc::ResultCancelled::matches(rc) {
                         break;
                     }
                     return Err(rc);

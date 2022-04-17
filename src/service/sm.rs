@@ -47,8 +47,8 @@ impl IUserInterface for UserInterface {
         ipc_client_send_request_command!([self.session.object_info; 65001] (name) => ())
     }
     
-    fn atmosphere_acknowledge_mitm_session(&mut self, name: ServiceName) -> Result<(MitmProcessInfo, sf::MoveHandle)> {
-        ipc_client_send_request_command!([self.session.object_info; 65003] (name) => (info: MitmProcessInfo, session_handle: sf::MoveHandle))
+    fn atmosphere_acknowledge_mitm_session(&mut self, name: ServiceName) -> Result<(mitm::MitmProcessInfo, sf::MoveHandle)> {
+        ipc_client_send_request_command!([self.session.object_info; 65003] (name) => (info: mitm::MitmProcessInfo, session_handle: sf::MoveHandle))
     }
 
     fn atmosphere_has_mitm(&mut self, name: ServiceName) -> Result<bool> {

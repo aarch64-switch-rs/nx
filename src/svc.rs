@@ -6,6 +6,8 @@ use crate::version;
 use core::ptr;
 use core::mem;
 
+pub mod rc;
+
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
 pub enum BreakReason {

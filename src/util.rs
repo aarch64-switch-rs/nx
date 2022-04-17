@@ -1,5 +1,4 @@
 use crate::result::*;
-use crate::results;
 use crate::thread;
 use crate::diag::assert;
 use crate::diag::log;
@@ -9,6 +8,8 @@ use core::str;
 use core::ptr;
 use core::fmt;
 use core::panic;
+
+pub mod rc;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
@@ -126,7 +127,7 @@ impl<const S: usize> CString<S> {
             unsafe {
                 match core::str::from_utf8(core::slice::from_raw_parts(ptr, str_len)) {
                     Ok(name) => Ok(name.trim_end_matches('\0')),
-                    Err(_) => Err(results::lib::util::ResultInvalidConversion::make())
+                    Err(_) => Err(rc::ResultInvalidUtf8Conversion::make())
                 }
             }
         }
@@ -321,6 +322,6 @@ pub fn simple_panic_handler<L: Logger>(info: &panic::PanicInfo, desired_level: a
     };
     diag_log!(L { log::LogSeverity::Fatal, true } => "Panic! at thread '{}' -> {}\n", thread_name, info);
 
-    assert::assert(desired_level, results::lib::ResultPanicked::make());
+    assert::assert(desired_level, super::rc::ResultPanicked::make());
     loop {}
 }

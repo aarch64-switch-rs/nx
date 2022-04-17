@@ -37,10 +37,12 @@ extern crate static_assertions;
 #[macro_use]
 pub mod macros;
 
+#[macro_use]
 pub mod result;
 
-pub mod results;
+pub mod rc;
 
+#[macro_use]
 pub mod util;
 
 pub mod mem;
@@ -53,16 +55,19 @@ pub mod thread;
 
 pub mod hbl;
 
+#[macro_use]
 pub mod rrt0;
 
 pub mod svc;
 
 pub mod smc;
 
+#[macro_use]
 pub mod ipc;
 
 pub mod service;
 
+#[macro_use]
 pub mod diag;
 
 pub mod gpu;

@@ -1,11 +1,12 @@
 use crate::result::*;
-use crate::results;
 use crate::svc;
 use crate::mem::alloc;
 use crate::wait;
 use crate::util;
 use core::ptr;
 use core::arch::asm;
+
+pub mod rc;
 
 pub type ThreadName = util::CString<0x20>;
 
@@ -133,7 +134,7 @@ impl Thread {
     }
     
     pub fn new_with_stack<T: Copy, F: 'static + Fn(&T)>(entry: F, args: &T, name: &str, stack: *mut u8, stack_size: usize) -> Result<Self> {
-        result_return_unless!(!stack.is_null(), results::lib::thread::ResultInvalidStack);
+        result_return_unless!(!stack.is_null(), rc::ResultInvalidStack);
         // TODO: also check alignment
 
         let thread_entry = ThreadEntry::new(thread_entry_impl::<T, F>, entry, args);
@@ -148,7 +149,7 @@ impl Thread {
     }
 
     pub fn initialize(&mut self, priority: i32, processor_id: i32) -> Result<()> {
-        result_return_unless!(self.state == ThreadState::NotInitialized, results::lib::thread::ResultInvalidState);
+        result_return_unless!(self.state == ThreadState::NotInitialized, rc::ResultInvalidState);
 
         let mut priority_value = priority;
         if priority_value == PRIORITY_AUTO {
@@ -162,7 +163,7 @@ impl Thread {
     }
 
     pub fn start(&mut self) -> Result<()> {
-        result_return_unless!((self.state == ThreadState::Initialized) || (self.state == ThreadState::Terminated), results::lib::thread::ResultInvalidState);
+        result_return_unless!((self.state == ThreadState::Initialized) || (self.state == ThreadState::Terminated), rc::ResultInvalidState);
 
         svc::start_thread(self.handle)?;
 
@@ -171,7 +172,7 @@ impl Thread {
     }
 
     pub fn join(&mut self) -> Result<()> {
-        result_return_unless!(self.state == ThreadState::Started, results::lib::thread::ResultInvalidState);
+        result_return_unless!(self.state == ThreadState::Started, rc::ResultInvalidState);
         
         wait::wait_handles(&[self.handle], -1)?;
 
@@ -188,13 +189,13 @@ impl Thread {
     }
 
     pub fn get_priority(&self) -> Result<i32> {
-        result_return_unless!(self.state != ThreadState::NotInitialized, results::lib::thread::ResultInvalidState);
+        result_return_unless!(self.state != ThreadState::NotInitialized, rc::ResultInvalidState);
 
         svc::get_thread_priority(self.handle)
     }
 
     pub fn get_id(&self) -> Result<u64> {
-        result_return_unless!(self.state != ThreadState::NotInitialized, results::lib::thread::ResultInvalidState);
+        result_return_unless!(self.state != ThreadState::NotInitialized, rc::ResultInvalidState);
         
         svc::get_thread_id(self.handle)
     } 

@@ -8,7 +8,9 @@ use crate::service::fatal;
 use crate::service::fatal::IService;
 use core::mem;
 
-bit_enum!{
+pub mod rc;
+
+bit_enum! {
     AssertLevel(u32) {
         NeedsHeapAllocation = bit!(31),
 

@@ -1,5 +1,4 @@
 use super::*;
-use crate::results;
 use crate::gpu::binder;
 use crate::gpu::ioctl;
 use crate::svc;
@@ -59,7 +58,7 @@ impl Surface {
         };
 
         let err = self.nvdrv_srv.get().ioctl(fd, I::get_id(), sf::Buffer::from_other_var(i), sf::Buffer::from_other_var(i))?;
-        nv::convert_error_code(err)
+        super::convert_nv_error_code(err)
     }
 
     fn initialize(&mut self) -> Result<()> {
@@ -163,7 +162,7 @@ impl Surface {
                         break;
                     },
                     Err(rc) => {
-                        if results::lib::gpu::ResultBinderErrorCodeWouldBlock::matches(rc) {
+                        if binder::rc::ResultErrorCodeWouldBlock::matches(rc) {
                             continue;
                         }
                         return Err(rc);

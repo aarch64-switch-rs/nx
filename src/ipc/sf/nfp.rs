@@ -6,6 +6,8 @@ use crate::ipc::sf::applet;
 use crate::ipc::sf::mii;
 use crate::version;
 
+pub mod rc;
+
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct McuVersionData {

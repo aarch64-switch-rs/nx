@@ -14,6 +14,8 @@ use crate::service::vi::IApplicationDisplayService;
 use crate::service::dispdrv;
 use crate::service::applet;
 
+pub mod rc;
+
 pub mod parcel;
 
 pub mod binder;
@@ -756,6 +758,32 @@ pub enum ViServiceKind {
     Manager
 }
 
+#[allow(unreachable_patterns)]
+pub fn convert_nv_error_code(err: nv::ErrorCode) -> Result<()> {
+    match err {
+        nv::ErrorCode::Success => Ok(()),
+        nv::ErrorCode::NotImplemented => Err(rc::ResultNvErrorCodeNotImplemented::make()),
+        nv::ErrorCode::NotSupported => Err(rc::ResultNvErrorCodeNotSupported::make()),
+        nv::ErrorCode::NotInitialized => Err(rc::ResultNvErrorCodeNotInitialized::make()),
+        nv::ErrorCode::InvalidParameter => Err(rc::ResultNvErrorCodeInvalidParameter::make()),
+        nv::ErrorCode::TimeOut => Err(rc::ResultNvErrorCodeTimeOut::make()),
+        nv::ErrorCode::InsufficientMemory => Err(rc::ResultNvErrorCodeInsufficientMemory::make()),
+        nv::ErrorCode::ReadOnlyAttribute => Err(rc::ResultNvErrorCodeReadOnlyAttribute::make()),
+        nv::ErrorCode::InvalidState => Err(rc::ResultNvErrorCodeInvalidState::make()),
+        nv::ErrorCode::InvalidAddress => Err(rc::ResultNvErrorCodeInvalidAddress::make()),
+        nv::ErrorCode::InvalidSize => Err(rc::ResultNvErrorCodeInvalidSize::make()),
+        nv::ErrorCode::InvalidValue => Err(rc::ResultNvErrorCodeInvalidValue::make()),
+        nv::ErrorCode::AlreadyAllocated => Err(rc::ResultNvErrorCodeAlreadyAllocated::make()),
+        nv::ErrorCode::Busy => Err(rc::ResultNvErrorCodeBusy::make()),
+        nv::ErrorCode::ResourceError => Err(rc::ResultNvErrorCodeResourceError::make()),
+        nv::ErrorCode::CountMismatch => Err(rc::ResultNvErrorCodeCountMismatch::make()),
+        nv::ErrorCode::SharedMemoryTooSmall => Err(rc::ResultNvErrorCodeSharedMemoryTooSmall::make()),
+        nv::ErrorCode::FileOperationFailed => Err(rc::ResultNvErrorCodeFileOperationFailed::make()),
+        nv::ErrorCode::IoctlFailed => Err(rc::ResultNvErrorCodeIoctlFailed::make()),
+        _ => Err(rc::ResultNvErrorCodeInvalid::make()),
+    }
+}
+
 pub struct Context {
     vi_service: mem::Shared<dyn sf::IObject>,
     nvdrv_service: mem::Shared<dyn INvDrvServices>,
@@ -814,11 +842,11 @@ impl Context {
         nvdrv_srv.get().initialize(transfer_mem_size as u32, sf::Handle::from(svc::CURRENT_PROCESS_PSEUDO_HANDLE), sf::Handle::from(transfer_mem_handle))?;
 
         let (nvhost_fd, nvhost_err) = nvdrv_srv.get().open(sf::Buffer::from_array(NVHOST_PATH.as_bytes()))?;
-        nv::convert_error_code(nvhost_err)?;
+        convert_nv_error_code(nvhost_err)?;
         let (nvmap_fd, nvmap_err) = nvdrv_srv.get().open(sf::Buffer::from_array(NVMAP_PATH.as_bytes()))?;
-        nv::convert_error_code(nvmap_err)?;
+        convert_nv_error_code(nvmap_err)?;
         let (nvhostctrl_fd, nvhostctrl_err) = nvdrv_srv.get().open(sf::Buffer::from_array(NVHOSTCTRL_PATH.as_bytes()))?;
-        nv::convert_error_code(nvhostctrl_err)?;
+        convert_nv_error_code(nvhostctrl_err)?;
         
         let hos_binder_drv = application_display_srv.get().get_relay_service()?;
         Ok(Self { vi_service: vi_srv, nvdrv_service: nvdrv_srv, application_display_service: application_display_srv, hos_binder_driver: hos_binder_drv, transfer_mem, transfer_mem_handle, nvhost_fd, nvmap_fd, nvhostctrl_fd })

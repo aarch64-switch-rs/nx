@@ -70,11 +70,11 @@ impl Logger for SvcOutputLogger {
 }
 
 use crate::service;
-use crate::service::fspsrv;
-use crate::service::fspsrv::IFileSystemProxy;
+use crate::service::fsp::srv;
+use crate::service::fsp::srv::IFileSystemProxy;
 
 pub struct FsAccessLogLogger {
-    service: Result<mem::Shared<fspsrv::FileSystemProxy>>
+    service: Result<mem::Shared<srv::FileSystemProxy>>
 }
 
 impl Logger for FsAccessLogLogger {

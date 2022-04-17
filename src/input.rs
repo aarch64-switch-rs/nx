@@ -1,5 +1,4 @@
 use crate::result::*;
-use crate::results;
 use crate::service::applet;
 use crate::service::hid;
 use crate::service::hid::IAppletResource;
@@ -10,6 +9,8 @@ use crate::mem;
 use crate::vmem;
 use crate::service;
 use core::mem as cmem;
+
+pub mod rc;
 
 bit_enum! {
     Key (u64) {
@@ -244,7 +245,7 @@ fn get_index_for_controller(controller: hid::ControllerId) -> Result<usize> {
     match controller {
         hid::ControllerId::Player1 | hid::ControllerId::Player2 | hid::ControllerId::Player3 | hid::ControllerId::Player4 | hid::ControllerId::Player5 | hid::ControllerId::Player6 | hid::ControllerId::Player7 | hid::ControllerId::Player8 => Ok(controller as usize),
         hid::ControllerId::Handheld => Ok(8),
-        _ => Err(results::lib::input::ResultInvalidControllerId::make())
+        _ => Err(rc::ResultInvalidControllerId::make())
     }
 }
 
@@ -284,7 +285,7 @@ impl InputContext {
     pub fn get_touch_data(&mut self, touch_index: u32) -> Result<TouchData> {
         unsafe {
             let touch_entry: *const TouchEntry = &(*self.shared_mem_data).touch_state.entries[(*self.shared_mem_data).touch_state.latest_index as usize];
-            result_return_unless!((touch_index as u64) < (*touch_entry).count, results::lib::input::ResultInvalidTouchIndex);
+            result_return_unless!((touch_index as u64) < (*touch_entry).count, rc::ResultInvalidTouchIndex);
             Ok((*touch_entry).touches[touch_index as usize])
         }
     }

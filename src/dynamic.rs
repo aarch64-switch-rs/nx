@@ -1,5 +1,6 @@
 use crate::result::*;
-use crate::results;
+
+pub mod rc;
 
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -14,7 +15,7 @@ pub fn relocate_with_dyn(base_address: *const u8, dynamic: *const elf::Dyn) -> R
         let rela_size = (*dynamic).find_value(elf::Tag::RelaSize)?;
         let rela_entry_size = (*dynamic).find_value(elf::Tag::RelaEntrySize)?;
         let rela_count = (*dynamic).find_value(elf::Tag::RelaCount)?;
-        result_return_unless!(rela_size == rela_entry_size * rela_count, results::lib::dynamic::ResultRelaSizeMismatch);
+        result_return_unless!(rela_size == rela_entry_size * rela_count, rc::ResultRelaSizeMismatch);
 
         let rela_base = base_address.offset(rela_offset as isize) as *const elf::Rela;
         for i in 0..rela_count {
@@ -38,7 +39,7 @@ pub fn relocate(base_address: *const u8) -> Result<()> {
         let module_start = base_address as *const ModuleStart;
         let mod_offset = (*module_start).magic_offset as isize;
         let module = base_address.offset(mod_offset) as *const mod0::Header;
-        result_return_unless!((*module).magic == mod0::MAGIC, results::lib::dynamic::ResultInvalidModuleMagic);
+        result_return_unless!((*module).magic == mod0::MAGIC, rc::ResultInvalidModuleMagic);
 
         let dyn_offset = mod_offset + (*module).dynamic as isize;
         let dynamic = base_address.offset(dyn_offset) as *const elf::Dyn;

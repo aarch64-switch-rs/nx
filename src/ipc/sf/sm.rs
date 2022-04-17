@@ -1,7 +1,10 @@
 use crate::{result::*, util};
 use crate::ipc::sf;
-use crate::input;
 use crate::version;
+
+pub mod mitm;
+
+pub mod rc;
 
 #[derive(Copy, Clone, Eq)]
 #[repr(C)]
@@ -76,15 +79,6 @@ impl core::fmt::Debug for ServiceName {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
-#[repr(C)]
-pub struct MitmProcessInfo {
-    pub process_id: u64,
-    pub program_id: u64,
-    pub keys_held: input::Key,
-    pub override_flags: u64
-}
-
 ipc_sf_define_interface_trait! {
     trait IUserInterface {
         register_client [0, version::VersionInterval::all()]: (process_id: sf::ProcessId) => ();
@@ -94,7 +88,7 @@ ipc_sf_define_interface_trait! {
         detach_client [4, version::VersionInterval::from(version::Version::new(11,0,0))]: (process_id: sf::ProcessId) => ();
         atmosphere_install_mitm [65000, version::VersionInterval::all()]: (name: ServiceName) => (port_handle: sf::MoveHandle, query_handle: sf::MoveHandle);
         atmosphere_uninstall_mitm [65001, version::VersionInterval::all()]: (name: ServiceName) => ();
-        atmosphere_acknowledge_mitm_session [65003, version::VersionInterval::all()]: (name: ServiceName) => (info: MitmProcessInfo, session_handle: sf::MoveHandle);
+        atmosphere_acknowledge_mitm_session [65003, version::VersionInterval::all()]: (name: ServiceName) => (info: mitm::MitmProcessInfo, session_handle: sf::MoveHandle);
         atmosphere_has_mitm [65004, version::VersionInterval::all()]: (name: ServiceName) => (has: bool);
         atmosphere_wait_mitm [65005, version::VersionInterval::all()]: (name: ServiceName) => ();
         atmosphere_declare_future_mitm [65006, version::VersionInterval::all()]: (name: ServiceName) => ();

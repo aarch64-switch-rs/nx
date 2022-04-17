@@ -39,7 +39,7 @@ pub fn new_service_object<T: IService + 'static>() -> Result<mem::Shared<T>> {
 
 pub mod psm;
 
-pub mod fspsrv;
+pub mod fsp;
 
 pub mod lm;
 

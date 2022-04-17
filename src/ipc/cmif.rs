@@ -1,5 +1,7 @@
 use super::*;
 
+pub mod rc;
+
 pub type DomainObjectId = u32;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
