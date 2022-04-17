@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["nx"] = [{"text":"impl&lt;T:&nbsp;Unsize&lt;U&gt; + ?Sized, U:&nbsp;?Sized&gt; CoerceUnsized&lt;<a class=\"struct\" href=\"nx/mem/struct.Shared.html\" title=\"struct nx::mem::Shared\">Shared</a>&lt;U&gt;&gt; for <a class=\"struct\" href=\"nx/mem/struct.Shared.html\" title=\"struct nx::mem::Shared\">Shared</a>&lt;T&gt;","synthetic":false,"types":["nx::mem::Shared"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

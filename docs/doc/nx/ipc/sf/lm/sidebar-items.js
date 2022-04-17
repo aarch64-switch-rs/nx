@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["LogDestination",""]],"trait":[["ILogService",""],["ILogger",""]]});

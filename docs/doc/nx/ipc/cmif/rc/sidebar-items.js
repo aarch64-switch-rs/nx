@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["RESULT_MODULE",""]],"struct":[["ResultInvalidCommandRequestId",""],["ResultInvalidHeaderSize",""],["ResultInvalidInObjectCount",""],["ResultInvalidInputHeader",""],["ResultInvalidOutObjectCount",""],["ResultInvalidOutputHeader",""]]});

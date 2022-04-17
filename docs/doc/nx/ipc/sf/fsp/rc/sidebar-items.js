@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["RESULT_MODULE",""]],"struct":[["ResultNotInSameFileSystem",""],["ResultPathAlreadyExists",""],["ResultPathNotFound",""]]});
