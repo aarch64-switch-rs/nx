@@ -37,6 +37,16 @@ impl PointerAndSize {
     }
 }
 
+const fn const_usize_min(a: usize, b: usize) -> usize {
+    // TODO: const min traits
+    if a > b {
+        b
+    }
+    else {
+        a
+    }
+}
+
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct CString<const S: usize> {
@@ -78,36 +88,34 @@ impl<const S: usize> CString<S> {
         Self { c_str: raw_bytes }
     }
 
-    pub fn from_str(string: &str) -> Result<Self> {
+    pub const fn from_str(string: &str) -> Self {
         let mut cstr = Self::new();
-        cstr.set_str(string)?;
-        Ok(cstr)
+        cstr.set_str(string);
+        cstr
     }
 
-    pub fn from_string(string: String) -> Result<Self> {
+    pub fn from_string(string: String) -> Self {
         let mut cstr = Self::new();
-        cstr.set_string(string)?;
-        Ok(cstr)
+        cstr.set_string(string);
+        cstr
     }
 
-    fn copy_str_to(string: &str, ptr: *mut u8, ptr_len: usize) -> Result<()> {
+    const fn copy_str_to(string: &str, ptr: *mut u8, ptr_len: usize) {
         unsafe {
             ptr::write_bytes(ptr, 0, ptr_len);
             if !string.is_empty() {
-                ptr::copy(string.as_ptr(), ptr, core::cmp::min(ptr_len - 1, string.len()));
+                ptr::copy(string.as_ptr(), ptr, const_usize_min(string.len(), ptr_len - 1));
             }
         }
-        Ok(())
     }
     
-    fn copy_string_to(string: String, ptr: *mut u8, ptr_len: usize) -> Result<()> {
+    fn copy_string_to(string: String, ptr: *mut u8, ptr_len: usize) {
         unsafe {
             ptr::write_bytes(ptr, 0, ptr_len);
             if !string.is_empty() {
                 ptr::copy(string.as_ptr(), ptr, core::cmp::min(ptr_len - 1, string.len()));
             }
         }
-        Ok(())
     }
 
     fn read_str_from(ptr: *const u8, str_len: usize) -> Result<&'static str> {
@@ -138,11 +146,11 @@ impl<const S: usize> CString<S> {
         S
     }
 
-    pub fn set_str(&mut self, string: &str) -> Result<()> {
+    pub const fn set_str(&mut self, string: &str) {
         Self::copy_str_to(string, &mut self.c_str as *mut _ as *mut u8, S)
     }
 
-    pub fn set_string(&mut self, string: String) -> Result<()> {
+    pub fn set_string(&mut self, string: String) {
         Self::copy_string_to(string, &mut self.c_str as *mut _ as *mut u8, S)
     }
 

@@ -47,6 +47,35 @@ pub fn get_executable_type() -> ExecutableType {
     }
 }
 
+#[derive(Copy, Clone)]
+#[repr(C)]
+pub struct ModulePath {
+    pub zero: u32,
+    pub path_len: u32,
+    pub path: util::CString<0x200>
+}
+
+impl ModulePath {
+    pub const fn new(name: &str) -> Self {
+        Self {
+            zero: 0,
+            path_len: name.len() as u32,
+            path: util::CString::from_str(name)
+        }
+    }
+}
+
+#[no_mangle]
+#[used]
+#[linkage = "weak"]
+#[link_section = ".module_name"]
+#[export_name = "__nx_rrt0_module_name"]
+static G_MODULE_NAME: ModulePath = ModulePath::new("aarch64-switch-rs (unknown module)");
+
+pub fn get_module_name() -> ModulePath {
+    G_MODULE_NAME
+}
+
 static mut G_EXIT_FN: sync::Locked<Option<ExitFn>> = sync::Locked::new(false, None);
 static mut G_MAIN_THREAD: thread::Thread = thread::Thread::empty();
 

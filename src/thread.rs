@@ -60,7 +60,9 @@ extern fn thread_entry_impl<T: Copy, F: 'static + Fn(&T)>(thread_ref_v: *mut u8)
 pub const PRIORITY_AUTO: i32 = -1;
 
 // Note: our thread type attempts to kind-of mimic the official nn::os::ThreadType struct, at least so that the thread name is properly accessible from TLS by, for instance, creport -- thus all the reserved fields
-// TODO: TLS slots
+// We act like nn::os::ThreadType version 1
+
+const CURRENT_THREAD_VERSION: u16 = 1;
 
 #[repr(C)]
 pub struct Thread {
@@ -71,14 +73,14 @@ pub struct Thread {
     pub handle: svc::Handle,
     pub stack: *mut u8,
     pub stack_size: usize,
-    pub reserved: [u8; 0x20], // Note: Originally entry and entry_arg ptrs would go here, but we use a different entry system (see entry field below)
-    pub unused_tls_slots: [*mut u8; 0x20],
+    pub reserved: [u8; 0x26],
+    pub version: u16,
+    pub reserved_2: [u8; 0xF8],
     pub entry: Option<ThreadEntry>,
-    pub reserved_2: [u8; 0x3C],
-    pub name_len: u32,
+    pub reserved_3: [u8; 0x28],
     pub name: ThreadName,
     pub name_addr: *mut u8,
-    pub reserved_3: [u8; 0x20],
+    pub reserved_4: [u8; 0x20]
 }
 
 impl Thread {
@@ -91,14 +93,14 @@ impl Thread {
             handle: 0,
             stack: ptr::null_mut(),
             stack_size: 0,
-            reserved: [0; 0x20],
-            unused_tls_slots: [ptr::null_mut(); 0x20],
+            reserved: [0; 0x26],
+            version: CURRENT_THREAD_VERSION,
+            reserved_2: [0; 0xF8],
             entry: None,
-            reserved_2: [0; 0x3C],
-            name_len: 0,
+            reserved_3: [0; 0x28],
             name: ThreadName::new(),
             name_addr: ptr::null_mut(),
-            reserved_3: [0; 0x20],
+            reserved_4: [0; 0x20]
         }
     }
 
@@ -111,18 +113,18 @@ impl Thread {
             handle,
             stack,
             stack_size,
-            reserved: [0; 0x20],
-            unused_tls_slots: [ptr::null_mut(); 0x20],
+            reserved: [0; 0x26],
+            version: CURRENT_THREAD_VERSION,
+            reserved_2: [0; 0xF8],
             entry,
-            reserved_2: [0; 0x3C],
-            name_len: 0,
-            name: util::CString::new(),
+            reserved_3: [0; 0x28],
+            name: ThreadName::new(),
             name_addr: ptr::null_mut(),
-            reserved_3: [0; 0x20],
+            reserved_4: [0; 0x20]
         };
         thread.self_ref = &mut thread;
         thread.name_addr = &mut thread.name as *mut ThreadName as *mut u8;
-        thread.name.set_str(name)?;
+        thread.name.set_str(name);
         Ok(thread)
     }
 

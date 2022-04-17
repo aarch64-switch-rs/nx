@@ -854,7 +854,7 @@ impl Context {
     }
 
     pub fn create_stray_layer_surface(&mut self, display_name: &str, buffer_count: u32, color_fmt: ColorFormat, pixel_fmt: PixelFormat, layout: Layout) -> Result<surface::Surface> {
-        let display_id = self.application_display_service.get().open_display(vi::DisplayName::from_str(display_name)?)?;
+        let display_id = self.application_display_service.get().open_display(vi::DisplayName::from_str(display_name))?;
         let native_window = parcel::ParcelPayload::new();
         let (layer_id, _) = self.application_display_service.get().create_stray_layer(vi::LayerFlags::Default(), display_id, sf::Buffer::from_other_var(&native_window))?;
 
@@ -879,7 +879,7 @@ impl Context {
     }
 
     pub fn create_managed_layer_surface(&mut self, display_name: &str, aruid: applet::AppletResourceUserId, layer_flags: vi::LayerFlags, x: f32, y: f32, width: u32, height: u32, z: LayerZ, buffer_count: u32, color_fmt: ColorFormat, pixel_fmt: PixelFormat, layout: Layout) -> Result<surface::Surface> {
-        let display_name_v = vi::DisplayName::from_str(display_name)?;
+        let display_name_v = vi::DisplayName::from_str(display_name);
         let display_id = self.application_display_service.get().open_display(display_name_v)?;
         let system_display_service = self.application_display_service.get().get_system_display_service()?;
         let manager_display_service = self.application_display_service.get().get_manager_display_service()?;

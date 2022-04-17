@@ -14,6 +14,8 @@
 #![feature(fn_traits)]
 #![feature(untagged_unions)]
 #![feature(negative_impls)]
+#![feature(const_intrinsic_copy)]
+#![feature(const_ptr_write)]
 #![macro_use]
 
 use core::arch::global_asm;

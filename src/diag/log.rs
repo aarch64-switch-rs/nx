@@ -1,3 +1,4 @@
+use crate::rrt0;
 use crate::thread;
 use crate::result::*;
 use crate::mem;
@@ -131,13 +132,21 @@ impl Logger for LmLogger {
             log_packet.set_file_name(String::from(metadata.file_name));
             log_packet.set_function_name(String::from(metadata.fn_name));
             log_packet.set_line_number(metadata.line_number);
-            log_packet.set_module_name(String::from("aarch64-switch-rs"));
+    
+            let mod_name = match rrt0::get_module_name().path.get_string() {
+                Ok(name) => name,
+                Err(_) => String::from("aarch64-switch-rs (invalid module name)")
+            };
+            log_packet.set_module_name(mod_name);
+
             log_packet.set_text_log(metadata.msg.clone());
+
             let thread_name = match cur_thread.name.get_str() {
                 Ok(name) => name,
-                _ => "<unknown>",
+                _ => "aarch64-switch-rs (invalid thread name)",
             };
             log_packet.set_thread_name(String::from(thread_name));
+
             for packet in log_packet.encode_packet() {
                 let _ = logger_obj.get().log(sf::Buffer::from_array(&packet));
             }

@@ -142,55 +142,55 @@ impl ProxyFileSystem {
 
 impl FileSystem for ProxyFileSystem {
     fn create_file(&mut self, path: String, attribute: FileAttribute, size: usize) -> Result<()> {
-        let sf_path = fspsrv::Path::from_string(path)?;
+        let sf_path = fspsrv::Path::from_string(path);
         self.fs_obj.get().create_file(attribute, size, ipc_sf::Buffer::from_var(&sf_path))
     }
 
     fn delete_file(&mut self, path: String) -> Result<()> {
-        let sf_path = fspsrv::Path::from_string(path)?;
+        let sf_path = fspsrv::Path::from_string(path);
         self.fs_obj.get().delete_file(ipc_sf::Buffer::from_var(&sf_path))
     }
 
     fn create_directory(&mut self, path: String) -> Result<()> {
-        let sf_path = fspsrv::Path::from_string(path)?;
+        let sf_path = fspsrv::Path::from_string(path);
         self.fs_obj.get().create_directory(ipc_sf::Buffer::from_var(&sf_path))
     }
 
     fn delete_directory(&mut self, path: String) -> Result<()> {
-        let sf_path = fspsrv::Path::from_string(path)?;
+        let sf_path = fspsrv::Path::from_string(path);
         self.fs_obj.get().delete_directory(ipc_sf::Buffer::from_var(&sf_path))
     }
 
     fn delete_directory_recursively(&mut self, path: String) -> Result<()> {
-        let sf_path = fspsrv::Path::from_string(path)?;
+        let sf_path = fspsrv::Path::from_string(path);
         self.fs_obj.get().delete_directory_recursively(ipc_sf::Buffer::from_var(&sf_path))
     }
 
     fn get_entry_type(&mut self, path: String) -> Result<DirectoryEntryType> {
-        let sf_path = fspsrv::Path::from_string(path)?;
+        let sf_path = fspsrv::Path::from_string(path);
         self.fs_obj.get().get_entry_type(ipc_sf::Buffer::from_var(&sf_path))
     }
 
     fn rename_file(&mut self, old_path: String, new_path: String) -> Result<()> {
-        let sf_old_path = fspsrv::Path::from_string(old_path)?;
-        let sf_new_path = fspsrv::Path::from_string(new_path)?;
+        let sf_old_path = fspsrv::Path::from_string(old_path);
+        let sf_new_path = fspsrv::Path::from_string(new_path);
         self.fs_obj.get().rename_file(ipc_sf::Buffer::from_var(&sf_old_path), ipc_sf::Buffer::from_var(&sf_new_path))
     }
 
     fn rename_directory(&mut self, old_path: String, new_path: String) -> Result<()> {
-        let sf_old_path = fspsrv::Path::from_string(old_path)?;
-        let sf_new_path = fspsrv::Path::from_string(new_path)?;
+        let sf_old_path = fspsrv::Path::from_string(old_path);
+        let sf_new_path = fspsrv::Path::from_string(new_path);
         self.fs_obj.get().rename_directory(ipc_sf::Buffer::from_var(&sf_old_path), ipc_sf::Buffer::from_var(&sf_new_path))
     }
 
     fn open_file(&mut self, path: String, mode: FileOpenMode) -> Result<mem::Shared<dyn File>> {
-        let sf_path = fspsrv::Path::from_string(path)?;
+        let sf_path = fspsrv::Path::from_string(path);
         let file_obj = self.fs_obj.get().open_file(mode, ipc_sf::Buffer::from_var(&sf_path))?;
         Ok(mem::Shared::new(ProxyFile::new(file_obj)))
     }
 
     fn open_directory(&mut self, path: String, mode: DirectoryOpenMode) -> Result<mem::Shared<dyn Directory>> {
-        let sf_path = fspsrv::Path::from_string(path)?;
+        let sf_path = fspsrv::Path::from_string(path);
         let dir_obj = self.fs_obj.get().open_directory(mode, ipc_sf::Buffer::from_var(&sf_path))?;
         Ok(mem::Shared::new(ProxyDirectory::new(dir_obj)))
     }
@@ -200,27 +200,27 @@ impl FileSystem for ProxyFileSystem {
     }
 
     fn get_free_space_size(&mut self, path: String) -> Result<usize> {
-        let sf_path = fspsrv::Path::from_string(path)?;
+        let sf_path = fspsrv::Path::from_string(path);
         self.fs_obj.get().get_free_space_size(ipc_sf::Buffer::from_var(&sf_path))
     }
 
     fn get_total_space_size(&mut self, path: String) -> Result<usize> {
-        let sf_path = fspsrv::Path::from_string(path)?;
+        let sf_path = fspsrv::Path::from_string(path);
         self.fs_obj.get().get_total_space_size(ipc_sf::Buffer::from_var(&sf_path))
     }
 
     fn clean_directory_recursively(&mut self, path: String) -> Result<()> {
-        let sf_path = fspsrv::Path::from_string(path)?;
+        let sf_path = fspsrv::Path::from_string(path);
         self.fs_obj.get().clean_directory_recursively(ipc_sf::Buffer::from_var(&sf_path))
     }
 
     fn get_file_time_stamp_raw(&mut self, path: String) -> Result<FileTimeStampRaw> {
-        let sf_path = fspsrv::Path::from_string(path)?;
+        let sf_path = fspsrv::Path::from_string(path);
         self.fs_obj.get().get_file_time_stamp_raw(ipc_sf::Buffer::from_var(&sf_path))
     }
 
     fn query_entry(&mut self, path: String, query_id: QueryId, in_buf: *const u8, in_buf_size: usize, out_buf: *mut u8, out_buf_size: usize) -> Result<()> {
-        let sf_path = fspsrv::Path::from_string(path)?;
+        let sf_path = fspsrv::Path::from_string(path);
         self.fs_obj.get().query_entry(ipc_sf::Buffer::from_var(&sf_path), query_id, ipc_sf::Buffer::from_ptr(in_buf, in_buf_size), ipc_sf::Buffer::from_mut_ptr(out_buf, out_buf_size))
     }
 }
