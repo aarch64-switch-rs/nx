@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["Policy",""]],"trait":[["IService",""]]});
+initSidebarItems({"enum":[["FatalPolicy",""]],"trait":[["IService",""]]});

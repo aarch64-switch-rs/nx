@@ -147,7 +147,7 @@
         <span class="kw">if</span> <span class="ident">level</span> <span class="op">==</span> <span class="ident">AssertLevel::FatalThrow</span>() {
             <span class="kw">match</span> <span class="ident">service::new_service_object</span>::<span class="op">&lt;</span><span class="ident">fatal::Service</span><span class="op">&gt;</span>() {
                 <span class="prelude-val">Ok</span>(<span class="ident">fatal</span>) =&gt; {
-                    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">fatal</span>.<span class="ident">get</span>().<span class="ident">throw_with_policy</span>(<span class="ident">rc</span>, <span class="ident">fatal::Policy::ErrorScreen</span>, <span class="ident">sf::ProcessId::new</span>());
+                    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">fatal</span>.<span class="ident">get</span>().<span class="ident">throw_fatal_with_policy</span>(<span class="ident">rc</span>, <span class="ident">fatal::FatalPolicy::ErrorScreen</span>, <span class="ident">sf::ProcessId::new</span>());
                 },
                 <span class="kw">_</span> =&gt; {}
             };

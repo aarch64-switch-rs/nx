@@ -176,7 +176,7 @@ impl<const S: usize> fmt::Debug for CString16<S> {
             write!(f, "{}", string)
         }
         else {
-            write!(f, "<null>")
+            write!(f, "<empty>")
         }
     }
 }
@@ -203,6 +203,10 @@ impl<const S: usize> Default for CString16<S> {
 impl<const S: usize> CString16<S> {
     pub const fn new() -> Self {
         Self { c_str: [0; S] }
+    }
+
+    pub const fn from_raw(raw_bytes: [u16; S]) -> Self {
+        Self { c_str: raw_bytes }
     }
 
     pub fn from_str(string: &str) -> Result<Self> {
@@ -273,6 +277,16 @@ impl<const S: usize> CString16<S> {
 
     pub fn get_string(&self) -> Result<String> {
         Self::read_string_from(&self.c_str as *const _ as *const u16, self.len())
+    }
+
+    pub fn swap_chars(&self) -> Self {
+        let mut self_copy = *self;
+
+        for i in 0..S {
+            self_copy.c_str[i] = self.c_str[i].swap_bytes();
+        }
+
+        self_copy
     }
 }
 

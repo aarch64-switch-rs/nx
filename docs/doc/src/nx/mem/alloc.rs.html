@@ -167,6 +167,8 @@
 <span id="162">162</span>
 <span id="163">163</span>
 <span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::diag::assert</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::result</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::util::PointerAndSize</span>;
@@ -323,12 +325,14 @@
 
 <span class="attribute">#[<span class="ident">alloc_error_handler</span>]</span>
 <span class="kw">fn</span> <span class="ident">alloc_error_handler</span>(<span class="ident">_layout</span>: <span class="ident">core::alloc::Layout</span>) -&gt; <span class="op">!</span> {
-    <span class="comment">// Disable memory allocation for this crate, this will avoid assertion methods which would need to allocate memory</span>
+    <span class="comment">// Disable memory allocation, this will avoid assertion levels which would need to allocate memory</span>
     <span class="ident">set_enabled</span>(<span class="bool-val">false</span>);
 
-    <span class="comment">// TODO: which desired assert level shall we choose here?</span>
-    <span class="ident">assert::assert</span>(<span class="ident">assert::AssertLevel::FatalThrow</span>(), <span class="ident">rc::ResultOutOfMemory::make</span>());
+    <span class="comment">// Using SvcBreak by default since this is the safest level that can be used by any context, regardless of available mem/etc.</span>
+    <span class="comment">// TODO: default aborting system to invoke here?</span>
+    <span class="ident">assert::assert</span>(<span class="ident">assert::AssertLevel::SvcBreak</span>(), <span class="ident">rc::ResultOutOfMemory::make</span>());
 
+    <span class="comment">// This should never be reached (TODO: better way to handle this really-unlikely situation than an infinite loop?)</span>
     <span class="kw">loop</span> {}
 }</code></pre></div>
 </section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="nx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (76d770ac2 2022-04-02)" ></div>

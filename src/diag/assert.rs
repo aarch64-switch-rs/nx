@@ -51,7 +51,7 @@ fn do_assert(level: AssertLevel, rc: ResultCode) -> bool {
         if level == AssertLevel::FatalThrow() {
             match service::new_service_object::<fatal::Service>() {
                 Ok(fatal) => {
-                    let _ = fatal.get().throw_with_policy(rc, fatal::Policy::ErrorScreen, sf::ProcessId::new());
+                    let _ = fatal.get().throw_fatal_with_policy(rc, fatal::FatalPolicy::ErrorScreen, sf::ProcessId::new());
                 },
                 _ => {}
             };

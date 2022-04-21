@@ -14,7 +14,7 @@ impl sf::IObject for Service {
 }
 
 impl IService for Service {
-    fn throw_with_policy(&mut self, rc: ResultCode, policy: Policy, process_id: sf::ProcessId) -> Result<()> {
+    fn throw_fatal_with_policy(&mut self, rc: ResultCode, policy: FatalPolicy, process_id: sf::ProcessId) -> Result<()> {
         ipc_client_send_request_command!([self.session.object_info; 1] (rc, policy, process_id) => ())
     }
 }

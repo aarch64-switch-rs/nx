@@ -63,7 +63,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">IService</span> <span class="kw">for</span> <span class="ident">Service</span> {
-    <span class="kw">fn</span> <span class="ident">throw_with_policy</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">rc</span>: <span class="ident">ResultCode</span>, <span class="ident">policy</span>: <span class="ident">Policy</span>, <span class="ident">process_id</span>: <span class="ident">sf::ProcessId</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">throw_fatal_with_policy</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">rc</span>: <span class="ident">ResultCode</span>, <span class="ident">policy</span>: <span class="ident">FatalPolicy</span>, <span class="ident">process_id</span>: <span class="ident">sf::ProcessId</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="macro">ipc_client_send_request_command!</span>([<span class="self">self</span>.<span class="ident">session</span>.<span class="ident">object_info</span>; <span class="number">1</span>] (<span class="ident">rc</span>, <span class="ident">policy</span>, <span class="ident">process_id</span>) =&gt; ())
     }
 }

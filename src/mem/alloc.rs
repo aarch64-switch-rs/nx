@@ -154,11 +154,13 @@ impl<T> Buffer<T> {
 
 #[alloc_error_handler]
 fn alloc_error_handler(_layout: core::alloc::Layout) -> ! {
-    // Disable memory allocation for this crate, this will avoid assertion methods which would need to allocate memory
+    // Disable memory allocation, this will avoid assertion levels which would need to allocate memory
     set_enabled(false);
 
-    // TODO: which desired assert level shall we choose here?
-    assert::assert(assert::AssertLevel::FatalThrow(), rc::ResultOutOfMemory::make());
+    // Using SvcBreak by default since this is the safest level that can be used by any context, regardless of available mem/etc.
+    // TODO: default aborting system to invoke here?
+    assert::assert(assert::AssertLevel::SvcBreak(), rc::ResultOutOfMemory::make());
 
+    // This should never be reached (TODO: better way to handle this really-unlikely situation than an infinite loop?)
     loop {}
 }

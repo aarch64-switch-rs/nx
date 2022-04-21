@@ -4,7 +4,7 @@ use crate::version;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
-pub enum Policy {
+pub enum FatalPolicy {
     ErrorReportAndErrorScreen,
     ErrorReport,
     ErrorScreen,
@@ -12,6 +12,6 @@ pub enum Policy {
 
 ipc_sf_define_interface_trait! {
     trait IService {
-        throw_with_policy [1, version::VersionInterval::all()]: (rc: ResultCode, policy: Policy, process_id: sf::ProcessId) => ();
+        throw_fatal_with_policy [1, version::VersionInterval::all()]: (rc: ResultCode, policy: FatalPolicy, process_id: sf::ProcessId) => ();
     }
 }
