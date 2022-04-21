@@ -604,35 +604,35 @@ impl CommandContext {
         ctx
     }
 
-    pub fn add_send_static(&mut self, send_static: SendStaticDescriptor) -> Result<()> {
+    fn add_send_static(&mut self, send_static: SendStaticDescriptor) -> Result<()> {
         match self.send_statics.try_push(send_static) {
             Ok(()) => Ok(()),
             Err(_) => Err(rc::ResultSendStaticsFull::make())
         }
     }
 
-    pub fn add_receive_static(&mut self, receive_static: ReceiveStaticDescriptor) -> Result<()> {
+    fn add_receive_static(&mut self, receive_static: ReceiveStaticDescriptor) -> Result<()> {
         match self.receive_statics.try_push(receive_static) {
             Ok(()) => Ok(()),
             Err(_) => Err(rc::ResultReceiveStaticsFull::make())
         }
     }
 
-    pub fn add_send_buffer(&mut self, send_buffer: BufferDescriptor) -> Result<()> {
+    fn add_send_buffer(&mut self, send_buffer: BufferDescriptor) -> Result<()> {
         match self.send_buffers.try_push(send_buffer) {
             Ok(()) => Ok(()),
             Err(_) => Err(rc::ResultSendBuffersFull::make())
         }
     }
 
-    pub fn add_receive_buffer(&mut self, receive_buffer: BufferDescriptor) -> Result<()> {
+    fn add_receive_buffer(&mut self, receive_buffer: BufferDescriptor) -> Result<()> {
         match self.receive_buffers.try_push(receive_buffer) {
             Ok(()) => Ok(()),
             Err(_) => Err(rc::ResultReceiveBuffersFull::make())
         }
     }
 
-    pub fn add_exchange_buffer(&mut self, exchange_buffer: BufferDescriptor) -> Result<()> {
+    fn add_exchange_buffer(&mut self, exchange_buffer: BufferDescriptor) -> Result<()> {
         match self.exchange_buffers.try_push(exchange_buffer) {
             Ok(()) => Ok(()),
             Err(_) => Err(rc::ResultExchangeBuffersFull::make())
@@ -720,35 +720,35 @@ impl CommandContext {
         Ok(())
     }
 
-    pub fn pop_send_static(&mut self) -> Result<SendStaticDescriptor> {
+    fn pop_send_static(&mut self) -> Result<SendStaticDescriptor> {
         match self.send_statics.pop_at(0) {
             Some(send_static) => Ok(send_static),
             None => Err(rc::ResultInvalidSendStaticCount::make())
         }
     }
 
-    pub fn pop_receive_static(&mut self) -> Result<ReceiveStaticDescriptor> {
+    fn pop_receive_static(&mut self) -> Result<ReceiveStaticDescriptor> {
         match self.receive_statics.pop_at(0) {
             Some(receive_static) => Ok(receive_static),
             None => Err(rc::ResultInvalidReceiveStaticCount::make())
         }
     }
 
-    pub fn pop_send_buffer(&mut self) -> Result<BufferDescriptor> {
+    fn pop_send_buffer(&mut self) -> Result<BufferDescriptor> {
         match self.send_buffers.pop_at(0) {
             Some(send_buffer) => Ok(send_buffer),
             None => Err(rc::ResultInvalidSendBufferCount::make())
         }
     }
 
-    pub fn pop_receive_buffer(&mut self) -> Result<BufferDescriptor> {
+    fn pop_receive_buffer(&mut self) -> Result<BufferDescriptor> {
         match self.receive_buffers.pop_at(0) {
             Some(receive_buffer) => Ok(receive_buffer),
             None => Err(rc::ResultInvalidReceiveBufferCount::make())
         }
     }
 
-    pub fn pop_exchange_buffer(&mut self) -> Result<BufferDescriptor> {
+    fn pop_exchange_buffer(&mut self) -> Result<BufferDescriptor> {
         match self.exchange_buffers.pop_at(0) {
             Some(exchange_buffer) => Ok(exchange_buffer),
             None => Err(rc::ResultInvalidExchangeBufferCount::make())

@@ -68,3 +68,5 @@ pub mod spl;
 pub mod usb;
 
 pub mod ldr;
+
+pub mod nfp;

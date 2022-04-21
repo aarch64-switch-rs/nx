@@ -116,7 +116,7 @@ const_assert!(core::mem::size_of::<ModelInfo>() == 0x40);
 pub type AccessId = u32;
 
 bit_enum! {
-    AdminInfoFlags (u8) {
+    AdminInfoFlags (u8) { // Note: plain amiibo flags shifted 4 bits (original bits 0-3 are discarded)
         IsInitialized = bit!(0),
         HasApplicationArea = bit!(1),
         Unk_2 = bit!(2),
@@ -139,7 +139,7 @@ pub struct AdminInfo {
     pub program_id: u64,
     pub access_id: AccessId,
     pub crc32_change_counter: u16,
-    pub flags: AdminInfoFlags, // Raw amiibo settings flags without the first 4 bits
+    pub flags: AdminInfoFlags,
     pub unk_0x2: u8, // Always 0x2
     pub console_type: ProgramIdConsoleType,
     pub pad: [u8; 0x7],
@@ -157,6 +157,28 @@ pub struct RegisterInfoPrivate {
     pub reserved: [u8; 0x8E]
 }
 const_assert!(core::mem::size_of::<RegisterInfoPrivate>() == 0x100);
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[repr(C)]
+pub struct NfpData {
+    pub data: [u8; 0x298] // TODO: finish REing this type
+}
+const_assert!(core::mem::size_of::<NfpData>() == 0x298);
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[repr(u32)]
+pub enum BreakType {
+    Unk0 = 0,
+    Unk1 = 1,
+    Unk2 = 2
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[repr(u32)]
+pub enum WriteType {
+    Unk0 = 0,
+    Unk1 = 1
+}
 
 ipc_sf_define_interface_trait! {
     trait IUser {
@@ -177,13 +199,13 @@ ipc_sf_define_interface_trait! {
         get_register_info [14, version::VersionInterval::all()]: (device_handle: DeviceHandle, out_register_info: sf::OutFixedPointerBuffer<RegisterInfo>) => ();
         get_common_info [15, version::VersionInterval::all()]: (device_handle: DeviceHandle, out_common_info: sf::OutFixedPointerBuffer<CommonInfo>) => ();
         get_model_info [16, version::VersionInterval::all()]: (device_handle: DeviceHandle, out_model_info: sf::OutFixedPointerBuffer<ModelInfo>) => ();
-        attach_activate_event [17, version::VersionInterval::all()]: (device_handle: DeviceHandle) => (activate_event: sf::CopyHandle);
-        attach_deactivate_event [18, version::VersionInterval::all()]: (device_handle: DeviceHandle) => (deactivate_event: sf::CopyHandle);
+        attach_activate_event [17, version::VersionInterval::all()]: (device_handle: DeviceHandle) => (event_handle: sf::CopyHandle);
+        attach_deactivate_event [18, version::VersionInterval::all()]: (device_handle: DeviceHandle) => (event_handle: sf::CopyHandle);
         get_state [19, version::VersionInterval::all()]: () => (state: State);
         get_device_state [20, version::VersionInterval::all()]: (device_handle: DeviceHandle) => (device_state: DeviceState);
         get_npad_id [21, version::VersionInterval::all()]: (device_handle: DeviceHandle) => (npad_id: u32);
         get_application_area_size [22, version::VersionInterval::all()]: (device_handle: DeviceHandle) => (size: u32);
-        attach_availability_change_event [23, version::VersionInterval::from(version::Version::new(3,0,0))]: () => (availability_change_event: sf::CopyHandle);
+        attach_availability_change_event [23, version::VersionInterval::from(version::Version::new(3,0,0))]: () => (event_handle: sf::CopyHandle);
         recreate_application_area [24, version::VersionInterval::from(version::Version::new(3,0,0))]: (device_handle: DeviceHandle, access_id: AccessId, data: sf::InMapAliasBuffer<u8>) => ();
     }
 }
@@ -209,8 +231,8 @@ ipc_sf_define_interface_trait! {
         get_register_info [14, version::VersionInterval::all()]: (device_handle: DeviceHandle, out_register_info: sf::OutFixedPointerBuffer<RegisterInfo>) => ();
         get_common_info [15, version::VersionInterval::all()]: (device_handle: DeviceHandle, out_common_info: sf::OutFixedPointerBuffer<CommonInfo>) => ();
         get_model_info [16, version::VersionInterval::all()]: (device_handle: DeviceHandle, out_model_info: sf::OutFixedPointerBuffer<ModelInfo>) => ();
-        attach_activate_event [17, version::VersionInterval::all()]: (device_handle: DeviceHandle) => (activate_event: sf::CopyHandle);
-        attach_deactivate_event [18, version::VersionInterval::all()]: (device_handle: DeviceHandle) => (deactivate_event: sf::CopyHandle);
+        attach_activate_event [17, version::VersionInterval::all()]: (device_handle: DeviceHandle) => (event_handle: sf::CopyHandle);
+        attach_deactivate_event [18, version::VersionInterval::all()]: (device_handle: DeviceHandle) => (event_handle: sf::CopyHandle);
         get_state [19, version::VersionInterval::all()]: () => (state: State);
         get_device_state [20, version::VersionInterval::all()]: (device_handle: DeviceHandle) => (device_state: DeviceState);
         get_npad_id [21, version::VersionInterval::all()]: (device_handle: DeviceHandle) => (npad_id: u32);
@@ -250,13 +272,13 @@ ipc_sf_define_interface_trait! {
         get_register_info [14, version::VersionInterval::all()]: (device_handle: DeviceHandle, out_register_info: sf::OutFixedPointerBuffer<RegisterInfo>) => ();
         get_common_info [15, version::VersionInterval::all()]: (device_handle: DeviceHandle, out_common_info: sf::OutFixedPointerBuffer<CommonInfo>) => ();
         get_model_info [16, version::VersionInterval::all()]: (device_handle: DeviceHandle, out_model_info: sf::OutFixedPointerBuffer<ModelInfo>) => ();
-        attach_activate_event [17, version::VersionInterval::all()]: (device_handle: DeviceHandle) => (activate_event: sf::CopyHandle);
-        attach_deactivate_event [18, version::VersionInterval::all()]: (device_handle: DeviceHandle) => (deactivate_event: sf::CopyHandle);
+        attach_activate_event [17, version::VersionInterval::all()]: (device_handle: DeviceHandle) => (event_handle: sf::CopyHandle);
+        attach_deactivate_event [18, version::VersionInterval::all()]: (device_handle: DeviceHandle) => (event_handle: sf::CopyHandle);
         get_state [19, version::VersionInterval::all()]: () => (state: State);
         get_device_state [20, version::VersionInterval::all()]: (device_handle: DeviceHandle) => (device_state: DeviceState);
         get_npad_id [21, version::VersionInterval::all()]: (device_handle: DeviceHandle) => (npad_id: u32);
         get_application_area_size [22, version::VersionInterval::all()]: (device_handle: DeviceHandle) => (size: u32);
-        attach_availability_change_event [23, version::VersionInterval::from(version::Version::new(3,0,0))]: () => (availability_change_event: sf::CopyHandle);
+        attach_availability_change_event [23, version::VersionInterval::from(version::Version::new(3,0,0))]: () => (event_handle: sf::CopyHandle);
         recreate_application_area [24, version::VersionInterval::from(version::Version::new(3,0,0))]: (device_handle: DeviceHandle, access_id: AccessId, data: sf::InMapAliasBuffer<u8>) => ();
         format [100, version::VersionInterval::all()]: (device_handle: DeviceHandle) => ();
         get_admin_info [101, version::VersionInterval::all()]: (device_handle: DeviceHandle, out_admin_info: sf::OutFixedPointerBuffer<AdminInfo>) => ();
@@ -265,7 +287,13 @@ ipc_sf_define_interface_trait! {
         delete_register_info [104, version::VersionInterval::all()]: (device_handle: DeviceHandle) => ();
         delete_application_area [105, version::VersionInterval::all()]: (device_handle: DeviceHandle) => ();
         exists_application_area [106, version::VersionInterval::all()]: (device_handle: DeviceHandle) => (exists: bool);
-        // TODO: remaining commands
+        get_all [200, version::VersionInterval::all()]: (device_handle: DeviceHandle, out_data: sf::OutFixedPointerBuffer<NfpData>) => ();
+        set_all [201, version::VersionInterval::all()]: (device_handle: DeviceHandle, data: sf::InFixedPointerBuffer<NfpData>) => ();
+        flush_debug [202, version::VersionInterval::all()]: (device_handle: DeviceHandle) => ();
+        break_tag [203, version::VersionInterval::all()]: (device_handle: DeviceHandle, break_type: BreakType) => ();
+        read_backup_data [204, version::VersionInterval::all()]: (device_handle: DeviceHandle, out_buf: sf::OutMapAliasBuffer<u8>) => (read_size: u32);
+        write_backup_data [205, version::VersionInterval::all()]: (device_handle: DeviceHandle, buf: sf::InMapAliasBuffer<u8>) => ();
+        write_ntf [206, version::VersionInterval::all()]: (device_handle: DeviceHandle, write_type: WriteType, buf: sf::InMapAliasBuffer<u8>) => ();
     }
 }
 

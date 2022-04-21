@@ -23,8 +23,6 @@
 
   - Finish mii services
 
-  - Finish nfp services
-
   - Finish nv servuces
 
   - Support HTC/TMA?
