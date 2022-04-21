@@ -96,55 +96,55 @@ impl sf::IObject for FileSystem {
 }
 
 impl IFileSystem for FileSystem {
-    fn create_file(&mut self, attribute: fsp::FileAttribute, size: usize, path_buf: sf::InPointerBuffer<fsp::Path>) -> Result<()> {
+    fn create_file(&mut self, attribute: fsp::FileAttribute, size: usize, path_buf: sf::InFixedPointerBuffer<fsp::Path>) -> Result<()> {
         let fs_path = path_buf.get_var().get_string()?;
         self.fs_obj.get().create_file(fs_path, attribute, size)
     }
 
-    fn delete_file(&mut self, path_buf: sf::InPointerBuffer<fsp::Path>) -> Result<()> {
+    fn delete_file(&mut self, path_buf: sf::InFixedPointerBuffer<fsp::Path>) -> Result<()> {
         let fs_path = path_buf.get_var().get_string()?;
         self.fs_obj.get().delete_file(fs_path)
     }
 
-    fn create_directory(&mut self, path_buf: sf::InPointerBuffer<fsp::Path>) -> Result<()> {
+    fn create_directory(&mut self, path_buf: sf::InFixedPointerBuffer<fsp::Path>) -> Result<()> {
         let fs_path = path_buf.get_var().get_string()?;
         self.fs_obj.get().create_directory(fs_path)
     }
     
-    fn delete_directory(&mut self, path_buf: sf::InPointerBuffer<fsp::Path>) -> Result<()> {
+    fn delete_directory(&mut self, path_buf: sf::InFixedPointerBuffer<fsp::Path>) -> Result<()> {
         let fs_path = path_buf.get_var().get_string()?;
         self.fs_obj.get().delete_directory(fs_path)
     }
 
-    fn delete_directory_recursively(&mut self, path_buf: sf::InPointerBuffer<fsp::Path>) -> Result<()> {
+    fn delete_directory_recursively(&mut self, path_buf: sf::InFixedPointerBuffer<fsp::Path>) -> Result<()> {
         let fs_path = path_buf.get_var().get_string()?;
         self.fs_obj.get().delete_directory_recursively(fs_path)
     }
 
-    fn rename_file(&mut self, old_path_buf: sf::InPointerBuffer<fsp::Path>, new_path_buf: sf::InPointerBuffer<fsp::Path>) -> Result<()> {
+    fn rename_file(&mut self, old_path_buf: sf::InFixedPointerBuffer<fsp::Path>, new_path_buf: sf::InFixedPointerBuffer<fsp::Path>) -> Result<()> {
         let old_fs_path = old_path_buf.get_var().get_string()?;
         let new_fs_path = new_path_buf.get_var().get_string()?;
         self.fs_obj.get().rename_file(old_fs_path, new_fs_path)
     }
 
-    fn rename_directory(&mut self, old_path_buf: sf::InPointerBuffer<fsp::Path>, new_path_buf: sf::InPointerBuffer<fsp::Path>) -> Result<()> {
+    fn rename_directory(&mut self, old_path_buf: sf::InFixedPointerBuffer<fsp::Path>, new_path_buf: sf::InFixedPointerBuffer<fsp::Path>) -> Result<()> {
         let old_fs_path = old_path_buf.get_var().get_string()?;
         let new_fs_path = new_path_buf.get_var().get_string()?;
         self.fs_obj.get().rename_directory(old_fs_path, new_fs_path)
     }
 
-    fn get_entry_type(&mut self, path_buf: sf::InPointerBuffer<fsp::Path>) -> Result<fsp::DirectoryEntryType> {
+    fn get_entry_type(&mut self, path_buf: sf::InFixedPointerBuffer<fsp::Path>) -> Result<fsp::DirectoryEntryType> {
         let fs_path = path_buf.get_var().get_string()?;
         self.fs_obj.get().get_entry_type(fs_path)
     }
     
-    fn open_file(&mut self, mode: fsp::FileOpenMode, path_buf: sf::InPointerBuffer<fsp::Path>) -> Result<mem::Shared<dyn fsp::IFile>> {
+    fn open_file(&mut self, mode: fsp::FileOpenMode, path_buf: sf::InFixedPointerBuffer<fsp::Path>) -> Result<mem::Shared<dyn fsp::IFile>> {
         let fs_path = path_buf.get_var().get_string()?;
         let file_obj = self.fs_obj.get().open_file(fs_path, mode)?;
         Ok(mem::Shared::new(File::new(file_obj)))
     }
 
-    fn open_directory(&mut self, mode: fsp::DirectoryOpenMode, path_buf: sf::InPointerBuffer<fsp::Path>) -> Result<mem::Shared<dyn fsp::IDirectory>> {
+    fn open_directory(&mut self, mode: fsp::DirectoryOpenMode, path_buf: sf::InFixedPointerBuffer<fsp::Path>) -> Result<mem::Shared<dyn fsp::IDirectory>> {
         let fs_path = path_buf.get_var().get_string()?;
         let dir_obj = self.fs_obj.get().open_directory(fs_path, mode)?;
         Ok(mem::Shared::new(Directory::new(dir_obj)))
@@ -154,27 +154,27 @@ impl IFileSystem for FileSystem {
         self.fs_obj.get().commit()
     }
 
-    fn get_free_space_size(&mut self, path_buf: sf::InPointerBuffer<fsp::Path>) -> Result<usize> {
+    fn get_free_space_size(&mut self, path_buf: sf::InFixedPointerBuffer<fsp::Path>) -> Result<usize> {
         let fs_path = path_buf.get_var().get_string()?;
         self.fs_obj.get().get_free_space_size(fs_path)
     }
 
-    fn get_total_space_size(&mut self, path_buf: sf::InPointerBuffer<fsp::Path>) -> Result<usize> {
+    fn get_total_space_size(&mut self, path_buf: sf::InFixedPointerBuffer<fsp::Path>) -> Result<usize> {
         let fs_path = path_buf.get_var().get_string()?;
         self.fs_obj.get().get_total_space_size(fs_path)
     }
 
-    fn clean_directory_recursively(&mut self, path_buf: sf::InPointerBuffer<fsp::Path>) -> Result<()> {
+    fn clean_directory_recursively(&mut self, path_buf: sf::InFixedPointerBuffer<fsp::Path>) -> Result<()> {
         let fs_path = path_buf.get_var().get_string()?;
         self.fs_obj.get().clean_directory_recursively(fs_path)
     }
 
-    fn get_file_time_stamp_raw(&mut self, path_buf: sf::InPointerBuffer<fsp::Path>) -> Result<fsp::FileTimeStampRaw> {
+    fn get_file_time_stamp_raw(&mut self, path_buf: sf::InFixedPointerBuffer<fsp::Path>) -> Result<fsp::FileTimeStampRaw> {
         let fs_path = path_buf.get_var().get_string()?;
         self.fs_obj.get().get_file_time_stamp_raw(fs_path)
     }
 
-    fn query_entry(&mut self, path_buf: sf::InPointerBuffer<fsp::Path>, query_id: fsp::QueryId, in_buf: sf::InNonSecureMapAliasBuffer<u8>, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) -> Result<()> {
+    fn query_entry(&mut self, path_buf: sf::InFixedPointerBuffer<fsp::Path>, query_id: fsp::QueryId, in_buf: sf::InNonSecureMapAliasBuffer<u8>, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) -> Result<()> {
         let fs_path = path_buf.get_var().get_string()?;
         self.fs_obj.get().query_entry(fs_path, query_id, in_buf.get_address(), in_buf.get_size(), out_buf.get_address(), out_buf.get_size())
     }

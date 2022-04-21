@@ -129,22 +129,22 @@ ipc_sf_define_interface_trait!{
 
 ipc_sf_define_interface_trait!{
     trait IFileSystem {
-        create_file [0, version::VersionInterval::all()]: (attribute: FileAttribute, size: usize, path_buf: sf::InPointerBuffer<Path>) => ();
-        delete_file [1, version::VersionInterval::all()]: (path_buf: sf::InPointerBuffer<Path>) => ();
-        create_directory [2, version::VersionInterval::all()]: (path_buf: sf::InPointerBuffer<Path>) => ();
-        delete_directory [3, version::VersionInterval::all()]: (path_buf: sf::InPointerBuffer<Path>) => ();
-        delete_directory_recursively [4, version::VersionInterval::all()]: (path_buf: sf::InPointerBuffer<Path>) => ();
-        rename_file [5, version::VersionInterval::all()]: (old_path_buf: sf::InPointerBuffer<Path>, new_path_buf: sf::InPointerBuffer<Path>) => ();
-        rename_directory [6, version::VersionInterval::all()]: (old_path_buf: sf::InPointerBuffer<Path>, new_path_buf: sf::InPointerBuffer<Path>) => ();
-        get_entry_type [7, version::VersionInterval::all()]: (path_buf: sf::InPointerBuffer<Path>) => (entry_type: DirectoryEntryType);
-        open_file [8, version::VersionInterval::all()]: (mode: FileOpenMode, path_buf: sf::InPointerBuffer<Path>) => (file: mem::Shared<dyn IFile>);
-        open_directory [9, version::VersionInterval::all()]: (mode: DirectoryOpenMode, path_buf: sf::InPointerBuffer<Path>) => (dir: mem::Shared<dyn IDirectory>);
+        create_file [0, version::VersionInterval::all()]: (attribute: FileAttribute, size: usize, path_buf: sf::InFixedPointerBuffer<Path>) => ();
+        delete_file [1, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer<Path>) => ();
+        create_directory [2, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer<Path>) => ();
+        delete_directory [3, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer<Path>) => ();
+        delete_directory_recursively [4, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer<Path>) => ();
+        rename_file [5, version::VersionInterval::all()]: (old_path_buf: sf::InFixedPointerBuffer<Path>, new_path_buf: sf::InFixedPointerBuffer<Path>) => ();
+        rename_directory [6, version::VersionInterval::all()]: (old_path_buf: sf::InFixedPointerBuffer<Path>, new_path_buf: sf::InFixedPointerBuffer<Path>) => ();
+        get_entry_type [7, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer<Path>) => (entry_type: DirectoryEntryType);
+        open_file [8, version::VersionInterval::all()]: (mode: FileOpenMode, path_buf: sf::InFixedPointerBuffer<Path>) => (file: mem::Shared<dyn IFile>);
+        open_directory [9, version::VersionInterval::all()]: (mode: DirectoryOpenMode, path_buf: sf::InFixedPointerBuffer<Path>) => (dir: mem::Shared<dyn IDirectory>);
         commit [10, version::VersionInterval::all()]: () => ();
-        get_free_space_size [11, version::VersionInterval::all()]: (path_buf: sf::InPointerBuffer<Path>) => (size: usize);
-        get_total_space_size [12, version::VersionInterval::all()]: (path_buf: sf::InPointerBuffer<Path>) => (size: usize);
-        clean_directory_recursively [13, version::VersionInterval::from(version::Version::new(3,0,0))]: (path_buf: sf::InPointerBuffer<Path>) => ();
-        get_file_time_stamp_raw [14, version::VersionInterval::from(version::Version::new(3,0,0))]: (path_buf: sf::InPointerBuffer<Path>) => (time_stamp: FileTimeStampRaw);
-        query_entry [15, version::VersionInterval::from(version::Version::new(4,0,0))]: (path_buf: sf::InPointerBuffer<Path>, query_id: QueryId, in_buf: sf::InNonSecureMapAliasBuffer<u8>, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) => ();
+        get_free_space_size [11, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer<Path>) => (size: usize);
+        get_total_space_size [12, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer<Path>) => (size: usize);
+        clean_directory_recursively [13, version::VersionInterval::from(version::Version::new(3,0,0))]: (path_buf: sf::InFixedPointerBuffer<Path>) => ();
+        get_file_time_stamp_raw [14, version::VersionInterval::from(version::Version::new(3,0,0))]: (path_buf: sf::InFixedPointerBuffer<Path>) => (time_stamp: FileTimeStampRaw);
+        query_entry [15, version::VersionInterval::from(version::Version::new(4,0,0))]: (path_buf: sf::InFixedPointerBuffer<Path>, query_id: QueryId, in_buf: sf::InNonSecureMapAliasBuffer<u8>, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) => ();
     }
 }
 
