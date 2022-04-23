@@ -83,97 +83,85 @@
 <span id="78">78</span>
 <span id="79">79</span>
 <span id="80">80</span>
-<span id="81">81</span>
-<span id="82">82</span>
-<span id="83">83</span>
-<span id="84">84</span>
-<span id="85">85</span>
-<span id="86">86</span>
 </pre><pre class="rust"><code><span class="attribute">#![<span class="ident">macro_use</span>]</span>
 
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">diag_assert</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">desired_level</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">cond</span>:<span class="ident">expr</span>) =&gt; {
-        <span class="kw">if</span> <span class="op">!</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">cond</span> {
-            <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::assert::assert</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">desired_level</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::assert::rc::ResultAssertionFailed::make</span>());
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">desired_abort_level</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">cond_expr</span>:<span class="ident">expr</span>) =&gt; {{
+        <span class="kw">let</span> <span class="ident">cond</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">cond_expr</span>;
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">cond</span> {
+            <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::abort::abort</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">desired_abort_level</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::rc::ResultAssertionFailed::make</span>());
         }
-    };
+    }};
 }
 
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">diag_log</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">logger</span>:<span class="ident">ty</span> { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">severity</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">verbosity</span>:<span class="ident">expr</span> } =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">msg</span>:<span class="ident">literal</span>) =&gt; {
-        {
-            <span class="kw">let</span> <span class="ident">metadata</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::log::LogMetadata::new</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">severity</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">verbosity</span>, <span class="ident">alloc::string::String::from</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">msg</span>), <span class="macro">file!</span>(), <span class="macro">cur_fn_name!</span>(), <span class="macro">line!</span>());
-            <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::log::log_with</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">logger</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">metadata</span>);
-        }
-    };
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">logger</span>:<span class="ident">ty</span> { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">severity</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">verbosity</span>:<span class="ident">expr</span> } =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">msg</span>:<span class="ident">expr</span>) =&gt; {
-        {
-            <span class="kw">let</span> <span class="ident">metadata</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::log::LogMetadata::new</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">severity</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">verbosity</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">msg</span>, <span class="macro">file!</span>(), <span class="macro">cur_fn_name!</span>(), <span class="macro">line!</span>());
-            <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::log::log_with</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">logger</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">metadata</span>);
-        }
-    };
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">logger</span>:<span class="ident">ty</span> { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">severity</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">verbosity</span>:<span class="ident">expr</span> } =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fmt</span>:<span class="ident">literal</span>, $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">params</span>:<span class="ident">expr</span> ),<span class="kw-2">*</span>) =&gt; {
-        {
-            <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fmt</span>, $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">params</span>, )<span class="kw-2">*</span>);
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">logger</span>:<span class="ident">ty</span> { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">severity</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">verbosity</span>:<span class="ident">expr</span> } =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">msg</span>:<span class="ident">literal</span>) =&gt; {{
+        <span class="kw">let</span> <span class="ident">metadata</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::log::LogMetadata::new</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">severity</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">verbosity</span>, <span class="ident">alloc::string::String::from</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">msg</span>), <span class="macro">file!</span>(), <span class="macro-nonterminal">$</span><span class="macro">crate::cur_fn_name!</span>(), <span class="macro">line!</span>());
+        <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::log::log_with</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">logger</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">metadata</span>);
+    }};
 
-            <span class="kw">let</span> <span class="ident">metadata</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::log::LogMetadata::new</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">severity</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">verbosity</span>, <span class="ident">msg</span>, <span class="macro">file!</span>(), <span class="macro">cur_fn_name!</span>(), <span class="macro">line!</span>());
-            <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::log::log_with</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">logger</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">metadata</span>);
-        }
-    };
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">logger</span>:<span class="ident">ty</span> { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">severity</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">verbosity</span>:<span class="ident">expr</span> } =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">msg</span>:<span class="ident">expr</span>) =&gt; {{
+        <span class="kw">let</span> <span class="ident">metadata</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::log::LogMetadata::new</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">severity</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">verbosity</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">msg</span>, <span class="macro">file!</span>(), <span class="macro-nonterminal">$</span><span class="macro">crate::cur_fn_name!</span>(), <span class="macro">line!</span>());
+        <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::log::log_with</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">logger</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">metadata</span>);
+    }};
+
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">logger</span>:<span class="ident">ty</span> { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">severity</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">verbosity</span>:<span class="ident">expr</span> } =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fmt</span>:<span class="ident">literal</span>, $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">params</span>:<span class="ident">expr</span> ),<span class="kw-2">*</span>) =&gt; {{
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fmt</span>, $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">params</span>, )<span class="kw-2">*</span>);
+        <span class="kw">let</span> <span class="ident">metadata</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::log::LogMetadata::new</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">severity</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">verbosity</span>, <span class="ident">msg</span>, <span class="macro">file!</span>(), <span class="macro-nonterminal">$</span><span class="macro">crate::cur_fn_name!</span>(), <span class="macro">line!</span>());
+        <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::log::log_with</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">logger</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">metadata</span>);
+    }};
 }
 
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">diag_log_assert</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">logger</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">desired_level</span>:<span class="ident">expr</span> =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">cond</span>:<span class="ident">expr</span>) =&gt; {
-        {
-            <span class="kw">if</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">cond</span> {
-                <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;Assertion suceeded -&gt; {}&quot;</span>, <span class="macro">stringify!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">cond</span>));
-
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">logger</span> <span class="op">=</span> <span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">logger</span><span class="op">&gt;</span><span class="ident">::new</span>();
-                <span class="kw">let</span> <span class="ident">metadata</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::log::LogMetadata::new</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::log::LogSeverity::Info</span>, <span class="bool-val">false</span>, <span class="ident">msg</span>, <span class="macro">file!</span>(), <span class="macro">cur_fn_name!</span>(), <span class="macro">line!</span>());
-                <span class="ident">logger</span>.<span class="ident">log</span>(<span class="kw-2">&amp;</span><span class="ident">metadata</span>);
-            }
-            <span class="kw">else</span> {
-                <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;Assertion failed ({}) -&gt; {}&quot;</span>, <span class="macro">stringify!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">desired_level</span>), <span class="macro">stringify!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">cond</span>));
-
-                <span class="kw">let</span> <span class="ident">metadata</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::log::LogMetadata::new</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::log::LogSeverity::Fatal</span>, <span class="bool-val">false</span>, <span class="ident">msg</span>, <span class="macro">file!</span>(), <span class="macro">cur_fn_name!</span>(), <span class="macro">line!</span>());
-                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::log::log_with</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">logger</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">metadata</span>);
-
-                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::assert::assert</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">desired_level</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::assert::rc::ResultAssertionFailed::make</span>());
-            }
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">logger</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">desired_abort_level</span>:<span class="ident">expr</span> =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">cond_expr</span>:<span class="ident">expr</span>) =&gt; {{
+        <span class="kw">let</span> <span class="ident">cond</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">cond_expr</span>;
+        <span class="kw">if</span> <span class="ident">cond</span> {
+            <span class="macro-nonterminal">$</span><span class="macro">crate::diag_log!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">logger</span> { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::log::LogSeverity::Info</span>, <span class="bool-val">true</span> } =&gt; <span class="string">&quot;Assertion succeeded: &#39;{}&#39;&quot;</span>, <span class="macro">stringify!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">cond_expr</span>));
         }
-    };
+        <span class="kw">else</span> {
+            <span class="macro-nonterminal">$</span><span class="macro">crate::diag_log!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">logger</span> { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::log::LogSeverity::Fatal</span>, <span class="bool-val">true</span> } =&gt; <span class="string">&quot;Assertion failed: &#39;{}&#39; - proceeding to abort through {:?}...&quot;</span>, <span class="macro">stringify!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">cond_expr</span>), <span class="macro-nonterminal">$</span><span class="macro-nonterminal">desired_abort_level</span>);
+
+            <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::abort::abort</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">desired_abort_level</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::rc::ResultAssertionFailed::make</span>());
+        }
+    }};
+}
+
+<span class="attribute">#[<span class="ident">macro_export</span>]</span>
+<span class="macro">macro_rules!</span> <span class="ident">diag_result_code_log_assert</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">logger</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">desired_abort_level</span>:<span class="ident">expr</span> =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">rc_expr</span>:<span class="ident">expr</span>) =&gt; {{
+        <span class="kw">let</span> <span class="ident">rc</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">rc_expr</span>;
+        <span class="kw">if</span> <span class="ident">rc</span>.<span class="ident">is_success</span>() {
+            <span class="macro-nonterminal">$</span><span class="macro">crate::diag_log!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">logger</span> { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::log::LogSeverity::Info</span>, <span class="bool-val">true</span> } =&gt; <span class="string">&quot;Result assertion succeeded: &#39;{}&#39;&quot;</span>, <span class="macro">stringify!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">rc_expr</span>));
+        }
+        <span class="kw">else</span> {
+            <span class="macro-nonterminal">$</span><span class="macro">crate::diag_log!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">logger</span> { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::log::LogSeverity::Fatal</span>, <span class="bool-val">true</span> } =&gt; <span class="string">&quot;Result assertion failed: &#39;{0}&#39; was {1} ({1:?}) - proceeding to abort through {2:?}...&quot;</span>, <span class="macro">stringify!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">rc_expr</span>), <span class="ident">rc</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">desired_abort_level</span>);
+
+            <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::abort::abort</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">desired_abort_level</span>, <span class="ident">rc</span>);
+        }
+    }};
 }
 
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">diag_result_log_assert</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">logger</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">desired_level</span>:<span class="ident">expr</span> =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">rc</span>:<span class="ident">expr</span>) =&gt; {
-        {
-            <span class="kw">fn</span> <span class="ident">f</span>() {}
-            <span class="kw">fn</span> <span class="ident">type_name_of</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw">_</span>: <span class="ident">T</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
-                <span class="ident">core::any::type_name</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>()
-            }
-            <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">type_name_of</span>(<span class="ident">f</span>);
-            <span class="kw">let</span> <span class="ident">fn_name</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">name</span>[..<span class="ident">name</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">3</span>];
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">logger</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">desired_abort_level</span>:<span class="ident">expr</span> =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">rc_expr</span>:<span class="ident">expr</span>) =&gt; {{
+        <span class="kw">let</span> <span class="ident">ret_rc</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">rc_expr</span>;
 
-            <span class="kw">if</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">rc</span>.<span class="ident">is_success</span>() {
-                <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;Result assertion suceeded -&gt; {0} - {0:?}&quot;</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">rc</span>);
+        <span class="kw">match</span> <span class="ident">ret_rc</span> {
+            <span class="prelude-val">Ok</span>(<span class="ident">t</span>) =&gt; {
+                <span class="macro-nonterminal">$</span><span class="macro">crate::diag_log!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">logger</span> { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::log::LogSeverity::Info</span>, <span class="bool-val">true</span> } =&gt; <span class="string">&quot;Result assertion succeeded: &#39;{}&#39;\n&quot;</span>, <span class="macro">stringify!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">rc_expr</span>));
 
-                <span class="kw">let</span> <span class="ident">metadata</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::log::LogMetadata::new</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::log::LogSeverity::Info</span>, <span class="bool-val">false</span>, <span class="ident">msg</span>, <span class="macro">file!</span>(), <span class="ident">fn_name</span>, <span class="macro">line!</span>());
-                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::log::log_with</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">logger</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">metadata</span>);
-            }
-            <span class="kw">else</span> {
-                <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;Result assertion failed ({0}) -&gt; {1} - {1:?}&quot;</span>, <span class="macro">stringify!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">desired_level</span>), <span class="macro-nonterminal">$</span><span class="macro-nonterminal">rc</span>);
+                <span class="ident">t</span>
+            },
+            <span class="prelude-val">Err</span>(<span class="ident">rc</span>) =&gt; {
+                <span class="macro-nonterminal">$</span><span class="macro">crate::diag_log!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">logger</span> { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::log::LogSeverity::Fatal</span>, <span class="bool-val">true</span> } =&gt; <span class="string">&quot;Result assertion failed: &#39;{0}&#39; was {1} ({1:?}) - proceeding to abort through {2:?}...&quot;</span>, <span class="macro">stringify!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">rc_expr</span>), <span class="ident">rc</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">desired_abort_level</span>);
 
-                <span class="kw">let</span> <span class="ident">metadata</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::log::LogMetadata::new</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::log::LogSeverity::Fatal</span>, <span class="bool-val">false</span>, <span class="ident">msg</span>, <span class="macro">file!</span>(), <span class="ident">fn_name</span>, <span class="macro">line!</span>());
-                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::log::log_with</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">logger</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">metadata</span>);
-
-                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::assert::assert</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">desired_level</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">rc</span>);
+                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::diag::abort::abort</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">desired_abort_level</span>, <span class="ident">rc</span>);
             }
         }
-    };
+    }};
 }</code></pre></div>
 </section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="nx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (76d770ac2 2022-04-02)" ></div>
 </body></html>

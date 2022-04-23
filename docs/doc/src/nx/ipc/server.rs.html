@@ -781,6 +781,10 @@
 <span id="776">776</span>
 <span id="777">777</span>
 <span id="778">778</span>
+<span id="779">779</span>
+<span id="780">780</span>
+<span id="781">781</span>
+<span id="782">782</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::result</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::svc</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::wait</span>;
@@ -884,7 +888,7 @@
             <span class="prelude-val">Ok</span>(<span class="ident">sf::ProcessId::from</span>(<span class="ident">ctx</span>.<span class="ident">ctx</span>.<span class="ident">in_params</span>.<span class="ident">process_id</span>)) 
         }
         <span class="kw">else</span> {
-            <span class="prelude-val">Err</span>(<span class="ident">sf::hipc::rc::ResultUnsupportedOperation::make</span>())
+            <span class="ident">sf::hipc::rc::ResultUnsupportedOperation::make_err</span>()
         }
     }
 }
@@ -894,7 +898,7 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">sf::IObject</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span> <span class="ident">RequestCommandParameter</span><span class="op">&lt;</span><span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">after_request_read</span>(<span class="ident">_ctx</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ServerContext</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="comment">// TODO: implement this (added this placeholder impl for interfaces to actually be valid)</span>
-        <span class="prelude-val">Err</span>(<span class="ident">sf::hipc::rc::ResultUnsupportedOperation::make</span>())
+        <span class="ident">sf::hipc::rc::ResultUnsupportedOperation::make_err</span>()
     }
 }
 
@@ -977,7 +981,7 @@
             <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">specific_domain_object_id</span>);
         }
         
-        <span class="prelude-val">Err</span>(<span class="ident">rc::ResultObjectIdAlreadyAllocated::make</span>())
+        <span class="ident">rc::ResultObjectIdAlreadyAllocated::make_err</span>()
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">find_domain</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">id</span>: <span class="ident">cmif::DomainObjectId</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">ISessionObject</span><span class="op">&gt;</span><span class="op">&gt;</span> {
@@ -987,7 +991,7 @@
             }
         }
 
-        <span class="prelude-val">Err</span>(<span class="ident">rc::ResultDomainNotFound::make</span>())
+        <span class="ident">rc::ResultDomainNotFound::make_err</span>()
     }
     
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">deallocate_domain</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">domain_object_id</span>: <span class="ident">cmif::DomainObjectId</span>) {
@@ -1046,14 +1050,14 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_new_server_fn</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">NewServerFn</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">new_server_fn</span> {
             <span class="prelude-val">Some</span>(<span class="ident">new_server_fn</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">new_server_fn</span>),
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">sf::hipc::rc::ResultSessionClosed::make</span>())
+            <span class="prelude-val">None</span> =&gt; <span class="ident">sf::hipc::rc::ResultSessionClosed::make_err</span>()
         }
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_new_mitm_server_fn</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">NewMitmServerFn</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">new_mitm_server_fn</span> {
             <span class="prelude-val">Some</span>(<span class="ident">new_mitm_server_fn</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">new_mitm_server_fn</span>),
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">sf::hipc::rc::ResultSessionClosed::make</span>())
+            <span class="prelude-val">None</span> =&gt; <span class="ident">sf::hipc::rc::ResultSessionClosed::make_err</span>()
         }
     }
 
@@ -1134,7 +1138,7 @@
 
     <span class="kw">fn</span> <span class="ident">copy_from_current_domain</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_domain_object_id</span>: <span class="ident">cmif::DomainObjectId</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">sf::MoveHandle</span><span class="op">&gt;</span> {
         <span class="comment">// TODO</span>
-        <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">crate</span>::rc::ResultNotImplemented::make</span>())
+        <span class="ident"><span class="kw">crate</span>::rc::ResultNotImplemented::make_err</span>()
     }
 
     <span class="kw">fn</span> <span class="ident">clone_current_object</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">sf::MoveHandle</span><span class="op">&gt;</span> {
@@ -1254,7 +1258,8 @@
                     };
                     <span class="comment">// Nothing done on success here, as if the command succeeds it will automatically respond by itself.</span>
                     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">command_found</span> <span class="op">=</span> <span class="bool-val">false</span>;
-                    <span class="kw">for</span> <span class="ident">command</span> <span class="kw">in</span> <span class="ident">target_server</span>.<span class="ident">get</span>().<span class="ident">get_command_metadata_table</span>() {
+                    <span class="kw">let</span> <span class="ident">command_table</span> <span class="op">=</span> <span class="ident">target_server</span>.<span class="ident">get</span>().<span class="ident">get_command_metadata_table</span>();
+                    <span class="kw">for</span> <span class="ident">command</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">command_table</span> {
                         <span class="kw">if</span> <span class="ident">command</span>.<span class="ident">matches</span>(<span class="ident">rq_id</span>) {
                             <span class="ident">command_found</span> <span class="op">=</span> <span class="bool-val">true</span>;
                             <span class="kw">let</span> <span class="ident">protocol</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">object_info</span>.<span class="ident">protocol</span>;
@@ -1295,7 +1300,7 @@
                 <span class="comment">// Invalid command type might mean that the session isn&#39;t a domain :P</span>
                 <span class="kw">match</span> <span class="ident">is_domain</span> {
                     <span class="bool-val">false</span> =&gt; <span class="ident">do_handle_request</span>()<span class="question-mark">?</span>,
-                    <span class="bool-val">true</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">rc::ResultInvalidDomainCommandType::make</span>())
+                    <span class="bool-val">true</span> =&gt; <span class="kw">return</span> <span class="ident">rc::ResultInvalidDomainCommandType::make_err</span>()
                 };
             },
             <span class="ident">cmif::DomainCommandType::SendMessage</span> =&gt; <span class="ident">do_handle_request</span>()<span class="question-mark">?</span>,
@@ -1314,20 +1319,23 @@
 
     <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
     <span class="kw">fn</span> <span class="ident">handle_control_command</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">ctx</span>: <span class="kw-2">&amp;mut</span> <span class="ident">CommandContext</span>, <span class="ident">rq_id</span>: <span class="ident">u32</span>, <span class="ident">command_type</span>: <span class="ident">cmif::CommandType</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="comment">// Control commands only exist in CMIF...</span>
+        <span class="macro">result_return_unless!</span>(<span class="ident">ctx</span>.<span class="ident">object_info</span>.<span class="ident">uses_cmif_protocol</span>(), <span class="ident"><span class="kw">super</span>::rc::ResultInvalidProtocol</span>);
+
         <span class="kw">for</span> <span class="ident">server_holder</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">server_holders</span> {
             <span class="kw">let</span> <span class="ident">server_info</span> <span class="op">=</span> <span class="ident">server_holder</span>.<span class="ident">info</span>;
             <span class="kw">if</span> <span class="ident">server_info</span>.<span class="ident">handle</span> <span class="op">==</span> <span class="ident">ctx</span>.<span class="ident">object_info</span>.<span class="ident">handle</span> {
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hipc_manager</span> <span class="op">=</span> <span class="ident">HipcManager::new</span>(<span class="ident">server_holder</span>, <span class="ident">P</span>);
                 <span class="comment">// Nothing done on success here, as if the command succeeds it will automatically respond by itself.</span>
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">command_found</span> <span class="op">=</span> <span class="bool-val">false</span>;
-                <span class="kw">for</span> <span class="ident">command</span> <span class="kw">in</span> <span class="ident">hipc_manager</span>.<span class="ident">get_command_metadata_table</span>() {
+                <span class="kw">let</span> <span class="ident">command_table</span> <span class="op">=</span> <span class="ident">hipc_manager</span>.<span class="ident">get_command_metadata_table</span>();
+                <span class="kw">for</span> <span class="ident">command</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">command_table</span> {
                     <span class="kw">if</span> <span class="ident">command</span>.<span class="ident">matches</span>(<span class="ident">rq_id</span>) {
                         <span class="ident">command_found</span> <span class="op">=</span> <span class="bool-val">true</span>;
                         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">unused_new_sessions</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ServerHolder</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
                         <span class="kw">let</span> <span class="ident">unused_domain_table</span> <span class="op">=</span> <span class="ident">mem::Shared::empty</span>();
                         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">server_ctx</span> <span class="op">=</span> <span class="ident">ServerContext::new</span>(<span class="ident">ctx</span>, <span class="ident">DataWalker::empty</span>(), <span class="ident">unused_domain_table</span>, <span class="kw-2">&amp;mut</span> <span class="ident">unused_new_sessions</span>);
-                        <span class="comment">// Control commands only exist in CMIF...</span>
-                        <span class="comment">// TODO: assert ctx.object_info.protocol == CommandProtocol::Cmif?</span>
+
                         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">rc</span>) <span class="op">=</span> <span class="ident">hipc_manager</span>.<span class="ident">call_self_server_command</span>(<span class="ident">command</span>.<span class="ident">command_fn</span>, <span class="ident">CommandProtocol::Cmif</span>, <span class="kw-2">&amp;mut</span> <span class="ident">server_ctx</span>) {
                             <span class="ident">cmif::server::write_control_command_response_on_msg_buffer</span>(<span class="ident">ctx</span>, <span class="ident">rc</span>, <span class="ident">command_type</span>);
                         }
@@ -1420,7 +1428,7 @@
                             <span class="ident">cmif::CommandType::Close</span> =&gt; {
                                 <span class="ident">should_close_session</span> <span class="op">=</span> <span class="bool-val">true</span>;
                             },
-                            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">rc::ResultInvalidCommandType::make</span>())
+                            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="ident">rc::ResultInvalidCommandType::make_err</span>()
                         }
                     },
                     <span class="ident">WaitHandleType::Server</span> =&gt; {
@@ -1483,7 +1491,7 @@
 
         <span class="kw">match</span> <span class="ident">server_found</span> {
             <span class="bool-val">true</span> =&gt; <span class="prelude-val">Ok</span>(()),
-            <span class="bool-val">false</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">rc::ResultSignaledServerNotFound::make</span>())
+            <span class="bool-val">false</span> =&gt; <span class="ident">rc::ResultSignaledServerNotFound::make_err</span>()
         }
     }
     

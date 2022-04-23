@@ -114,7 +114,7 @@ macro_rules! read_bits {
 
 #[macro_export]
 macro_rules! nul {
-    ($lit:expr) => {
+    ($lit:literal) => {
         concat!($lit, "\0")
     };
 }
@@ -131,5 +131,5 @@ macro_rules! cur_fn_name {
 
         let name = type_name_of(dummy_fn);
         &name[..name.len() - DUMMY_FN_EXTRA_SIZE]
-    }}
+    }};
 }

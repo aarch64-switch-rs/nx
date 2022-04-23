@@ -22,27 +22,33 @@ macro_rules! result_define {
 #[macro_export]
 macro_rules! result_define_group {
     ($module:expr => { $( $name:ident: $description:expr ),* }) => {
-        $( result_define!($name: $module, $description); )*
+        $( $crate::result_define!($name: $module, $description); )*
     };
 }
 
 #[macro_export]
 macro_rules! result_define_subgroup {
-    ($module:expr, $submodule:expr => { $( $name:ident: $description:expr ),* }) => {
-        result_define_group!($module => { $( $name: $submodule + $description ),* });
+    (
+        $module:expr, $submodule:expr => {
+            $( $name:ident: $description:expr ),*
+        }
+    ) => {
+        $crate::result_define_group!($module => { $( $name: $submodule + $description ),* });
     };
 }
 
 #[macro_export]
 macro_rules! result_return_if {
     ($cond:expr, $res:ty) => {
-        if $cond {
+        let cond_val = $cond;
+        if cond_val {
             return <$res>::make_err();
         }
     };
 
     ($cond:expr, $res:literal) => {
-        if $cond {
+        let cond_val = $cond;
+        if cond_val {
             return $crate::result::ResultCode::new_err($res);
         }
     };
@@ -51,20 +57,20 @@ macro_rules! result_return_if {
 #[macro_export]
 macro_rules! result_return_unless {
     ($cond:expr, $res:ty) => {
-        result_return_if!(!$cond, $res);
+        $crate::result_return_if!(!$cond, $res);
     };
 
     ($cond:expr, $res:literal) => {
-        result_return_if!(!$cond, $res);
+        $crate::result_return_if!(!$cond, $res);
     };
 }
 
 #[macro_export]
 macro_rules! result_try {
-    ($rc:expr) => {
-        if $rc.is_failure() {
-            return Err($rc);
+    ($rc_expr:expr) => {
+        let rc = $rc_expr;
+        if rc.is_failure() {
+            return Err(rc);
         }
     };
 }
-

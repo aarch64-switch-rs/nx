@@ -192,28 +192,28 @@
 }
 
 <span class="kw">impl</span> <span class="ident">VersionInterval</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">all</span>() -&gt; <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">all</span>() -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">min</span>: <span class="prelude-val">None</span>,
             <span class="ident">max</span>: <span class="prelude-val">None</span>
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">min</span>: <span class="ident">Version</span>) -&gt; <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">min</span>: <span class="ident">Version</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">min</span>: <span class="prelude-val">Some</span>(<span class="ident">min</span>),
             <span class="ident">max</span>: <span class="prelude-val">None</span>
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to</span>(<span class="ident">max</span>: <span class="ident">Version</span>) -&gt; <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">to</span>(<span class="ident">max</span>: <span class="ident">Version</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">min</span>: <span class="prelude-val">None</span>,
             <span class="ident">max</span>: <span class="prelude-val">Some</span>(<span class="ident">max</span>)
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_to</span>(<span class="ident">min</span>: <span class="ident">Version</span>, <span class="ident">max</span>: <span class="ident">Version</span>) -&gt; <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">from_to</span>(<span class="ident">min</span>: <span class="ident">Version</span>, <span class="ident">max</span>: <span class="ident">Version</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">min</span>: <span class="prelude-val">Some</span>(<span class="ident">min</span>),
             <span class="ident">max</span>: <span class="prelude-val">Some</span>(<span class="ident">max</span>)

@@ -1118,7 +1118,7 @@
                 <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">device</span>.<span class="ident">fs</span>.<span class="ident">clone</span>());
             }
         }
-        <span class="prelude-val">Err</span>(<span class="ident">rc::ResultDeviceNotFound::make</span>())
+        <span class="ident">rc::ResultDeviceNotFound::make_err</span>()
     }
 }
 

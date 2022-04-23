@@ -343,10 +343,9 @@
 <span id="338">338</span>
 <span id="339">339</span>
 <span id="340">340</span>
-<span id="341">341</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::result</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::thread</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::diag::assert</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::diag::abort</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::diag::log</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::diag::log::Logger</span>;
 <span class="kw">use</span> <span class="ident">alloc::string::String</span>;
@@ -473,7 +472,7 @@
             <span class="kw">unsafe</span> {
                 <span class="kw">match</span> <span class="ident">core::str::from_utf8</span>(<span class="ident">core::slice::from_raw_parts</span>(<span class="ident">ptr</span>, <span class="ident">str_len</span>)) {
                     <span class="prelude-val">Ok</span>(<span class="ident">name</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">name</span>.<span class="ident">trim_end_matches</span>(<span class="string">&#39;\0&#39;</span>)),
-                    <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">rc::ResultInvalidUtf8Conversion::make</span>())
+                    <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="ident">rc::ResultInvalidUtf8Conversion::make_err</span>()
                 }
             }
         }
@@ -675,15 +674,14 @@
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">simple_panic_handler</span><span class="op">&lt;</span><span class="ident">L</span>: <span class="ident">Logger</span><span class="op">&gt;</span>(<span class="ident">info</span>: <span class="kw-2">&amp;</span><span class="ident">panic::PanicInfo</span>, <span class="ident">desired_level</span>: <span class="ident">assert::AssertLevel</span>) -&gt; <span class="op">!</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">simple_panic_handler</span><span class="op">&lt;</span><span class="ident">L</span>: <span class="ident">Logger</span><span class="op">&gt;</span>(<span class="ident">info</span>: <span class="kw-2">&amp;</span><span class="ident">panic::PanicInfo</span>, <span class="ident">desired_level</span>: <span class="ident">abort::AbortLevel</span>) -&gt; <span class="op">!</span> {
     <span class="kw">let</span> <span class="ident">thread_name</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">thread::get_current_thread</span>().<span class="ident">name</span>.<span class="ident">get_str</span>() {
         <span class="prelude-val">Ok</span>(<span class="ident">name</span>) =&gt; <span class="ident">name</span>,
         <span class="kw">_</span> =&gt; <span class="string">&quot;&lt;unknown&gt;&quot;</span>,
     };
     <span class="macro">diag_log!</span>(<span class="ident">L</span> { <span class="ident">log::LogSeverity::Fatal</span>, <span class="bool-val">true</span> } =&gt; <span class="string">&quot;Panic! at thread &#39;{}&#39; -&gt; {}\n&quot;</span>, <span class="ident">thread_name</span>, <span class="ident">info</span>);
 
-    <span class="ident">assert::assert</span>(<span class="ident">desired_level</span>, <span class="ident"><span class="kw">super</span>::rc::ResultPanicked::make</span>());
-    <span class="kw">loop</span> {}
+    <span class="ident">abort::abort</span>(<span class="ident">desired_level</span>, <span class="ident"><span class="kw">super</span>::rc::ResultPanicked::make</span>())
 }</code></pre></div>
 </section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="nx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (76d770ac2 2022-04-02)" ></div>
 </body></html>

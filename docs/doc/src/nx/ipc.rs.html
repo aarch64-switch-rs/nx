@@ -911,21 +911,21 @@
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">convert_current_object_to_domain</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">cmif::DomainObjectId</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">uses_tipc_protocol</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">super</span>::rc::ResultNotSupported::make</span>());
+            <span class="kw">return</span> <span class="ident"><span class="kw">super</span>::rc::ResultNotSupported::make_err</span>();
         }
         <span class="macro">ipc_client_send_control_command!</span>([<span class="kw-2">*</span><span class="self">self</span>; <span class="ident">cmif::ControlRequestId::ConvertCurrentObjectToDomain</span>] () =&gt; (<span class="ident">domain_object_id</span>: <span class="ident">cmif::DomainObjectId</span>))
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">query_pointer_buffer_size</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">uses_tipc_protocol</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">super</span>::rc::ResultNotSupported::make</span>());
+            <span class="kw">return</span> <span class="ident"><span class="kw">super</span>::rc::ResultNotSupported::make_err</span>();
         }
         <span class="macro">ipc_client_send_control_command!</span>([<span class="kw-2">*</span><span class="self">self</span>; <span class="ident">cmif::ControlRequestId::QueryPointerBufferSize</span>] () =&gt; (<span class="ident">pointer_buffer_size</span>: <span class="ident">u16</span>))
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clone_current_object</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">sf::MoveHandle</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">uses_tipc_protocol</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">super</span>::rc::ResultNotSupported::make</span>());
+            <span class="kw">return</span> <span class="ident"><span class="kw">super</span>::rc::ResultNotSupported::make_err</span>();
         }
         <span class="macro">ipc_client_send_control_command!</span>([<span class="kw-2">*</span><span class="self">self</span>; <span class="ident">cmif::ControlRequestId::CloneCurrentObject</span>] () =&gt; (<span class="ident">cloned_handle</span>: <span class="ident">sf::MoveHandle</span>))
     }
@@ -1196,7 +1196,7 @@
 
 <span class="kw">const</span> <span class="ident">MAX_COUNT</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">8</span>;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DataWalker</span> {
     <span class="ident">ptr</span>: <span class="kw-2">*mut</span> <span class="ident">u8</span>,
     <span class="ident">cur_offset</span>: <span class="ident">isize</span>
@@ -1309,17 +1309,17 @@
         <span class="self">Self</span> { <span class="ident">send_process_id</span>: <span class="bool-val">false</span>, <span class="ident">process_id</span>: <span class="number">0</span>, <span class="ident">data_size</span>: <span class="number">0</span>, <span class="ident">data_offset</span>: <span class="ident">ptr::null_mut</span>(), <span class="ident">data_words_offset</span>: <span class="ident">ptr::null_mut</span>(), <span class="ident">objects_offset</span>: <span class="ident">ptr::null_mut</span>(), <span class="ident">copy_handles</span>: <span class="ident">ArrayVec::new</span>(), <span class="ident">move_handles</span>: <span class="ident">ArrayVec::new</span>(), <span class="ident">objects</span>: <span class="ident">ArrayVec::new</span>(), <span class="ident">out_pointer_sizes</span>: <span class="ident">ArrayVec::new</span>() }
     }
     
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_copy_handle</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">handle</span>: <span class="ident">svc::Handle</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">add_copy_handle</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">handle</span>: <span class="ident">svc::Handle</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">copy_handles</span>.<span class="ident">try_push</span>(<span class="ident">handle</span>) {
             <span class="prelude-val">Ok</span>(()) =&gt; <span class="prelude-val">Ok</span>(()),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">rc::ResultCopyHandlesFull::make</span>())
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="ident">rc::ResultCopyHandlesFull::make_err</span>()
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_move_handle</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">handle</span>: <span class="ident">svc::Handle</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">add_move_handle</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">handle</span>: <span class="ident">svc::Handle</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">move_handles</span>.<span class="ident">try_push</span>(<span class="ident">handle</span>) {
             <span class="prelude-val">Ok</span>(()) =&gt; <span class="prelude-val">Ok</span>(()),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">rc::ResultMoveHandlesFull::make</span>())
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="ident">rc::ResultMoveHandlesFull::make_err</span>()
         }
     }
 
@@ -1333,7 +1333,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_domain_object</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">domain_object_id</span>: <span class="ident">cmif::DomainObjectId</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">objects</span>.<span class="ident">try_push</span>(<span class="ident">domain_object_id</span>) {
             <span class="prelude-val">Ok</span>(()) =&gt; <span class="prelude-val">Ok</span>(()),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">rc::ResultDomainObjectsFull::make</span>())
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="ident">rc::ResultDomainObjectsFull::make_err</span>()
         }
     }
 
@@ -1342,28 +1342,28 @@
             <span class="self">self</span>.<span class="ident">add_domain_object</span>(<span class="ident">object_info</span>.<span class="ident">domain_object_id</span>)
         }
         <span class="kw">else</span> {
-            <span class="prelude-val">Err</span>(<span class="ident">rc::ResultInvalidDomainObject::make</span>())
+            <span class="ident">rc::ResultInvalidDomainObject::make_err</span>()
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_out_pointer_size</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">pointer_size</span>: <span class="ident">u16</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">add_out_pointer_size</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">pointer_size</span>: <span class="ident">u16</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">out_pointer_sizes</span>.<span class="ident">try_push</span>(<span class="ident">pointer_size</span>) {
             <span class="prelude-val">Ok</span>(()) =&gt; <span class="prelude-val">Ok</span>(()),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">rc::ResultPointerSizesFull::make</span>())
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="ident">rc::ResultPointerSizesFull::make_err</span>()
         }
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pop_copy_handle</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">svc::Handle</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">copy_handles</span>.<span class="ident">pop_at</span>(<span class="number">0</span>) {
             <span class="prelude-val">Some</span>(<span class="ident">handle</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">handle</span>),
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">cmif::rc::ResultInvalidOutObjectCount::make</span>())
+            <span class="prelude-val">None</span> =&gt; <span class="ident">cmif::rc::ResultInvalidOutObjectCount::make_err</span>()
         }
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pop_move_handle</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">svc::Handle</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">move_handles</span>.<span class="ident">pop_at</span>(<span class="number">0</span>) {
             <span class="prelude-val">Some</span>(<span class="ident">handle</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">handle</span>),
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">cmif::rc::ResultInvalidOutObjectCount::make</span>())
+            <span class="prelude-val">None</span> =&gt; <span class="ident">cmif::rc::ResultInvalidOutObjectCount::make_err</span>()
         }
     }
 
@@ -1375,17 +1375,17 @@
         <span class="prelude-val">Ok</span>(<span class="ident">handle</span>)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push_copy_handle</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">handle</span>: <span class="ident">svc::Handle</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">push_copy_handle</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">handle</span>: <span class="ident">svc::Handle</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">copy_handles</span>.<span class="ident">try_push</span>(<span class="ident">handle</span>) {
             <span class="prelude-val">Ok</span>(()) =&gt; <span class="prelude-val">Ok</span>(()),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">rc::ResultCopyHandlesFull::make</span>())
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="ident">rc::ResultCopyHandlesFull::make_err</span>()
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push_move_handle</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">handle</span>: <span class="ident">svc::Handle</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">push_move_handle</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">handle</span>: <span class="ident">svc::Handle</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">move_handles</span>.<span class="ident">try_push</span>(<span class="ident">handle</span>) {
             <span class="prelude-val">Ok</span>(()) =&gt; <span class="prelude-val">Ok</span>(()),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">rc::ResultMoveHandlesFull::make</span>())
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="ident">rc::ResultMoveHandlesFull::make_err</span>()
         }
     }
 
@@ -1399,14 +1399,14 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pop_domain_object</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">cmif::DomainObjectId</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">objects</span>.<span class="ident">pop_at</span>(<span class="number">0</span>) {
             <span class="prelude-val">Some</span>(<span class="ident">handle</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">handle</span>),
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">cmif::rc::ResultInvalidOutObjectCount::make</span>())
+            <span class="prelude-val">None</span> =&gt; <span class="ident">cmif::rc::ResultInvalidOutObjectCount::make_err</span>()
         }
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push_domain_object</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">domain_object_id</span>: <span class="ident">cmif::DomainObjectId</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">objects</span>.<span class="ident">try_push</span>(<span class="ident">domain_object_id</span>) {
             <span class="prelude-val">Ok</span>(()) =&gt; <span class="prelude-val">Ok</span>(()),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">rc::ResultDomainObjectsFull::make</span>())
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="ident">rc::ResultDomainObjectsFull::make_err</span>()
         }
     }
 }
@@ -1460,38 +1460,38 @@
         <span class="ident">ctx</span>
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_send_static</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">send_static</span>: <span class="ident">SendStaticDescriptor</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">add_send_static</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">send_static</span>: <span class="ident">SendStaticDescriptor</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">send_statics</span>.<span class="ident">try_push</span>(<span class="ident">send_static</span>) {
             <span class="prelude-val">Ok</span>(()) =&gt; <span class="prelude-val">Ok</span>(()),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">rc::ResultSendStaticsFull::make</span>())
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="ident">rc::ResultSendStaticsFull::make_err</span>()
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_receive_static</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">receive_static</span>: <span class="ident">ReceiveStaticDescriptor</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">add_receive_static</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">receive_static</span>: <span class="ident">ReceiveStaticDescriptor</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">receive_statics</span>.<span class="ident">try_push</span>(<span class="ident">receive_static</span>) {
             <span class="prelude-val">Ok</span>(()) =&gt; <span class="prelude-val">Ok</span>(()),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">rc::ResultReceiveStaticsFull::make</span>())
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="ident">rc::ResultReceiveStaticsFull::make_err</span>()
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_send_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">send_buffer</span>: <span class="ident">BufferDescriptor</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">add_send_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">send_buffer</span>: <span class="ident">BufferDescriptor</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">send_buffers</span>.<span class="ident">try_push</span>(<span class="ident">send_buffer</span>) {
             <span class="prelude-val">Ok</span>(()) =&gt; <span class="prelude-val">Ok</span>(()),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">rc::ResultSendBuffersFull::make</span>())
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="ident">rc::ResultSendBuffersFull::make_err</span>()
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_receive_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">receive_buffer</span>: <span class="ident">BufferDescriptor</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">add_receive_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">receive_buffer</span>: <span class="ident">BufferDescriptor</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">receive_buffers</span>.<span class="ident">try_push</span>(<span class="ident">receive_buffer</span>) {
             <span class="prelude-val">Ok</span>(()) =&gt; <span class="prelude-val">Ok</span>(()),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">rc::ResultReceiveBuffersFull::make</span>())
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="ident">rc::ResultReceiveBuffersFull::make_err</span>()
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_exchange_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">exchange_buffer</span>: <span class="ident">BufferDescriptor</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">add_exchange_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">exchange_buffer</span>: <span class="ident">BufferDescriptor</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">exchange_buffers</span>.<span class="ident">try_push</span>(<span class="ident">exchange_buffer</span>) {
             <span class="prelude-val">Ok</span>(()) =&gt; <span class="prelude-val">Ok</span>(()),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">rc::ResultExchangeBuffersFull::make</span>())
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="ident">rc::ResultExchangeBuffersFull::make_err</span>()
         }
     }
 
@@ -1570,44 +1570,44 @@
             }
         }
         <span class="kw">else</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">rc::ResultInvalidBufferAttributes::make</span>());
+            <span class="kw">return</span> <span class="ident">rc::ResultInvalidBufferAttributes::make_err</span>();
         }
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pop_send_static</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SendStaticDescriptor</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">pop_send_static</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SendStaticDescriptor</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">send_statics</span>.<span class="ident">pop_at</span>(<span class="number">0</span>) {
             <span class="prelude-val">Some</span>(<span class="ident">send_static</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">send_static</span>),
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">rc::ResultInvalidSendStaticCount::make</span>())
+            <span class="prelude-val">None</span> =&gt; <span class="ident">rc::ResultInvalidSendStaticCount::make_err</span>()
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pop_receive_static</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ReceiveStaticDescriptor</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">pop_receive_static</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ReceiveStaticDescriptor</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">receive_statics</span>.<span class="ident">pop_at</span>(<span class="number">0</span>) {
             <span class="prelude-val">Some</span>(<span class="ident">receive_static</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">receive_static</span>),
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">rc::ResultInvalidReceiveStaticCount::make</span>())
+            <span class="prelude-val">None</span> =&gt; <span class="ident">rc::ResultInvalidReceiveStaticCount::make_err</span>()
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pop_send_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BufferDescriptor</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">pop_send_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BufferDescriptor</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">send_buffers</span>.<span class="ident">pop_at</span>(<span class="number">0</span>) {
             <span class="prelude-val">Some</span>(<span class="ident">send_buffer</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">send_buffer</span>),
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">rc::ResultInvalidSendBufferCount::make</span>())
+            <span class="prelude-val">None</span> =&gt; <span class="ident">rc::ResultInvalidSendBufferCount::make_err</span>()
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pop_receive_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BufferDescriptor</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">pop_receive_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BufferDescriptor</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">receive_buffers</span>.<span class="ident">pop_at</span>(<span class="number">0</span>) {
             <span class="prelude-val">Some</span>(<span class="ident">receive_buffer</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">receive_buffer</span>),
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">rc::ResultInvalidReceiveBufferCount::make</span>())
+            <span class="prelude-val">None</span> =&gt; <span class="ident">rc::ResultInvalidReceiveBufferCount::make_err</span>()
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pop_exchange_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BufferDescriptor</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">pop_exchange_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BufferDescriptor</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">exchange_buffers</span>.<span class="ident">pop_at</span>(<span class="number">0</span>) {
             <span class="prelude-val">Some</span>(<span class="ident">exchange_buffer</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">exchange_buffer</span>),
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">rc::ResultInvalidExchangeBufferCount::make</span>())
+            <span class="prelude-val">None</span> =&gt; <span class="ident">rc::ResultInvalidExchangeBufferCount::make_err</span>()
         }
     }
 
@@ -1679,7 +1679,7 @@
             }
         }
 
-        <span class="prelude-val">Err</span>(<span class="ident">rc::ResultInvalidBufferAttributes::make</span>())
+        <span class="ident">rc::ResultInvalidBufferAttributes::make_err</span>()
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pop_object</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ObjectInfo</span><span class="op">&gt;</span> {

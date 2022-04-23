@@ -121,6 +121,7 @@
 <span id="116">116</span>
 <span id="117">117</span>
 <span id="118">118</span>
+<span id="119">119</span>
 </pre><pre class="rust"><code><span class="attribute">#![<span class="ident">macro_use</span>]</span>
 
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
@@ -196,7 +197,8 @@
                     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused_assignments</span>)]</span>
                     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused_parens</span>)]</span>
                     <span class="kw">fn</span> [<span class="op">&lt;</span><span class="ident">sf_server_impl_</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span><span class="op">&gt;</span>](<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_protocol</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::ipc::CommandProtocol</span>, <span class="kw-2">mut</span> <span class="ident">ctx</span>: <span class="kw-2">&amp;mut</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::ipc::server::ServerContext</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::result::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-                        <span class="comment">// TODO: assert cmif protocol?</span>
+                        <span class="comment">// TODO: tipc support, for now force cmif</span>
+                        <span class="macro-nonterminal">$</span><span class="macro">crate::result_return_if!</span>(<span class="macro-nonterminal">ctx</span>.<span class="ident">ctx</span>.<span class="ident">object_info</span>.<span class="ident">uses_tipc_protocol</span>(), <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::ipc::rc::ResultInvalidProtocol</span>);
 
                         <span class="ident">ctx</span>.<span class="ident">raw_data_walker</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::ipc::DataWalker::new</span>(<span class="ident">ctx</span>.<span class="ident">ctx</span>.<span class="ident">in_params</span>.<span class="ident">data_offset</span>);
                         $( <span class="kw">let</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">in_param_name</span> <span class="op">=</span> <span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">in_param_type</span> <span class="kw">as</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::ipc::server::RequestCommandParameter</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::after_request_read</span>(<span class="kw-2">&amp;mut</span> <span class="ident">ctx</span>)<span class="question-mark">?</span>; )<span class="op">*</span>

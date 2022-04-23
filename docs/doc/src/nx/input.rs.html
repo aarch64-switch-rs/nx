@@ -551,7 +551,7 @@
     <span class="kw">match</span> <span class="ident">controller</span> {
         <span class="ident">hid::ControllerId::Player1</span> <span class="op">|</span> <span class="ident">hid::ControllerId::Player2</span> <span class="op">|</span> <span class="ident">hid::ControllerId::Player3</span> <span class="op">|</span> <span class="ident">hid::ControllerId::Player4</span> <span class="op">|</span> <span class="ident">hid::ControllerId::Player5</span> <span class="op">|</span> <span class="ident">hid::ControllerId::Player6</span> <span class="op">|</span> <span class="ident">hid::ControllerId::Player7</span> <span class="op">|</span> <span class="ident">hid::ControllerId::Player8</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">controller</span> <span class="kw">as</span> <span class="ident">usize</span>),
         <span class="ident">hid::ControllerId::Handheld</span> =&gt; <span class="prelude-val">Ok</span>(<span class="number">8</span>),
-        <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">rc::ResultInvalidControllerId::make</span>())
+        <span class="kw">_</span> =&gt; <span class="ident">rc::ResultInvalidControllerId::make_err</span>()
     }
 }
 

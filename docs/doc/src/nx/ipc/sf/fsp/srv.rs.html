@@ -20,7 +20,7 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::mem</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::version</span>;
 
-<span class="macro">ipc_sf_define_interface_trait!</span>{
+<span class="macro">ipc_sf_define_interface_trait!</span> {
     <span class="kw">trait</span> <span class="ident">IFileSystemProxy</span> {
         <span class="ident">set_current_process</span> [<span class="number">1</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">process_id</span>: <span class="ident">sf::ProcessId</span>) =&gt; ();
         <span class="ident">open_sd_card_filesystem</span> [<span class="number">18</span>, <span class="ident">version::VersionInterval::all</span>()]: () =&gt; (<span class="ident">sd_filesystem</span>: <span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident"><span class="kw">super</span>::IFileSystem</span><span class="op">&gt;</span>);

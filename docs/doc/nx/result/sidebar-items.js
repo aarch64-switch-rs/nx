@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["wrap",""]],"struct":[["ResultCode",""],["ResultSuccess",""]],"trait":[["ResultBase",""]],"type":[["Result",""]]});
+initSidebarItems({"fn":[["pack",""],["unpack",""]],"struct":[["ResultCode",""],["ResultSuccess",""]],"trait":[["ResultBase",""]],"type":[["Result",""]]});

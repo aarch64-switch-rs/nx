@@ -279,6 +279,34 @@
 <span id="274">274</span>
 <span id="275">275</span>
 <span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::result</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ipc::sf</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::mem</span>;
@@ -397,7 +425,7 @@
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">AccessId</span> <span class="op">=</span> <span class="ident">u32</span>;
 
 <span class="macro">bit_enum!</span> {
-    <span class="ident">AdminInfoFlags</span> (<span class="ident">u8</span>) {
+    <span class="ident">AdminInfoFlags</span> (<span class="ident">u8</span>) { <span class="comment">// Note: plain amiibo flags shifted 4 bits (original bits 0-3 are discarded)</span>
         <span class="ident">IsInitialized</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">0</span>),
         <span class="ident">HasApplicationArea</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">1</span>),
         <span class="ident">Unk_2</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">2</span>),
@@ -420,7 +448,7 @@
     <span class="kw">pub</span> <span class="ident">program_id</span>: <span class="ident">u64</span>,
     <span class="kw">pub</span> <span class="ident">access_id</span>: <span class="ident">AccessId</span>,
     <span class="kw">pub</span> <span class="ident">crc32_change_counter</span>: <span class="ident">u16</span>,
-    <span class="kw">pub</span> <span class="ident">flags</span>: <span class="ident">AdminInfoFlags</span>, <span class="comment">// Raw amiibo settings flags without the first 4 bits</span>
+    <span class="kw">pub</span> <span class="ident">flags</span>: <span class="ident">AdminInfoFlags</span>,
     <span class="kw">pub</span> <span class="ident">unk_0x2</span>: <span class="ident">u8</span>, <span class="comment">// Always 0x2</span>
     <span class="kw">pub</span> <span class="ident">console_type</span>: <span class="ident">ProgramIdConsoleType</span>,
     <span class="kw">pub</span> <span class="ident">pad</span>: [<span class="ident">u8</span>; <span class="number">0x7</span>],
@@ -438,6 +466,28 @@
     <span class="kw">pub</span> <span class="ident">reserved</span>: [<span class="ident">u8</span>; <span class="number">0x8E</span>]
 }
 <span class="macro">const_assert!</span>(<span class="ident">core::mem::size_of</span>::<span class="op">&lt;</span><span class="ident">RegisterInfoPrivate</span><span class="op">&gt;</span>() <span class="op">==</span> <span class="number">0x100</span>);
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>)]</span>
+<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">NfpData</span> {
+    <span class="kw">pub</span> <span class="ident">data</span>: [<span class="ident">u8</span>; <span class="number">0x298</span>] <span class="comment">// TODO: finish REing this type</span>
+}
+<span class="macro">const_assert!</span>(<span class="ident">core::mem::size_of</span>::<span class="op">&lt;</span><span class="ident">NfpData</span><span class="op">&gt;</span>() <span class="op">==</span> <span class="number">0x298</span>);
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>)]</span>
+<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">u32</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">BreakType</span> {
+    <span class="ident">Unk0</span> <span class="op">=</span> <span class="number">0</span>,
+    <span class="ident">Unk1</span> <span class="op">=</span> <span class="number">1</span>,
+    <span class="ident">Unk2</span> <span class="op">=</span> <span class="number">2</span>
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>)]</span>
+<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">u32</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">WriteType</span> {
+    <span class="ident">Unk0</span> <span class="op">=</span> <span class="number">0</span>,
+    <span class="ident">Unk1</span> <span class="op">=</span> <span class="number">1</span>
+}
 
 <span class="macro">ipc_sf_define_interface_trait!</span> {
     <span class="kw">trait</span> <span class="ident">IUser</span> {
@@ -458,13 +508,13 @@
         <span class="ident">get_register_info</span> [<span class="number">14</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>, <span class="ident">out_register_info</span>: <span class="ident">sf::OutFixedPointerBuffer</span><span class="op">&lt;</span><span class="ident">RegisterInfo</span><span class="op">&gt;</span>) =&gt; ();
         <span class="ident">get_common_info</span> [<span class="number">15</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>, <span class="ident">out_common_info</span>: <span class="ident">sf::OutFixedPointerBuffer</span><span class="op">&lt;</span><span class="ident">CommonInfo</span><span class="op">&gt;</span>) =&gt; ();
         <span class="ident">get_model_info</span> [<span class="number">16</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>, <span class="ident">out_model_info</span>: <span class="ident">sf::OutFixedPointerBuffer</span><span class="op">&lt;</span><span class="ident">ModelInfo</span><span class="op">&gt;</span>) =&gt; ();
-        <span class="ident">attach_activate_event</span> [<span class="number">17</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>) =&gt; (<span class="ident">activate_event</span>: <span class="ident">sf::CopyHandle</span>);
-        <span class="ident">attach_deactivate_event</span> [<span class="number">18</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>) =&gt; (<span class="ident">deactivate_event</span>: <span class="ident">sf::CopyHandle</span>);
+        <span class="ident">attach_activate_event</span> [<span class="number">17</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>) =&gt; (<span class="ident">event_handle</span>: <span class="ident">sf::CopyHandle</span>);
+        <span class="ident">attach_deactivate_event</span> [<span class="number">18</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>) =&gt; (<span class="ident">event_handle</span>: <span class="ident">sf::CopyHandle</span>);
         <span class="ident">get_state</span> [<span class="number">19</span>, <span class="ident">version::VersionInterval::all</span>()]: () =&gt; (<span class="ident">state</span>: <span class="ident">State</span>);
         <span class="ident">get_device_state</span> [<span class="number">20</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>) =&gt; (<span class="ident">device_state</span>: <span class="ident">DeviceState</span>);
         <span class="ident">get_npad_id</span> [<span class="number">21</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>) =&gt; (<span class="ident">npad_id</span>: <span class="ident">u32</span>);
         <span class="ident">get_application_area_size</span> [<span class="number">22</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>) =&gt; (<span class="ident">size</span>: <span class="ident">u32</span>);
-        <span class="ident">attach_availability_change_event</span> [<span class="number">23</span>, <span class="ident">version::VersionInterval::from</span>(<span class="ident">version::Version::new</span>(<span class="number">3</span>,<span class="number">0</span>,<span class="number">0</span>))]: () =&gt; (<span class="ident">availability_change_event</span>: <span class="ident">sf::CopyHandle</span>);
+        <span class="ident">attach_availability_change_event</span> [<span class="number">23</span>, <span class="ident">version::VersionInterval::from</span>(<span class="ident">version::Version::new</span>(<span class="number">3</span>,<span class="number">0</span>,<span class="number">0</span>))]: () =&gt; (<span class="ident">event_handle</span>: <span class="ident">sf::CopyHandle</span>);
         <span class="ident">recreate_application_area</span> [<span class="number">24</span>, <span class="ident">version::VersionInterval::from</span>(<span class="ident">version::Version::new</span>(<span class="number">3</span>,<span class="number">0</span>,<span class="number">0</span>))]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>, <span class="ident">access_id</span>: <span class="ident">AccessId</span>, <span class="ident">data</span>: <span class="ident">sf::InMapAliasBuffer</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) =&gt; ();
     }
 }
@@ -490,8 +540,8 @@
         <span class="ident">get_register_info</span> [<span class="number">14</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>, <span class="ident">out_register_info</span>: <span class="ident">sf::OutFixedPointerBuffer</span><span class="op">&lt;</span><span class="ident">RegisterInfo</span><span class="op">&gt;</span>) =&gt; ();
         <span class="ident">get_common_info</span> [<span class="number">15</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>, <span class="ident">out_common_info</span>: <span class="ident">sf::OutFixedPointerBuffer</span><span class="op">&lt;</span><span class="ident">CommonInfo</span><span class="op">&gt;</span>) =&gt; ();
         <span class="ident">get_model_info</span> [<span class="number">16</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>, <span class="ident">out_model_info</span>: <span class="ident">sf::OutFixedPointerBuffer</span><span class="op">&lt;</span><span class="ident">ModelInfo</span><span class="op">&gt;</span>) =&gt; ();
-        <span class="ident">attach_activate_event</span> [<span class="number">17</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>) =&gt; (<span class="ident">activate_event</span>: <span class="ident">sf::CopyHandle</span>);
-        <span class="ident">attach_deactivate_event</span> [<span class="number">18</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>) =&gt; (<span class="ident">deactivate_event</span>: <span class="ident">sf::CopyHandle</span>);
+        <span class="ident">attach_activate_event</span> [<span class="number">17</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>) =&gt; (<span class="ident">event_handle</span>: <span class="ident">sf::CopyHandle</span>);
+        <span class="ident">attach_deactivate_event</span> [<span class="number">18</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>) =&gt; (<span class="ident">event_handle</span>: <span class="ident">sf::CopyHandle</span>);
         <span class="ident">get_state</span> [<span class="number">19</span>, <span class="ident">version::VersionInterval::all</span>()]: () =&gt; (<span class="ident">state</span>: <span class="ident">State</span>);
         <span class="ident">get_device_state</span> [<span class="number">20</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>) =&gt; (<span class="ident">device_state</span>: <span class="ident">DeviceState</span>);
         <span class="ident">get_npad_id</span> [<span class="number">21</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>) =&gt; (<span class="ident">npad_id</span>: <span class="ident">u32</span>);
@@ -531,13 +581,13 @@
         <span class="ident">get_register_info</span> [<span class="number">14</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>, <span class="ident">out_register_info</span>: <span class="ident">sf::OutFixedPointerBuffer</span><span class="op">&lt;</span><span class="ident">RegisterInfo</span><span class="op">&gt;</span>) =&gt; ();
         <span class="ident">get_common_info</span> [<span class="number">15</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>, <span class="ident">out_common_info</span>: <span class="ident">sf::OutFixedPointerBuffer</span><span class="op">&lt;</span><span class="ident">CommonInfo</span><span class="op">&gt;</span>) =&gt; ();
         <span class="ident">get_model_info</span> [<span class="number">16</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>, <span class="ident">out_model_info</span>: <span class="ident">sf::OutFixedPointerBuffer</span><span class="op">&lt;</span><span class="ident">ModelInfo</span><span class="op">&gt;</span>) =&gt; ();
-        <span class="ident">attach_activate_event</span> [<span class="number">17</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>) =&gt; (<span class="ident">activate_event</span>: <span class="ident">sf::CopyHandle</span>);
-        <span class="ident">attach_deactivate_event</span> [<span class="number">18</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>) =&gt; (<span class="ident">deactivate_event</span>: <span class="ident">sf::CopyHandle</span>);
+        <span class="ident">attach_activate_event</span> [<span class="number">17</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>) =&gt; (<span class="ident">event_handle</span>: <span class="ident">sf::CopyHandle</span>);
+        <span class="ident">attach_deactivate_event</span> [<span class="number">18</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>) =&gt; (<span class="ident">event_handle</span>: <span class="ident">sf::CopyHandle</span>);
         <span class="ident">get_state</span> [<span class="number">19</span>, <span class="ident">version::VersionInterval::all</span>()]: () =&gt; (<span class="ident">state</span>: <span class="ident">State</span>);
         <span class="ident">get_device_state</span> [<span class="number">20</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>) =&gt; (<span class="ident">device_state</span>: <span class="ident">DeviceState</span>);
         <span class="ident">get_npad_id</span> [<span class="number">21</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>) =&gt; (<span class="ident">npad_id</span>: <span class="ident">u32</span>);
         <span class="ident">get_application_area_size</span> [<span class="number">22</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>) =&gt; (<span class="ident">size</span>: <span class="ident">u32</span>);
-        <span class="ident">attach_availability_change_event</span> [<span class="number">23</span>, <span class="ident">version::VersionInterval::from</span>(<span class="ident">version::Version::new</span>(<span class="number">3</span>,<span class="number">0</span>,<span class="number">0</span>))]: () =&gt; (<span class="ident">availability_change_event</span>: <span class="ident">sf::CopyHandle</span>);
+        <span class="ident">attach_availability_change_event</span> [<span class="number">23</span>, <span class="ident">version::VersionInterval::from</span>(<span class="ident">version::Version::new</span>(<span class="number">3</span>,<span class="number">0</span>,<span class="number">0</span>))]: () =&gt; (<span class="ident">event_handle</span>: <span class="ident">sf::CopyHandle</span>);
         <span class="ident">recreate_application_area</span> [<span class="number">24</span>, <span class="ident">version::VersionInterval::from</span>(<span class="ident">version::Version::new</span>(<span class="number">3</span>,<span class="number">0</span>,<span class="number">0</span>))]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>, <span class="ident">access_id</span>: <span class="ident">AccessId</span>, <span class="ident">data</span>: <span class="ident">sf::InMapAliasBuffer</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) =&gt; ();
         <span class="ident">format</span> [<span class="number">100</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>) =&gt; ();
         <span class="ident">get_admin_info</span> [<span class="number">101</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>, <span class="ident">out_admin_info</span>: <span class="ident">sf::OutFixedPointerBuffer</span><span class="op">&lt;</span><span class="ident">AdminInfo</span><span class="op">&gt;</span>) =&gt; ();
@@ -546,7 +596,13 @@
         <span class="ident">delete_register_info</span> [<span class="number">104</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>) =&gt; ();
         <span class="ident">delete_application_area</span> [<span class="number">105</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>) =&gt; ();
         <span class="ident">exists_application_area</span> [<span class="number">106</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>) =&gt; (<span class="ident">exists</span>: <span class="ident">bool</span>);
-        <span class="comment">// TODO: remaining commands</span>
+        <span class="ident">get_all</span> [<span class="number">200</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>, <span class="ident">out_data</span>: <span class="ident">sf::OutFixedPointerBuffer</span><span class="op">&lt;</span><span class="ident">NfpData</span><span class="op">&gt;</span>) =&gt; ();
+        <span class="ident">set_all</span> [<span class="number">201</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>, <span class="ident">data</span>: <span class="ident">sf::InFixedPointerBuffer</span><span class="op">&lt;</span><span class="ident">NfpData</span><span class="op">&gt;</span>) =&gt; ();
+        <span class="ident">flush_debug</span> [<span class="number">202</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>) =&gt; ();
+        <span class="ident">break_tag</span> [<span class="number">203</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>, <span class="ident">break_type</span>: <span class="ident">BreakType</span>) =&gt; ();
+        <span class="ident">read_backup_data</span> [<span class="number">204</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>, <span class="ident">out_buf</span>: <span class="ident">sf::OutMapAliasBuffer</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) =&gt; (<span class="ident">read_size</span>: <span class="ident">u32</span>);
+        <span class="ident">write_backup_data</span> [<span class="number">205</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>, <span class="ident">buf</span>: <span class="ident">sf::InMapAliasBuffer</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) =&gt; ();
+        <span class="ident">write_ntf</span> [<span class="number">206</span>, <span class="ident">version::VersionInterval::all</span>()]: (<span class="ident">device_handle</span>: <span class="ident">DeviceHandle</span>, <span class="ident">write_type</span>: <span class="ident">WriteType</span>, <span class="ident">buf</span>: <span class="ident">sf::InMapAliasBuffer</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) =&gt; ();
     }
 }
 
