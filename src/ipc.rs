@@ -55,21 +55,21 @@ impl ObjectInfo {
 
     pub fn convert_current_object_to_domain(&mut self) -> Result<cmif::DomainObjectId> {
         if self.uses_tipc_protocol() {
-            return Err(super::rc::ResultNotSupported::make());
+            return super::rc::ResultNotSupported::make_err();
         }
         ipc_client_send_control_command!([*self; cmif::ControlRequestId::ConvertCurrentObjectToDomain] () => (domain_object_id: cmif::DomainObjectId))
     }
 
     pub fn query_pointer_buffer_size(&mut self) -> Result<u16> {
         if self.uses_tipc_protocol() {
-            return Err(super::rc::ResultNotSupported::make());
+            return super::rc::ResultNotSupported::make_err();
         }
         ipc_client_send_control_command!([*self; cmif::ControlRequestId::QueryPointerBufferSize] () => (pointer_buffer_size: u16))
     }
 
     pub fn clone_current_object(&mut self) -> Result<sf::MoveHandle> {
         if self.uses_tipc_protocol() {
-            return Err(super::rc::ResultNotSupported::make());
+            return super::rc::ResultNotSupported::make_err();
         }
         ipc_client_send_control_command!([*self; cmif::ControlRequestId::CloneCurrentObject] () => (cloned_handle: sf::MoveHandle))
     }
@@ -340,7 +340,7 @@ bit_enum! {
 
 const MAX_COUNT: usize = 8;
 
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 pub struct DataWalker {
     ptr: *mut u8,
     cur_offset: isize
@@ -453,17 +453,17 @@ impl CommandContent {
         Self { send_process_id: false, process_id: 0, data_size: 0, data_offset: ptr::null_mut(), data_words_offset: ptr::null_mut(), objects_offset: ptr::null_mut(), copy_handles: ArrayVec::new(), move_handles: ArrayVec::new(), objects: ArrayVec::new(), out_pointer_sizes: ArrayVec::new() }
     }
     
-    pub fn add_copy_handle(&mut self, handle: svc::Handle) -> Result<()> {
+    fn add_copy_handle(&mut self, handle: svc::Handle) -> Result<()> {
         match self.copy_handles.try_push(handle) {
             Ok(()) => Ok(()),
-            Err(_) => Err(rc::ResultCopyHandlesFull::make())
+            Err(_) => rc::ResultCopyHandlesFull::make_err()
         }
     }
 
-    pub fn add_move_handle(&mut self, handle: svc::Handle) -> Result<()> {
+    fn add_move_handle(&mut self, handle: svc::Handle) -> Result<()> {
         match self.move_handles.try_push(handle) {
             Ok(()) => Ok(()),
-            Err(_) => Err(rc::ResultMoveHandlesFull::make())
+            Err(_) => rc::ResultMoveHandlesFull::make_err()
         }
     }
 
@@ -477,7 +477,7 @@ impl CommandContent {
     pub fn add_domain_object(&mut self, domain_object_id: cmif::DomainObjectId) -> Result<()> {
         match self.objects.try_push(domain_object_id) {
             Ok(()) => Ok(()),
-            Err(_) => Err(rc::ResultDomainObjectsFull::make())
+            Err(_) => rc::ResultDomainObjectsFull::make_err()
         }
     }
 
@@ -486,28 +486,28 @@ impl CommandContent {
             self.add_domain_object(object_info.domain_object_id)
         }
         else {
-            Err(rc::ResultInvalidDomainObject::make())
+            rc::ResultInvalidDomainObject::make_err()
         }
     }
 
-    pub fn add_out_pointer_size(&mut self, pointer_size: u16) -> Result<()> {
+    fn add_out_pointer_size(&mut self, pointer_size: u16) -> Result<()> {
         match self.out_pointer_sizes.try_push(pointer_size) {
             Ok(()) => Ok(()),
-            Err(_) => Err(rc::ResultPointerSizesFull::make())
+            Err(_) => rc::ResultPointerSizesFull::make_err()
         }
     }
 
     pub fn pop_copy_handle(&mut self) -> Result<svc::Handle> {
         match self.copy_handles.pop_at(0) {
             Some(handle) => Ok(handle),
-            None => Err(cmif::rc::ResultInvalidOutObjectCount::make())
+            None => cmif::rc::ResultInvalidOutObjectCount::make_err()
         }
     }
 
     pub fn pop_move_handle(&mut self) -> Result<svc::Handle> {
         match self.move_handles.pop_at(0) {
             Some(handle) => Ok(handle),
-            None => Err(cmif::rc::ResultInvalidOutObjectCount::make())
+            None => cmif::rc::ResultInvalidOutObjectCount::make_err()
         }
     }
 
@@ -519,17 +519,17 @@ impl CommandContent {
         Ok(handle)
     }
 
-    pub fn push_copy_handle(&mut self, handle: svc::Handle) -> Result<()> {
+    fn push_copy_handle(&mut self, handle: svc::Handle) -> Result<()> {
         match self.copy_handles.try_push(handle) {
             Ok(()) => Ok(()),
-            Err(_) => Err(rc::ResultCopyHandlesFull::make())
+            Err(_) => rc::ResultCopyHandlesFull::make_err()
         }
     }
 
-    pub fn push_move_handle(&mut self, handle: svc::Handle) -> Result<()> {
+    fn push_move_handle(&mut self, handle: svc::Handle) -> Result<()> {
         match self.move_handles.try_push(handle) {
             Ok(()) => Ok(()),
-            Err(_) => Err(rc::ResultMoveHandlesFull::make())
+            Err(_) => rc::ResultMoveHandlesFull::make_err()
         }
     }
 
@@ -543,14 +543,14 @@ impl CommandContent {
     pub fn pop_domain_object(&mut self) -> Result<cmif::DomainObjectId> {
         match self.objects.pop_at(0) {
             Some(handle) => Ok(handle),
-            None => Err(cmif::rc::ResultInvalidOutObjectCount::make())
+            None => cmif::rc::ResultInvalidOutObjectCount::make_err()
         }
     }
 
     pub fn push_domain_object(&mut self, domain_object_id: cmif::DomainObjectId) -> Result<()> {
         match self.objects.try_push(domain_object_id) {
             Ok(()) => Ok(()),
-            Err(_) => Err(rc::ResultDomainObjectsFull::make())
+            Err(_) => rc::ResultDomainObjectsFull::make_err()
         }
     }
 }
@@ -607,35 +607,35 @@ impl CommandContext {
     fn add_send_static(&mut self, send_static: SendStaticDescriptor) -> Result<()> {
         match self.send_statics.try_push(send_static) {
             Ok(()) => Ok(()),
-            Err(_) => Err(rc::ResultSendStaticsFull::make())
+            Err(_) => rc::ResultSendStaticsFull::make_err()
         }
     }
 
     fn add_receive_static(&mut self, receive_static: ReceiveStaticDescriptor) -> Result<()> {
         match self.receive_statics.try_push(receive_static) {
             Ok(()) => Ok(()),
-            Err(_) => Err(rc::ResultReceiveStaticsFull::make())
+            Err(_) => rc::ResultReceiveStaticsFull::make_err()
         }
     }
 
     fn add_send_buffer(&mut self, send_buffer: BufferDescriptor) -> Result<()> {
         match self.send_buffers.try_push(send_buffer) {
             Ok(()) => Ok(()),
-            Err(_) => Err(rc::ResultSendBuffersFull::make())
+            Err(_) => rc::ResultSendBuffersFull::make_err()
         }
     }
 
     fn add_receive_buffer(&mut self, receive_buffer: BufferDescriptor) -> Result<()> {
         match self.receive_buffers.try_push(receive_buffer) {
             Ok(()) => Ok(()),
-            Err(_) => Err(rc::ResultReceiveBuffersFull::make())
+            Err(_) => rc::ResultReceiveBuffersFull::make_err()
         }
     }
 
     fn add_exchange_buffer(&mut self, exchange_buffer: BufferDescriptor) -> Result<()> {
         match self.exchange_buffers.try_push(exchange_buffer) {
             Ok(()) => Ok(()),
-            Err(_) => Err(rc::ResultExchangeBuffersFull::make())
+            Err(_) => rc::ResultExchangeBuffersFull::make_err()
         }
     }
 
@@ -714,7 +714,7 @@ impl CommandContext {
             }
         }
         else {
-            return Err(rc::ResultInvalidBufferAttributes::make());
+            return rc::ResultInvalidBufferAttributes::make_err();
         }
 
         Ok(())
@@ -723,35 +723,35 @@ impl CommandContext {
     fn pop_send_static(&mut self) -> Result<SendStaticDescriptor> {
         match self.send_statics.pop_at(0) {
             Some(send_static) => Ok(send_static),
-            None => Err(rc::ResultInvalidSendStaticCount::make())
+            None => rc::ResultInvalidSendStaticCount::make_err()
         }
     }
 
     fn pop_receive_static(&mut self) -> Result<ReceiveStaticDescriptor> {
         match self.receive_statics.pop_at(0) {
             Some(receive_static) => Ok(receive_static),
-            None => Err(rc::ResultInvalidReceiveStaticCount::make())
+            None => rc::ResultInvalidReceiveStaticCount::make_err()
         }
     }
 
     fn pop_send_buffer(&mut self) -> Result<BufferDescriptor> {
         match self.send_buffers.pop_at(0) {
             Some(send_buffer) => Ok(send_buffer),
-            None => Err(rc::ResultInvalidSendBufferCount::make())
+            None => rc::ResultInvalidSendBufferCount::make_err()
         }
     }
 
     fn pop_receive_buffer(&mut self) -> Result<BufferDescriptor> {
         match self.receive_buffers.pop_at(0) {
             Some(receive_buffer) => Ok(receive_buffer),
-            None => Err(rc::ResultInvalidReceiveBufferCount::make())
+            None => rc::ResultInvalidReceiveBufferCount::make_err()
         }
     }
 
     fn pop_exchange_buffer(&mut self) -> Result<BufferDescriptor> {
         match self.exchange_buffers.pop_at(0) {
             Some(exchange_buffer) => Ok(exchange_buffer),
-            None => Err(rc::ResultInvalidExchangeBufferCount::make())
+            None => rc::ResultInvalidExchangeBufferCount::make_err()
         }
     }
 
@@ -823,7 +823,7 @@ impl CommandContext {
             }
         }
 
-        Err(rc::ResultInvalidBufferAttributes::make())
+        rc::ResultInvalidBufferAttributes::make_err()
     }
 
     pub fn pop_object(&mut self) -> Result<ObjectInfo> {

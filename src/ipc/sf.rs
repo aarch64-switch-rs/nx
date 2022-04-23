@@ -292,7 +292,7 @@ pub struct CommandMetadata {
 pub type CommandMetadataTable = Vec<CommandMetadata>;
 
 impl CommandMetadata {
-    pub fn new(rq_id: u32, command_fn: server::CommandFn, ver_intv: version::VersionInterval) -> Self {
+    pub const fn new(rq_id: u32, command_fn: server::CommandFn, ver_intv: version::VersionInterval) -> Self {
         Self {
             rq_id,
             command_fn,
@@ -316,8 +316,8 @@ pub trait IObject {
     fn get_command_metadata_table(&self) -> CommandMetadataTable;
 
     fn call_self_server_command(&mut self, command_fn: server::CommandFn, protocol: CommandProtocol, ctx: &mut server::ServerContext) -> Result<()> {
-        let original_fn: server::CommandSpecificFn<Self> = unsafe { core::mem::transmute(command_fn) };
-        (original_fn)(self, protocol, ctx)
+        let self_fn: server::CommandSpecificFn<Self> = unsafe { core::mem::transmute(command_fn) };
+        (self_fn)(self, protocol, ctx)
     }
 }
 

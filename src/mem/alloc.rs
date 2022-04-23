@@ -1,4 +1,4 @@
-use crate::diag::assert;
+use crate::diag::abort;
 use crate::result::*;
 use crate::util::PointerAndSize;
 use crate::sync;
@@ -36,7 +36,7 @@ impl Allocator for LinkedListAllocator {
     fn allocate(&mut self, layout: Layout) -> Result<*mut u8> {
         match self.allocate_first_fit(layout) {
             Ok(non_null_addr) => Ok(non_null_addr.as_ptr()),
-            Err(_) => Err(rc::ResultOutOfMemory::make())
+            Err(_) => rc::ResultOutOfMemory::make_err()
         }
     }
 
@@ -154,13 +154,10 @@ impl<T> Buffer<T> {
 
 #[alloc_error_handler]
 fn alloc_error_handler(_layout: core::alloc::Layout) -> ! {
-    // Disable memory allocation, this will avoid assertion levels which would need to allocate memory
+    // Disable memory allocation, this will avoid abort levels which would need to allocate memory
     set_enabled(false);
 
     // Using SvcBreak by default since this is the safest level that can be used by any context, regardless of available mem/etc.
     // TODO: default aborting system to invoke here?
-    assert::assert(assert::AssertLevel::SvcBreak(), rc::ResultOutOfMemory::make());
-
-    // This should never be reached (TODO: better way to handle this really-unlikely situation than an infinite loop?)
-    loop {}
+    abort::abort(abort::AbortLevel::SvcBreak(), rc::ResultOutOfMemory::make())
 }

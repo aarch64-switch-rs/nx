@@ -1,6 +1,6 @@
 use crate::result::*;
 use crate::thread;
-use crate::diag::assert;
+use crate::diag::abort;
 use crate::diag::log;
 use crate::diag::log::Logger;
 use alloc::string::String;
@@ -127,7 +127,7 @@ impl<const S: usize> CString<S> {
             unsafe {
                 match core::str::from_utf8(core::slice::from_raw_parts(ptr, str_len)) {
                     Ok(name) => Ok(name.trim_end_matches('\0')),
-                    Err(_) => Err(rc::ResultInvalidUtf8Conversion::make())
+                    Err(_) => rc::ResultInvalidUtf8Conversion::make_err()
                 }
             }
         }
@@ -329,13 +329,12 @@ pub fn raw_transmute<T: Copy, U: Copy>(t: T) -> U {
     }
 }
 
-pub fn simple_panic_handler<L: Logger>(info: &panic::PanicInfo, desired_level: assert::AssertLevel) -> ! {
+pub fn simple_panic_handler<L: Logger>(info: &panic::PanicInfo, desired_level: abort::AbortLevel) -> ! {
     let thread_name = match thread::get_current_thread().name.get_str() {
         Ok(name) => name,
         _ => "<unknown>",
     };
     diag_log!(L { log::LogSeverity::Fatal, true } => "Panic! at thread '{}' -> {}\n", thread_name, info);
 
-    assert::assert(desired_level, super::rc::ResultPanicked::make());
-    loop {}
+    abort::abort(desired_level, super::rc::ResultPanicked::make())
 }

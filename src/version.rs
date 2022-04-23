@@ -64,28 +64,28 @@ pub struct VersionInterval {
 }
 
 impl VersionInterval {
-    pub fn all() -> Self {
+    pub const fn all() -> Self {
         Self {
             min: None,
             max: None
         }
     }
 
-    pub fn from(min: Version) -> Self {
+    pub const fn from(min: Version) -> Self {
         Self {
             min: Some(min),
             max: None
         }
     }
 
-    pub fn to(max: Version) -> Self {
+    pub const fn to(max: Version) -> Self {
         Self {
             min: None,
             max: Some(max)
         }
     }
 
-    pub fn from_to(min: Version, max: Version) -> Self {
+    pub const fn from_to(min: Version, max: Version) -> Self {
         Self {
             min: Some(min),
             max: Some(max)

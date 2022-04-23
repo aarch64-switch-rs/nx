@@ -73,7 +73,8 @@ macro_rules! ipc_sf_define_control_interface_trait {
                     #[allow(unused_assignments)]
                     #[allow(unused_parens)]
                     fn [<sf_server_impl_ $name>](&mut self, _protocol: $crate::ipc::CommandProtocol, mut ctx: &mut $crate::ipc::server::ServerContext) -> $crate::result::Result<()> {
-                        // TODO: assert cmif protocol?
+                        // TODO: tipc support, for now force cmif
+                        $crate::result_return_if!(ctx.ctx.object_info.uses_tipc_protocol(), $crate::ipc::rc::ResultInvalidProtocol);
 
                         ctx.raw_data_walker = $crate::ipc::DataWalker::new(ctx.ctx.in_params.data_offset);
                         $( let $in_param_name = <$in_param_type as $crate::ipc::server::RequestCommandParameter<_>>::after_request_read(&mut ctx)?; )*

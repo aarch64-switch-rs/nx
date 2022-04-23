@@ -245,7 +245,7 @@ fn get_index_for_controller(controller: hid::ControllerId) -> Result<usize> {
     match controller {
         hid::ControllerId::Player1 | hid::ControllerId::Player2 | hid::ControllerId::Player3 | hid::ControllerId::Player4 | hid::ControllerId::Player5 | hid::ControllerId::Player6 | hid::ControllerId::Player7 | hid::ControllerId::Player8 => Ok(controller as usize),
         hid::ControllerId::Handheld => Ok(8),
-        _ => Err(rc::ResultInvalidControllerId::make())
+        _ => rc::ResultInvalidControllerId::make_err()
     }
 }
 

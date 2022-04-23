@@ -423,7 +423,7 @@ fn find_device_by_name(name: &PathSegment) -> Result<mem::Shared<dyn FileSystem>
                 return Ok(device.fs.clone());
             }
         }
-        Err(rc::ResultDeviceNotFound::make())
+        rc::ResultDeviceNotFound::make_err()
     }
 }
 

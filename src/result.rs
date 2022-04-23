@@ -28,6 +28,10 @@ impl ResultCode {
     pub const fn new(value: u32) -> Self {
         Self { value }
     }
+
+    pub const fn new_err<T>(value: u32) -> Result<T> {
+        Err(Self::new(value))
+    }
     
     pub const fn is_success(&self) -> bool {
         self.value == SUCCESS_VALUE
@@ -65,12 +69,20 @@ impl fmt::Display for ResultCode {
 pub type Result<T> = result::Result<T, ResultCode>;
 
 #[inline(always)]
-pub fn wrap<T>(rc: ResultCode, value: T) -> Result<T> {
+pub fn pack<T>(rc: ResultCode, value: T) -> Result<T> {
     if rc.is_success() {
         Ok(value)
     }
     else {
         Err(rc)
+    }
+}
+
+#[inline(always)]
+pub fn unpack<T>(rc: &Result<T>) -> ResultCode {
+    match rc {
+        Ok(_) => ResultSuccess::make(),
+        Err(rc) => *rc
     }
 }
 

@@ -17,7 +17,7 @@ result_define_subgroup!(RESULT_MODULE, RESULT_SUBMODULE => {
 100: dynamic
 200: dynamic/elf
 300: util
-400: diag/assert
+400: diag
 500: gpu
 600: ipc
 700: fs

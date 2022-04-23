@@ -210,7 +210,7 @@ pub fn set_heap_size(size: Size) -> Result<*mut u8> {
         let mut address: *mut u8 = ptr::null_mut();
 
         let rc = __nx_svc_set_heap_size(&mut address, size);
-        wrap(rc, address)
+        pack(rc, address)
     }
 }
 
@@ -222,7 +222,7 @@ pub fn set_memory_attribute(address: Address, size: Size, mask: u32, value: Memo
 
     unsafe {
         let rc = __nx_svc_set_memory_attribute(address, size, mask, value);
-        wrap(rc, ())
+        pack(rc, ())
     }
 }
 
@@ -237,7 +237,7 @@ pub fn query_memory(address: Address) -> Result<(MemoryInfo, PageInfo)> {
         let mut page_info: PageInfo = 0;
 
         let rc = __nx_svc_query_memory(&mut memory_info, &mut page_info, address);
-        wrap(rc, (memory_info, page_info))
+        pack(rc, (memory_info, page_info))
     }
 }
 
@@ -262,7 +262,7 @@ pub fn create_thread(entry: ThreadEntrypointFn, entry_arg: Address, stack_top: A
         let mut handle: Handle = 0;
 
         let rc = __nx_svc_create_thread(&mut handle, entry, entry_arg, stack_top, priority, processor_id);
-        wrap(rc, handle)
+        pack(rc, handle)
     }
 }
 
@@ -274,7 +274,7 @@ pub fn start_thread(handle: Handle) -> Result<()> {
 
     unsafe {
         let rc = __nx_svc_start_thread(handle);
-        wrap(rc, ())
+        pack(rc, ())
     }
 }
 
@@ -297,7 +297,7 @@ pub fn sleep_thread(timeout: i64) -> Result<()> {
 
     unsafe {
         let rc = __nx_svc_sleep_thread(timeout);
-        wrap(rc, ())
+        pack(rc, ())
     }
 }
 
@@ -311,7 +311,7 @@ pub fn get_thread_priority(handle: Handle) -> Result<i32> {
         let mut priority: i32 = 0;
 
         let rc = __nx_svc_get_thread_priority(&mut priority, handle);
-        wrap(rc, priority)
+        pack(rc, priority)
     }
 }
 
@@ -323,7 +323,7 @@ pub fn signal_event(handle: Handle) -> Result<()> {
 
     unsafe {
         let rc = __nx_svc_signal_event(handle);
-        wrap(rc, ())
+        pack(rc, ())
     }
 }
 
@@ -335,7 +335,7 @@ pub fn map_shared_memory(handle: Handle, address: Address, size: Size, permissio
 
     unsafe {
         let rc = __nx_svc_map_shared_memory(handle, address, size, permission);
-        wrap(rc, ())
+        pack(rc, ())
     }
 }
 
@@ -347,7 +347,7 @@ pub fn unmap_shared_memory(handle: Handle, address: Address, size: Size) -> Resu
 
     unsafe {
         let rc = __nx_svc_unmap_shared_memory(handle, address, size);
-        wrap(rc, ())
+        pack(rc, ())
     }
 }
 
@@ -361,7 +361,7 @@ pub fn create_transfer_memory(address: Address, size: Size, permissions: MemoryP
         let mut handle: Handle = 0;
 
         let rc = __nx_svc_create_transfer_memory(&mut handle, address, size, permissions);
-        wrap(rc, handle)
+        pack(rc, handle)
     }
 }
 
@@ -373,7 +373,7 @@ pub fn close_handle(handle: Handle) -> Result<()> {
 
     unsafe {
         let rc = __nx_svc_close_handle(handle);
-        wrap(rc, ())
+        pack(rc, ())
     }
 }
 
@@ -385,7 +385,7 @@ pub fn reset_signal(handle: Handle) -> Result<()> {
 
     unsafe {
         let rc = __nx_svc_reset_signal(handle);
-        wrap(rc, ())
+        pack(rc, ())
     }
 }
 
@@ -399,7 +399,7 @@ pub fn wait_synchronization(handles: *const Handle, handle_count: u32, timeout: 
         let mut index: i32 = 0;
 
         let rc = __nx_svc_wait_synchronization(&mut index, handles, handle_count, timeout);
-        wrap(rc, index)
+        pack(rc, index)
     }
 }
 
@@ -411,7 +411,7 @@ pub fn arbitrate_lock(thread_handle: Handle, tag_location: Address, tag: u32) ->
 
     unsafe {
         let rc = __nx_svc_arbitrate_lock(thread_handle, tag_location, tag);
-        wrap(rc, ())
+        pack(rc, ())
     }
 }
 
@@ -423,7 +423,7 @@ pub fn arbitrate_unlock(tag_location: Address) -> Result<()> {
 
     unsafe {
         let rc = __nx_svc_arbitrate_unlock(tag_location);
-        wrap(rc, ())
+        pack(rc, ())
     }
 }
 
@@ -437,7 +437,7 @@ pub fn connect_to_named_port(name: Address) -> Result<Handle> {
         let mut handle: Handle = 0;
 
         let rc = __nx_svc_connect_to_named_port(&mut handle, name);
-        wrap(rc, handle)
+        pack(rc, handle)
     }
 }
 
@@ -449,7 +449,7 @@ pub fn send_sync_request(handle: Handle) -> Result<()> {
     
     unsafe {
         let rc = __nx_svc_send_sync_request(handle);
-        wrap(rc, ())
+        pack(rc, ())
     }
 }
 
@@ -463,7 +463,7 @@ pub fn get_process_id(process_handle: Handle) -> Result<u64> {
         let mut process_id: u64 = 0;
 
         let rc = __nx_svc_get_process_id(&mut process_id, process_handle);
-        wrap(rc, process_id)
+        pack(rc, process_id)
     }
 }
 
@@ -477,7 +477,7 @@ pub fn get_thread_id(handle: Handle) -> Result<u64> {
         let mut thread_id: u64 = 0;
 
         let rc = __nx_svc_get_thread_id(&mut thread_id, handle);
-        wrap(rc, thread_id)
+        pack(rc, thread_id)
     }
 }
 
@@ -502,7 +502,7 @@ pub fn output_debug_string(msg: Address, len: Size) -> Result<()> {
 
     unsafe {
         let rc = __nx_svc_output_debug_string(msg, len);
-        wrap(rc, ())
+        pack(rc, ())
     }
 }
 
@@ -527,7 +527,7 @@ pub fn get_info(id: InfoId, handle: Handle, sub_id: u64) -> Result<u64> {
         let mut info: u64 = 0;
 
         let rc = __nx_svc_get_info(&mut info, id, handle, sub_id);
-        wrap(rc, info)
+        pack(rc, info)
     }
 }
 
@@ -542,7 +542,7 @@ pub fn create_session(is_light: bool, unk_name: u64) -> Result<(Handle, Handle)>
         let mut client_handle: Handle = 0;
 
         let rc = __nx_svc_create_session(&mut server_handle, &mut client_handle, is_light, unk_name);
-        wrap(rc, (server_handle, client_handle))
+        pack(rc, (server_handle, client_handle))
     }
 }
 
@@ -556,7 +556,7 @@ pub fn accept_session(handle: Handle) -> Result<Handle> {
         let mut session_handle: Handle = 0;
         
         let rc = __nx_svc_accept_session(&mut session_handle, handle);
-        wrap(rc, session_handle)
+        pack(rc, session_handle)
     }
 }
 
@@ -570,7 +570,7 @@ pub fn reply_and_receive(handles: *const Handle, handle_count: u32, reply_target
         let mut index: i32 = 0;
 
         let rc = __nx_svc_reply_and_receive(&mut index, handles, handle_count, reply_target, timeout);
-        wrap(rc, index)
+        pack(rc, index)
     }
 }
 
@@ -585,7 +585,7 @@ pub fn create_event() -> Result<(Handle, Handle)> {
         let mut client_handle: Handle = 0;
 
         let rc = __nx_svc_create_event(&mut server_handle, &mut client_handle);
-        wrap(rc, (server_handle, client_handle))
+        pack(rc, (server_handle, client_handle))
     }
 }
 
@@ -599,7 +599,7 @@ pub fn debug_active_process(process_id: u64) -> Result<Handle> {
         let mut handle: Handle = 0;
 
         let rc = __nx_svc_debug_active_process(&mut handle, process_id);
-        wrap(rc, handle)
+        pack(rc, handle)
     }
 }
 
@@ -611,7 +611,7 @@ pub fn break_debug_process(debug_handle: Handle) -> Result<()> {
 
     unsafe {
         let rc = __nx_svc_break_debug_process(debug_handle);
-        wrap(rc, ())
+        pack(rc, ())
     }
 }
 
@@ -625,7 +625,7 @@ pub fn get_debug_event(debug_handle: Handle) -> Result<DebugEvent> {
         let mut debug_event: DebugEvent = mem::zeroed();
 
         let rc = __nx_svc_get_debug_event(&mut debug_event, debug_handle);
-        wrap(rc, debug_event)
+        pack(rc, debug_event)
     }
 }
 
@@ -639,11 +639,11 @@ pub fn continue_debug_event(debug_handle: Handle, flags: u32, thread_ids: &[u64]
     unsafe {
         if version::get_version() < version::Version::new(3, 0, 0) {
             let rc = __nx_svc_legacy_continue_debug_event(debug_handle, flags, thread_ids[0]);
-            wrap(rc, ())
+            pack(rc, ())
         }
         else {
             let rc = __nx_svc_continue_debug_event(debug_handle, flags, thread_ids.as_ptr(), thread_ids.len() as u32);
-            wrap(rc, ())
+            pack(rc, ())
         }
     }
 }
@@ -658,7 +658,7 @@ pub fn get_process_list(process_list: &mut [u64]) -> Result<usize> {
         let mut count: u32 = 0;
         
         let rc = __nx_svc_get_process_list(&mut count, process_list.as_mut_ptr(), process_list.len() as u32);
-        wrap(rc, count as usize)
+        pack(rc, count as usize)
     }
 }
 
@@ -672,7 +672,7 @@ pub fn get_thread_list(debug_handle: Handle, thread_id_list: &mut [u64]) -> Resu
         let mut count: u32 = 0;
         
         let rc = __nx_svc_get_thread_list(&mut count, thread_id_list.as_mut_ptr(), thread_id_list.len() as u32, debug_handle);
-        wrap(rc, count as usize)
+        pack(rc, count as usize)
     }
 }
 
@@ -687,7 +687,7 @@ pub fn get_debug_thread_context(debug_handle: Handle, thread_id: u64, register_g
         let mut thread_context: arm::ThreadContext = Default::default();
 
         let rc = __nx_svc_get_debug_thread_context(&mut thread_context, debug_handle, thread_id, register_group);
-        wrap(rc, thread_context)
+        pack(rc, thread_context)
     }
 }
 
@@ -700,7 +700,7 @@ pub fn set_debug_thread_context(debug_handle: Handle, thread_context: arm::Threa
 
     unsafe {
         let rc = __nx_svc_set_debug_thread_context(debug_handle, thread_id, &thread_context as *const _, register_group);
-        wrap(rc, ())
+        pack(rc, ())
     }
 }
 
@@ -715,7 +715,7 @@ pub fn query_debug_process_memory(debug_handle: Handle, address: Address) -> Res
         let mut page_info: PageInfo = 0;
 
         let rc = __nx_svc_query_debug_process_memory(&mut memory_info, &mut page_info, debug_handle, address);
-        wrap(rc, (memory_info, page_info))
+        pack(rc, (memory_info, page_info))
     }
 }
 
@@ -727,7 +727,7 @@ pub fn read_debug_process_memory(debug_handle: Handle, read_address: usize, read
 
     unsafe {
         let rc = __nx_svc_read_debug_process_memory(buffer, debug_handle, read_address, read_size);
-        wrap(rc, ())
+        pack(rc, ())
     }
 }
 
@@ -739,7 +739,7 @@ pub fn write_debug_process_memory(debug_handle: Handle, write_address: usize, wr
 
     unsafe {
         let rc = __nx_svc_write_debug_process_memory(debug_handle, buffer, write_address, write_size);
-        wrap(rc, ())
+        pack(rc, ())
     }
 }
 
@@ -753,7 +753,7 @@ pub fn manage_named_port(name: Address, max_sessions: i32) -> Result<Handle> {
         let mut handle: Handle = 0;
 
         let rc = __nx_svc_manage_named_port(&mut handle, name, max_sessions);
-        wrap(rc, handle)
+        pack(rc, handle)
     }
 }
 

@@ -101,7 +101,7 @@ impl RequestCommandParameter<sf::ProcessId> for sf::ProcessId {
             Ok(sf::ProcessId::from(ctx.ctx.in_params.process_id)) 
         }
         else {
-            Err(sf::hipc::rc::ResultUnsupportedOperation::make())
+            sf::hipc::rc::ResultUnsupportedOperation::make_err()
         }
     }
 }
@@ -111,7 +111,7 @@ impl !ResponseCommandParameter for sf::ProcessId {}
 impl<S: sf::IObject + ?Sized> RequestCommandParameter<mem::Shared<S>> for mem::Shared<S> {
     fn after_request_read(_ctx: &mut ServerContext) -> Result<Self> {
         // TODO: implement this (added this placeholder impl for interfaces to actually be valid)
-        Err(sf::hipc::rc::ResultUnsupportedOperation::make())
+        sf::hipc::rc::ResultUnsupportedOperation::make_err()
     }
 }
 
@@ -194,7 +194,7 @@ impl DomainTable {
             return Ok(specific_domain_object_id);
         }
         
-        Err(rc::ResultObjectIdAlreadyAllocated::make())
+        rc::ResultObjectIdAlreadyAllocated::make_err()
     }
 
     pub fn find_domain(&mut self, id: cmif::DomainObjectId) -> Result<mem::Shared<dyn ISessionObject>> {
@@ -204,7 +204,7 @@ impl DomainTable {
             }
         }
 
-        Err(rc::ResultDomainNotFound::make())
+        rc::ResultDomainNotFound::make_err()
     }
     
     pub fn deallocate_domain(&mut self, domain_object_id: cmif::DomainObjectId) {
@@ -263,14 +263,14 @@ impl ServerHolder {
     pub fn get_new_server_fn(&self) -> Result<NewServerFn> {
         match self.new_server_fn {
             Some(new_server_fn) => Ok(new_server_fn),
-            None => Err(sf::hipc::rc::ResultSessionClosed::make())
+            None => sf::hipc::rc::ResultSessionClosed::make_err()
         }
     }
 
     pub fn get_new_mitm_server_fn(&self) -> Result<NewMitmServerFn> {
         match self.new_mitm_server_fn {
             Some(new_mitm_server_fn) => Ok(new_mitm_server_fn),
-            None => Err(sf::hipc::rc::ResultSessionClosed::make())
+            None => sf::hipc::rc::ResultSessionClosed::make_err()
         }
     }
 
@@ -351,7 +351,7 @@ impl<'a> IHipcManager for HipcManager<'a> {
 
     fn copy_from_current_domain(&mut self, _domain_object_id: cmif::DomainObjectId) -> Result<sf::MoveHandle> {
         // TODO
-        Err(crate::rc::ResultNotImplemented::make())
+        crate::rc::ResultNotImplemented::make_err()
     }
 
     fn clone_current_object(&mut self) -> Result<sf::MoveHandle> {
@@ -471,7 +471,8 @@ impl<const P: usize> ServerManager<P> {
                     };
                     // Nothing done on success here, as if the command succeeds it will automatically respond by itself.
                     let mut command_found = false;
-                    for command in target_server.get().get_command_metadata_table() {
+                    let command_table = target_server.get().get_command_metadata_table();
+                    for command in &command_table {
                         if command.matches(rq_id) {
                             command_found = true;
                             let protocol = ctx.object_info.protocol;
@@ -512,7 +513,7 @@ impl<const P: usize> ServerManager<P> {
                 // Invalid command type might mean that the session isn't a domain :P
                 match is_domain {
                     false => do_handle_request()?,
-                    true => return Err(rc::ResultInvalidDomainCommandType::make())
+                    true => return rc::ResultInvalidDomainCommandType::make_err()
                 };
             },
             cmif::DomainCommandType::SendMessage => do_handle_request()?,
@@ -531,20 +532,23 @@ impl<const P: usize> ServerManager<P> {
 
     #[inline(always)]
     fn handle_control_command(&mut self, ctx: &mut CommandContext, rq_id: u32, command_type: cmif::CommandType) -> Result<()> {
+        // Control commands only exist in CMIF...
+        result_return_unless!(ctx.object_info.uses_cmif_protocol(), super::rc::ResultInvalidProtocol);
+
         for server_holder in &mut self.server_holders {
             let server_info = server_holder.info;
             if server_info.handle == ctx.object_info.handle {
                 let mut hipc_manager = HipcManager::new(server_holder, P);
                 // Nothing done on success here, as if the command succeeds it will automatically respond by itself.
                 let mut command_found = false;
-                for command in hipc_manager.get_command_metadata_table() {
+                let command_table = hipc_manager.get_command_metadata_table();
+                for command in &command_table {
                     if command.matches(rq_id) {
                         command_found = true;
                         let mut unused_new_sessions: Vec<ServerHolder> = Vec::new();
                         let unused_domain_table = mem::Shared::empty();
                         let mut server_ctx = ServerContext::new(ctx, DataWalker::empty(), unused_domain_table, &mut unused_new_sessions);
-                        // Control commands only exist in CMIF...
-                        // TODO: assert ctx.object_info.protocol == CommandProtocol::Cmif?
+
                         if let Err(rc) = hipc_manager.call_self_server_command(command.command_fn, CommandProtocol::Cmif, &mut server_ctx) {
                             cmif::server::write_control_command_response_on_msg_buffer(ctx, rc, command_type);
                         }
@@ -637,7 +641,7 @@ impl<const P: usize> ServerManager<P> {
                             cmif::CommandType::Close => {
                                 should_close_session = true;
                             },
-                            _ => return Err(rc::ResultInvalidCommandType::make())
+                            _ => return rc::ResultInvalidCommandType::make_err()
                         }
                     },
                     WaitHandleType::Server => {
@@ -700,7 +704,7 @@ impl<const P: usize> ServerManager<P> {
 
         match server_found {
             true => Ok(()),
-            false => Err(rc::ResultSignaledServerNotFound::make())
+            false => rc::ResultSignaledServerNotFound::make_err()
         }
     }
     

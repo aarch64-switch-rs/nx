@@ -37,13 +37,13 @@ macro_rules! result_define_subgroup {
 macro_rules! result_return_if {
     ($cond:expr, $res:ty) => {
         if $cond {
-            return Err(<$res>::make());
+            return <$res>::make_err();
         }
     };
 
     ($cond:expr, $res:literal) => {
         if $cond {
-            return Err($crate::result::ResultCode::new($res));
+            return $crate::result::ResultCode::new_err($res);
         }
     };
 }
