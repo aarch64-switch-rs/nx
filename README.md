@@ -69,6 +69,10 @@
 
 - Add library applet support (`nx::la` module)
 
+- Optimize IPC code to generate better asm (like libnx or nnsdk)
+
+- 32-bit support
+
 ## Credits
 
 - [libnx](https://github.com/switchbrew/libnx) and its contributors for being the base of this project.

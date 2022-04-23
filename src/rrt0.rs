@@ -1,3 +1,4 @@
+use crate::dynamic::elf;
 use crate::result::*;
 use crate::svc;
 use crate::mem::alloc;
@@ -14,6 +15,8 @@ use crate::service;
 use crate::service::set;
 use crate::service::set::ISystemSettingsServer;
 use core::ptr;
+use core::mem;
+use core::arch::asm;
 
 // These functions must be implemented by any binary using this crate
 
@@ -78,6 +81,15 @@ pub fn get_module_name() -> ModulePath {
 static mut G_EXIT_FN: sync::Locked<Option<ExitFn>> = sync::Locked::new(false, None);
 static mut G_MAIN_THREAD: thread::Thread = thread::Thread::empty();
 
+pub fn exit(rc: ResultCode) -> ! {
+    unsafe {
+        match G_EXIT_FN.get() {
+            Some(exit_fn) => exit_fn(rc),
+            None => svc::exit_process()
+        }
+    }
+}
+
 // TODO: consider adding a default heap-init function?
 
 #[no_mangle]
@@ -96,25 +108,23 @@ fn initialize_version(hbl_hos_version: hbl::Version) {
     }
 }
 
-#[no_mangle]
-#[linkage = "weak"]
-unsafe extern "C" fn __nx_rrt0_entry(abi_ptr: *const hbl::AbiConfigEntry, raw_main_thread_handle: u64, aslr_base_address: *const u8, lr_exit_fn: ExitFn) {
+unsafe fn normal_entry(maybe_abi_cfg_entries_ptr: *const hbl::AbiConfigEntry, maybe_main_thread_handle: usize, aslr_base_address: *const u8, dyn_section: *const elf::Dyn, lr_exit_fn: ExitFn) {
     // First of all, relocate ourselves
-    dynamic::relocate(aslr_base_address).unwrap();
+    dynamic::relocate_with_dyn(aslr_base_address, dyn_section).unwrap();
     
-    let exec_type = match !abi_ptr.is_null() && (raw_main_thread_handle == u64::MAX) {
+    let exec_type = match !maybe_abi_cfg_entries_ptr.is_null() && (maybe_main_thread_handle == usize::MAX) {
         true => ExecutableType::Nro,
         false => ExecutableType::Nso
     };
     set_executable_type(exec_type);
 
     let mut heap = util::PointerAndSize::new(ptr::null_mut(), 0);
-    let mut main_thread_handle = raw_main_thread_handle as svc::Handle;
+    let mut main_thread_handle = maybe_main_thread_handle as svc::Handle;
     let mut hos_version = hbl::Version::empty();
 
     // If we are a NRO, parse the config entries hbloader sent us
     if exec_type == ExecutableType::Nro {
-        let mut abi_entry = abi_ptr;
+        let mut abi_entry = maybe_abi_cfg_entries_ptr;
         loop {
             match (*abi_entry).key {
                 hbl::AbiConfigEntryKey::EndOfList => {
@@ -159,7 +169,7 @@ unsafe extern "C" fn __nx_rrt0_entry(abi_ptr: *const hbl::AbiConfigEntry, raw_ma
                     // todo!("SyscallAvailableHint");
                 },
                 hbl::AbiConfigEntryKey::AppletType => {
-                    let applet_type: hbl::AppletType = core::mem::transmute((*abi_entry).value[0] as u32);
+                    let applet_type: hbl::AppletType = mem::transmute((*abi_entry).value[0] as u32);
                     hbl::set_applet_type(applet_type);
                 },
                 hbl::AbiConfigEntryKey::ProcessHandle => {
@@ -221,17 +231,53 @@ unsafe extern "C" fn __nx_rrt0_entry(abi_ptr: *const hbl::AbiConfigEntry, raw_ma
     exit(ResultSuccess::make());
 }
 
-#[no_mangle]
-#[linkage = "weak"]
-unsafe extern "C" fn __nx_rrt0_exception_entry(_error_desc: u32, _stack_top: *mut u8) {
+unsafe fn exception_entry(_exc_type: svc::ExceptionType, _stack_top: *mut u8) {
+    // TODO: user exception handler?
     svc::return_from_exception(svc::rc::ResultNotHandled::make());
 }
 
-pub fn exit(rc: ResultCode) -> ! {
-    unsafe {
-        match G_EXIT_FN.get() {
-            Some(exit_fn) => exit_fn(rc),
-            None => svc::exit_process()
+#[no_mangle]
+#[linkage = "weak"]
+unsafe extern "C" fn __nx_rrt0_entry(x0: usize, x1: usize) {
+    /*
+    Possible entry arguments:
+    - NSO/KIP: x0 = 0, x1 = <main-thread-handle>
+    - NRO (hbl): x0 = <abi-config-entries-ptr>, x1 = usize::MAX
+    - Exception: x0 = <exception-type>, x1 = <stack-top>
+    */
+
+    if (x0 != 0) && (x1 != usize::MAX) {
+        // Handle exception entry
+        let exc_type: svc::ExceptionType = mem::transmute(x0 as u32);
+        let stack_top = x1 as *mut u8;
+        exception_entry(exc_type, stack_top);
+    }
+    else {
+        // Clean BSS first
+        let bss_start_addr: *mut usize;
+        asm!("adr {}, __bss_start", out(reg) bss_start_addr);
+        let bss_end_addr: *mut usize;
+        asm!("adr {}, __bss_end", out(reg) bss_end_addr);
+
+        let mut cur_bss_addr = bss_start_addr;
+        while cur_bss_addr < bss_end_addr {
+            ptr::write_volatile(cur_bss_addr, 0);
+            cur_bss_addr = cur_bss_addr.offset(1);
         }
+
+        // Handle NSO/KIP/NRO normal entry
+        let aslr_base_address: *const u8;
+        asm!("adr {}, _start", out(reg) aslr_base_address);
+
+        let dyn_start_addr: *const elf::Dyn;
+        asm!("adr {}, __dynamic_start", out(reg) dyn_start_addr);
+
+        let lr_exit_fn: ExitFn;
+        asm!("mov {}, lr", out(reg) lr_exit_fn);
+
+        let maybe_abi_cfg_entries_ptr = x0 as *const hbl::AbiConfigEntry;
+        let maybe_main_thread_handle = x1;
+
+        normal_entry(maybe_abi_cfg_entries_ptr, maybe_main_thread_handle, aslr_base_address, dyn_start_addr, lr_exit_fn);
     }
 }

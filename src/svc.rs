@@ -172,6 +172,23 @@ pub struct DebugEvent {
     pub info: DebugEventInfo
 }
 
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[repr(u32)]
+pub enum ExceptionType {
+    Init = 0x000,
+    InstructionAbort = 0x100,
+    DataAbort = 0x101,
+    UnalignedInstruction = 0x102,
+    UnalignedData = 0x103,
+    UndefinedInstruction = 0x104,
+    ExceptionInstruction = 0x105,
+    MemorySystemError = 0x106,
+    FpuException = 0x200,
+    InvalidSystemCall = 0x301,
+    SystemCallBreak = 0x302,
+    AtmosphereStdAbort = 0xFFE
+}
+
 pub type PageInfo = u32;
 pub type Address = *const u8;
 pub type Size = usize;

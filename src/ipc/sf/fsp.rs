@@ -108,7 +108,7 @@ pub enum OperationId {
     ReadLazyLoadFileForciblyForDebug = 10001
 }
 
-ipc_sf_define_interface_trait!{
+ipc_sf_define_interface_trait! {
     trait IFile {
         read [0, version::VersionInterval::all()]: (option: FileReadOption, offset: usize, size: usize, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) => (read_size: usize);
         write [1, version::VersionInterval::all()]: (option: FileWriteOption, offset: usize, size: usize, buf: sf::InNonSecureMapAliasBuffer<u8>) => ();
@@ -120,14 +120,14 @@ ipc_sf_define_interface_trait!{
     }
 }
 
-ipc_sf_define_interface_trait!{
+ipc_sf_define_interface_trait! {
     trait IDirectory {
         read [0, version::VersionInterval::all()]: (out_entries: sf::OutMapAliasBuffer<DirectoryEntry>) => (read_count: u64);
         get_entry_count [1, version::VersionInterval::all()]: () => (count: u64);
     }
 }
 
-ipc_sf_define_interface_trait!{
+ipc_sf_define_interface_trait! {
     trait IFileSystem {
         create_file [0, version::VersionInterval::all()]: (attribute: FileAttribute, size: usize, path_buf: sf::InFixedPointerBuffer<Path>) => ();
         delete_file [1, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer<Path>) => ();
@@ -148,7 +148,7 @@ ipc_sf_define_interface_trait!{
     }
 }
 
-ipc_sf_define_interface_trait!{
+ipc_sf_define_interface_trait! {
     trait IFileSystemProxy {
         set_current_process [1, version::VersionInterval::all()]: (process_id: sf::ProcessId) => ();
         open_sd_card_filesystem [18, version::VersionInterval::all()]: () => (sd_filesystem: mem::Shared<dyn IFileSystem>);
