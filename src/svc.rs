@@ -5,8 +5,17 @@ use crate::util;
 use crate::version;
 use core::ptr;
 use core::mem;
+use core::arch::global_asm;
 
 pub mod rc;
+
+global_asm!(include_str!("asm.s"));
+
+#[cfg(target_pointer_width = "64")]
+global_asm!(include_str!("svc.aarch64.s"));
+
+#[cfg(target_pointer_width = "32")]
+global_asm!(include_str!("svc.arm.s"));
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]

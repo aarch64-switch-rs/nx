@@ -10,6 +10,8 @@ fn get_current_thread_handle() -> u32 {
     thread::get_current_thread().get_handle()
 }
 
+// TODO: 32-bit support
+
 #[inline(always)]
 #[cfg(target_pointer_width = "64")]
 fn load_exclusive(ptr: *mut u32) -> u32 {
@@ -148,7 +150,7 @@ impl Mutex {
 
     #[cfg(target_pointer_width = "32")]
     pub fn lock(&mut self) {
-        
+        // TODO
     }
 
     #[cfg(target_pointer_width = "64")]
@@ -170,7 +172,7 @@ impl Mutex {
 
     #[cfg(target_pointer_width = "32")]
     pub fn unlock(&mut self) {
-        
+        // TODO
     }
 
     #[cfg(target_pointer_width = "64")]

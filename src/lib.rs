@@ -18,27 +18,6 @@
 #![feature(const_ptr_write)]
 #![macro_use]
 
-use core::arch::global_asm;
-
-// Required assembly bits (those which essentially cannot/shouldn't be inlined)
-
-// Valid asm for aarch64 and arm
-global_asm!(include_str!("asm.s"));
-global_asm!(include_str!("mod0.s"));
-
-// aarch64-only
-#[cfg(target_pointer_width = "64")]
-global_asm!(include_str!("arm.aarch64.s"));
-#[cfg(target_pointer_width = "64")]
-global_asm!(include_str!("mem.aarch64.s"));
-#[cfg(target_pointer_width = "64")]
-global_asm!(include_str!("svc.aarch64.s"));
-
-// arm-only
-
-#[cfg(target_pointer_width = "32")]
-global_asm!(include_str!("svc.arm.s"));
-
 #[macro_use]
 extern crate alloc;
 

@@ -1,5 +1,13 @@
 use core::arch::asm;
+use core::arch::global_asm;
+
+#[cfg(target_pointer_width = "32")]
 use crate::svc;
+
+global_asm!(include_str!("asm.s"));
+
+#[cfg(target_pointer_width = "64")]
+global_asm!(include_str!("arm.aarch64.s"));
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
@@ -113,9 +121,7 @@ pub fn get_system_tick() -> u64 {
     }
 
     #[cfg(target_pointer_width = "32")]
-    {
-        system_tick = svc::get_system_tick();
-    }
+    { system_tick = svc::get_system_tick(); }
 
     system_tick
 }

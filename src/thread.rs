@@ -240,6 +240,7 @@ pub struct ThreadLocalRegion {
     pub thread_ref: *mut Thread,
 }
 #[cfg(target_pointer_width = "64")]
+// TODO: different struct/expected size on 32-bit?
 const_assert!(core::mem::size_of::<ThreadLocalRegion>() == 0x200);
 
 #[inline(always)]

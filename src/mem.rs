@@ -4,8 +4,14 @@ use core::ops;
 use core::ptr;
 use core::mem;
 use core::marker;
+use core::arch::global_asm;
 
 use crate::util;
+
+global_asm!(include_str!("asm.s"));
+
+#[cfg(target_pointer_width = "64")]
+global_asm!(include_str!("mem.aarch64.s"));
 
 pub mod alloc;
 
