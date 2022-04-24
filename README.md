@@ -71,7 +71,15 @@
 
 - Optimize IPC code to generate better asm (like libnx or nnsdk)
 
-- 32-bit support
+- Continue 32-bit support:
+
+  - Implement sync asm bits
+
+  - Implement memory cache bits
+
+  - Test that everything works fine
+
+  - A lot of usize -> u64 renaming (specially on IPC code)
 
 ## Credits
 

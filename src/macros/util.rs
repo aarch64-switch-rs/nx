@@ -82,20 +82,19 @@ macro_rules! bit_group {
 
 #[macro_export]
 macro_rules! util_return_if {
-    ($cond:expr, $ret:expr) => {
-        if $cond {
-            return $ret;
+    ($cond_expr:expr, $ret_expr:expr) => {{
+        let cond = $cond_expr;
+        if cond {
+            return $ret_expr;
         }
-    }
+    }};
 }
 
 #[macro_export]
 macro_rules! util_return_unless {
-    ($cond:expr, $ret:expr) => {
-        if !$cond {
-            return $ret;
-        }
-    }
+    ($cond_expr:expr, $ret_expr:expr) => {{
+        $crate::util_return_if!(!$cond_expr, $ret_expr);
+    }};
 }
 
 #[macro_export]

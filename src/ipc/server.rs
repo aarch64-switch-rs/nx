@@ -591,7 +591,7 @@ impl<const P: usize> ServerManager<P> {
                         if P > 0 {
                             // Send our pointer buffer as a C descriptor for kernel - why are Pointer buffers so fucking weird?
                             let mut tmp_ctx = CommandContext::new_client(server_info);
-                            tmp_ctx.add_receive_static(ReceiveStaticDescriptor::new(self.pointer_buffer.as_ptr(), P))?;
+                            tmp_ctx.add_receive_static(ReceiveStaticDescriptor::new(self.pointer_buffer.as_ptr(), P as u64))?;
                             cmif::client::write_command_on_msg_buffer(&mut tmp_ctx, cmif::CommandType::Invalid, 0);
                         }
 

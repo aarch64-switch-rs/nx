@@ -1,8 +1,7 @@
-use crate::dynamic::elf;
+use crate::elf;
 use crate::result::*;
 use crate::svc;
 use crate::mem::alloc;
-use crate::dynamic;
 use crate::svc::Handle;
 use crate::sync;
 use crate::util;
@@ -17,6 +16,7 @@ use crate::service::set::ISystemSettingsServer;
 use core::ptr;
 use core::mem;
 use core::arch::asm;
+use core::arch::global_asm;
 
 // These functions must be implemented by any binary using this crate
 
@@ -108,10 +108,7 @@ fn initialize_version(hbl_hos_version: hbl::Version) {
     }
 }
 
-unsafe fn normal_entry(maybe_abi_cfg_entries_ptr: *const hbl::AbiConfigEntry, maybe_main_thread_handle: usize, aslr_base_address: *const u8, dyn_section: *const elf::Dyn, lr_exit_fn: ExitFn) {
-    // First of all, relocate ourselves
-    dynamic::relocate_with_dyn(aslr_base_address, dyn_section).unwrap();
-    
+unsafe fn normal_entry(maybe_abi_cfg_entries_ptr: *const hbl::AbiConfigEntry, maybe_main_thread_handle: usize, lr_exit_fn: ExitFn) {
     let exec_type = match !maybe_abi_cfg_entries_ptr.is_null() && (maybe_main_thread_handle == usize::MAX) {
         true => ExecutableType::Nro,
         false => ExecutableType::Nso
@@ -236,9 +233,18 @@ unsafe fn exception_entry(_exc_type: svc::ExceptionType, _stack_top: *mut u8) {
     svc::return_from_exception(svc::rc::ResultNotHandled::make());
 }
 
+global_asm!(include_str!("asm.s"));
+global_asm!(include_str!("rrt0.s"));
+
 #[no_mangle]
 #[linkage = "weak"]
-unsafe extern "C" fn __nx_rrt0_entry(x0: usize, x1: usize) {
+unsafe extern "C" fn __nx_rrt0_entry(arg0: usize, arg1: usize) {
+    let lr_exit_fn: ExitFn;
+    asm!(
+        "mov {}, lr",
+        out(reg) lr_exit_fn
+    );
+
     /*
     Possible entry arguments:
     - NSO/KIP: x0 = 0, x1 = <main-thread-handle>
@@ -246,38 +252,53 @@ unsafe extern "C" fn __nx_rrt0_entry(x0: usize, x1: usize) {
     - Exception: x0 = <exception-type>, x1 = <stack-top>
     */
 
-    if (x0 != 0) && (x1 != usize::MAX) {
+    if (arg0 != 0) && (arg1 != usize::MAX) {
         // Handle exception entry
-        let exc_type: svc::ExceptionType = mem::transmute(x0 as u32);
-        let stack_top = x1 as *mut u8;
+        let exc_type: svc::ExceptionType = mem::transmute(arg0 as u32);
+        let stack_top = arg1 as *mut u8;
         exception_entry(exc_type, stack_top);
     }
     else {
-        // Clean BSS first
-        let bss_start_addr: *mut usize;
-        asm!("adr {}, __bss_start", out(reg) bss_start_addr);
-        let bss_end_addr: *mut usize;
-        asm!("adr {}, __bss_end", out(reg) bss_end_addr);
+        // TODO: why does this return the address to __nx_rrt0_entry instead of actually _start?
+        // Since it's a valid .text address anyway, use QueryMemory to find the actual start
+        let self_base_address: *const u8;
+        asm!(
+            "adr {}, _start",
+            out(reg) self_base_address
+        );
+
+        let (info, _) = svc::query_memory(self_base_address).unwrap();
+        let aslr_base_address = info.base_address as *const u8;
+
+        let start_dyn = elf::mod0::find_start_dyn_address(aslr_base_address).unwrap();
+
+        #[cfg(target_pointer_width = "64")]
+        elf::aarch64::relocate_with_dyn(aslr_base_address, start_dyn as *const elf::aarch64::Dyn).unwrap();
+
+        #[cfg(target_pointer_width = "32")]
+        elf::arm::relocate_with_dyn(aslr_base_address, start_dyn as *const elf::arm::Dyn).unwrap();
+
+        extern "C" {
+            static __bss_start: u8;
+            static __bss_end: u8;
+        }
+
+        let bss_start_addr = &__bss_start as *const _ as *mut u64;
+        let bss_end_addr = &__bss_end as *const _ as *mut u64;
 
         let mut cur_bss_addr = bss_start_addr;
         while cur_bss_addr < bss_end_addr {
             ptr::write_volatile(cur_bss_addr, 0);
-            cur_bss_addr = cur_bss_addr.offset(1);
+            cur_bss_addr = cur_bss_addr.add(1);
         }
 
         // Handle NSO/KIP/NRO normal entry
-        let aslr_base_address: *const u8;
-        asm!("adr {}, _start", out(reg) aslr_base_address);
-
-        let dyn_start_addr: *const elf::Dyn;
-        asm!("adr {}, __dynamic_start", out(reg) dyn_start_addr);
-
-        let lr_exit_fn: ExitFn;
-        asm!("mov {}, lr", out(reg) lr_exit_fn);
-
-        let maybe_abi_cfg_entries_ptr = x0 as *const hbl::AbiConfigEntry;
-        let maybe_main_thread_handle = x1;
-
-        normal_entry(maybe_abi_cfg_entries_ptr, maybe_main_thread_handle, aslr_base_address, dyn_start_addr, lr_exit_fn);
+        let maybe_abi_cfg_entries_ptr = arg0 as *const hbl::AbiConfigEntry;
+        let maybe_main_thread_handle = arg1;
+        normal_entry(maybe_abi_cfg_entries_ptr, maybe_main_thread_handle, lr_exit_fn);
     }
 }
+
+#[cfg(target_pointer_width = "32")]
+#[no_mangle]
+unsafe extern "C" fn __aeabi_unwind_cpp_pr0() {}

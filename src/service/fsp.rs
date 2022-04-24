@@ -42,11 +42,11 @@ impl sf::IObject for File {
 }
 
 impl IFile for File {
-    fn read(&mut self, option: FileReadOption, offset: usize, size: usize, buf: sf::OutNonSecureMapAliasBuffer<u8>) -> Result<usize> {
-        ipc_client_send_request_command!([self.session.object_info; 0] (option, offset, size, buf) => (read_size: usize))
+    fn read(&mut self, option: FileReadOption, offset: u64, size: u64, buf: sf::OutNonSecureMapAliasBuffer<u8>) -> Result<u64> {
+        ipc_client_send_request_command!([self.session.object_info; 0] (option, offset, size, buf) => (read_size: u64))
     }
 
-    fn write(&mut self, option: FileWriteOption, offset: usize, size: usize, buf: sf::InNonSecureMapAliasBuffer<u8>) -> Result<()> {
+    fn write(&mut self, option: FileWriteOption, offset: u64, size: u64, buf: sf::InNonSecureMapAliasBuffer<u8>) -> Result<()> {
         ipc_client_send_request_command!([self.session.object_info; 1] (option, offset, size, buf) => ())
     }
 
@@ -54,19 +54,19 @@ impl IFile for File {
         ipc_client_send_request_command!([self.session.object_info; 2] () => ())
     }
 
-    fn set_size(&mut self, size: usize) -> Result<()> {
+    fn set_size(&mut self, size: u64) -> Result<()> {
         ipc_client_send_request_command!([self.session.object_info; 3] (size) => ())
     }
 
-    fn get_size(&mut self) -> Result<usize> {
-        ipc_client_send_request_command!([self.session.object_info; 4] () => (size: usize))
+    fn get_size(&mut self) -> Result<u64> {
+        ipc_client_send_request_command!([self.session.object_info; 4] () => (size: u64))
     }
 
-    fn operate_range(&mut self, operation_id: OperationId, offset: usize, size: usize) -> Result<FileQueryRangeInfo> {
+    fn operate_range(&mut self, operation_id: OperationId, offset: u64, size: u64) -> Result<FileQueryRangeInfo> {
         ipc_client_send_request_command!([self.session.object_info; 5] (operation_id, offset, size) => (info: FileQueryRangeInfo))
     }
 
-    fn operate_range_with_buffer(&mut self, operation_id: OperationId, offset: usize, size: usize, in_buf: sf::InNonSecureMapAliasBuffer<u8>, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) -> Result<()> {
+    fn operate_range_with_buffer(&mut self, operation_id: OperationId, offset: u64, size: u64, in_buf: sf::InNonSecureMapAliasBuffer<u8>, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) -> Result<()> {
         ipc_client_send_request_command!([self.session.object_info; 6] (operation_id, offset, size, in_buf, out_buf) => ())
     }
 }
@@ -90,7 +90,7 @@ impl sf::IObject for FileSystem {
 }
 
 impl IFileSystem for FileSystem {
-    fn create_file(&mut self, attribute: FileAttribute, size: usize, path_buf: sf::InFixedPointerBuffer<Path>) -> Result<()> {
+    fn create_file(&mut self, attribute: FileAttribute, size: u64, path_buf: sf::InFixedPointerBuffer<Path>) -> Result<()> {
         ipc_client_send_request_command!([self.session.object_info; 0] (attribute, size, path_buf) => ())
     }
 
@@ -134,12 +134,12 @@ impl IFileSystem for FileSystem {
         ipc_client_send_request_command!([self.session.object_info; 10] () => ())
     }
 
-    fn get_free_space_size(&mut self, path_buf: sf::InFixedPointerBuffer<Path>) -> Result<usize> {
-        ipc_client_send_request_command!([self.session.object_info; 11] (path_buf) => (size: usize))
+    fn get_free_space_size(&mut self, path_buf: sf::InFixedPointerBuffer<Path>) -> Result<u64> {
+        ipc_client_send_request_command!([self.session.object_info; 11] (path_buf) => (size: u64))
     }
 
-    fn get_total_space_size(&mut self, path_buf: sf::InFixedPointerBuffer<Path>) -> Result<usize> {
-        ipc_client_send_request_command!([self.session.object_info; 12] (path_buf) => (size: usize))
+    fn get_total_space_size(&mut self, path_buf: sf::InFixedPointerBuffer<Path>) -> Result<u64> {
+        ipc_client_send_request_command!([self.session.object_info; 12] (path_buf) => (size: u64))
     }
 
     fn clean_directory_recursively(&mut self, path_buf: sf::InFixedPointerBuffer<Path>) -> Result<()> {

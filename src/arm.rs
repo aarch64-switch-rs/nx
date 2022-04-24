@@ -1,4 +1,5 @@
 use core::arch::asm;
+use crate::svc;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
@@ -102,16 +103,25 @@ pub fn cache_flush(address: *mut u8, size: usize) {
 #[inline(always)]
 pub fn get_system_tick() -> u64 {
     let system_tick: u64;
+
+    #[cfg(target_pointer_width = "64")]
     unsafe {
         asm!(
             "mrs {}, cntpct_el0",
             out(reg) system_tick
         );
     }
+
+    #[cfg(target_pointer_width = "32")]
+    {
+        system_tick = svc::get_system_tick();
+    }
+
     system_tick
 }
 
 #[inline(always)]
+#[cfg(target_pointer_width = "64")]
 pub fn get_system_tick_frequency() -> u64 {
     let system_tick_freq: u64;
     unsafe {

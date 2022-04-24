@@ -73,8 +73,8 @@ bit_enum! {
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct MemoryInfo {
-    pub base_address: usize,
-    pub size: usize,
+    pub base_address: u64,
+    pub size: u64,
     pub state: MemoryState,
     pub attribute: MemoryAttribute,
     pub permission: MemoryPermission,
@@ -424,6 +424,17 @@ pub fn arbitrate_unlock(tag_location: Address) -> Result<()> {
     unsafe {
         let rc = __nx_svc_arbitrate_unlock(tag_location);
         pack(rc, ())
+    }
+}
+
+#[inline(always)]
+pub fn get_system_tick() -> u64 {
+    extern "C" {
+        fn __nx_svc_get_system_tick() -> u64;
+    }
+
+    unsafe {
+        __nx_svc_get_system_tick()
     }
 }
 

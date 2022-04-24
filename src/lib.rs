@@ -22,12 +22,22 @@ use core::arch::global_asm;
 
 // Required assembly bits (those which essentially cannot/shouldn't be inlined)
 
+// Valid asm for aarch64 and arm
 global_asm!(include_str!("asm.s"));
-global_asm!(include_str!("rrt0.s"));
 global_asm!(include_str!("mod0.s"));
-global_asm!(include_str!("arm.s"));
-global_asm!(include_str!("mem.s"));
-global_asm!(include_str!("svc.s"));
+
+// aarch64-only
+#[cfg(target_pointer_width = "64")]
+global_asm!(include_str!("arm.aarch64.s"));
+#[cfg(target_pointer_width = "64")]
+global_asm!(include_str!("mem.aarch64.s"));
+#[cfg(target_pointer_width = "64")]
+global_asm!(include_str!("svc.aarch64.s"));
+
+// arm-only
+
+#[cfg(target_pointer_width = "32")]
+global_asm!(include_str!("svc.arm.s"));
 
 #[macro_use]
 extern crate alloc;
@@ -48,7 +58,7 @@ pub mod util;
 
 pub mod mem;
 
-pub mod dynamic;
+pub mod elf;
 
 pub mod sync;
 
@@ -87,6 +97,7 @@ pub mod version;
 
 pub mod rand;
 
+#[cfg(target_pointer_width = "64")]
 pub mod crypto;
 
 pub use paste;

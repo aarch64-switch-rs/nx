@@ -30,13 +30,13 @@ pub type OperationId = fsp::OperationId;
 pub type FileQueryRangeInfo = fsp::FileQueryRangeInfo;
 
 pub trait File {
-    fn read(&mut self, offset: usize, out_buf: *mut u8, out_buf_size: usize, option: FileReadOption) -> Result<usize>;
-    fn write(&mut self, offset: usize, buf: *const u8, buf_size: usize, option: FileWriteOption) -> Result<()>; // Write command does not return the written size
+    fn read(&mut self, offset: u64, out_buf: *mut u8, out_buf_size: u64, option: FileReadOption) -> Result<u64>;
+    fn write(&mut self, offset: u64, buf: *const u8, buf_size: u64, option: FileWriteOption) -> Result<()>; // Write command does not return the written size
     fn flush(&mut self) -> Result<()>;
-    fn set_size(&mut self, size: usize) -> Result<()>;
-    fn get_size(&mut self) -> Result<usize>;
-    fn operate_range(&mut self, operation_id: OperationId, offset: usize, size: usize) -> Result<FileQueryRangeInfo>;
-    fn operate_range_with_buffer(&mut self, operation_id: OperationId, offset: usize, size: usize, in_buf: *const u8, in_buf_size: usize, out_buf: *mut u8, out_buf_size: usize) -> Result<()>;
+    fn set_size(&mut self, size: u64) -> Result<()>;
+    fn get_size(&mut self) -> Result<u64>;
+    fn operate_range(&mut self, operation_id: OperationId, offset: u64, size: u64) -> Result<FileQueryRangeInfo>;
+    fn operate_range_with_buffer(&mut self, operation_id: OperationId, offset: u64, size: u64, in_buf: *const u8, in_buf_size: u64, out_buf: *mut u8, out_buf_size: u64) -> Result<()>;
 }
 
 pub trait Directory {
@@ -45,7 +45,7 @@ pub trait Directory {
 }
 
 pub trait FileSystem {
-    fn create_file(&mut self, path: String, attribute: FileAttribute, size: usize) -> Result<()>;
+    fn create_file(&mut self, path: String, attribute: FileAttribute, size: u64) -> Result<()>;
     fn delete_file(&mut self, path: String) -> Result<()>;
     fn create_directory(&mut self, path: String) -> Result<()>;
     fn delete_directory(&mut self, path: String) -> Result<()>;
@@ -56,11 +56,11 @@ pub trait FileSystem {
     fn open_file(&mut self, path: String, mode: FileOpenMode) -> Result<mem::Shared<dyn File>>;
     fn open_directory(&mut self, path: String, mode: DirectoryOpenMode) -> Result<mem::Shared<dyn Directory>>;
     fn commit(&mut self) -> Result<()>;
-    fn get_free_space_size(&mut self, path: String) -> Result<usize>;
-    fn get_total_space_size(&mut self, path: String) -> Result<usize>;
+    fn get_free_space_size(&mut self, path: String) -> Result<u64>;
+    fn get_total_space_size(&mut self, path: String) -> Result<u64>;
     fn clean_directory_recursively(&mut self, path: String) -> Result<()>;
     fn get_file_time_stamp_raw(&mut self, path: String) -> Result<FileTimeStampRaw>;
-    fn query_entry(&mut self, path: String, query_id: QueryId, in_buf: *const u8, in_buf_size: usize, out_buf: *mut u8, out_buf_size: usize) -> Result<()>;
+    fn query_entry(&mut self, path: String, query_id: QueryId, in_buf: *const u8, in_buf_size: u64, out_buf: *mut u8, out_buf_size: u64) -> Result<()>;
 }
 
 // Proxy* objects are helper object types to translate from IPC fs objects to our fs objects
@@ -78,11 +78,11 @@ impl ProxyFile {
 }
 
 impl File for ProxyFile {
-    fn read(&mut self, offset: usize, out_buf: *mut u8, out_buf_size: usize, option: FileReadOption) -> Result<usize> {
+    fn read(&mut self, offset: u64, out_buf: *mut u8, out_buf_size: u64, option: FileReadOption) -> Result<u64> {
         self.file_obj.get().read(option, offset, out_buf_size, ipc_sf::Buffer::from_mut_ptr(out_buf, out_buf_size))
     }
 
-    fn write(&mut self, offset: usize, buf: *const u8, buf_size: usize, option: FileWriteOption) -> Result<()> {
+    fn write(&mut self, offset: u64, buf: *const u8, buf_size: u64, option: FileWriteOption) -> Result<()> {
         self.file_obj.get().write(option, offset, buf_size, ipc_sf::Buffer::from_ptr(buf, buf_size))
     }
 
@@ -90,19 +90,19 @@ impl File for ProxyFile {
         self.file_obj.get().flush()
     }
 
-    fn set_size(&mut self, size: usize) -> Result<()> {
+    fn set_size(&mut self, size: u64) -> Result<()> {
         self.file_obj.get().set_size(size)
     }
 
-    fn get_size(&mut self) -> Result<usize> {
+    fn get_size(&mut self) -> Result<u64> {
         self.file_obj.get().get_size()
     }
 
-    fn operate_range(&mut self, operation_id: OperationId, offset: usize, size: usize) -> Result<FileQueryRangeInfo> {
+    fn operate_range(&mut self, operation_id: OperationId, offset: u64, size: u64) -> Result<FileQueryRangeInfo> {
         self.file_obj.get().operate_range(operation_id, offset, size)
     }
 
-    fn operate_range_with_buffer(&mut self, operation_id: OperationId, offset: usize, size: usize, in_buf: *const u8, in_buf_size: usize, out_buf: *mut u8, out_buf_size: usize) -> Result<()> {
+    fn operate_range_with_buffer(&mut self, operation_id: OperationId, offset: u64, size: u64, in_buf: *const u8, in_buf_size: u64, out_buf: *mut u8, out_buf_size: u64) -> Result<()> {
         self.file_obj.get().operate_range_with_buffer(operation_id, offset, size, ipc_sf::Buffer::from_ptr(in_buf, in_buf_size), ipc_sf::Buffer::from_mut_ptr(out_buf, out_buf_size))
     }
 }
@@ -142,7 +142,7 @@ impl ProxyFileSystem {
 }
 
 impl FileSystem for ProxyFileSystem {
-    fn create_file(&mut self, path: String, attribute: FileAttribute, size: usize) -> Result<()> {
+    fn create_file(&mut self, path: String, attribute: FileAttribute, size: u64) -> Result<()> {
         let sf_path = fsp::Path::from_string(path);
         self.fs_obj.get().create_file(attribute, size, ipc_sf::Buffer::from_var(&sf_path))
     }
@@ -200,12 +200,12 @@ impl FileSystem for ProxyFileSystem {
         self.fs_obj.get().commit()
     }
 
-    fn get_free_space_size(&mut self, path: String) -> Result<usize> {
+    fn get_free_space_size(&mut self, path: String) -> Result<u64> {
         let sf_path = fsp::Path::from_string(path);
         self.fs_obj.get().get_free_space_size(ipc_sf::Buffer::from_var(&sf_path))
     }
 
-    fn get_total_space_size(&mut self, path: String) -> Result<usize> {
+    fn get_total_space_size(&mut self, path: String) -> Result<u64> {
         let sf_path = fsp::Path::from_string(path);
         self.fs_obj.get().get_total_space_size(ipc_sf::Buffer::from_var(&sf_path))
     }
@@ -220,7 +220,7 @@ impl FileSystem for ProxyFileSystem {
         self.fs_obj.get().get_file_time_stamp_raw(ipc_sf::Buffer::from_var(&sf_path))
     }
 
-    fn query_entry(&mut self, path: String, query_id: QueryId, in_buf: *const u8, in_buf_size: usize, out_buf: *mut u8, out_buf_size: usize) -> Result<()> {
+    fn query_entry(&mut self, path: String, query_id: QueryId, in_buf: *const u8, in_buf_size: u64, out_buf: *mut u8, out_buf_size: u64) -> Result<()> {
         let sf_path = fsp::Path::from_string(path);
         self.fs_obj.get().query_entry(ipc_sf::Buffer::from_var(&sf_path), query_id, ipc_sf::Buffer::from_ptr(in_buf, in_buf_size), ipc_sf::Buffer::from_mut_ptr(out_buf, out_buf_size))
     }
@@ -234,7 +234,7 @@ pub enum Whence {
 
 pub struct FileAccessor {
     file: mem::Shared<dyn File>,
-    offset: usize
+    offset: u64
 }
 
 impl FileAccessor {
@@ -246,11 +246,11 @@ impl FileAccessor {
         self.file.clone()
     }
 
-    pub fn get_size(&mut self) -> Result<usize> {
+    pub fn get_size(&mut self) -> Result<u64> {
         self.file.get().get_size()
     }
 
-    pub fn seek(&mut self, offset: usize, whence: Whence) -> Result<()> {
+    pub fn seek(&mut self, offset: u64, whence: Whence) -> Result<()> {
         match whence {
             Whence::Start => self.offset = offset,
             Whence::Current => self.offset += offset,
@@ -262,34 +262,34 @@ impl FileAccessor {
         Ok(())
     }
 
-    pub fn read<T>(&mut self, buf: *mut T, buf_size: usize) -> Result<usize> {
+    pub fn read<T>(&mut self, buf: *mut T, buf_size: u64) -> Result<u64> {
         let read_size = self.file.get().read(self.offset, buf as *mut u8, buf_size, FileReadOption::None())?;
         self.offset += buf_size;
         Ok(read_size)
     }
 
-    pub fn read_array<T>(&mut self, arr: &mut [T]) -> Result<usize> {
-        self.read(arr.as_mut_ptr(), arr.len() * cmem::size_of::<T>())
+    pub fn read_array<T>(&mut self, arr: &mut [T]) -> Result<u64> {
+        self.read(arr.as_mut_ptr(), (arr.len() * cmem::size_of::<T>()) as u64)
     }
 
     pub fn read_val<T: Copy + Default>(&mut self) -> Result<T> {
         let mut t: T = Default::default();
-        self.read(&mut t, cmem::size_of::<T>())?;
+        self.read(&mut t, cmem::size_of::<T>() as u64)?;
         Ok(t)
     }
 
-    pub fn write<T>(&mut self, buf: *const T, buf_size: usize) -> Result<()> {
+    pub fn write<T>(&mut self, buf: *const T, buf_size: u64) -> Result<()> {
         self.file.get().write(self.offset, buf as *const u8, buf_size, FileWriteOption::Flush())?;
         self.offset += buf_size;
         Ok(())
     }
 
     pub fn write_array<T>(&mut self, arr: &[T]) -> Result<()> {
-        self.write(arr.as_ptr(), arr.len() * cmem::size_of::<T>())
+        self.write(arr.as_ptr(), (arr.len() * cmem::size_of::<T>()) as u64)
     }
 
     pub fn write_val<T: Copy>(&mut self, t: T) -> Result<()> {
-        self.write(&t, cmem::size_of::<T>())
+        self.write(&t, (cmem::size_of::<T>()) as u64)
     }
 }
 
@@ -513,7 +513,7 @@ pub fn format_path(path: String) -> Result<(mem::Shared<dyn FileSystem>, String)
     Ok((fs, processed_path))
 }
 
-pub fn create_file(path: String, size: usize, attribute: FileAttribute) -> Result<()> {
+pub fn create_file(path: String, size: u64, attribute: FileAttribute) -> Result<()> {
     let (fs, processed_path) = format_path(path)?;
 
     fs.get().create_file(processed_path, attribute, size)
@@ -629,7 +629,7 @@ pub fn open_file(path: String, option: FileOpenOption) -> Result<FileAccessor> {
         }
     };
 
-    let offset : usize = match option.contains(FileOpenOption::Append()) {
+    let offset : u64 = match option.contains(FileOpenOption::Append()) {
         true => file.get().get_size().unwrap_or(0),
         false => 0
     };
@@ -652,13 +652,13 @@ pub fn commit(path: String) -> Result<()> {
     fs.get().commit()
 }
 
-pub fn get_free_space_size(path: String) -> Result<usize> {
+pub fn get_free_space_size(path: String) -> Result<u64> {
     let (fs, processed_path) = format_path(path)?;
 
     fs.get().get_free_space_size(processed_path)
 }
 
-pub fn get_total_space_size(path: String) -> Result<usize> {
+pub fn get_total_space_size(path: String) -> Result<u64> {
     let (fs, processed_path) = format_path(path)?;
 
     fs.get().get_total_space_size(processed_path)
@@ -670,7 +670,7 @@ pub fn get_file_time_stamp_raw(path: String) -> Result<FileTimeStampRaw> {
     fs.get().get_file_time_stamp_raw(processed_path)
 }
 
-pub fn query_entry(path: String, query_id: QueryId, in_buf: *const u8, in_buf_size: usize, out_buf: *mut u8, out_buf_size: usize) -> Result<()> {
+pub fn query_entry(path: String, query_id: QueryId, in_buf: *const u8, in_buf_size: u64, out_buf: *mut u8, out_buf_size: u64) -> Result<()> {
     let (fs, processed_path) = format_path(path)?;
 
     fs.get().query_entry(processed_path, query_id, in_buf, in_buf_size, out_buf, out_buf_size)

@@ -11,6 +11,7 @@ fn get_current_thread_handle() -> u32 {
 }
 
 #[inline(always)]
+#[cfg(target_pointer_width = "64")]
 fn load_exclusive(ptr: *mut u32) -> u32 {
     let value: u32;
     unsafe {
@@ -24,6 +25,7 @@ fn load_exclusive(ptr: *mut u32) -> u32 {
 }
 
 #[inline(always)]
+#[cfg(target_pointer_width = "64")]
 fn store_exclusive(ptr: *mut u32, value: u32) -> i32 {
     let res: i32;
     unsafe {
@@ -38,12 +40,14 @@ fn store_exclusive(ptr: *mut u32, value: u32) -> i32 {
 }
 
 #[inline(always)]
+#[cfg(target_pointer_width = "64")]
 fn clear_exclusive() {
     unsafe {
         asm!("clrex");
     }
 }
 
+#[cfg(target_pointer_width = "64")]
 fn lock_impl(handle_ref: *mut u32) {
     let thr_handle = get_current_thread_handle();
     
@@ -72,6 +76,7 @@ fn lock_impl(handle_ref: *mut u32) {
     }
 }
 
+#[cfg(target_pointer_width = "64")]
 fn unlock_impl(handle_ref: *mut u32) {
     let thr_handle = get_current_thread_handle();
     
@@ -93,6 +98,7 @@ fn unlock_impl(handle_ref: *mut u32) {
     }
 }
 
+#[cfg(target_pointer_width = "64")]
 fn try_lock_impl(handle_ref: *mut u32) -> bool {
     let thr_handle = get_current_thread_handle();
 
@@ -122,6 +128,7 @@ impl Mutex {
         Self { value: 0, is_recursive: recursive, counter: 0, thread_handle: 0 }
     }
 
+    #[cfg(target_pointer_width = "64")]
     pub fn lock(&mut self) {
         let mut do_lock = true;
         if self.is_recursive {
@@ -139,6 +146,12 @@ impl Mutex {
         }
     }
 
+    #[cfg(target_pointer_width = "32")]
+    pub fn lock(&mut self) {
+        
+    }
+
+    #[cfg(target_pointer_width = "64")]
     pub fn unlock(&mut self) {
         let mut do_unlock = true;
         if self.is_recursive {
@@ -155,6 +168,12 @@ impl Mutex {
         }
     }
 
+    #[cfg(target_pointer_width = "32")]
+    pub fn unlock(&mut self) {
+        
+    }
+
+    #[cfg(target_pointer_width = "64")]
     pub fn try_lock(&mut self) -> bool {
         if self.is_recursive {
             let thr_handle = get_current_thread_handle();
@@ -170,6 +189,12 @@ impl Mutex {
         else {
             try_lock_impl(&mut self.value)
         }
+    }
+
+    #[cfg(target_pointer_width = "32")]
+    pub fn try_lock(&mut self) -> bool {
+        // TODO
+        true
     }
 }
 

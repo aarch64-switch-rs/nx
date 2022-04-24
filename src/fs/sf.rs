@@ -50,11 +50,11 @@ impl sf::IObject for File {
 }
 
 impl IFile for File {
-    fn read(&mut self, option: fsp::FileReadOption, offset: usize, size: usize, buf: sf::OutNonSecureMapAliasBuffer<u8>) -> Result<usize> {
+    fn read(&mut self, option: fsp::FileReadOption, offset: u64, size: u64, buf: sf::OutNonSecureMapAliasBuffer<u8>) -> Result<u64> {
         self.file_obj.get().read(offset, buf.get_address(), size.min(buf.get_size()), option)
     }
 
-    fn write(&mut self, option: fsp::FileWriteOption, offset: usize, size: usize, buf: sf::InNonSecureMapAliasBuffer<u8>) -> Result<()> {
+    fn write(&mut self, option: fsp::FileWriteOption, offset: u64, size: u64, buf: sf::InNonSecureMapAliasBuffer<u8>) -> Result<()> {
         self.file_obj.get().write(offset, buf.get_address(), size.min(buf.get_size()), option)
     }
 
@@ -62,19 +62,19 @@ impl IFile for File {
         self.file_obj.get().flush()
     }
 
-    fn set_size(&mut self, size: usize) -> Result<()> {
+    fn set_size(&mut self, size: u64) -> Result<()> {
         self.file_obj.get().set_size(size)
     }
 
-    fn get_size(&mut self) -> Result<usize> {
+    fn get_size(&mut self) -> Result<u64> {
         self.file_obj.get().get_size()
     }
 
-    fn operate_range(&mut self, operation_id: fsp::OperationId, offset: usize, size: usize) -> Result<fsp::FileQueryRangeInfo> {
+    fn operate_range(&mut self, operation_id: fsp::OperationId, offset: u64, size: u64) -> Result<fsp::FileQueryRangeInfo> {
         self.file_obj.get().operate_range(operation_id, offset, size)
     }
 
-    fn operate_range_with_buffer(&mut self, operation_id: fsp::OperationId, offset: usize, size: usize, in_buf: sf::InNonSecureMapAliasBuffer<u8>, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) -> Result<()> {
+    fn operate_range_with_buffer(&mut self, operation_id: fsp::OperationId, offset: u64, size: u64, in_buf: sf::InNonSecureMapAliasBuffer<u8>, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) -> Result<()> {
         self.file_obj.get().operate_range_with_buffer(operation_id, offset, size, in_buf.get_address(), in_buf.get_size(), out_buf.get_address(), out_buf.get_size())
     }
 }
@@ -96,7 +96,7 @@ impl sf::IObject for FileSystem {
 }
 
 impl IFileSystem for FileSystem {
-    fn create_file(&mut self, attribute: fsp::FileAttribute, size: usize, path_buf: sf::InFixedPointerBuffer<fsp::Path>) -> Result<()> {
+    fn create_file(&mut self, attribute: fsp::FileAttribute, size: u64, path_buf: sf::InFixedPointerBuffer<fsp::Path>) -> Result<()> {
         let fs_path = path_buf.get_var().get_string()?;
         self.fs_obj.get().create_file(fs_path, attribute, size)
     }
@@ -154,12 +154,12 @@ impl IFileSystem for FileSystem {
         self.fs_obj.get().commit()
     }
 
-    fn get_free_space_size(&mut self, path_buf: sf::InFixedPointerBuffer<fsp::Path>) -> Result<usize> {
+    fn get_free_space_size(&mut self, path_buf: sf::InFixedPointerBuffer<fsp::Path>) -> Result<u64> {
         let fs_path = path_buf.get_var().get_string()?;
         self.fs_obj.get().get_free_space_size(fs_path)
     }
 
-    fn get_total_space_size(&mut self, path_buf: sf::InFixedPointerBuffer<fsp::Path>) -> Result<usize> {
+    fn get_total_space_size(&mut self, path_buf: sf::InFixedPointerBuffer<fsp::Path>) -> Result<u64> {
         let fs_path = path_buf.get_var().get_string()?;
         self.fs_obj.get().get_total_space_size(fs_path)
     }

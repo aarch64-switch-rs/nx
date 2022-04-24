@@ -4,4 +4,4 @@
 .global _start
 _start:
 	b __nx_rrt0_entry
-	.word __module_header - _start
+	.word __nx_module_header - _start

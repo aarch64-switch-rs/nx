@@ -239,17 +239,29 @@ pub struct ThreadLocalRegion {
     pub thread_ptr: *mut u8,
     pub thread_ref: *mut Thread,
 }
+#[cfg(target_pointer_width = "64")]
 const_assert!(core::mem::size_of::<ThreadLocalRegion>() == 0x200);
 
 #[inline(always)]
 pub fn get_thread_local_region() -> *mut ThreadLocalRegion {
     let tlr: *mut ThreadLocalRegion;
+
+    #[cfg(target_pointer_width = "64")]
     unsafe {
         asm!(
             "mrs {}, tpidrro_el0",
             out(reg) tlr
         );
     }
+
+    #[cfg(target_pointer_width = "32")]
+    unsafe {
+        asm!(
+            "mrc p15, 0, {}, c13, c0, 3",
+            out(reg) tlr
+        );
+    }
+
     tlr
 }
 

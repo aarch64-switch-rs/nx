@@ -8,12 +8,12 @@ use alloc::string::String;
 
 pub struct Buffer<const A: BufferAttribute, T> {
     buf: *mut T,
-    count: usize
+    count: u64
 }
 
 impl<const A: BufferAttribute, T> Buffer<A, T> {
-    pub const fn get_expected_size() -> usize {
-        mem::size_of::<T>()
+    pub const fn get_expected_size() -> u64 {
+        mem::size_of::<T>() as u64
     }
 
     pub const fn empty() -> Self {
@@ -25,21 +25,21 @@ impl<const A: BufferAttribute, T> Buffer<A, T> {
 
     // TODO: ensure that sizeof(T) is a multiple of size
 
-    pub const fn new(addr: *mut u8, size: usize) -> Self {
+    pub const fn new(addr: *mut u8, size: u64) -> Self {
         Self {
             buf: addr as *mut T,
             count: size / Self::get_expected_size()
         }
     }
     
-    pub const fn from_ptr(buf: *const T, count: usize) -> Self {
+    pub const fn from_ptr(buf: *const T, count: u64) -> Self {
         Self {
             buf: buf as *mut T,
             count
         }
     }
 
-    pub const fn from_mut_ptr(buf: *mut T, count: usize) -> Self {
+    pub const fn from_mut_ptr(buf: *mut T, count: u64) -> Self {
         Self {
             buf,
             count
@@ -57,19 +57,19 @@ impl<const A: BufferAttribute, T> Buffer<A, T> {
     // TODO: ensure sizeof(T) is a multiple of sizeof(U)
 
     pub const fn from_other_var<U>(var: &U) -> Self {
-        Self::from_ptr(var as *const U as *const T, mem::size_of::<U>() / Self::get_expected_size())
+        Self::from_ptr(var as *const U as *const T, mem::size_of::<U>() as u64 / Self::get_expected_size())
     }
 
     pub const fn from_other_mut_var<U>(var: &mut U) -> Self {
-        Self::from_mut_ptr(var as *mut U as *mut T, mem::size_of::<U>() / Self::get_expected_size())
+        Self::from_mut_ptr(var as *mut U as *mut T, mem::size_of::<U>() as u64 / Self::get_expected_size())
     }
 
     pub const fn from_array(arr: &[T]) -> Self {
-        Self::from_ptr(arr.as_ptr(), arr.len())
+        Self::from_ptr(arr.as_ptr(), arr.len() as u64)
     }
 
     pub const fn from_mut_array(arr: &mut [T]) -> Self {
-        Self::from_mut_ptr(arr.as_mut_ptr(), arr.len())
+        Self::from_mut_ptr(arr.as_mut_ptr(), arr.len() as u64)
     }
 
     pub const fn from_other<const A2: BufferAttribute, U>(other: &Buffer<A2, U>) -> Self {
@@ -80,11 +80,11 @@ impl<const A: BufferAttribute, T> Buffer<A, T> {
         self.buf as *mut u8
     }
 
-    pub const fn get_size(&self) -> usize {
+    pub const fn get_size(&self) -> u64 {
         self.count * Self::get_expected_size()
     }
 
-    pub const fn get_count(&self) -> usize {
+    pub const fn get_count(&self) -> u64 {
         self.count
     }
 
@@ -108,13 +108,13 @@ impl<const A: BufferAttribute, T> Buffer<A, T> {
 
     pub fn get_slice(&self) -> &[T] {
         unsafe {
-            core::slice::from_raw_parts(self.buf as *const T, self.count)
+            core::slice::from_raw_parts(self.buf as *const T, self.count as usize)
         }
     }
 
     pub fn get_mut_slice(&self) -> &mut [T] {
         unsafe {
-            core::slice::from_raw_parts_mut(self.buf, self.count)
+            core::slice::from_raw_parts_mut(self.buf, self.count as usize)
         }
     }
 }
@@ -122,9 +122,9 @@ impl<const A: BufferAttribute, T> Buffer<A, T> {
 impl<const A: BufferAttribute> Buffer<A, u8> {
     pub fn get_string(&self) -> String {
         unsafe {
-            let mut string = String::with_capacity(self.count);
+            let mut string = String::with_capacity(self.count as usize);
             for i in 0..self.count {
-                let cur_char = *self.buf.add(i) as char;
+                let cur_char = *self.buf.add(i as usize) as char;
                 if cur_char == '\0' {
                     break;
                 }
@@ -137,8 +137,8 @@ impl<const A: BufferAttribute> Buffer<A, u8> {
     pub fn set_string(&mut self, string: String) {
         unsafe {
             // First memset to zero so that it will be a valid nul-terminated string
-            core::ptr::write_bytes(self.buf as *mut u8, 0, self.count);
-            core::ptr::copy(string.as_ptr(), self.buf as *mut u8, core::cmp::min(self.count - 1, string.len()));
+            core::ptr::write_bytes(self.buf as *mut u8, 0, self.count as usize);
+            core::ptr::copy(string.as_ptr(), self.buf as *mut u8, core::cmp::min(self.count - 1, string.len() as u64) as usize);
         }
     }
 }

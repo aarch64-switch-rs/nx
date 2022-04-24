@@ -27,7 +27,7 @@ impl sf::IObject for FileSystem {
 }
 
 impl IFileSystem for FileSystem {
-    fn create_file(&mut self, attribute: fsp::FileAttribute, size: usize, path_buf: sf::InFixedPointerBuffer<fsp::Path>) -> Result<()> {
+    fn create_file(&mut self, attribute: fsp::FileAttribute, size: u64, path_buf: sf::InFixedPointerBuffer<fsp::Path>) -> Result<()> {
         let path = self.make_path(&path_buf)?;
         super::create_file(path, size, attribute)
     }
@@ -85,12 +85,12 @@ impl IFileSystem for FileSystem {
         super::commit(self.sub_dir.clone())
     }
 
-    fn get_free_space_size(&mut self, path_buf: sf::InFixedPointerBuffer<fsp::Path>) -> Result<usize> {
+    fn get_free_space_size(&mut self, path_buf: sf::InFixedPointerBuffer<fsp::Path>) -> Result<u64> {
         let path = self.make_path(&path_buf)?;
         super::get_free_space_size(path)
     }
 
-    fn get_total_space_size(&mut self, path_buf: sf::InFixedPointerBuffer<fsp::Path>) -> Result<usize> {
+    fn get_total_space_size(&mut self, path_buf: sf::InFixedPointerBuffer<fsp::Path>) -> Result<u64> {
         let path = self.make_path(&path_buf)?;
         super::get_total_space_size(path)
     }

@@ -104,10 +104,10 @@ impl BufferDescriptor {
         Self { size_low: 0, address_low: 0, bits: 0 }
     }
 
-    pub fn new(buffer: *const u8, buffer_size: usize, flags: BufferFlags) -> Self {
-        let address_low = buffer as usize as u32;
-        let address_mid = ((buffer as usize) >> 32) as u32;
-        let address_high = ((buffer as usize) >> 36) as u32;
+    pub fn new(buffer: *const u8, buffer_size: u64, flags: BufferFlags) -> Self {
+        let address_low = buffer as u64 as u32;
+        let address_mid = ((buffer as u64) >> 32) as u32;
+        let address_high = ((buffer as u64) >> 36) as u32;
         let size_low = buffer_size as u32;
         let size_high = (buffer_size >> 32) as u32;
 
@@ -123,12 +123,12 @@ impl BufferDescriptor {
     pub const fn get_address(&self) -> *mut u8 {
         let address_high = read_bits!(2, 23, self.bits);
         let address_mid = read_bits!(28, 31, self.bits);
-        (self.address_low as usize | ((address_mid as usize) << 32) | ((address_high as usize) << 36)) as *mut u8
+        (self.address_low as u64 | ((address_mid as u64) << 32) | ((address_high as u64) << 36)) as *mut u8
     }
 
-    pub const fn get_size(&self) -> usize {
+    pub const fn get_size(&self) -> u64 {
         let size_high = read_bits!(24, 27, self.bits);
-        self.size_low as usize | ((size_high as usize) << 32)
+        self.size_low as u64 | ((size_high as u64) << 32)
     }
 }
 
@@ -144,10 +144,10 @@ impl SendStaticDescriptor {
         Self { bits: 0, address_low: 0 }
     }
 
-    pub fn new(buffer: *const u8, buffer_size: usize, index: u32) -> Self {
-        let address_low = buffer as usize as u32;
-        let address_mid = ((buffer as usize) >> 32) as u32;
-        let address_high = ((buffer as usize) >> 36) as u32;
+    pub fn new(buffer: *const u8, buffer_size: u64, index: u32) -> Self {
+        let address_low = buffer as u64 as u32;
+        let address_mid = ((buffer as u64) >> 32) as u32;
+        let address_high = ((buffer as u64) >> 36) as u32;
 
         let mut bits: u32 = 0;
         write_bits!(0, 5, bits, index);
@@ -161,11 +161,11 @@ impl SendStaticDescriptor {
     pub const fn get_address(&self) -> *mut u8 {
         let address_high = read_bits!(6, 11, self.bits);
         let address_mid = read_bits!(12, 15, self.bits);
-        (self.address_low as usize | ((address_mid as usize) << 32) | ((address_high as usize) << 36)) as *mut u8
+        (self.address_low as u64 | ((address_mid as u64) << 32) | ((address_high as u64) << 36)) as *mut u8
     }
 
-    pub const fn get_size(&self) -> usize {
-        read_bits!(16, 31, self.bits) as usize
+    pub const fn get_size(&self) -> u64 {
+        read_bits!(16, 31, self.bits) as u64
     }
 }
 
@@ -181,9 +181,9 @@ impl ReceiveStaticDescriptor {
         Self { address_low: 0, bits: 0 }
     }
 
-    pub fn new(buffer: *const u8, buffer_size: usize) -> Self {
-        let address_low = buffer as usize as u32;
-        let address_high = ((buffer as usize) >> 32) as u32;
+    pub fn new(buffer: *const u8, buffer_size: u64) -> Self {
+        let address_low = buffer as u64 as u32;
+        let address_high = ((buffer as u64) >> 32) as u32;
 
         let mut bits: u32 = 0;
         write_bits!(0, 15, bits, address_high);
@@ -194,11 +194,11 @@ impl ReceiveStaticDescriptor {
 
     pub const fn get_address(&self) -> *mut u8 {
         let address_high = read_bits!(0, 15, self.bits);
-        (self.address_low as usize | ((address_high as usize) << 32)) as *mut u8
+        (self.address_low as u64 | ((address_high as u64) << 32)) as *mut u8
     }
 
-    pub const fn get_size(&self) -> usize {
-        read_bits!(16, 31, self.bits) as usize
+    pub const fn get_size(&self) -> u64 {
+        read_bits!(16, 31, self.bits) as u64
     }
 }
 
@@ -430,9 +430,9 @@ pub fn write_array_to_buffer<T: Copy>(buffer: *mut u8, count: u32, array: &Array
 
 #[inline(always)]
 pub fn get_aligned_data_offset(data_words_offset: *mut u8, base_offset: *mut u8) -> *mut u8 {
-    let align = DATA_PADDING as usize - 1;
-    let data_offset = (data_words_offset as usize - base_offset as usize + align) & !align;
-    (data_offset + base_offset as usize) as *mut u8
+    let align = DATA_PADDING as u64 - 1;
+    let data_offset = (data_words_offset as u64 - base_offset as u64 + align) & !align;
+    (data_offset + base_offset as u64) as *mut u8
 }
 
 pub struct CommandContent {
@@ -565,8 +565,8 @@ pub struct CommandContext {
     receive_buffers: ArrayVec<[BufferDescriptor; MAX_COUNT]>,
     exchange_buffers: ArrayVec<[BufferDescriptor; MAX_COUNT]>,
     pointer_buffer: *mut u8,
-    in_pointer_buffer_offset: usize,
-    out_pointer_buffer_offset: usize,
+    in_pointer_buffer_offset: u64,
+    out_pointer_buffer_offset: u64,
     pointer_size_walker: DataWalker,
     pointer_size_walker_initialized: bool
 }
@@ -650,7 +650,7 @@ impl CommandContext {
                 self.pointer_buffer = self.object_info.query_pointer_buffer_size()? as *mut u8;
             }
 
-            let pointer_buf_size = self.pointer_buffer as usize;
+            let pointer_buf_size = self.pointer_buffer as u64;
             let mut buffer_in_static = false;
             if pointer_buf_size > 0 {
                 let left_size = pointer_buf_size - self.in_pointer_buffer_offset;
@@ -796,11 +796,11 @@ impl CommandContext {
                     true => sf::Buffer::<A, T>::get_expected_size(),
                     false => {
                         self.ensure_pointer_size_walker(raw_data_walker);
-                        self.pointer_size_walker.advance_get::<u16>() as usize
+                        self.pointer_size_walker.advance_get::<u16>() as u64
                     }
                 };
 
-                let buf = unsafe { self.pointer_buffer.add(self.out_pointer_buffer_offset) };
+                let buf = unsafe { self.pointer_buffer.add(self.out_pointer_buffer_offset as usize) };
                 self.out_pointer_buffer_offset += buf_size;
                 return Ok(sf::Buffer::new(buf, buf_size));
             }

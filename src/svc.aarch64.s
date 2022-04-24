@@ -260,6 +260,8 @@ FN_START __nx_svc_unmap_physical_memory
 	ret
 FN_END
 
+// TODO: __nx_svc_get_future_thread_info (0x2E)
+
 FN_START __nx_svc_get_debug_future_thread_info
 	stp x0, x1, [sp, #-16]!
 	svc 0x2E

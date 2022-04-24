@@ -61,7 +61,7 @@ pub struct DirectoryEntry {
     pub pad: [u8; 2],
     pub entry_type: DirectoryEntryType,
     pub pad_2: [u8; 3],
-    pub file_size: usize
+    pub file_size: u64
 }
 const_assert!(core::mem::size_of::<DirectoryEntry>() == 0x310);
 
@@ -110,13 +110,13 @@ pub enum OperationId {
 
 ipc_sf_define_interface_trait! {
     trait IFile {
-        read [0, version::VersionInterval::all()]: (option: FileReadOption, offset: usize, size: usize, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) => (read_size: usize);
-        write [1, version::VersionInterval::all()]: (option: FileWriteOption, offset: usize, size: usize, buf: sf::InNonSecureMapAliasBuffer<u8>) => ();
+        read [0, version::VersionInterval::all()]: (option: FileReadOption, offset: u64, size: u64, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) => (read_size: u64);
+        write [1, version::VersionInterval::all()]: (option: FileWriteOption, offset: u64, size: u64, buf: sf::InNonSecureMapAliasBuffer<u8>) => ();
         flush [2, version::VersionInterval::all()]: () => ();
-        set_size [3, version::VersionInterval::all()]: (size: usize) => ();
-        get_size [4, version::VersionInterval::all()]: () => (size: usize);
-        operate_range [5, version::VersionInterval::from(version::Version::new(4,0,0))]: (operation_id: OperationId, offset: usize, size: usize) => (info: FileQueryRangeInfo);
-        operate_range_with_buffer [6, version::VersionInterval::from(version::Version::new(12,0,0))]: (operation_id: OperationId, offset: usize, size: usize, in_buf: sf::InNonSecureMapAliasBuffer<u8>, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) => ();
+        set_size [3, version::VersionInterval::all()]: (size: u64) => ();
+        get_size [4, version::VersionInterval::all()]: () => (size: u64);
+        operate_range [5, version::VersionInterval::from(version::Version::new(4,0,0))]: (operation_id: OperationId, offset: u64, size: u64) => (info: FileQueryRangeInfo);
+        operate_range_with_buffer [6, version::VersionInterval::from(version::Version::new(12,0,0))]: (operation_id: OperationId, offset: u64, size: u64, in_buf: sf::InNonSecureMapAliasBuffer<u8>, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) => ();
     }
 }
 
@@ -129,7 +129,7 @@ ipc_sf_define_interface_trait! {
 
 ipc_sf_define_interface_trait! {
     trait IFileSystem {
-        create_file [0, version::VersionInterval::all()]: (attribute: FileAttribute, size: usize, path_buf: sf::InFixedPointerBuffer<Path>) => ();
+        create_file [0, version::VersionInterval::all()]: (attribute: FileAttribute, size: u64, path_buf: sf::InFixedPointerBuffer<Path>) => ();
         delete_file [1, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer<Path>) => ();
         create_directory [2, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer<Path>) => ();
         delete_directory [3, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer<Path>) => ();
@@ -140,8 +140,8 @@ ipc_sf_define_interface_trait! {
         open_file [8, version::VersionInterval::all()]: (mode: FileOpenMode, path_buf: sf::InFixedPointerBuffer<Path>) => (file: mem::Shared<dyn IFile>);
         open_directory [9, version::VersionInterval::all()]: (mode: DirectoryOpenMode, path_buf: sf::InFixedPointerBuffer<Path>) => (dir: mem::Shared<dyn IDirectory>);
         commit [10, version::VersionInterval::all()]: () => ();
-        get_free_space_size [11, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer<Path>) => (size: usize);
-        get_total_space_size [12, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer<Path>) => (size: usize);
+        get_free_space_size [11, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer<Path>) => (size: u64);
+        get_total_space_size [12, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer<Path>) => (size: u64);
         clean_directory_recursively [13, version::VersionInterval::from(version::Version::new(3,0,0))]: (path_buf: sf::InFixedPointerBuffer<Path>) => ();
         get_file_time_stamp_raw [14, version::VersionInterval::from(version::Version::new(3,0,0))]: (path_buf: sf::InFixedPointerBuffer<Path>) => (time_stamp: FileTimeStampRaw);
         query_entry [15, version::VersionInterval::from(version::Version::new(4,0,0))]: (path_buf: sf::InFixedPointerBuffer<Path>, query_id: QueryId, in_buf: sf::InNonSecureMapAliasBuffer<u8>, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) => ();

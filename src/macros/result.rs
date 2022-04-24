@@ -39,16 +39,16 @@ macro_rules! result_define_subgroup {
 
 #[macro_export]
 macro_rules! result_return_if {
-    ($cond:expr, $res:ty) => {
-        let cond_val = $cond;
-        if cond_val {
+    ($cond_expr:expr, $res:ty) => {
+        let cond = $cond_expr;
+        if cond {
             return <$res>::make_err();
         }
     };
 
-    ($cond:expr, $res:literal) => {
-        let cond_val = $cond;
-        if cond_val {
+    ($cond_expr:expr, $res:literal) => {
+        let cond = $cond_expr;
+        if cond {
             return $crate::result::ResultCode::new_err($res);
         }
     };
@@ -56,12 +56,12 @@ macro_rules! result_return_if {
 
 #[macro_export]
 macro_rules! result_return_unless {
-    ($cond:expr, $res:ty) => {
-        $crate::result_return_if!(!$cond, $res);
+    ($cond_expr:expr, $res:ty) => {
+        $crate::result_return_if!(!$cond_expr, $res);
     };
 
-    ($cond:expr, $res:literal) => {
-        $crate::result_return_if!(!$cond, $res);
+    ($cond_expr:expr, $res:literal) => {
+        $crate::result_return_if!(!$cond_expr, $res);
     };
 }
 
