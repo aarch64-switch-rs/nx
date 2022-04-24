@@ -1,5 +1,7 @@
-use core::arch::asm;
 use core::arch::global_asm;
+
+#[cfg(target_pointer_width = "64")]
+use core::arch::asm;
 
 #[cfg(target_pointer_width = "32")]
 use crate::svc;

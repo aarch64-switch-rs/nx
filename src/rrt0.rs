@@ -233,7 +233,6 @@ unsafe fn exception_entry(_exc_type: svc::ExceptionType, _stack_top: *mut u8) {
     svc::return_from_exception(svc::rc::ResultNotHandled::make());
 }
 
-global_asm!(include_str!("asm.s"));
 global_asm!(include_str!("mod0.s"));
 global_asm!(include_str!("rrt0.s"));
 

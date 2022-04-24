@@ -73,8 +73,6 @@
 
 - Continue 32-bit support:
 
-  - Implement sync asm bits
-
   - Implement memory cache bits
 
   - Test that everything works fine

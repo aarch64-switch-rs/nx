@@ -1,5 +1,4 @@
 use crate::result::*;
-use core::ptr;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(i32)]

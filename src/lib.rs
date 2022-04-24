@@ -16,6 +16,7 @@
 #![feature(negative_impls)]
 #![feature(const_intrinsic_copy)]
 #![feature(const_ptr_write)]
+#![feature(stdsimd)]
 #![macro_use]
 
 #[macro_use]

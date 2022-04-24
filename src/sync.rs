@@ -1,7 +1,12 @@
 use crate::svc;
 use crate::thread;
 use core::cell::UnsafeCell;
+
+#[cfg(target_pointer_width = "64")]
 use core::arch::asm;
+
+#[cfg(target_pointer_width = "32")]
+use core::arch::arm;
 
 const HANDLE_WAIT_MASK: u32 = 0x40000000;
 
@@ -13,9 +18,10 @@ fn get_current_thread_handle() -> u32 {
 // TODO: 32-bit support
 
 #[inline(always)]
-#[cfg(target_pointer_width = "64")]
-fn load_exclusive(ptr: *mut u32) -> u32 {
+fn load_exclusive(ptr: *const u32) -> u32 {
     let value: u32;
+
+    #[cfg(target_pointer_width = "64")]
     unsafe {
         asm!(
             "ldaxr {0:w}, [{1:x}]",
@@ -23,13 +29,20 @@ fn load_exclusive(ptr: *mut u32) -> u32 {
             in(reg) ptr
         );
     }
+
+    #[cfg(target_pointer_width = "32")]
+    unsafe {
+        value = arm::__ldrex(ptr);
+    }
+
     value
 }
 
 #[inline(always)]
-#[cfg(target_pointer_width = "64")]
-fn store_exclusive(ptr: *mut u32, value: u32) -> i32 {
-    let res: i32;
+fn store_exclusive(ptr: *mut u32, value: u32) -> u32 {
+    let res: u32;
+
+    #[cfg(target_pointer_width = "64")]
     unsafe {
         asm!(
             "stlxr {0:w}, {1:w}, [{2:x}]",
@@ -38,18 +51,28 @@ fn store_exclusive(ptr: *mut u32, value: u32) -> i32 {
             in(reg) ptr
         );
     }
+
+    #[cfg(target_pointer_width = "32")]
+    unsafe {
+        res = arm::__strex(value, ptr);
+    }
+
     res
 }
 
 #[inline(always)]
-#[cfg(target_pointer_width = "64")]
 fn clear_exclusive() {
+    #[cfg(target_pointer_width = "64")]
     unsafe {
         asm!("clrex");
     }
+
+    #[cfg(target_pointer_width = "32")]
+    unsafe {
+        arm::__clrex();
+    }
 }
 
-#[cfg(target_pointer_width = "64")]
 fn lock_impl(handle_ref: *mut u32) {
     let thr_handle = get_current_thread_handle();
     
@@ -78,7 +101,6 @@ fn lock_impl(handle_ref: *mut u32) {
     }
 }
 
-#[cfg(target_pointer_width = "64")]
 fn unlock_impl(handle_ref: *mut u32) {
     let thr_handle = get_current_thread_handle();
     
@@ -100,7 +122,6 @@ fn unlock_impl(handle_ref: *mut u32) {
     }
 }
 
-#[cfg(target_pointer_width = "64")]
 fn try_lock_impl(handle_ref: *mut u32) -> bool {
     let thr_handle = get_current_thread_handle();
 
@@ -130,7 +151,6 @@ impl Mutex {
         Self { value: 0, is_recursive: recursive, counter: 0, thread_handle: 0 }
     }
 
-    #[cfg(target_pointer_width = "64")]
     pub fn lock(&mut self) {
         let mut do_lock = true;
         if self.is_recursive {
@@ -148,12 +168,6 @@ impl Mutex {
         }
     }
 
-    #[cfg(target_pointer_width = "32")]
-    pub fn lock(&mut self) {
-        // TODO
-    }
-
-    #[cfg(target_pointer_width = "64")]
     pub fn unlock(&mut self) {
         let mut do_unlock = true;
         if self.is_recursive {
@@ -170,12 +184,6 @@ impl Mutex {
         }
     }
 
-    #[cfg(target_pointer_width = "32")]
-    pub fn unlock(&mut self) {
-        // TODO
-    }
-
-    #[cfg(target_pointer_width = "64")]
     pub fn try_lock(&mut self) -> bool {
         if self.is_recursive {
             let thr_handle = get_current_thread_handle();
@@ -191,12 +199,6 @@ impl Mutex {
         else {
             try_lock_impl(&mut self.value)
         }
-    }
-
-    #[cfg(target_pointer_width = "32")]
-    pub fn try_lock(&mut self) -> bool {
-        // TODO
-        true
     }
 }
 

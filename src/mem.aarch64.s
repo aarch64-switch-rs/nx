@@ -10,7 +10,7 @@ FN_START __nx_mem_flush_data_cache
 	mov x10, x1
 
 data_cache_flush_l0:
-	dc  civac, x8
+	dc civac, x8
 	add x8, x8, x9
 	cmp x8, x10
 	bcc data_cache_flush_l0
