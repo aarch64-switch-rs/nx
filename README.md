@@ -73,6 +73,8 @@
 
 - Continue 32-bit support:
 
+  - Fix sync support...
+
   - Implement memory cache bits
 
   - Test that everything works fine

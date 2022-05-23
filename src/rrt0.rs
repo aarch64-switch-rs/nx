@@ -302,3 +302,7 @@ unsafe extern "C" fn __nx_rrt0_entry(arg0: usize, arg1: usize) {
 #[cfg(target_pointer_width = "32")]
 #[no_mangle]
 unsafe extern "C" fn __aeabi_unwind_cpp_pr0() {}
+
+#[cfg(target_pointer_width = "32")]
+#[no_mangle]
+unsafe extern "C" fn __aeabi_unwind_cpp_pr1() {}
