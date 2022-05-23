@@ -3,7 +3,9 @@
         </a><h2 class="location"></h2>
     </nav>
     <nav class="sidebar"><a class="sidebar-logo" href="../../nx/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../nx/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../nx/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
+                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -237,7 +239,15 @@
 <span id="232">232</span>
 <span id="233">233</span>
 <span id="234">234</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::svc</span>;
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::diag::abort</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::svc</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::thread</span>;
 <span class="kw">use</span> <span class="ident">core::cell::UnsafeCell</span>;
 <span class="kw">use</span> <span class="ident">core::arch::asm</span>;
@@ -288,7 +298,7 @@
     
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">load_exclusive</span>(<span class="ident">handle_ref</span>);
     <span class="kw">loop</span> {
-        <span class="kw">if</span> <span class="ident">value</span> <span class="op">==</span> <span class="number">0</span> {
+        <span class="kw">if</span> <span class="ident">value</span> <span class="op">==</span> <span class="ident">svc::INVALID_HANDLE</span> {
             <span class="kw">if</span> <span class="ident">store_exclusive</span>(<span class="ident">handle_ref</span>, <span class="ident">thr_handle</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
                 <span class="ident">value</span> <span class="op">=</span> <span class="ident">load_exclusive</span>(<span class="ident">handle_ref</span>);
                 <span class="kw">continue</span>;
@@ -300,8 +310,10 @@
             <span class="kw">continue</span>;
         }
 
-        <span class="comment">// TODO: handle this instead of unwrapping it?</span>
-        <span class="ident">svc::arbitrate_lock</span>(<span class="ident">value</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">HANDLE_WAIT_MASK</span>, <span class="ident">handle_ref</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">u8</span>, <span class="ident">thr_handle</span>).<span class="ident">unwrap</span>();
+        <span class="kw">match</span> <span class="ident">svc::arbitrate_lock</span>(<span class="ident">value</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">HANDLE_WAIT_MASK</span>, <span class="ident">handle_ref</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">u8</span>, <span class="ident">thr_handle</span>) {
+            <span class="prelude-val">Err</span>(<span class="ident">rc</span>) =&gt; <span class="ident">abort::abort</span>(<span class="ident">abort::AbortLevel::SvcBreak</span>(), <span class="ident">rc</span>),
+            <span class="kw">_</span> =&gt; {}
+        };
 
         <span class="ident">value</span> <span class="op">=</span> <span class="ident">load_exclusive</span>(<span class="ident">handle_ref</span>);
         <span class="kw">if</span> (<span class="ident">value</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">HANDLE_WAIT_MASK</span>) <span class="op">==</span> <span class="ident">thr_handle</span> {
@@ -320,9 +332,11 @@
             <span class="ident">clear_exclusive</span>();
             <span class="kw">break</span>;
         }
+
         <span class="kw">if</span> <span class="ident">store_exclusive</span>(<span class="ident">handle_ref</span>, <span class="number">0</span>) <span class="op">==</span> <span class="number">0</span> {
             <span class="kw">break</span>;
         }
+
         <span class="ident">value</span> <span class="op">=</span> <span class="ident">load_exclusive</span>(<span class="ident">handle_ref</span>);
     }
 
@@ -337,15 +351,17 @@
 
     <span class="kw">loop</span> {
         <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">load_exclusive</span>(<span class="ident">handle_ref</span>);
-        <span class="kw">if</span> <span class="ident">value</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
+        <span class="kw">if</span> <span class="ident">value</span> <span class="op">!</span><span class="op">=</span> <span class="ident">svc::INVALID_HANDLE</span> {
             <span class="kw">break</span>;
         }
+
         <span class="kw">if</span> <span class="ident">store_exclusive</span>(<span class="ident">handle_ref</span>, <span class="ident">thr_handle</span>) <span class="op">==</span> <span class="number">0</span> {
             <span class="kw">return</span> <span class="bool-val">true</span>;
         }
     }
 
     <span class="ident">clear_exclusive</span>();
+
     <span class="bool-val">false</span>
 }
 
@@ -471,5 +487,5 @@
         <span class="ident">obj_copy</span>
     }
 }</code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="nx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (76d770ac2 2022-04-02)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="nx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0-nightly (9257f5aad 2022-05-21)" ></div>
 </body></html>

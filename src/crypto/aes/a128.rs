@@ -55,7 +55,6 @@ pub struct Context {
 impl Context {
     pub fn new(key: &[u8], is_encryptor: bool) -> Result<Self> {
         result_return_unless!(key.len() == KEY_SIZE, rc::ResultInvalidSize);
-        // TODO: ensure key.len() == KEY_SIZE
 
         let mut ctx = Self {
             round_keys: [[0; ROUND_COUNT + 1]; super::BLOCK_SIZE]

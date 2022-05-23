@@ -28,6 +28,7 @@ unsafe fn increment_ctr(ctr: aarch64::uint8x16_t) -> aarch64::uint8x16_t {
         ctr = in(vreg) ctr
     );
 
+    // Silence warnings of the last assigned value not being read
     let _ = high;
     let _ = low;
 
