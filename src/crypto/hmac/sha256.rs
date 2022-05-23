@@ -1,6 +1,7 @@
+use crate::crypto::{rc, sha256};
+use crate::result::*;
 use core::ptr;
 use core::mem;
-use crate::crypto::sha256;
 
 pub struct Context {
     sha_ctx: sha256::Context,
@@ -10,7 +11,7 @@ pub struct Context {
 }
 
 impl Context {
-    pub fn new(key: &[u8]) -> Self {
+    pub fn new(key: &[u8]) -> Result<Self> {
         let mut ctx = Self {
             sha_ctx: sha256::Context::new(),
             key: [0; sha256::BLOCK_SIZE_32],
@@ -25,7 +26,7 @@ impl Context {
         }
         else {
             ctx.sha_ctx.update(key);
-            ctx.sha_ctx.get_hash(&mut ctx.key);
+            ctx.sha_ctx.get_hash(&mut ctx.key)?;
         }
 
         for i in 0..ctx.key.len() {
@@ -35,16 +36,18 @@ impl Context {
         ctx.sha_ctx.reset();
         ctx.sha_ctx.update(&ctx.key);
 
-        ctx
+        Ok(ctx)
     }
 
     pub fn update<T>(&mut self, data: &[T]) {
         self.sha_ctx.update(data);
     }
 
-    pub fn get_mac<T>(&mut self, out_mac: &mut [T]) {
+    pub fn get_mac<T>(&mut self, out_mac: &mut [T]) -> Result<()> {
+        result_return_unless!(out_mac.len() * mem::size_of::<T>() == sha256::HASH_SIZE, rc::ResultInvalidSize);
+
         if !self.finalized {
-            self.sha_ctx.get_hash(&mut self.mac);
+            self.sha_ctx.get_hash(&mut self.mac)?;
 
             for i in 0..self.key.len() {
                 self.key[i] ^= super::IPAD_XOR_OPAD_VAL;
@@ -53,15 +56,15 @@ impl Context {
             self.sha_ctx.reset();
             self.sha_ctx.update(&self.key);
             self.sha_ctx.update(&self.mac);
-            self.sha_ctx.get_hash(&mut self.mac);
+            self.sha_ctx.get_hash(&mut self.mac)?;
 
             self.finalized = true;
         }
 
-        if (out_mac.len() * mem::size_of::<T>()) >= sha256::HASH_SIZE {
-            unsafe {
-                ptr::copy(self.mac.as_ptr() as *const u8, out_mac.as_mut_ptr() as *mut u8, sha256::HASH_SIZE);
-            }
+        unsafe {
+            ptr::copy(self.mac.as_ptr() as *const u8, out_mac.as_mut_ptr() as *mut u8, sha256::HASH_SIZE);
         }
+
+        Ok(())
     }
 }

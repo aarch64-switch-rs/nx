@@ -428,6 +428,17 @@ pub fn arbitrate_unlock(tag_location: Address) -> Result<()> {
 }
 
 #[inline(always)]
+pub fn get_system_tick() -> u64 {
+    extern "C" {
+        fn __nx_svc_get_system_tick() -> u64;
+    }
+
+    unsafe {
+        __nx_svc_get_system_tick()
+    }
+}
+
+#[inline(always)]
 pub fn connect_to_named_port(name: Address) -> Result<Handle> {
     extern "C" {
         fn __nx_svc_connect_to_named_port(out_handle: *mut Handle, name: Address) -> ResultCode;

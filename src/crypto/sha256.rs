@@ -1,3 +1,5 @@
+use crate::crypto::rc;
+use crate::result::*;
 use core::mem;
 use core::ptr;
 use core::arch::asm;
@@ -262,7 +264,9 @@ impl Context {
         }
     }
 
-    pub fn get_hash<T>(&mut self, out_hash: &mut [T]) {
+    pub fn get_hash<T>(&mut self, out_hash: &mut [T]) -> Result<()> {
+        result_return_unless!(out_hash.len() * mem::size_of::<T>() == HASH_SIZE, rc::ResultInvalidSize);
+
         if !self.finalized {
             // Process last block, if necessary
             self.bits_consumed += 8 * self.buffered_size;
@@ -288,21 +292,20 @@ impl Context {
             self.finalized = true;
         }
 
-        // TODO: assert this?
-        if (out_hash.len() * mem::size_of::<T>()) >= HASH_SIZE {
-            unsafe {
-                let out_hash_buf_32 = out_hash.as_mut_ptr() as *mut u32;
-                for i in 0..HASH_SIZE_32 {
-                    *out_hash_buf_32.offset(i as isize) = self.intermediate_hash[i].swap_bytes();
-                }
+        unsafe {
+            let out_hash_buf_32 = out_hash.as_mut_ptr() as *mut u32;
+            for i in 0..HASH_SIZE_32 {
+                *out_hash_buf_32.offset(i as isize) = self.intermediate_hash[i].swap_bytes();
             }
         }
+
+        Ok(())
     }
 }
 
 #[inline]
-pub fn calculate_hash(data: &[u8], out_hash: &mut [u8]) {
+pub fn calculate_hash<T>(data: &[u8], out_hash: &mut [T]) -> Result<()> {
     let mut ctx = Context::new();
     ctx.update(data);
-    ctx.get_hash(out_hash);
+    ctx.get_hash(out_hash)
 }

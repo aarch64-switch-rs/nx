@@ -129,6 +129,7 @@ impl Thread {
         Ok(thread)
     }
 
+    #[inline]
     pub fn new_remote(handle: svc::Handle, name: &str, stack: *mut u8, stack_size: usize) -> Result<Self> {
         Self::new_impl(handle, ThreadState::Started, name, stack, stack_size, false, None)
     }
@@ -180,10 +181,12 @@ impl Thread {
         Ok(())
     }
 
+    #[inline]
     pub fn is_remote(&self) -> bool {
         self.entry.is_none()
     }
 
+    #[inline]
     pub fn get_handle(&self) -> svc::Handle {
         self.handle
     }

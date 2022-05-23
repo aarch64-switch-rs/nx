@@ -1,3 +1,4 @@
+use crate::diag::abort;
 use crate::svc;
 use crate::thread;
 use core::cell::UnsafeCell;
@@ -49,7 +50,7 @@ fn lock_impl(handle_ref: *mut u32) {
     
     let mut value = load_exclusive(handle_ref);
     loop {
-        if value == 0 {
+        if value == svc::INVALID_HANDLE {
             if store_exclusive(handle_ref, thr_handle) != 0 {
                 value = load_exclusive(handle_ref);
                 continue;
@@ -61,8 +62,10 @@ fn lock_impl(handle_ref: *mut u32) {
             continue;
         }
 
-        // TODO: handle this instead of unwrapping it?
-        svc::arbitrate_lock(value & !HANDLE_WAIT_MASK, handle_ref as *mut u8, thr_handle).unwrap();
+        match svc::arbitrate_lock(value & !HANDLE_WAIT_MASK, handle_ref as *mut u8, thr_handle) {
+            Err(rc) => abort::abort(abort::AbortLevel::SvcBreak(), rc),
+            _ => {}
+        };
 
         value = load_exclusive(handle_ref);
         if (value & !HANDLE_WAIT_MASK) == thr_handle {
@@ -81,9 +84,11 @@ fn unlock_impl(handle_ref: *mut u32) {
             clear_exclusive();
             break;
         }
+
         if store_exclusive(handle_ref, 0) == 0 {
             break;
         }
+
         value = load_exclusive(handle_ref);
     }
 
@@ -98,15 +103,17 @@ fn try_lock_impl(handle_ref: *mut u32) -> bool {
 
     loop {
         let value = load_exclusive(handle_ref);
-        if value != 0 {
+        if value != svc::INVALID_HANDLE {
             break;
         }
+
         if store_exclusive(handle_ref, thr_handle) == 0 {
             return true;
         }
     }
 
     clear_exclusive();
+
     false
 }
 
