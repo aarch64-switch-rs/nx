@@ -309,6 +309,32 @@
 <span id="302">302</span>
 <span id="303">303</span>
 <span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::result</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ipc::sf</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::mem</span>;
@@ -437,8 +463,9 @@
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">u8</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ProgramIdConsoleType</span> {
-    <span class="attribute">#[<span class="ident">default</span>]</span> <span class="ident">Default</span> <span class="op">=</span> <span class="number">0</span>,
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ConsoleFamily</span> { <span class="comment">// Note: unofficial name</span>
+    <span class="attribute">#[<span class="ident">default</span>]</span>
+    <span class="ident">Default</span> <span class="op">=</span> <span class="number">0</span>,
     <span class="ident">NintendoWiiU</span> <span class="op">=</span> <span class="number">1</span>,
     <span class="ident">Nintendo3DS</span> <span class="op">=</span> <span class="number">2</span>,
     <span class="ident">NintendoSwitch</span> <span class="op">=</span> <span class="number">3</span>
@@ -452,7 +479,7 @@
     <span class="kw">pub</span> <span class="ident">crc32_change_counter</span>: <span class="ident">u16</span>,
     <span class="kw">pub</span> <span class="ident">flags</span>: <span class="ident">AdminInfoFlags</span>,
     <span class="kw">pub</span> <span class="ident">unk_0x2</span>: <span class="ident">u8</span>, <span class="comment">// Always 0x2</span>
-    <span class="kw">pub</span> <span class="ident">console_type</span>: <span class="ident">ProgramIdConsoleType</span>,
+    <span class="kw">pub</span> <span class="ident">console_family</span>: <span class="ident">ConsoleFamily</span>,
     <span class="kw">pub</span> <span class="ident">pad</span>: [<span class="ident">u8</span>; <span class="number">0x7</span>],
     <span class="kw">pub</span> <span class="ident">reserved</span>: [<span class="ident">u8</span>; <span class="number">0x28</span>]
 }
@@ -472,7 +499,32 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">NfpData</span> {
-    <span class="kw">pub</span> <span class="ident">data</span>: [<span class="ident">u8</span>; <span class="number">0x298</span>] <span class="comment">// TODO: finish REing this type</span>
+    <span class="comment">// TODO: finish REing this type...</span>
+    <span class="kw">pub</span> <span class="ident">unk_0xA5</span>: <span class="ident">u8</span>,
+    <span class="kw">pub</span> <span class="ident">maybe_pad</span>: <span class="ident">u8</span>,
+    <span class="kw">pub</span> <span class="ident">unk_v1</span>: <span class="ident">u16</span>,
+    <span class="kw">pub</span> <span class="ident">unk_v2</span>: <span class="ident">u32</span>,
+    <span class="kw">pub</span> <span class="ident">maybe_reserved</span>: [<span class="ident">u8</span>; <span class="number">56</span>],
+    <span class="kw">pub</span> <span class="ident">last_write_date</span>: <span class="ident">Date</span>,
+    <span class="kw">pub</span> <span class="ident">unk_v3</span>: <span class="ident">u16</span>,
+    <span class="kw">pub</span> <span class="ident">unk_v4</span>: <span class="ident">u8</span>,
+    <span class="kw">pub</span> <span class="ident">maybe_pad_2</span>: <span class="ident">u8</span>,
+    <span class="kw">pub</span> <span class="ident">app_area_size</span>: <span class="ident">u32</span>,
+    <span class="kw">pub</span> <span class="ident">maybe_pad_3</span>: [<span class="ident">u8</span>; <span class="number">4</span>],
+    <span class="kw">pub</span> <span class="ident">maybe_reserved_2</span>: [<span class="ident">u8</span>; <span class="number">0x30</span>],
+    <span class="kw">pub</span> <span class="ident">mii_3ds_format</span>: [<span class="ident">u8</span>; <span class="number">0x60</span>],
+    <span class="kw">pub</span> <span class="ident">unk_v5</span>: [<span class="ident">u8</span>; <span class="number">0x8</span>],
+    <span class="kw">pub</span> <span class="ident">first_write_date</span>: <span class="ident">Date</span>,
+    <span class="kw">pub</span> <span class="ident">name</span>: <span class="ident">util::CString16</span><span class="op">&lt;</span><span class="number">11</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">unk_v6</span>: <span class="ident">u8</span>,
+    <span class="kw">pub</span> <span class="ident">unk_v7</span>: <span class="ident">u8</span>,
+    <span class="kw">pub</span> <span class="ident">unk_v8</span>: <span class="ident">u32</span>,
+    <span class="kw">pub</span> <span class="ident">unk_v9</span>: <span class="ident">u64</span>,
+    <span class="kw">pub</span> <span class="ident">unk_v10</span>: <span class="ident">u64</span>,
+    <span class="kw">pub</span> <span class="ident">unk_v11</span>: <span class="ident">u32</span>,
+    <span class="kw">pub</span> <span class="ident">maybe_reserved_3</span>: [<span class="ident">u8</span>; <span class="number">100</span>],
+    <span class="kw">pub</span> <span class="ident">admin_info</span>: <span class="ident">AdminInfo</span>,
+    <span class="kw">pub</span> <span class="ident">app_area</span>: [<span class="ident">u8</span>; <span class="number">0xD8</span>]
 }
 <span class="macro">const_assert!</span>(<span class="ident">core::mem::size_of</span>::<span class="op">&lt;</span><span class="ident">NfpData</span><span class="op">&gt;</span>() <span class="op">==</span> <span class="number">0x298</span>);
 
