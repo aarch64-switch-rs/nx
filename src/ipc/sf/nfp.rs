@@ -126,8 +126,9 @@ bit_enum! {
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
-pub enum ProgramIdConsoleType {
-    #[default] Default = 0,
+pub enum ConsoleFamily { // Note: unofficial name
+    #[default]
+    Default = 0,
     NintendoWiiU = 1,
     Nintendo3DS = 2,
     NintendoSwitch = 3
@@ -141,7 +142,7 @@ pub struct AdminInfo {
     pub crc32_change_counter: u16,
     pub flags: AdminInfoFlags,
     pub unk_0x2: u8, // Always 0x2
-    pub console_type: ProgramIdConsoleType,
+    pub console_family: ConsoleFamily,
     pub pad: [u8; 0x7],
     pub reserved: [u8; 0x28]
 }
@@ -161,7 +162,32 @@ const_assert!(core::mem::size_of::<RegisterInfoPrivate>() == 0x100);
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]
 pub struct NfpData {
-    pub data: [u8; 0x298] // TODO: finish REing this type
+    // TODO: finish REing this type...
+    pub unk_0xA5: u8,
+    pub maybe_pad: u8,
+    pub unk_v1: u16,
+    pub unk_v2: u32,
+    pub maybe_reserved: [u8; 56],
+    pub last_write_date: Date,
+    pub unk_v3: u16,
+    pub unk_v4: u8,
+    pub maybe_pad_2: u8,
+    pub app_area_size: u32,
+    pub maybe_pad_3: [u8; 4],
+    pub maybe_reserved_2: [u8; 0x30],
+    pub mii_3ds_format: [u8; 0x60],
+    pub unk_v5: [u8; 0x8],
+    pub first_write_date: Date,
+    pub name: util::CString16<11>,
+    pub unk_v6: u8,
+    pub unk_v7: u8,
+    pub unk_v8: u32,
+    pub unk_v9: u64,
+    pub unk_v10: u64,
+    pub unk_v11: u32,
+    pub maybe_reserved_3: [u8; 100],
+    pub admin_info: AdminInfo,
+    pub app_area: [u8; 0xD8]
 }
 const_assert!(core::mem::size_of::<NfpData>() == 0x298);
 
