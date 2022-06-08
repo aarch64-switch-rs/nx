@@ -267,9 +267,7 @@ impl Context {
 
                     ctr0 = inout(vreg) ctr0,
                     ctr1 = inout(vreg) ctr1,
-                    ctr2 = inout(vreg) ctr2,
-
-                    options(preserves_flags)
+                    ctr2 = inout(vreg) ctr2
                 );
 
                 tmp0 = aarch64::veorq_u8(block0, tmp0);
@@ -362,9 +360,7 @@ impl Context {
                 high = inout(reg) high,
                 low = inout(reg) low,
 
-                ctr0 = inout(vreg) ctr0,
-
-                options(preserves_flags)
+                ctr0 = inout(vreg) ctr0
             );
             
             tmp0 = aarch64::veorq_u8(block0, tmp0);
