@@ -325,7 +325,7 @@ impl CommandSpecialHeader {
 
 pub const DATA_PADDING: u32 = 16;
 
-bit_enum! {
+define_bit_enum! {
     BufferAttribute (u8) {
         In = bit!(0),
         Out = bit!(1),

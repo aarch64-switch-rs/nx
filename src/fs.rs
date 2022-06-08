@@ -434,7 +434,7 @@ fn get_fspsrv_session_ref() -> &'static mut mem::Shared<dyn IFileSystemProxy> {
     }
 }
 
-bit_enum! {
+define_bit_enum! {
     FileOpenOption (u32) {
         None = 0,
         Create = bit!(0),

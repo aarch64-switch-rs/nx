@@ -8,7 +8,7 @@ use crate::service::fatal;
 use crate::service::fatal::IService;
 use core::mem;
 
-bit_enum! {
+define_bit_enum! {
     AbortLevel (u32) {
         NeedsHeapAllocation = bit!(31),
 

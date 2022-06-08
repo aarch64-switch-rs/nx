@@ -8,7 +8,7 @@ macro_rules! bit {
 }
 
 #[macro_export]
-macro_rules! bit_enum {
+macro_rules! define_bit_enum {
     (
         $name:ident ($base:ty) {
             $( $entry_name:ident = $entry_value:expr ),*

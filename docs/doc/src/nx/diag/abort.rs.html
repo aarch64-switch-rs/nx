@@ -99,7 +99,7 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::service::fatal::IService</span>;
 <span class="kw">use</span> <span class="ident">core::mem</span>;
 
-<span class="macro">bit_enum!</span> {
+<span class="macro">define_bit_enum!</span> {
     <span class="ident">AbortLevel</span> (<span class="ident">u32</span>) {
         <span class="ident">NeedsHeapAllocation</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">31</span>),
 

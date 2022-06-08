@@ -5,13 +5,13 @@ use crate::version;
 
 pub mod shmem;
 
-bit_enum! {
+define_bit_enum! {
     DebugPadAttribute (u32) {
         IsConnected = bit!(0)
     }
 }
 
-bit_enum! {
+define_bit_enum! {
     DebugPadButton (u32) {
         A = bit!(0),
         B = bit!(1),
@@ -37,7 +37,7 @@ pub struct AnalogStickState {
     pub y: u32
 }
 
-bit_enum! {
+define_bit_enum! {
     TouchAttribute (u32) {
         None = 0,
         Start = bit!(0),
@@ -59,14 +59,14 @@ pub struct TouchState {
     pub reserved: [u8; 4]
 }
 
-bit_enum! {
+define_bit_enum! {
     MouseAttribute (u32) {
         Transferable = bit!(0),
         IsConnected = bit!(1)
     }
 }
 
-bit_enum! {
+define_bit_enum! {
     MouseButton (u32) {
         Left = bit!(0),
         Right = bit!(1),
@@ -76,7 +76,7 @@ bit_enum! {
     }
 }
 
-bit_enum! {
+define_bit_enum! {
     KeyboardModifier (u32) {
         Control = bit!(0),
         Shift = bit!(1),
@@ -92,7 +92,7 @@ bit_enum! {
 }
 
 /*
-bit_enum! {
+define_bit_enum! {
     KeyboardKey (u32) {
         // TODO (is 256-bit, not 32-bit...): https://switchbrew.org/wiki/HID_services#KeyboardKey
     }
@@ -105,43 +105,43 @@ pub struct KeyboardKey {
     pub todo: [u8; 0x20]
 }
 
-bit_enum! {
+define_bit_enum! {
     BasicXpadAttribute (u32) {
         // TODO: are these known at all?
     }
 }
 
-bit_enum! {
+define_bit_enum! {
     BasicXpadButton (u32) {
         // TODO: are these known at all?
     }
 }
 
-bit_enum! {
+define_bit_enum! {
     DigitizerAttribute (u32) {
         // TODO: are these known at all?
     }
 }
 
-bit_enum! {
+define_bit_enum! {
     DigitizerButton (u32) {
         // TODO: are these known at all?
     }
 }
 
-bit_enum! {
+define_bit_enum! {
     HomeButton (u32) {
         // TODO: are these known at all?
     }
 }
 
-bit_enum! {
+define_bit_enum! {
     SleepButton (u32) {
         // TODO: are these known at all?
     }
 }
 
-bit_enum! {
+define_bit_enum! {
     CaptureButton (u32) {
         // TODO: are these known at all?
     }
@@ -174,7 +174,7 @@ pub enum UniquePadInterface {
 
 pub type UniquePadSerialNumber = [u8; 0x10];
 
-bit_enum! {
+define_bit_enum! {
     AnalogStickCalibrationFlags (u32) {
         // TODO: are these known at all?
     }
@@ -194,7 +194,7 @@ pub enum AnalogStickManualCalibrationStage {
     ClearCompleted = 8
 }
 
-bit_enum! {
+define_bit_enum! {
     SixAxisSensorUserCalibrationFlags (u32) {
         // TODO: are these known at all?
     }
@@ -240,14 +240,14 @@ pub struct GesturePoint {
     pub y: u32
 }
 
-bit_enum! {
+define_bit_enum! {
     GestureAttribute (u32) {
         IsNewTouch = bit!(4),
         IsDoubleTap = bit!(8)
     }
 }
 
-bit_enum! {
+define_bit_enum! {
     NpadStyleTag (u32) {
         FullKey = bit!(0), // Pro controller
         Handheld = bit!(1), // Joy-Con controller in handheld mode
@@ -310,7 +310,7 @@ pub struct NpadControllerColor {
     pub sub: u32
 }
 
-bit_enum! {
+define_bit_enum! {
     NpadButton (u64) {
         A = bit!(0),
         B = bit!(1),
@@ -350,7 +350,7 @@ bit_enum! {
     }
 }
 
-bit_enum! {
+define_bit_enum! {
     NpadAttribute (u32) {
         IsConnected = bit!(0),
         IsWired = bit!(1),
@@ -375,14 +375,14 @@ pub struct DirectionState {
     pub zz: u32
 }
 
-bit_enum! {
+define_bit_enum! {
     SixAxisSensorAttribute (u32) {
         IsConnected = bit!(0),
         IsInterpolated = bit!(1)
     }
 }
 
-bit_enum! {
+define_bit_enum! {
     DeviceType (u32) {
         FullKey = bit!(0),
         DebugPad = bit!(1),
@@ -406,7 +406,7 @@ bit_enum! {
     }
 }
 
-bit_enum! {
+define_bit_enum! {
     NpadSystemProperties (u64) {
         IsChargingJoyDual = bit!(0),
         IsChargingJoyLeft = bit!(1),
@@ -424,7 +424,7 @@ bit_enum! {
     }
 }
 
-bit_enum! {
+define_bit_enum! {
     NpadSystemButtonProperties (u32) {
         IsUnintendedHomeButtonInputProtectionEnabled = bit!(0)
     }
@@ -432,7 +432,7 @@ bit_enum! {
 
 pub type NpadBatteryLevel = u32;
 
-bit_enum! {
+define_bit_enum! {
     AppletFooterUiAttribute (u32) {
         // TODO: are these known at all?
     }
@@ -493,7 +493,7 @@ pub enum NpadLagerType {
     U = 3
 }
 
-bit_enum! {
+define_bit_enum! {
     SixAxisSensorProperties (u8) {
         IsSixAxisSensorDeviceNewlyAssigned = bit!(0),
         IsFirmwareUpdateAvailableForSixAxisSensor = bit!(1)

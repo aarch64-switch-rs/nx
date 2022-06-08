@@ -6,7 +6,7 @@ use crate::version;
 
 pub mod rc;
 
-bit_enum! {
+define_bit_enum! {
     FileOpenMode (u32) {
         None = 0,
         Read = bit!(0),
@@ -15,7 +15,7 @@ bit_enum! {
     }
 }
 
-bit_enum! {
+define_bit_enum! {
     DirectoryOpenMode (u32) {
         ReadDirectories = bit!(0),
         ReadFiles = bit!(1),
@@ -23,20 +23,20 @@ bit_enum! {
     }
 }
 
-bit_enum! {
+define_bit_enum! {
     FileAttribute (u32) {
         None = 0,
         ConcatenationFile = bit!(0)
     }
 }
 
-bit_enum! {
+define_bit_enum! {
     FileReadOption (u32) {
         None = 0
     }
 }
 
-bit_enum! {
+define_bit_enum! {
     FileWriteOption (u32) {
         None = 0,
         Flush = bit!(0)

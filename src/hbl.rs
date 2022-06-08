@@ -25,13 +25,13 @@ pub enum AbiConfigEntryKey {
     HosVersion = 16
 }
 
-bit_enum! {
+define_bit_enum! {
     AbiConfigEntryFlags (u32) {
         Mandatory = bit!(0)
     }
 }
 
-bit_enum! {
+define_bit_enum! {
     AbiConfigAppletFlags (u32) {
         ApplicationOverride = bit!(0)
     }

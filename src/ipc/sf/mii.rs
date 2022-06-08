@@ -36,7 +36,7 @@ pub enum Race {
     All
 }
 
-bit_enum! {
+define_bit_enum! {
     SourceFlag (u32) {
         Database = bit!(0),
         Default = bit!(1)

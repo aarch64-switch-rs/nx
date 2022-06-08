@@ -3,7 +3,7 @@ use crate::ipc::sf;
 use crate::version;
 use crate::mem;
 
-bit_enum! {
+define_bit_enum! {
     DeviceFilterFlags (u16) {
         IdVendor = bit!(0),
         IdProduct = bit!(1),

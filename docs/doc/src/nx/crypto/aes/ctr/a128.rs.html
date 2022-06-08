@@ -434,8 +434,6 @@
 <span id="427">427</span>
 <span id="428">428</span>
 <span id="429">429</span>
-<span id="430">430</span>
-<span id="431">431</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::crypto::aes</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::crypto::rc</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::result</span>::<span class="kw-2">*</span>;
@@ -498,7 +496,7 @@
         <span class="macro">result_return_unless!</span>(<span class="ident">ctr</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="ident">aes::BLOCK_SIZE</span>, <span class="ident">rc::ResultInvalidSize</span>);
 
         <span class="kw">unsafe</span> {
-            <span class="ident">ptr::copy</span>(<span class="ident">ctr</span>.<span class="ident">as_ptr</span>(), <span class="self">self</span>.<span class="ident">ctr</span>.<span class="ident">as_mut_ptr</span>(), <span class="self">self</span>.<span class="ident">ctr</span>.<span class="ident">len</span>());
+            <span class="ident">ptr::copy</span>(<span class="ident">ctr</span>.<span class="ident">as_ptr</span>(), <span class="self">self</span>.<span class="ident">ctr</span>.<span class="ident">as_mut_ptr</span>(), <span class="ident">ctr</span>.<span class="ident">len</span>());
         }
         <span class="self">self</span>.<span class="ident">enc_ctr_buffer</span> <span class="op">=</span> [<span class="number">0</span>; <span class="ident">aes::BLOCK_SIZE</span>];
         <span class="self">self</span>.<span class="ident">buffer_offset</span> <span class="op">=</span> <span class="number">0</span>;
@@ -544,7 +542,6 @@
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tmp1</span> <span class="op">=</span> <span class="ident">ctr1</span>;
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tmp2</span> <span class="op">=</span> <span class="ident">ctr2</span>;
 
-                <span class="comment">// ...</span>
                 <span class="macro">asm!</span>(
                     <span class="string">&quot;aese {tmp0:v}.16b, {round_key_0:v}.16b&quot;</span>,
                     <span class="string">&quot;aesmc {tmp0:v}.16b, {tmp0:v}.16b&quot;</span>,
@@ -580,7 +577,6 @@
                     <span class="string">&quot;aesmc {tmp0:v}.16b, {tmp0:v}.16b&quot;</span>,
 
                     <span class="string">&quot;rev {high_tmp}, {high}&quot;</span>,
-
                     
                     <span class="string">&quot;aese {tmp1:v}.16b, {round_key_2:v}.16b&quot;</span>,
                     <span class="string">&quot;aesmc {tmp1:v}.16b, {tmp1:v}.16b&quot;</span>,
@@ -815,10 +811,10 @@
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">crypt</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">src</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">dst</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="macro">result_return_unless!</span>(<span class="ident">src</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="ident">dst</span>.<span class="ident">len</span>(), <span class="ident">rc::ResultInvalidSize</span>);
+
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cur_src</span> <span class="op">=</span> <span class="ident">src</span>.<span class="ident">as_ptr</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cur_dst</span> <span class="op">=</span> <span class="ident">dst</span>.<span class="ident">as_mut_ptr</span>();
-
-        <span class="macro">result_return_unless!</span>(<span class="ident">src</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="ident">dst</span>.<span class="ident">len</span>(), <span class="ident">rc::ResultInvalidSize</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cur_size</span> <span class="op">=</span> <span class="ident">src</span>.<span class="ident">len</span>();
 
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">buffer_offset</span> <span class="op">&gt;</span> <span class="number">0</span> {
@@ -859,7 +855,7 @@
                 <span class="kw">let</span> <span class="ident">enc_ctr_buf_ptr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">enc_ctr_buffer</span>.<span class="ident">as_ptr</span>();
                 <span class="self">self</span>.<span class="ident">crypt_blocks</span>(<span class="ident">enc_ctr_buf_ptr</span>, <span class="ident">enc_ctr_buf_ptr</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">u8</span>, <span class="number">1</span>);
 
-                <span class="ident">ptr::copy</span>(<span class="self">self</span>.<span class="ident">enc_ctr_buffer</span>.<span class="ident">as_ptr</span>(), <span class="ident">cur_dst</span>, <span class="ident">cur_size</span>);
+                <span class="ident">ptr::copy</span>(<span class="ident">enc_ctr_buf_ptr</span>, <span class="ident">cur_dst</span>, <span class="ident">cur_size</span>);
                 <span class="self">self</span>.<span class="ident">buffer_offset</span> <span class="op">=</span> <span class="ident">cur_size</span>;
             }
         }

@@ -297,7 +297,7 @@
 }
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Context</span> {
-    <span class="kw">pub</span> <span class="ident">round_keys</span>: [[<span class="ident">u8</span>; <span class="ident">ROUND_COUNT</span> <span class="op">+</span> <span class="number">1</span>]; <span class="ident"><span class="kw">super</span>::BLOCK_SIZE</span>]
+    <span class="kw">pub</span> <span class="ident">round_keys</span>: [[<span class="ident">u8</span>; <span class="ident"><span class="kw">super</span>::BLOCK_SIZE</span>]; <span class="ident">ROUND_COUNT</span> <span class="op">+</span> <span class="number">1</span>]
 }
 
 <span class="kw">impl</span> <span class="ident">Context</span> {
@@ -305,7 +305,7 @@
         <span class="macro">result_return_unless!</span>(<span class="ident">key</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="ident">KEY_SIZE</span>, <span class="ident">rc::ResultInvalidSize</span>);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ctx</span> <span class="op">=</span> <span class="self">Self</span> {
-            <span class="ident">round_keys</span>: [[<span class="number">0</span>; <span class="ident">ROUND_COUNT</span> <span class="op">+</span> <span class="number">1</span>]; <span class="ident"><span class="kw">super</span>::BLOCK_SIZE</span>]
+            <span class="ident">round_keys</span>: [[<span class="number">0</span>; <span class="ident"><span class="kw">super</span>::BLOCK_SIZE</span>]; <span class="ident">ROUND_COUNT</span> <span class="op">+</span> <span class="number">1</span>]
         };
 
         <span class="kw">let</span> <span class="ident">round_keys_32</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">round_keys</span>.<span class="ident">as_mut_ptr</span>() <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">u32</span>;

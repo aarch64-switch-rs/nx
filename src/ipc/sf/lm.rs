@@ -3,7 +3,7 @@ use crate::ipc::sf;
 use crate::mem;
 use crate::version;
 
-bit_enum! {
+define_bit_enum! {
     LogDestination (u32) {
         Tma = bit!(0),
         Uart = bit!(1),

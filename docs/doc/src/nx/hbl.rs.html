@@ -238,13 +238,13 @@
     <span class="ident">HosVersion</span> <span class="op">=</span> <span class="number">16</span>
 }
 
-<span class="macro">bit_enum!</span> {
+<span class="macro">define_bit_enum!</span> {
     <span class="ident">AbiConfigEntryFlags</span> (<span class="ident">u32</span>) {
         <span class="ident">Mandatory</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">0</span>)
     }
 }
 
-<span class="macro">bit_enum!</span> {
+<span class="macro">define_bit_enum!</span> {
     <span class="ident">AbiConfigAppletFlags</span> (<span class="ident">u32</span>) {
         <span class="ident">ApplicationOverride</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">0</span>)
     }

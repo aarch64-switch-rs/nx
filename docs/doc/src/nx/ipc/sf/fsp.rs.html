@@ -172,7 +172,7 @@
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">rc</span>;
 
-<span class="macro">bit_enum!</span> {
+<span class="macro">define_bit_enum!</span> {
     <span class="ident">FileOpenMode</span> (<span class="ident">u32</span>) {
         <span class="prelude-val">None</span> <span class="op">=</span> <span class="number">0</span>,
         <span class="ident">Read</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">0</span>),
@@ -181,7 +181,7 @@
     }
 }
 
-<span class="macro">bit_enum!</span> {
+<span class="macro">define_bit_enum!</span> {
     <span class="ident">DirectoryOpenMode</span> (<span class="ident">u32</span>) {
         <span class="ident">ReadDirectories</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">0</span>),
         <span class="ident">ReadFiles</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">1</span>),
@@ -189,20 +189,20 @@
     }
 }
 
-<span class="macro">bit_enum!</span> {
+<span class="macro">define_bit_enum!</span> {
     <span class="ident">FileAttribute</span> (<span class="ident">u32</span>) {
         <span class="prelude-val">None</span> <span class="op">=</span> <span class="number">0</span>,
         <span class="ident">ConcatenationFile</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">0</span>)
     }
 }
 
-<span class="macro">bit_enum!</span> {
+<span class="macro">define_bit_enum!</span> {
     <span class="ident">FileReadOption</span> (<span class="ident">u32</span>) {
         <span class="prelude-val">None</span> <span class="op">=</span> <span class="number">0</span>
     }
 }
 
-<span class="macro">bit_enum!</span> {
+<span class="macro">define_bit_enum!</span> {
     <span class="ident">FileWriteOption</span> (<span class="ident">u32</span>) {
         <span class="prelude-val">None</span> <span class="op">=</span> <span class="number">0</span>,
         <span class="ident">Flush</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">0</span>)

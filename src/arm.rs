@@ -64,7 +64,7 @@ impl FpuRegister {
     }
 }
 
-bit_enum! {
+define_bit_enum! {
     RegisterGroup (u32) {
         CpuGprs = bit!(0),
         CpuSprs = bit!(1),

@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["Context",""]]});
+initSidebarItems({"fn":[["calculate_mac",""]],"struct":[["Context",""]]});

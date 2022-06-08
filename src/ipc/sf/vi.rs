@@ -8,7 +8,7 @@ use crate::version;
 
 pub type DisplayName = util::CString<0x40>;
 
-bit_enum! {
+define_bit_enum! {
     LayerFlags (u32) {
         None = 0,
         Default = bit!(0)

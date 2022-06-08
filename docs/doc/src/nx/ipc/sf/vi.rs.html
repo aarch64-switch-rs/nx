@@ -92,7 +92,7 @@
 
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">DisplayName</span> <span class="op">=</span> <span class="ident">util::CString</span><span class="op">&lt;</span><span class="number">0x40</span><span class="op">&gt;</span>;
 
-<span class="macro">bit_enum!</span> {
+<span class="macro">define_bit_enum!</span> {
     <span class="ident">LayerFlags</span> (<span class="ident">u32</span>) {
         <span class="prelude-val">None</span> <span class="op">=</span> <span class="number">0</span>,
         <span class="ident">Default</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">0</span>)

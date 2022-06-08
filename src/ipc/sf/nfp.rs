@@ -116,7 +116,7 @@ const_assert!(core::mem::size_of::<ModelInfo>() == 0x40);
 
 pub type AccessId = u32;
 
-bit_enum! {
+define_bit_enum! {
     AdminInfoFlags (u8) { // Note: plain amiibo flags shifted 4 bits (original bits 0-3 are discarded)
         IsInitialized = bit!(0),
         HasApplicationArea = bit!(1),

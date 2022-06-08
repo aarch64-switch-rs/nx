@@ -531,13 +531,13 @@
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">shmem</span>;
 
-<span class="macro">bit_enum!</span> {
+<span class="macro">define_bit_enum!</span> {
     <span class="ident">DebugPadAttribute</span> (<span class="ident">u32</span>) {
         <span class="ident">IsConnected</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">0</span>)
     }
 }
 
-<span class="macro">bit_enum!</span> {
+<span class="macro">define_bit_enum!</span> {
     <span class="ident">DebugPadButton</span> (<span class="ident">u32</span>) {
         <span class="ident">A</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">0</span>),
         <span class="ident">B</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">1</span>),
@@ -563,7 +563,7 @@
     <span class="kw">pub</span> <span class="ident">y</span>: <span class="ident">u32</span>
 }
 
-<span class="macro">bit_enum!</span> {
+<span class="macro">define_bit_enum!</span> {
     <span class="ident">TouchAttribute</span> (<span class="ident">u32</span>) {
         <span class="prelude-val">None</span> <span class="op">=</span> <span class="number">0</span>,
         <span class="ident">Start</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">0</span>),
@@ -585,14 +585,14 @@
     <span class="kw">pub</span> <span class="ident">reserved</span>: [<span class="ident">u8</span>; <span class="number">4</span>]
 }
 
-<span class="macro">bit_enum!</span> {
+<span class="macro">define_bit_enum!</span> {
     <span class="ident">MouseAttribute</span> (<span class="ident">u32</span>) {
         <span class="ident">Transferable</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">0</span>),
         <span class="ident">IsConnected</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">1</span>)
     }
 }
 
-<span class="macro">bit_enum!</span> {
+<span class="macro">define_bit_enum!</span> {
     <span class="ident">MouseButton</span> (<span class="ident">u32</span>) {
         <span class="ident">Left</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">0</span>),
         <span class="ident">Right</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">1</span>),
@@ -602,7 +602,7 @@
     }
 }
 
-<span class="macro">bit_enum!</span> {
+<span class="macro">define_bit_enum!</span> {
     <span class="ident">KeyboardModifier</span> (<span class="ident">u32</span>) {
         <span class="ident">Control</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">0</span>),
         <span class="ident">Shift</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">1</span>),
@@ -618,7 +618,7 @@
 }
 
 <span class="comment">/*
-bit_enum! {
+define_bit_enum! {
     KeyboardKey (u32) {
         // TODO (is 256-bit, not 32-bit...): https://switchbrew.org/wiki/HID_services#KeyboardKey
     }
@@ -631,43 +631,43 @@ bit_enum! {
     <span class="kw">pub</span> <span class="ident">todo</span>: [<span class="ident">u8</span>; <span class="number">0x20</span>]
 }
 
-<span class="macro">bit_enum!</span> {
+<span class="macro">define_bit_enum!</span> {
     <span class="ident">BasicXpadAttribute</span> (<span class="ident">u32</span>) {
         <span class="comment">// TODO: are these known at all?</span>
     }
 }
 
-<span class="macro">bit_enum!</span> {
+<span class="macro">define_bit_enum!</span> {
     <span class="ident">BasicXpadButton</span> (<span class="ident">u32</span>) {
         <span class="comment">// TODO: are these known at all?</span>
     }
 }
 
-<span class="macro">bit_enum!</span> {
+<span class="macro">define_bit_enum!</span> {
     <span class="ident">DigitizerAttribute</span> (<span class="ident">u32</span>) {
         <span class="comment">// TODO: are these known at all?</span>
     }
 }
 
-<span class="macro">bit_enum!</span> {
+<span class="macro">define_bit_enum!</span> {
     <span class="ident">DigitizerButton</span> (<span class="ident">u32</span>) {
         <span class="comment">// TODO: are these known at all?</span>
     }
 }
 
-<span class="macro">bit_enum!</span> {
+<span class="macro">define_bit_enum!</span> {
     <span class="ident">HomeButton</span> (<span class="ident">u32</span>) {
         <span class="comment">// TODO: are these known at all?</span>
     }
 }
 
-<span class="macro">bit_enum!</span> {
+<span class="macro">define_bit_enum!</span> {
     <span class="ident">SleepButton</span> (<span class="ident">u32</span>) {
         <span class="comment">// TODO: are these known at all?</span>
     }
 }
 
-<span class="macro">bit_enum!</span> {
+<span class="macro">define_bit_enum!</span> {
     <span class="ident">CaptureButton</span> (<span class="ident">u32</span>) {
         <span class="comment">// TODO: are these known at all?</span>
     }
@@ -700,7 +700,7 @@ bit_enum! {
 
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">UniquePadSerialNumber</span> <span class="op">=</span> [<span class="ident">u8</span>; <span class="number">0x10</span>];
 
-<span class="macro">bit_enum!</span> {
+<span class="macro">define_bit_enum!</span> {
     <span class="ident">AnalogStickCalibrationFlags</span> (<span class="ident">u32</span>) {
         <span class="comment">// TODO: are these known at all?</span>
     }
@@ -720,7 +720,7 @@ bit_enum! {
     <span class="ident">ClearCompleted</span> <span class="op">=</span> <span class="number">8</span>
 }
 
-<span class="macro">bit_enum!</span> {
+<span class="macro">define_bit_enum!</span> {
     <span class="ident">SixAxisSensorUserCalibrationFlags</span> (<span class="ident">u32</span>) {
         <span class="comment">// TODO: are these known at all?</span>
     }
@@ -766,14 +766,14 @@ bit_enum! {
     <span class="kw">pub</span> <span class="ident">y</span>: <span class="ident">u32</span>
 }
 
-<span class="macro">bit_enum!</span> {
+<span class="macro">define_bit_enum!</span> {
     <span class="ident">GestureAttribute</span> (<span class="ident">u32</span>) {
         <span class="ident">IsNewTouch</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">4</span>),
         <span class="ident">IsDoubleTap</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">8</span>)
     }
 }
 
-<span class="macro">bit_enum!</span> {
+<span class="macro">define_bit_enum!</span> {
     <span class="ident">NpadStyleTag</span> (<span class="ident">u32</span>) {
         <span class="ident">FullKey</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">0</span>), <span class="comment">// Pro controller</span>
         <span class="ident">Handheld</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">1</span>), <span class="comment">// Joy-Con controller in handheld mode</span>
@@ -836,7 +836,7 @@ bit_enum! {
     <span class="kw">pub</span> <span class="ident">sub</span>: <span class="ident">u32</span>
 }
 
-<span class="macro">bit_enum!</span> {
+<span class="macro">define_bit_enum!</span> {
     <span class="ident">NpadButton</span> (<span class="ident">u64</span>) {
         <span class="ident">A</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">0</span>),
         <span class="ident">B</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">1</span>),
@@ -876,7 +876,7 @@ bit_enum! {
     }
 }
 
-<span class="macro">bit_enum!</span> {
+<span class="macro">define_bit_enum!</span> {
     <span class="ident">NpadAttribute</span> (<span class="ident">u32</span>) {
         <span class="ident">IsConnected</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">0</span>),
         <span class="ident">IsWired</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">1</span>),
@@ -901,14 +901,14 @@ bit_enum! {
     <span class="kw">pub</span> <span class="ident">zz</span>: <span class="ident">u32</span>
 }
 
-<span class="macro">bit_enum!</span> {
+<span class="macro">define_bit_enum!</span> {
     <span class="ident">SixAxisSensorAttribute</span> (<span class="ident">u32</span>) {
         <span class="ident">IsConnected</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">0</span>),
         <span class="ident">IsInterpolated</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">1</span>)
     }
 }
 
-<span class="macro">bit_enum!</span> {
+<span class="macro">define_bit_enum!</span> {
     <span class="ident">DeviceType</span> (<span class="ident">u32</span>) {
         <span class="ident">FullKey</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">0</span>),
         <span class="ident">DebugPad</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">1</span>),
@@ -932,7 +932,7 @@ bit_enum! {
     }
 }
 
-<span class="macro">bit_enum!</span> {
+<span class="macro">define_bit_enum!</span> {
     <span class="ident">NpadSystemProperties</span> (<span class="ident">u64</span>) {
         <span class="ident">IsChargingJoyDual</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">0</span>),
         <span class="ident">IsChargingJoyLeft</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">1</span>),
@@ -950,7 +950,7 @@ bit_enum! {
     }
 }
 
-<span class="macro">bit_enum!</span> {
+<span class="macro">define_bit_enum!</span> {
     <span class="ident">NpadSystemButtonProperties</span> (<span class="ident">u32</span>) {
         <span class="ident">IsUnintendedHomeButtonInputProtectionEnabled</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">0</span>)
     }
@@ -958,7 +958,7 @@ bit_enum! {
 
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">NpadBatteryLevel</span> <span class="op">=</span> <span class="ident">u32</span>;
 
-<span class="macro">bit_enum!</span> {
+<span class="macro">define_bit_enum!</span> {
     <span class="ident">AppletFooterUiAttribute</span> (<span class="ident">u32</span>) {
         <span class="comment">// TODO: are these known at all?</span>
     }
@@ -1019,7 +1019,7 @@ bit_enum! {
     <span class="ident">U</span> <span class="op">=</span> <span class="number">3</span>
 }
 
-<span class="macro">bit_enum!</span> {
+<span class="macro">define_bit_enum!</span> {
     <span class="ident">SixAxisSensorProperties</span> (<span class="ident">u8</span>) {
         <span class="ident">IsSixAxisSensorDeviceNewlyAssigned</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">0</span>),
         <span class="ident">IsFirmwareUpdateAvailableForSixAxisSensor</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">1</span>)
