@@ -48,8 +48,8 @@ impl IHidServer for HidServer {
         ipc_client_send_request_command!([self.session.object_info; 100] (npad_style_tag, aruid) => ())
     }
 
-    fn set_supported_npad_id_type(&mut self, aruid: sf::ProcessId, controllers: sf::InPointerBuffer<ControllerId>) -> Result<()> {
-        ipc_client_send_request_command!([self.session.object_info; 102] (aruid, controllers) => ())
+    fn set_supported_npad_id_type(&mut self, aruid: sf::ProcessId, npad_ids: sf::InPointerBuffer<NpadIdType>) -> Result<()> {
+        ipc_client_send_request_command!([self.session.object_info; 102] (aruid, npad_ids) => ())
     }
 
     fn activate_npad(&mut self, aruid: sf::ProcessId) -> Result<()> {
@@ -60,12 +60,12 @@ impl IHidServer for HidServer {
         ipc_client_send_request_command!([self.session.object_info; 104] (aruid) => ())
     }
 
-    fn set_npad_joy_assignment_mode_single(&mut self, aruid: sf::ProcessId, controller: ControllerId, joy_type: NpadJoyDeviceType) -> Result<()> {
-        ipc_client_send_request_command!([self.session.object_info; 123] (controller, aruid, joy_type) => ())
+    fn set_npad_joy_assignment_mode_single(&mut self, aruid: sf::ProcessId, npad_id: NpadIdType, joy_type: NpadJoyDeviceType) -> Result<()> {
+        ipc_client_send_request_command!([self.session.object_info; 123] (npad_id, aruid, joy_type) => ())
     }
 
-    fn set_npad_joy_assignment_mode_dual(&mut self, aruid: sf::ProcessId, controller: ControllerId) -> Result<()> {
-        ipc_client_send_request_command!([self.session.object_info; 124] (controller, aruid) => ())
+    fn set_npad_joy_assignment_mode_dual(&mut self, aruid: sf::ProcessId, npad_id: NpadIdType) -> Result<()> {
+        ipc_client_send_request_command!([self.session.object_info; 124] (npad_id, aruid) => ())
     }
 }
 

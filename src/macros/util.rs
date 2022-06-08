@@ -70,6 +70,15 @@ macro_rules! bit_enum {
                 self.0 &= other.0
             }
         }
+
+        impl const core::ops::Not for $name {
+            type Output = Self;
+        
+            #[inline]
+            fn not(self) -> Self {
+                Self(!self.0)
+            }
+        }
     };
 }
 

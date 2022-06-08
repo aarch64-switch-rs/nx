@@ -1,11 +1,11 @@
-use crate::input;
+use crate::service::hid;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct MitmProcessInfo {
     pub process_id: u64,
     pub program_id: u64,
-    pub keys_held: input::Key,
+    pub npad_buttons: hid::NpadButton,
     pub override_flags: u64
 }
 
