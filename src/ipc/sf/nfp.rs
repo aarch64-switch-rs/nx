@@ -4,6 +4,7 @@ use crate::mem;
 use crate::util;
 use crate::ipc::sf::applet;
 use crate::ipc::sf::mii;
+use crate::ipc::sf::hid;
 use crate::version;
 
 pub mod rc;
@@ -229,7 +230,7 @@ ipc_sf_define_interface_trait! {
         attach_deactivate_event [18, version::VersionInterval::all()]: (device_handle: DeviceHandle) => (event_handle: sf::CopyHandle);
         get_state [19, version::VersionInterval::all()]: () => (state: State);
         get_device_state [20, version::VersionInterval::all()]: (device_handle: DeviceHandle) => (device_state: DeviceState);
-        get_npad_id [21, version::VersionInterval::all()]: (device_handle: DeviceHandle) => (npad_id: u32);
+        get_npad_id [21, version::VersionInterval::all()]: (device_handle: DeviceHandle) => (npad_id: hid::NpadIdType);
         get_application_area_size [22, version::VersionInterval::all()]: (device_handle: DeviceHandle) => (size: u32);
         attach_availability_change_event [23, version::VersionInterval::from(version::Version::new(3,0,0))]: () => (event_handle: sf::CopyHandle);
         recreate_application_area [24, version::VersionInterval::from(version::Version::new(3,0,0))]: (device_handle: DeviceHandle, access_id: AccessId, data: sf::InMapAliasBuffer<u8>) => ();
@@ -261,7 +262,7 @@ ipc_sf_define_interface_trait! {
         attach_deactivate_event [18, version::VersionInterval::all()]: (device_handle: DeviceHandle) => (event_handle: sf::CopyHandle);
         get_state [19, version::VersionInterval::all()]: () => (state: State);
         get_device_state [20, version::VersionInterval::all()]: (device_handle: DeviceHandle) => (device_state: DeviceState);
-        get_npad_id [21, version::VersionInterval::all()]: (device_handle: DeviceHandle) => (npad_id: u32);
+        get_npad_id [21, version::VersionInterval::all()]: (device_handle: DeviceHandle) => (npad_id: hid::NpadIdType);
         attach_availability_change_event [23, version::VersionInterval::all()]: () => (availability_change_event: sf::CopyHandle);
         format [100, version::VersionInterval::all()]: (device_handle: DeviceHandle) => ();
         get_admin_info [101, version::VersionInterval::all()]: (device_handle: DeviceHandle, out_admin_info: sf::OutFixedPointerBuffer<AdminInfo>) => ();
@@ -302,7 +303,7 @@ ipc_sf_define_interface_trait! {
         attach_deactivate_event [18, version::VersionInterval::all()]: (device_handle: DeviceHandle) => (event_handle: sf::CopyHandle);
         get_state [19, version::VersionInterval::all()]: () => (state: State);
         get_device_state [20, version::VersionInterval::all()]: (device_handle: DeviceHandle) => (device_state: DeviceState);
-        get_npad_id [21, version::VersionInterval::all()]: (device_handle: DeviceHandle) => (npad_id: u32);
+        get_npad_id [21, version::VersionInterval::all()]: (device_handle: DeviceHandle) => (npad_id: hid::NpadIdType);
         get_application_area_size [22, version::VersionInterval::all()]: (device_handle: DeviceHandle) => (size: u32);
         attach_availability_change_event [23, version::VersionInterval::from(version::Version::new(3,0,0))]: () => (event_handle: sf::CopyHandle);
         recreate_application_area [24, version::VersionInterval::from(version::Version::new(3,0,0))]: (device_handle: DeviceHandle, access_id: AccessId, data: sf::InMapAliasBuffer<u8>) => ();

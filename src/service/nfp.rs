@@ -1,5 +1,6 @@
 use crate::ipc::sf::applet;
 use crate::ipc::sf::sm;
+use crate::ipc::sf::hid;
 use crate::result::*;
 use crate::ipc::sf;
 use crate::ipc::client;
@@ -101,8 +102,8 @@ impl IUser for User {
         ipc_client_send_request_command!([self.session.object_info; 20] (device_handle) => (dev_state: DeviceState))
     }
 
-    fn get_npad_id(&mut self, device_handle: DeviceHandle) -> Result<u32> {
-        ipc_client_send_request_command!([self.session.object_info; 21] (device_handle) => (npad_id: u32))
+    fn get_npad_id(&mut self, device_handle: DeviceHandle) -> Result<hid::NpadIdType> {
+        ipc_client_send_request_command!([self.session.object_info; 21] (device_handle) => (npad_id: hid::NpadIdType))
     }
 
     fn get_application_area_size(&mut self, device_handle: DeviceHandle) -> Result<u32> {
@@ -244,8 +245,8 @@ impl ISystem for System {
         ipc_client_send_request_command!([self.session.object_info; 20] (device_handle) => (dev_state: DeviceState))
     }
 
-    fn get_npad_id(&mut self, device_handle: DeviceHandle) -> Result<u32> {
-        ipc_client_send_request_command!([self.session.object_info; 21] (device_handle) => (npad_id: u32))
+    fn get_npad_id(&mut self, device_handle: DeviceHandle) -> Result<hid::NpadIdType> {
+        ipc_client_send_request_command!([self.session.object_info; 21] (device_handle) => (npad_id: hid::NpadIdType))
     }
 
     fn attach_availability_change_event(&mut self) -> Result<sf::CopyHandle> {
@@ -423,8 +424,8 @@ impl IDebug for Debug {
         ipc_client_send_request_command!([self.session.object_info; 20] (device_handle) => (dev_state: DeviceState))
     }
 
-    fn get_npad_id(&mut self, device_handle: DeviceHandle) -> Result<u32> {
-        ipc_client_send_request_command!([self.session.object_info; 21] (device_handle) => (npad_id: u32))
+    fn get_npad_id(&mut self, device_handle: DeviceHandle) -> Result<hid::NpadIdType> {
+        ipc_client_send_request_command!([self.session.object_info; 21] (device_handle) => (npad_id: hid::NpadIdType))
     }
 
     fn get_application_area_size(&mut self, device_handle: DeviceHandle) -> Result<u32> {
