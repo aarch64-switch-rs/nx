@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["rc",""]],"struct":[["ConnectionState",""],["ControllerColor",""],["ControllerData",""],["ControllerMacAddress",""],["ControllerState",""],["ControllerStateEntry",""],["InputContext",""],["JoystickPosition",""],["Key",""],["Player",""],["SharedMemoryData",""],["TouchData",""],["TouchEntry",""],["TouchState",""]]});
+initSidebarItems({"mod":[["rc",""]],"struct":[["InputContext",""],["Player",""]]});

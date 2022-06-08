@@ -17,14 +17,14 @@
 <span id="10">10</span>
 <span id="11">11</span>
 <span id="12">12</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::input</span>;
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::service::hid</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MitmProcessInfo</span> {
     <span class="kw">pub</span> <span class="ident">process_id</span>: <span class="ident">u64</span>,
     <span class="kw">pub</span> <span class="ident">program_id</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">keys_held</span>: <span class="ident">input::Key</span>,
+    <span class="kw">pub</span> <span class="ident">npad_buttons</span>: <span class="ident">hid::NpadButton</span>,
     <span class="kw">pub</span> <span class="ident">override_flags</span>: <span class="ident">u64</span>
 }
 

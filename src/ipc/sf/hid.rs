@@ -508,12 +508,12 @@ ipc_sf_define_interface_trait! {
 
 ipc_sf_define_interface_trait! {
     trait IHidServer {
-        create_applet_resource [0, version::VersionInterval::all()]: (aruid: sf::ProcessId) => (applet_resource: mem::Shared<dyn IAppletResource>);
-        set_supported_npad_style_set [100, version::VersionInterval::all()]: (aruid: sf::ProcessId, npad_style_tag: NpadStyleTag) => ();
-        set_supported_npad_id_type [102, version::VersionInterval::all()]: (aruid: sf::ProcessId, npad_ids: sf::InPointerBuffer<NpadIdType>) => ();
-        activate_npad [103, version::VersionInterval::all()]: (aruid: sf::ProcessId) => ();
-        deactivate_npad [104, version::VersionInterval::all()]: (aruid: sf::ProcessId) => ();
-        set_npad_joy_assignment_mode_single [123, version::VersionInterval::all()]: (aruid: sf::ProcessId, npad_id: NpadIdType, joy_type: NpadJoyDeviceType) => ();
-        set_npad_joy_assignment_mode_dual [124, version::VersionInterval::all()]: (aruid: sf::ProcessId, npad_id: NpadIdType) => ();
+        create_applet_resource [0, version::VersionInterval::all()]: (process_id: sf::ProcessId) => (applet_resource: mem::Shared<dyn IAppletResource>);
+        set_supported_npad_style_set [100, version::VersionInterval::all()]: (process_id: sf::ProcessId, npad_style_tag: NpadStyleTag) => ();
+        set_supported_npad_id_type [102, version::VersionInterval::all()]: (process_id: sf::ProcessId, npad_ids: sf::InPointerBuffer<NpadIdType>) => ();
+        activate_npad [103, version::VersionInterval::all()]: (process_id: sf::ProcessId) => ();
+        deactivate_npad [104, version::VersionInterval::all()]: (process_id: sf::ProcessId) => ();
+        set_npad_joy_assignment_mode_single [123, version::VersionInterval::all()]: (process_id: sf::ProcessId, npad_id: NpadIdType, joy_type: NpadJoyDeviceType) => ();
+        set_npad_joy_assignment_mode_dual [124, version::VersionInterval::all()]: (process_id: sf::ProcessId, npad_id: NpadIdType) => ();
     }
 }

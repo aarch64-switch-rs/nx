@@ -210,323 +210,132 @@
 <span id="203">203</span>
 <span id="204">204</span>
 <span id="205">205</span>
-<span id="206">206</span>
-<span id="207">207</span>
-<span id="208">208</span>
-<span id="209">209</span>
-<span id="210">210</span>
-<span id="211">211</span>
-<span id="212">212</span>
-<span id="213">213</span>
-<span id="214">214</span>
-<span id="215">215</span>
-<span id="216">216</span>
-<span id="217">217</span>
-<span id="218">218</span>
-<span id="219">219</span>
-<span id="220">220</span>
-<span id="221">221</span>
-<span id="222">222</span>
-<span id="223">223</span>
-<span id="224">224</span>
-<span id="225">225</span>
-<span id="226">226</span>
-<span id="227">227</span>
-<span id="228">228</span>
-<span id="229">229</span>
-<span id="230">230</span>
-<span id="231">231</span>
-<span id="232">232</span>
-<span id="233">233</span>
-<span id="234">234</span>
-<span id="235">235</span>
-<span id="236">236</span>
-<span id="237">237</span>
-<span id="238">238</span>
-<span id="239">239</span>
-<span id="240">240</span>
-<span id="241">241</span>
-<span id="242">242</span>
-<span id="243">243</span>
-<span id="244">244</span>
-<span id="245">245</span>
-<span id="246">246</span>
-<span id="247">247</span>
-<span id="248">248</span>
-<span id="249">249</span>
-<span id="250">250</span>
-<span id="251">251</span>
-<span id="252">252</span>
-<span id="253">253</span>
-<span id="254">254</span>
-<span id="255">255</span>
-<span id="256">256</span>
-<span id="257">257</span>
-<span id="258">258</span>
-<span id="259">259</span>
-<span id="260">260</span>
-<span id="261">261</span>
-<span id="262">262</span>
-<span id="263">263</span>
-<span id="264">264</span>
-<span id="265">265</span>
-<span id="266">266</span>
-<span id="267">267</span>
-<span id="268">268</span>
-<span id="269">269</span>
-<span id="270">270</span>
-<span id="271">271</span>
-<span id="272">272</span>
-<span id="273">273</span>
-<span id="274">274</span>
-<span id="275">275</span>
-<span id="276">276</span>
-<span id="277">277</span>
-<span id="278">278</span>
-<span id="279">279</span>
-<span id="280">280</span>
-<span id="281">281</span>
-<span id="282">282</span>
-<span id="283">283</span>
-<span id="284">284</span>
-<span id="285">285</span>
-<span id="286">286</span>
-<span id="287">287</span>
-<span id="288">288</span>
-<span id="289">289</span>
-<span id="290">290</span>
-<span id="291">291</span>
-<span id="292">292</span>
-<span id="293">293</span>
-<span id="294">294</span>
-<span id="295">295</span>
-<span id="296">296</span>
-<span id="297">297</span>
-<span id="298">298</span>
-<span id="299">299</span>
-<span id="300">300</span>
-<span id="301">301</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::result</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::service::applet</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::service::hid</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::service::hid::shmem</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::service::hid::IAppletResource</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::service::hid::IHidServer</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ipc::sf</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::svc</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::mem</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::version</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::vmem</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::service</span>;
-<span class="kw">use</span> <span class="ident">core::mem</span> <span class="kw">as</span> <span class="ident">cmem</span>;
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">rc</span>;
 
-<span class="macro">bit_enum!</span> {
-    <span class="ident">Key</span> (<span class="ident">u64</span>) {
-        <span class="ident">A</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">0</span>),
-        <span class="ident">B</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">1</span>),
-        <span class="ident">X</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">2</span>),
-        <span class="ident">Y</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">3</span>),
-        <span class="ident">LStick</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">4</span>),
-        <span class="ident">RStick</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">5</span>),
-        <span class="ident">L</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">6</span>),
-        <span class="ident">R</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">7</span>),
-        <span class="ident">ZL</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">8</span>),
-        <span class="ident">ZR</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">9</span>),
-        <span class="ident">Plus</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">10</span>),
-        <span class="ident">Minus</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">11</span>),
-        <span class="ident">Left</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">12</span>),
-        <span class="ident">Right</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">13</span>),
-        <span class="ident">Up</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">14</span>),
-        <span class="ident">Down</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">15</span>),
-        <span class="ident">LStickLeft</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">16</span>),
-        <span class="ident">LStickUp</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">17</span>),
-        <span class="ident">LStickRight</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">18</span>),
-        <span class="ident">LStickDown</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">19</span>),
-        <span class="ident">RStickLeft</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">20</span>),
-        <span class="ident">RStickUp</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">21</span>),
-        <span class="ident">RStickRight</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">22</span>),
-        <span class="ident">RStickDown</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">23</span>),
-        <span class="ident">SLLeft</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">24</span>),
-        <span class="ident">SRLeft</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">25</span>),
-        <span class="ident">SLRight</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">26</span>),
-        <span class="ident">SRRight</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">27</span>),
-        <span class="ident">Touch</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">28</span>)
+<span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
+<span class="kw">fn</span> <span class="ident">get_npad_id_shmem_entry_index</span>(<span class="ident">npad_id</span>: <span class="ident">hid::NpadIdType</span>) -&gt; <span class="ident">usize</span> {
+    <span class="kw">match</span> <span class="ident">npad_id</span> {
+        <span class="ident">hid::NpadIdType::Handheld</span> =&gt; <span class="number">8</span>,
+        <span class="ident">hid::NpadIdType::Other</span> =&gt; <span class="number">9</span>,
+        <span class="kw">_</span> =&gt; <span class="ident">npad_id</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="comment">// (No1...8 -&gt; 0...7)</span>
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TouchData</span> {
-    <span class="kw">pub</span> <span class="ident">timestamp</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">pad</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">index</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">x</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">y</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">diameter_x</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">diameter_y</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">angle</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">pad_2</span>: <span class="ident">u32</span>
+<span class="macro">macro_rules!</span> <span class="ident">get_shmem_npad_entry_ring_lifo</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">shmem_ptr</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">npad_id_idx</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">shmem_npad_lifo_type</span>:<span class="ident">ident</span>) =&gt; {{
+        <span class="kw">let</span> <span class="ident">cur_ver</span> <span class="op">=</span> <span class="ident">version::get_version</span>();
+        <span class="kw">if</span> <span class="ident">hid::shmem::SharedMemoryFormatV1::VERSION_INTERVAL</span>.<span class="ident">matches</span>(<span class="ident">cur_ver</span>) {
+            <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">shmem_ptr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">hid::shmem::SharedMemoryFormatV1</span>)).<span class="ident">npad</span>.<span class="ident">entries</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">npad_id_idx</span>].<span class="macro-nonterminal">$</span><span class="macro-nonterminal">shmem_npad_lifo_type</span>
+        }
+        <span class="kw">else</span> <span class="kw">if</span> <span class="ident">hid::shmem::SharedMemoryFormatV2::VERSION_INTERVAL</span>.<span class="ident">matches</span>(<span class="ident">cur_ver</span>) {
+            <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">shmem_ptr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">hid::shmem::SharedMemoryFormatV2</span>)).<span class="ident">npad</span>.<span class="ident">entries</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">npad_id_idx</span>].<span class="macro-nonterminal">$</span><span class="macro-nonterminal">shmem_npad_lifo_type</span>
+        }
+        <span class="kw">else</span> <span class="kw">if</span> <span class="ident">hid::shmem::SharedMemoryFormatV3::VERSION_INTERVAL</span>.<span class="ident">matches</span>(<span class="ident">cur_ver</span>) {
+            <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">shmem_ptr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">hid::shmem::SharedMemoryFormatV3</span>)).<span class="ident">npad</span>.<span class="ident">entries</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">npad_id_idx</span>].<span class="macro-nonterminal">$</span><span class="macro-nonterminal">shmem_npad_lifo_type</span>
+        } 
+        <span class="kw">else</span> <span class="kw">if</span> <span class="ident">hid::shmem::SharedMemoryFormatV4::VERSION_INTERVAL</span>.<span class="ident">matches</span>(<span class="ident">cur_ver</span>) {
+            <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">shmem_ptr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">hid::shmem::SharedMemoryFormatV4</span>)).<span class="ident">npad</span>.<span class="ident">entries</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">npad_id_idx</span>].<span class="macro-nonterminal">$</span><span class="macro-nonterminal">shmem_npad_lifo_type</span>
+        }
+        <span class="kw">else</span> <span class="kw">if</span> <span class="ident">hid::shmem::SharedMemoryFormatV5::VERSION_INTERVAL</span>.<span class="ident">matches</span>(<span class="ident">cur_ver</span>) {
+            <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">shmem_ptr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">hid::shmem::SharedMemoryFormatV5</span>)).<span class="ident">npad</span>.<span class="ident">entries</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">npad_id_idx</span>].<span class="macro-nonterminal">$</span><span class="macro-nonterminal">shmem_npad_lifo_type</span>
+        }
+        <span class="kw">else</span> <span class="kw">if</span> <span class="ident">hid::shmem::SharedMemoryFormatV6::VERSION_INTERVAL</span>.<span class="ident">matches</span>(<span class="ident">cur_ver</span>) {
+            <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">shmem_ptr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">hid::shmem::SharedMemoryFormatV6</span>)).<span class="ident">npad</span>.<span class="ident">entries</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">npad_id_idx</span>].<span class="macro-nonterminal">$</span><span class="macro-nonterminal">shmem_npad_lifo_type</span>
+        }
+        <span class="kw">else</span> {
+            <span class="macro">panic!</span>(<span class="string">&quot;Unexpected version mismatch&quot;</span>);
+        }
+    }};
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TouchEntry</span> {
-    <span class="kw">pub</span> <span class="ident">timestamp</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">count</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">touches</span>: [<span class="ident">TouchData</span>; <span class="number">16</span>],
-    <span class="kw">pub</span> <span class="ident">pad</span>: <span class="ident">u64</span>
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TouchState</span> {
-    <span class="kw">pub</span> <span class="ident">timestamp_ticks</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">entry_count</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">latest_index</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">max_index</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">timestamp</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">entries</span>: [<span class="ident">TouchEntry</span>; <span class="number">17</span>]
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">JoystickPosition</span> {
-    <span class="kw">pub</span> <span class="ident">x</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">y</span>: <span class="ident">u32</span>
-}
-
-<span class="macro">bit_enum!</span> {
-    <span class="ident">ConnectionState</span> (<span class="ident">u64</span>) {
-        <span class="prelude-val">None</span> <span class="op">=</span> <span class="number">0</span>,
-        <span class="ident">Connected</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">0</span>),
-        <span class="ident">Wired</span> <span class="op">=</span> <span class="macro">bit!</span>(<span class="number">1</span>)
-    }
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ControllerStateEntry</span> {
-    <span class="kw">pub</span> <span class="ident">timestamp</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">timestamp_2</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">button_state</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">left_position</span>: <span class="ident">JoystickPosition</span>,
-    <span class="kw">pub</span> <span class="ident">right_position</span>: <span class="ident">JoystickPosition</span>,
-    <span class="kw">pub</span> <span class="ident">connection_state</span>: <span class="ident">ConnectionState</span>
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ControllerState</span> {
-    <span class="kw">pub</span> <span class="ident">timestamp</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">entry_count</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">latest_index</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">max_index</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">entries</span>: [<span class="ident">ControllerStateEntry</span>; <span class="number">17</span>]
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ControllerMacAddress</span> {
-    <span class="kw">pub</span> <span class="ident">address</span>: [<span class="ident">u8</span>; <span class="number">0x10</span>]
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ControllerColor</span> {
-    <span class="kw">pub</span> <span class="ident">body</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">buttons</span>: <span class="ident">u32</span>
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ControllerData</span> {
-    <span class="kw">pub</span> <span class="ident">status</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">is_joycon_half</span>: <span class="ident">bool</span>,
-    <span class="kw">pub</span> <span class="ident">pad</span>: [<span class="ident">u8</span>; <span class="number">3</span>],
-    <span class="kw">pub</span> <span class="ident">color_descriptor_single</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">color_single</span>: <span class="ident">ControllerColor</span>,
-    <span class="kw">pub</span> <span class="ident">color_descriptor_split</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">color_right</span>: <span class="ident">ControllerColor</span>,
-    <span class="kw">pub</span> <span class="ident">color_left</span>: <span class="ident">ControllerColor</span>,
-    <span class="kw">pub</span> <span class="ident">pro_controller_state</span>: <span class="ident">ControllerState</span>,
-    <span class="kw">pub</span> <span class="ident">handheld_state</span>: <span class="ident">ControllerState</span>,
-    <span class="kw">pub</span> <span class="ident">joined_state</span>: <span class="ident">ControllerState</span>,
-    <span class="kw">pub</span> <span class="ident">left_state</span>: <span class="ident">ControllerState</span>,
-    <span class="kw">pub</span> <span class="ident">right_state</span>: <span class="ident">ControllerState</span>,
-    <span class="kw">pub</span> <span class="ident">main_no_analog_state</span>: <span class="ident">ControllerState</span>,
-    <span class="kw">pub</span> <span class="ident">main_state</span>: <span class="ident">ControllerState</span>,
-    <span class="kw">pub</span> <span class="ident">unk</span>: [<span class="ident">u8</span>; <span class="number">0x2A78</span>],
-    <span class="kw">pub</span> <span class="ident">mac_addresses</span>: [<span class="ident">ControllerMacAddress</span>; <span class="number">2</span>],
-    <span class="kw">pub</span> <span class="ident">unk_2</span>: [<span class="ident">u8</span>; <span class="number">0xE10</span>]
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SharedMemoryData</span> {
-    <span class="kw">pub</span> <span class="ident">header</span>: [<span class="ident">u8</span>; <span class="number">0x400</span>],
-    <span class="kw">pub</span> <span class="ident">touch_state</span>: <span class="ident">TouchState</span>,
-    <span class="kw">pub</span> <span class="ident">pad</span>: [<span class="ident">u8</span>; <span class="number">0x3C0</span>],
-    <span class="kw">pub</span> <span class="ident">mouse</span>: [<span class="ident">u8</span>; <span class="number">0x400</span>],
-    <span class="kw">pub</span> <span class="ident">keyboard</span>: [<span class="ident">u8</span>; <span class="number">0x400</span>],
-    <span class="kw">pub</span> <span class="ident">unk</span>: [<span class="ident">u8</span>; <span class="number">0x400</span>],
-    <span class="kw">pub</span> <span class="ident">unk_2</span>: [<span class="ident">u8</span>; <span class="number">0x400</span>],
-    <span class="kw">pub</span> <span class="ident">unk_3</span>: [<span class="ident">u8</span>; <span class="number">0x400</span>],
-    <span class="kw">pub</span> <span class="ident">unk_4</span>: [<span class="ident">u8</span>; <span class="number">0x400</span>],
-    <span class="kw">pub</span> <span class="ident">unk_5</span>: [<span class="ident">u8</span>; <span class="number">0x200</span>],
-    <span class="kw">pub</span> <span class="ident">unk_6</span>: [<span class="ident">u8</span>; <span class="number">0x200</span>],
-    <span class="kw">pub</span> <span class="ident">unk_7</span>: [<span class="ident">u8</span>; <span class="number">0x200</span>],
-    <span class="kw">pub</span> <span class="ident">unk_8</span>: [<span class="ident">u8</span>; <span class="number">0x800</span>],
-    <span class="kw">pub</span> <span class="ident">controller_serials</span>: [<span class="ident">u8</span>; <span class="number">0x4000</span>],
-    <span class="kw">pub</span> <span class="ident">controllers</span>: [<span class="ident">ControllerData</span>; <span class="number">10</span>],
-    <span class="kw">pub</span> <span class="ident">unk_9</span>: [<span class="ident">u8</span>; <span class="number">0x4600</span>]
+<span class="macro">macro_rules!</span> <span class="ident">get_state</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">shmem_ptr</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">npad_id_idx</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">style_tag</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">state_field</span>:<span class="ident">ident</span>) =&gt; { <span class="kw">unsafe</span> {
+        <span class="kw">if</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">style_tag</span>.<span class="ident">contains</span>(<span class="ident">hid::NpadStyleTag::FullKey</span>()) {
+            <span class="macro">get_shmem_npad_entry_ring_lifo!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">shmem_ptr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">npad_id_idx</span>, <span class="ident">full_key_lifo</span>).<span class="ident">get_tail_item</span>().<span class="ident">state</span>.<span class="macro-nonterminal">$</span><span class="macro-nonterminal">state_field</span>
+        }
+        <span class="kw">else</span> <span class="kw">if</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">style_tag</span>.<span class="ident">contains</span>(<span class="ident">hid::NpadStyleTag::Handheld</span>()) {
+            <span class="macro">get_shmem_npad_entry_ring_lifo!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">shmem_ptr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">npad_id_idx</span>, <span class="ident">handheld_lifo</span>).<span class="ident">get_tail_item</span>().<span class="ident">state</span>.<span class="macro-nonterminal">$</span><span class="macro-nonterminal">state_field</span>
+        }
+        <span class="kw">else</span> <span class="kw">if</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">style_tag</span>.<span class="ident">contains</span>(<span class="ident">hid::NpadStyleTag::JoyDual</span>()) {
+            <span class="macro">get_shmem_npad_entry_ring_lifo!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">shmem_ptr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">npad_id_idx</span>, <span class="ident">joy_dual_lifo</span>).<span class="ident">get_tail_item</span>().<span class="ident">state</span>.<span class="macro-nonterminal">$</span><span class="macro-nonterminal">state_field</span>
+        }
+        <span class="kw">else</span> <span class="kw">if</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">style_tag</span>.<span class="ident">contains</span>(<span class="ident">hid::NpadStyleTag::JoyLeft</span>()) {
+            <span class="macro">get_shmem_npad_entry_ring_lifo!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">shmem_ptr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">npad_id_idx</span>, <span class="ident">joy_left_lifo</span>).<span class="ident">get_tail_item</span>().<span class="ident">state</span>.<span class="macro-nonterminal">$</span><span class="macro-nonterminal">state_field</span>
+        }
+        <span class="kw">else</span> <span class="kw">if</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">style_tag</span>.<span class="ident">contains</span>(<span class="ident">hid::NpadStyleTag::JoyRight</span>()) {
+            <span class="macro">get_shmem_npad_entry_ring_lifo!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">shmem_ptr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">npad_id_idx</span>, <span class="ident">joy_right_lifo</span>).<span class="ident">get_tail_item</span>().<span class="ident">state</span>.<span class="macro-nonterminal">$</span><span class="macro-nonterminal">state_field</span>
+        }
+        <span class="kw">else</span> <span class="kw">if</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">style_tag</span>.<span class="ident">contains</span>(<span class="ident">hid::NpadStyleTag::System</span>()) <span class="op">|</span><span class="op">|</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">style_tag</span>.<span class="ident">contains</span>(<span class="ident">hid::NpadStyleTag::SystemExt</span>()) {
+            <span class="macro">get_shmem_npad_entry_ring_lifo!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">shmem_ptr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">npad_id_idx</span>, <span class="ident">system_ext_lifo</span>).<span class="ident">get_tail_item</span>().<span class="ident">state</span>.<span class="macro-nonterminal">$</span><span class="macro-nonterminal">state_field</span>
+        }
+        <span class="kw">else</span> {
+            <span class="ident">Default::default</span>()
+        }
+    }};
 }
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Player</span> {
-    <span class="ident">controller</span>: <span class="ident">hid::ControllerId</span>,
-    <span class="ident">data</span>: <span class="kw-2">*const</span> <span class="ident">ControllerData</span>,
-    <span class="ident">prev_button_state</span>: <span class="ident">u64</span>
+    <span class="ident">npad_id</span>: <span class="ident">hid::NpadIdType</span>,
+    <span class="ident">npad_id_idx</span>: <span class="ident">usize</span>,
+    <span class="ident">style_tag</span>: <span class="ident">hid::NpadStyleTag</span>,
+    <span class="ident">shmem_ptr</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>,
+    <span class="ident">prev_buttons</span>: <span class="ident">hid::NpadButton</span>
 }
 
 <span class="kw">impl</span> <span class="ident">Player</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">controller</span>: <span class="ident">hid::ControllerId</span>, <span class="ident">data</span>: <span class="kw-2">*const</span> <span class="ident">ControllerData</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> { <span class="ident">controller</span>, <span class="ident">data</span>, <span class="ident">prev_button_state</span>: <span class="number">0</span> }
-    }
-
-    <span class="kw">fn</span> <span class="ident">get_latest_state_entry</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">*const</span> <span class="ident">ControllerStateEntry</span> {
-        <span class="kw">unsafe</span> {
-            <span class="kw-2">&amp;</span>(<span class="kw-2">*</span><span class="self">self</span>.<span class="ident">data</span>).<span class="ident">main_state</span>.<span class="ident">entries</span>[(<span class="kw-2">*</span><span class="self">self</span>.<span class="ident">data</span>).<span class="ident">main_state</span>.<span class="ident">latest_index</span> <span class="kw">as</span> <span class="ident">usize</span>]
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">npad_id</span>: <span class="ident">hid::NpadIdType</span>, <span class="ident">style_tag</span>: <span class="ident">hid::NpadStyleTag</span>, <span class="ident">shmem_ptr</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>) -&gt; <span class="self">Self</span> {
+        <span class="self">Self</span> {
+            <span class="ident">npad_id</span>,
+            <span class="ident">npad_id_idx</span>: <span class="ident">get_npad_id_shmem_entry_index</span>(<span class="ident">npad_id</span>),
+            <span class="ident">style_tag</span>,
+            <span class="ident">shmem_ptr</span>,
+            <span class="ident">prev_buttons</span>: <span class="ident">Default::default</span>()
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">get_button_state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u64</span> {
-        <span class="kw">let</span> <span class="ident">last_entry</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_latest_state_entry</span>();
-        <span class="kw">unsafe</span> {
-            (<span class="kw-2">*</span><span class="ident">last_entry</span>).<span class="ident">button_state</span>
-        }
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_attributes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">hid::NpadAttribute</span> {
+        <span class="macro">get_state!</span>(<span class="self">self</span>.<span class="ident">shmem_ptr</span>, <span class="self">self</span>.<span class="ident">npad_id_idx</span>, <span class="self">self</span>.<span class="ident">style_tag</span>, <span class="ident">attributes</span>)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_button_state_held</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">Key</span> {
-        <span class="kw">let</span> <span class="ident">button_state</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_button_state</span>();
-        <span class="self">self</span>.<span class="ident">prev_button_state</span> <span class="op">=</span> <span class="ident">button_state</span>;
-        <span class="ident">Key</span>(<span class="ident">button_state</span>)
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_buttons</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">hid::NpadButton</span> {
+        <span class="kw">let</span> <span class="ident">cur_buttons</span> <span class="op">=</span> <span class="macro">get_state!</span>(<span class="self">self</span>.<span class="ident">shmem_ptr</span>, <span class="self">self</span>.<span class="ident">npad_id_idx</span>, <span class="self">self</span>.<span class="ident">style_tag</span>, <span class="ident">buttons</span>);
+        <span class="self">self</span>.<span class="ident">prev_buttons</span> <span class="op">=</span> <span class="ident">cur_buttons</span>;
+        <span class="ident">cur_buttons</span>
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_button_state_down</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">Key</span> {
-        <span class="kw">let</span> <span class="ident">button_state</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_button_state</span>();
-        <span class="kw">let</span> <span class="ident">down_state</span> <span class="op">=</span> (<span class="op">!</span><span class="self">self</span>.<span class="ident">prev_button_state</span>) <span class="op">&amp;</span> <span class="ident">button_state</span>;
-        <span class="self">self</span>.<span class="ident">prev_button_state</span> <span class="op">=</span> <span class="ident">button_state</span>;
-        <span class="ident">Key</span>(<span class="ident">down_state</span>)
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_buttons_down</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">hid::NpadButton</span> {
+        <span class="kw">let</span> <span class="ident">prev_buttons</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">prev_buttons</span>;
+        <span class="kw">let</span> <span class="ident">cur_buttons</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_buttons</span>();
+        (<span class="op">!</span><span class="ident">prev_buttons</span>) <span class="op">&amp;</span> <span class="ident">cur_buttons</span>
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_button_state_up</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">Key</span> {
-        <span class="kw">let</span> <span class="ident">button_state</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_button_state</span>();
-        <span class="kw">let</span> <span class="ident">up_state</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">prev_button_state</span> <span class="op">&amp;</span> (<span class="op">!</span><span class="ident">button_state</span>);
-        <span class="self">self</span>.<span class="ident">prev_button_state</span> <span class="op">=</span> <span class="ident">button_state</span>;
-        <span class="ident">Key</span>(<span class="ident">up_state</span>)
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_buttons_up</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">hid::NpadButton</span> {
+        <span class="kw">let</span> <span class="ident">prev_buttons</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">prev_buttons</span>;
+        <span class="kw">let</span> <span class="ident">cur_buttons</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_buttons</span>();
+        <span class="ident">prev_buttons</span> <span class="op">&amp;</span> (<span class="op">!</span><span class="ident">cur_buttons</span>)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_controller</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">hid::ControllerId</span> {
-        <span class="self">self</span>.<span class="ident">controller</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_npad_id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">hid::NpadIdType</span> {
+        <span class="self">self</span>.<span class="ident">npad_id</span>
+    }
+
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_style_tag</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">hid::NpadStyleTag</span> {
+        <span class="self">self</span>.<span class="ident">style_tag</span>
     }
 }
 
@@ -534,77 +343,76 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InputContext</span> {
     <span class="ident">hid_service</span>: <span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">IHidServer</span><span class="op">&gt;</span>,
     <span class="ident">applet_resource</span>: <span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">IAppletResource</span><span class="op">&gt;</span>,
-    <span class="ident">shared_mem_handle</span>: <span class="ident">svc::Handle</span>,
-    <span class="ident">aruid</span>: <span class="ident">applet::AppletResourceUserId</span>,
-    <span class="ident">shared_mem_data</span>: <span class="kw-2">*const</span> <span class="ident">SharedMemoryData</span>
-}
-
-<span class="macro">macro_rules!</span> <span class="ident">set_all_controllers_mode_dual_impl</span> {
-    (<span class="question-mark">?</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">srv</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">process_id</span>:<span class="ident">expr</span>, $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">id</span>:<span class="ident">expr</span> ),<span class="kw-2">*</span>) =&gt; {
-        $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">srv</span>.<span class="ident">get</span>().<span class="ident">set_npad_joy_assignment_mode_dual</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">process_id</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">id</span>)<span class="question-mark">?</span>; )<span class="op">*</span>
-    };
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">srv</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">process_id</span>:<span class="ident">expr</span>, $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">id</span>:<span class="ident">expr</span> ),<span class="kw-2">*</span>) =&gt; {
-        $( <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">srv</span>.<span class="ident">get</span>().<span class="ident">set_npad_joy_assignment_mode_dual</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">process_id</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">id</span>); )<span class="op">*</span>
-    };
-}
-
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unreachable_patterns</span>)]</span>
-<span class="kw">fn</span> <span class="ident">get_index_for_controller</span>(<span class="ident">controller</span>: <span class="ident">hid::ControllerId</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-    <span class="kw">match</span> <span class="ident">controller</span> {
-        <span class="ident">hid::ControllerId::Player1</span> <span class="op">|</span> <span class="ident">hid::ControllerId::Player2</span> <span class="op">|</span> <span class="ident">hid::ControllerId::Player3</span> <span class="op">|</span> <span class="ident">hid::ControllerId::Player4</span> <span class="op">|</span> <span class="ident">hid::ControllerId::Player5</span> <span class="op">|</span> <span class="ident">hid::ControllerId::Player6</span> <span class="op">|</span> <span class="ident">hid::ControllerId::Player7</span> <span class="op">|</span> <span class="ident">hid::ControllerId::Player8</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">controller</span> <span class="kw">as</span> <span class="ident">usize</span>),
-        <span class="ident">hid::ControllerId::Handheld</span> =&gt; <span class="prelude-val">Ok</span>(<span class="number">8</span>),
-        <span class="kw">_</span> =&gt; <span class="ident">rc::ResultInvalidControllerId::make_err</span>()
-    }
+    <span class="ident">shmem_handle</span>: <span class="ident">svc::Handle</span>,
+    <span class="ident">shmem_ptr</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>
 }
 
 <span class="kw">impl</span> <span class="ident">InputContext</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">aruid</span>: <span class="ident">applet::AppletResourceUserId</span>, <span class="ident">supported_tags</span>: <span class="ident">hid::NpadStyleTag</span>, <span class="ident">controllers</span>: <span class="kw-2">&amp;</span>[<span class="ident">hid::ControllerId</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">supported_style_tags</span>: <span class="ident">hid::NpadStyleTag</span>, <span class="ident">supported_npad_ids</span>: <span class="kw-2">&amp;</span>[<span class="ident">hid::NpadIdType</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">hid_srv</span> <span class="op">=</span> <span class="ident">service::new_service_object</span>::<span class="op">&lt;</span><span class="ident">hid::HidServer</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">applet_res</span> <span class="op">=</span> <span class="ident">hid_srv</span>.<span class="ident">get</span>().<span class="ident">create_applet_resource</span>(<span class="ident">sf::ProcessId::from</span>(<span class="ident">aruid</span>))<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">applet_res</span> <span class="op">=</span> <span class="ident">hid_srv</span>.<span class="ident">get</span>().<span class="ident">create_applet_resource</span>(<span class="ident">sf::ProcessId::new</span>())<span class="question-mark">?</span>;
+        
         <span class="kw">let</span> <span class="ident">shmem_handle</span> <span class="op">=</span> <span class="ident">applet_res</span>.<span class="ident">get</span>().<span class="ident">get_shared_memory_handle</span>()<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">shmem_size</span> <span class="op">=</span> <span class="ident">cmem::size_of</span>::<span class="op">&lt;</span><span class="ident">SharedMemoryData</span><span class="op">&gt;</span>();
-        <span class="kw">let</span> <span class="ident">shmem_address</span> <span class="op">=</span> <span class="ident">vmem::allocate</span>(<span class="ident">shmem_size</span>)<span class="question-mark">?</span>;
-        <span class="ident">svc::map_shared_memory</span>(<span class="ident">shmem_handle</span>.<span class="ident">handle</span>, <span class="ident">shmem_address</span>, <span class="ident">shmem_size</span>, <span class="ident">svc::MemoryPermission::Read</span>())<span class="question-mark">?</span>;
-        <span class="ident">hid_srv</span>.<span class="ident">get</span>().<span class="ident">activate_npad</span>(<span class="ident">sf::ProcessId::from</span>(<span class="ident">aruid</span>))<span class="question-mark">?</span>;
-        <span class="ident">hid_srv</span>.<span class="ident">get</span>().<span class="ident">set_supported_npad_style_set</span>(<span class="ident">sf::ProcessId::from</span>(<span class="ident">aruid</span>), <span class="ident">supported_tags</span>)<span class="question-mark">?</span>;
-        <span class="ident">hid_srv</span>.<span class="ident">get</span>().<span class="ident">set_supported_npad_id_type</span>(<span class="ident">sf::ProcessId::from</span>(<span class="ident">aruid</span>), <span class="ident">sf::Buffer::from_array</span>(<span class="ident">controllers</span>))<span class="question-mark">?</span>;
-        <span class="ident">hid_srv</span>.<span class="ident">get</span>().<span class="ident">activate_npad</span>(<span class="ident">sf::ProcessId::from</span>(<span class="ident">aruid</span>))<span class="question-mark">?</span>;
-        <span class="macro">set_all_controllers_mode_dual_impl!</span>(<span class="question-mark">?</span> <span class="ident">hid_srv</span>, <span class="ident">sf::ProcessId::from</span>(<span class="ident">aruid</span>), <span class="ident">hid::ControllerId::Player1</span>, <span class="ident">hid::ControllerId::Player2</span>, <span class="ident">hid::ControllerId::Player3</span>, <span class="ident">hid::ControllerId::Player4</span>, <span class="ident">hid::ControllerId::Player5</span>, <span class="ident">hid::ControllerId::Player6</span>, <span class="ident">hid::ControllerId::Player7</span>, <span class="ident">hid::ControllerId::Player8</span>, <span class="ident">hid::ControllerId::Handheld</span>);
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> { <span class="ident">hid_service</span>: <span class="ident">hid_srv</span>, <span class="ident">applet_resource</span>: <span class="ident">applet_res</span>, <span class="ident">shared_mem_handle</span>: <span class="ident">shmem_handle</span>.<span class="ident">handle</span>, <span class="ident">aruid</span>, <span class="ident">shared_mem_data</span>: <span class="ident">shmem_address</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">SharedMemoryData</span> })
+        <span class="kw">let</span> <span class="ident">shmem_address</span> <span class="op">=</span> <span class="ident">vmem::allocate</span>(<span class="ident">shmem::SHMEM_SIZE</span>)<span class="question-mark">?</span>;
+        <span class="ident">svc::map_shared_memory</span>(<span class="ident">shmem_handle</span>.<span class="ident">handle</span>, <span class="ident">shmem_address</span>, <span class="ident">shmem::SHMEM_SIZE</span>, <span class="ident">svc::MemoryPermission::Read</span>())<span class="question-mark">?</span>;
+
+        <span class="ident">hid_srv</span>.<span class="ident">get</span>().<span class="ident">activate_npad</span>(<span class="ident">sf::ProcessId::new</span>())<span class="question-mark">?</span>;
+        <span class="ident">hid_srv</span>.<span class="ident">get</span>().<span class="ident">set_supported_npad_style_set</span>(<span class="ident">sf::ProcessId::new</span>(), <span class="ident">supported_style_tags</span>)<span class="question-mark">?</span>;
+        <span class="ident">hid_srv</span>.<span class="ident">get</span>().<span class="ident">set_supported_npad_id_type</span>(<span class="ident">sf::ProcessId::new</span>(), <span class="ident">sf::Buffer::from_array</span>(<span class="ident">supported_npad_ids</span>))<span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
+            <span class="ident">hid_service</span>: <span class="ident">hid_srv</span>,
+            <span class="ident">applet_resource</span>: <span class="ident">applet_res</span>,
+            <span class="ident">shmem_handle</span>: <span class="ident">shmem_handle</span>.<span class="ident">handle</span>,
+            <span class="ident">shmem_ptr</span>: <span class="ident">shmem_address</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">u8</span>
+        })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_controller_connected</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">controller</span>: <span class="ident">hid::ControllerId</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">index</span>) <span class="op">=</span> <span class="ident">get_index_for_controller</span>(<span class="ident">controller</span>) {
-            <span class="kw">let</span> <span class="ident">controller_data</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span>(<span class="kw-2">*</span><span class="self">self</span>.<span class="ident">shared_mem_data</span>).<span class="ident">controllers</span>[<span class="ident">index</span>] };
-            <span class="kw">let</span> <span class="ident">last_entry</span> <span class="op">=</span> <span class="ident">controller_data</span>.<span class="ident">main_state</span>.<span class="ident">entries</span>[<span class="ident">controller_data</span>.<span class="ident">main_state</span>.<span class="ident">latest_index</span> <span class="kw">as</span> <span class="ident">usize</span>];
-            <span class="ident">last_entry</span>.<span class="ident">connection_state</span>.<span class="ident">contains</span>(<span class="ident">ConnectionState::Connected</span>())
-        }
-        <span class="kw">else</span> {
-            <span class="bool-val">false</span>
-        }
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_player</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">npad_id</span>: <span class="ident">hid::NpadIdType</span>, <span class="ident">style_tag</span>: <span class="ident">hid::NpadStyleTag</span>) -&gt; <span class="ident">Player</span> {
+        <span class="ident">Player::new</span>(<span class="ident">npad_id</span>, <span class="ident">style_tag</span>, <span class="self">self</span>.<span class="ident">shmem_ptr</span>)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_player</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">controller</span>: <span class="ident">hid::ControllerId</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Player</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">get_index_for_controller</span>(<span class="ident">controller</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">controller_data</span>: <span class="kw-2">*const</span> <span class="ident">ControllerData</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span>(<span class="kw-2">*</span><span class="self">self</span>.<span class="ident">shared_mem_data</span>).<span class="ident">controllers</span>[<span class="ident">index</span>] };
-        <span class="prelude-val">Ok</span>(<span class="ident">Player::new</span>(<span class="ident">controller</span>, <span class="ident">controller_data</span>))
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_touch_data</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">touch_index</span>: <span class="ident">u32</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TouchData</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_touches</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">touch_states</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">hid::TouchState</span>]) -&gt; <span class="ident">usize</span> {
         <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="ident">touch_entry</span>: <span class="kw-2">*const</span> <span class="ident">TouchEntry</span> <span class="op">=</span> <span class="kw-2">&amp;</span>(<span class="kw-2">*</span><span class="self">self</span>.<span class="ident">shared_mem_data</span>).<span class="ident">touch_state</span>.<span class="ident">entries</span>[(<span class="kw-2">*</span><span class="self">self</span>.<span class="ident">shared_mem_data</span>).<span class="ident">touch_state</span>.<span class="ident">latest_index</span> <span class="kw">as</span> <span class="ident">usize</span>];
-            <span class="macro">result_return_unless!</span>((<span class="ident">touch_index</span> <span class="kw">as</span> <span class="ident">u64</span>) <span class="op">&lt;</span> (<span class="kw-2">*</span><span class="ident">touch_entry</span>).<span class="ident">count</span>, <span class="ident">rc::ResultInvalidTouchIndex</span>);
-            <span class="prelude-val">Ok</span>((<span class="kw-2">*</span><span class="ident">touch_entry</span>).<span class="ident">touches</span>[<span class="ident">touch_index</span> <span class="kw">as</span> <span class="ident">usize</span>])
+            <span class="kw">let</span> <span class="ident">cur_ver</span> <span class="op">=</span> <span class="ident">version::get_version</span>();
+            <span class="kw">let</span> <span class="ident">touch_screen_shmem</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">hid::shmem::SharedMemoryFormatV1::VERSION_INTERVAL</span>.<span class="ident">matches</span>(<span class="ident">cur_ver</span>) {
+                <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="self">self</span>.<span class="ident">shmem_ptr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">hid::shmem::SharedMemoryFormatV1</span>)).<span class="ident">touch_screen</span>
+            }
+            <span class="kw">else</span> <span class="kw">if</span> <span class="ident">hid::shmem::SharedMemoryFormatV2::VERSION_INTERVAL</span>.<span class="ident">matches</span>(<span class="ident">cur_ver</span>) {
+                <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="self">self</span>.<span class="ident">shmem_ptr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">hid::shmem::SharedMemoryFormatV2</span>)).<span class="ident">touch_screen</span>
+            }
+            <span class="kw">else</span> <span class="kw">if</span> <span class="ident">hid::shmem::SharedMemoryFormatV3::VERSION_INTERVAL</span>.<span class="ident">matches</span>(<span class="ident">cur_ver</span>) {
+                <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="self">self</span>.<span class="ident">shmem_ptr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">hid::shmem::SharedMemoryFormatV3</span>)).<span class="ident">touch_screen</span>
+            } 
+            <span class="kw">else</span> <span class="kw">if</span> <span class="ident">hid::shmem::SharedMemoryFormatV4::VERSION_INTERVAL</span>.<span class="ident">matches</span>(<span class="ident">cur_ver</span>) {
+                <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="self">self</span>.<span class="ident">shmem_ptr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">hid::shmem::SharedMemoryFormatV4</span>)).<span class="ident">touch_screen</span>
+            }
+            <span class="kw">else</span> <span class="kw">if</span> <span class="ident">hid::shmem::SharedMemoryFormatV5::VERSION_INTERVAL</span>.<span class="ident">matches</span>(<span class="ident">cur_ver</span>) {
+                <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="self">self</span>.<span class="ident">shmem_ptr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">hid::shmem::SharedMemoryFormatV5</span>)).<span class="ident">touch_screen</span>
+            }
+            <span class="kw">else</span> <span class="kw">if</span> <span class="ident">hid::shmem::SharedMemoryFormatV6::VERSION_INTERVAL</span>.<span class="ident">matches</span>(<span class="ident">cur_ver</span>) {
+                <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="self">self</span>.<span class="ident">shmem_ptr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">hid::shmem::SharedMemoryFormatV6</span>)).<span class="ident">touch_screen</span>
+            }
+            <span class="kw">else</span> {
+                <span class="macro">panic!</span>(<span class="string">&quot;Unexpected version mismatch&quot;</span>);
+            };
+
+            <span class="kw">let</span> <span class="ident">screen_state</span> <span class="op">=</span> <span class="ident">touch_screen_shmem</span>.<span class="ident">lifo</span>.<span class="ident">get_tail_item</span>().<span class="ident">state</span>;
+            <span class="kw">let</span> <span class="ident">min_count</span> <span class="op">=</span> <span class="ident">touch_states</span>.<span class="ident">len</span>().<span class="ident">min</span>(<span class="ident">screen_state</span>.<span class="ident">count</span> <span class="kw">as</span> <span class="ident">usize</span>);
+            <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">min_count</span> {
+                <span class="ident">touch_states</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="ident">screen_state</span>.<span class="ident">touches</span>[<span class="ident">i</span>];
+            }
+            <span class="ident">min_count</span>
         }
     }
 }
 
 <span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">InputContext</span> {
     <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="macro">set_all_controllers_mode_dual_impl!</span>(<span class="self">self</span>.<span class="ident">hid_service</span>, <span class="ident">sf::ProcessId::from</span>(<span class="self">self</span>.<span class="ident">aruid</span>), <span class="ident">hid::ControllerId::Player1</span>, <span class="ident">hid::ControllerId::Player2</span>, <span class="ident">hid::ControllerId::Player3</span>, <span class="ident">hid::ControllerId::Player4</span>, <span class="ident">hid::ControllerId::Player5</span>, <span class="ident">hid::ControllerId::Player6</span>, <span class="ident">hid::ControllerId::Player7</span>, <span class="ident">hid::ControllerId::Player8</span>, <span class="ident">hid::ControllerId::Handheld</span>);
-        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">hid_service</span>.<span class="ident">get</span>().<span class="ident">deactivate_npad</span>(<span class="ident">sf::ProcessId::from</span>(<span class="self">self</span>.<span class="ident">aruid</span>));
-        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">svc::unmap_shared_memory</span>(<span class="self">self</span>.<span class="ident">shared_mem_handle</span>, <span class="self">self</span>.<span class="ident">shared_mem_data</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">u8</span>, <span class="ident">cmem::size_of</span>::<span class="op">&lt;</span><span class="ident">SharedMemoryData</span><span class="op">&gt;</span>());
-        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">svc::close_handle</span>(<span class="self">self</span>.<span class="ident">shared_mem_handle</span>);
+        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">hid_service</span>.<span class="ident">get</span>().<span class="ident">deactivate_npad</span>(<span class="ident">sf::ProcessId::new</span>());
+        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">svc::unmap_shared_memory</span>(<span class="self">self</span>.<span class="ident">shmem_handle</span>, <span class="self">self</span>.<span class="ident">shmem_ptr</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">u8</span>, <span class="ident">shmem::SHMEM_SIZE</span>);
+        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">svc::close_handle</span>(<span class="self">self</span>.<span class="ident">shmem_handle</span>);
     }
 }</code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="nx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0-nightly (9257f5aad 2022-05-21)" ></div>
