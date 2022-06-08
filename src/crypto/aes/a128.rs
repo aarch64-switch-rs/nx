@@ -49,7 +49,7 @@ const fn rotate_bytes(tmp: u32) -> u32 {
 }
 
 pub struct Context {
-    pub round_keys: [[u8; ROUND_COUNT + 1]; super::BLOCK_SIZE]
+    pub round_keys: [[u8; super::BLOCK_SIZE]; ROUND_COUNT + 1]
 }
 
 impl Context {
@@ -57,7 +57,7 @@ impl Context {
         result_return_unless!(key.len() == KEY_SIZE, rc::ResultInvalidSize);
 
         let mut ctx = Self {
-            round_keys: [[0; ROUND_COUNT + 1]; super::BLOCK_SIZE]
+            round_keys: [[0; super::BLOCK_SIZE]; ROUND_COUNT + 1]
         };
 
         let round_keys_32 = ctx.round_keys.as_mut_ptr() as *mut u32;

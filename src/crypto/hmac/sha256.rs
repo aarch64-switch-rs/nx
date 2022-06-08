@@ -68,3 +68,10 @@ impl Context {
         Ok(())
     }
 }
+
+#[inline]
+pub fn calculate_mac<T>(key: &[u8], data: &[u8], out_mac: &mut [T]) -> Result<()> {
+    let mut ctx = Context::new(key)?;
+    ctx.update(data);
+    ctx.get_mac(out_mac)
+}

@@ -60,7 +60,7 @@ impl Context {
         result_return_unless!(ctr.len() == aes::BLOCK_SIZE, rc::ResultInvalidSize);
 
         unsafe {
-            ptr::copy(ctr.as_ptr(), self.ctr.as_mut_ptr(), self.ctr.len());
+            ptr::copy(ctr.as_ptr(), self.ctr.as_mut_ptr(), ctr.len());
         }
         self.enc_ctr_buffer = [0; aes::BLOCK_SIZE];
         self.buffer_offset = 0;
@@ -106,7 +106,6 @@ impl Context {
                 let mut tmp1 = ctr1;
                 let mut tmp2 = ctr2;
 
-                // ...
                 asm!(
                     "aese {tmp0:v}.16b, {round_key_0:v}.16b",
                     "aesmc {tmp0:v}.16b, {tmp0:v}.16b",
@@ -142,7 +141,6 @@ impl Context {
                     "aesmc {tmp0:v}.16b, {tmp0:v}.16b",
 
                     "rev {high_tmp}, {high}",
-
                     
                     "aese {tmp1:v}.16b, {round_key_2:v}.16b",
                     "aesmc {tmp1:v}.16b, {tmp1:v}.16b",
@@ -269,7 +267,9 @@ impl Context {
 
                     ctr0 = inout(vreg) ctr0,
                     ctr1 = inout(vreg) ctr1,
-                    ctr2 = inout(vreg) ctr2
+                    ctr2 = inout(vreg) ctr2,
+
+                    options(preserves_flags)
                 );
 
                 tmp0 = aarch64::veorq_u8(block0, tmp0);
@@ -362,7 +362,9 @@ impl Context {
                 high = inout(reg) high,
                 low = inout(reg) low,
 
-                ctr0 = inout(vreg) ctr0
+                ctr0 = inout(vreg) ctr0,
+
+                options(preserves_flags)
             );
             
             tmp0 = aarch64::veorq_u8(block0, tmp0);
@@ -377,10 +379,10 @@ impl Context {
     }
 
     pub fn crypt(&mut self, src: &[u8], dst: &mut [u8]) -> Result<()> {
+        result_return_unless!(src.len() == dst.len(), rc::ResultInvalidSize);
+
         let mut cur_src = src.as_ptr();
         let mut cur_dst = dst.as_mut_ptr();
-
-        result_return_unless!(src.len() == dst.len(), rc::ResultInvalidSize);
         let mut cur_size = src.len();
 
         if self.buffer_offset > 0 {
@@ -421,7 +423,7 @@ impl Context {
                 let enc_ctr_buf_ptr = self.enc_ctr_buffer.as_ptr();
                 self.crypt_blocks(enc_ctr_buf_ptr, enc_ctr_buf_ptr as *mut u8, 1);
 
-                ptr::copy(self.enc_ctr_buffer.as_ptr(), cur_dst, cur_size);
+                ptr::copy(enc_ctr_buf_ptr, cur_dst, cur_size);
                 self.buffer_offset = cur_size;
             }
         }
