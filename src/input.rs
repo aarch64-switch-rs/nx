@@ -128,14 +128,14 @@ impl Player {
 }
 
 #[allow(dead_code)]
-pub struct InputContext {
+pub struct Context {
     hid_service: mem::Shared<dyn IHidServer>,
     applet_resource: mem::Shared<dyn IAppletResource>,
     shmem_handle: svc::Handle,
     shmem_ptr: *const u8
 }
 
-impl InputContext {
+impl Context {
     pub fn new(supported_style_tags: hid::NpadStyleTag, supported_npad_ids: &[hid::NpadIdType]) -> Result<Self> {
         let hid_srv = service::new_service_object::<hid::HidServer>()?;
         let applet_res = hid_srv.get().create_applet_resource(sf::ProcessId::new())?;
@@ -196,7 +196,7 @@ impl InputContext {
     }
 }
 
-impl Drop for InputContext {
+impl Drop for Context {
     fn drop(&mut self) {
         let _ = self.hid_service.get().deactivate_npad(sf::ProcessId::new());
         let _ = svc::unmap_shared_memory(self.shmem_handle, self.shmem_ptr as *mut u8, shmem::SHMEM_SIZE);
