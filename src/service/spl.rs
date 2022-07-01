@@ -4,7 +4,7 @@ use crate::service;
 
 pub use crate::ipc::sf::spl::*;
 
-ipc_sf_client_object_define_default_impl!(RandomInterface);
+ipc_client_define_object_default!(RandomInterface);
 
 impl IRandomInterface for RandomInterface {
     fn generate_random_bytes(&mut self, out_buf: sf::OutMapAliasBuffer<u8>) -> Result<()> {

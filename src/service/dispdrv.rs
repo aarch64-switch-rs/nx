@@ -4,7 +4,7 @@ use crate::service;
 
 pub use crate::ipc::sf::dispdrv::*;
 
-ipc_sf_client_object_define_default_impl!(HOSBinderDriver);
+ipc_client_define_object_default!(HOSBinderDriver);
 
 impl IHOSBinderDriver for HOSBinderDriver {
     fn transact_parcel(&mut self, binder_handle: BinderHandle, transaction_id: ParcelTransactionId, flags: u32, in_parcel: sf::InMapAliasBuffer<u8>, out_parcel: sf::OutMapAliasBuffer<u8>) -> Result<()> {

@@ -27,7 +27,7 @@ impl<S: NvDrvService> INvDrvServices for S {
     }
 }
 
-ipc_sf_client_object_define_default_impl!(ApplicationNvDrvService);
+ipc_client_define_object_default!(ApplicationNvDrvService);
 
 impl NvDrvService for ApplicationNvDrvService {}
 
@@ -45,7 +45,7 @@ impl service::IService for ApplicationNvDrvService {
     }
 }
 
-ipc_sf_client_object_define_default_impl!(AppletNvDrvService);
+ipc_client_define_object_default!(AppletNvDrvService);
 
 impl NvDrvService for AppletNvDrvService {}
 
@@ -63,7 +63,7 @@ impl service::IService for AppletNvDrvService {
     }
 }
 
-ipc_sf_client_object_define_default_impl!(SystemNvDrvService);
+ipc_client_define_object_default!(SystemNvDrvService);
 
 impl NvDrvService for SystemNvDrvService {}
 

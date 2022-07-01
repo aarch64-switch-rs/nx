@@ -1,1 +1,0 @@
-initSidebarItems({"enum":[["ClassCode",""],["DescriptorType",""]],"mod":[["hs",""]],"struct":[["ConfigDescriptor",""],["DeviceDescriptor",""],["EndPointDescriptor",""],["InterfaceDescriptor",""],["SsEndPointCompanionDescriptor",""]]});

@@ -1,1 +1,0 @@
-initSidebarItems({"constant":[["RESULT_SUBMODULE",""]],"struct":[["ResultAlreadyDomain",""],["ResultDomainNotFound",""],["ResultInvalidCommandType",""],["ResultInvalidDomainCommandType",""],["ResultObjectIdAlreadyAllocated",""],["ResultSignaledServerNotFound",""]]});

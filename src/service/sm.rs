@@ -6,7 +6,7 @@ use crate::version;
 
 pub use crate::ipc::sf::sm::*;
 
-ipc_sf_client_object_define_default_impl!(UserInterface);
+ipc_client_define_object_default!(UserInterface);
 
 impl IUserInterface for UserInterface {
     fn register_client(&mut self, process_id: sf::ProcessId) -> Result<()> {

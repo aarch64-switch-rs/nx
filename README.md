@@ -67,7 +67,7 @@
 
 - Finish waitable support
 
-- Add library applet support (`nx::la` module)
+- Improve library applet support (proper implementations, etc.)
 
 - Optimize IPC code to generate better asm (like libnx or nnsdk)
 

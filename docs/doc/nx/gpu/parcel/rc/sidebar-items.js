@@ -1,1 +1,0 @@
-initSidebarItems({"constant":[["RESULT_SUBMODULE",""]],"struct":[["ResultFdsNotSupported",""],["ResultNotEnoughReadSpace",""],["ResultNotEnoughWriteSpace",""],["ResultReadSizeMismatch",""]]});

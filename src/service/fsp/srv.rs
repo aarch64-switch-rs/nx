@@ -6,7 +6,7 @@ use crate::mem;
 
 pub use crate::ipc::sf::fsp::srv::*;
 
-ipc_sf_client_object_define_default_impl!(FileSystemProxy);
+ipc_client_define_object_default!(FileSystemProxy);
 
 impl IFileSystemProxy for FileSystemProxy {
     fn set_current_process(&mut self, process_id: sf::ProcessId) -> Result<()> {

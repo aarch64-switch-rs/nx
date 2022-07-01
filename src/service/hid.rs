@@ -6,7 +6,7 @@ use crate::mem;
 
 pub use crate::ipc::sf::hid::*;
 
-ipc_sf_client_object_define_default_impl!(AppletResource);
+ipc_client_define_object_default!(AppletResource);
 
 impl IAppletResource for AppletResource {
     fn get_shared_memory_handle(&mut self) -> Result<sf::CopyHandle> {
@@ -14,7 +14,7 @@ impl IAppletResource for AppletResource {
     }
 }
 
-ipc_sf_client_object_define_default_impl!(HidServer);
+ipc_client_define_object_default!(HidServer);
 
 impl IHidServer for HidServer {
     fn create_applet_resource(&mut self, aruid: sf::ProcessId) -> Result<mem::Shared<dyn IAppletResource>> {

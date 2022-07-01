@@ -4,7 +4,7 @@ use crate::service;
 
 pub use crate::ipc::sf::fatal::*;
 
-ipc_sf_client_object_define_default_impl!(Service);
+ipc_client_define_object_default!(Service);
 
 impl IService for Service {
     fn throw_fatal_with_policy(&mut self, rc: ResultCode, policy: FatalPolicy, process_id: sf::ProcessId) -> Result<()> {

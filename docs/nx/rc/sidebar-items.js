@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":[["RESULT_MODULE",""],["RESULT_SUBMODULE",""]],"struct":[["ResultNotImplemented",""],["ResultNotInitialized",""],["ResultNotSupported",""],["ResultPanicked",""]]};

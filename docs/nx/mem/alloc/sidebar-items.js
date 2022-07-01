@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":[["PAGE_ALIGNMENT",""]],"fn":[["allocate",""],["delete",""],["initialize",""],["is_enabled",""],["new",""],["release",""]],"mod":[["rc",""]],"struct":[["Buffer",""],["Layout","Layout of a block of memory."]],"trait":[["Allocator",""]]};

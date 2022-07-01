@@ -4,7 +4,7 @@ use crate::service;
 
 pub use crate::ipc::sf::psm::*;
 
-ipc_sf_client_object_define_default_impl!(PsmServer);
+ipc_client_define_object_default!(PsmServer);
 
 impl IPsmServer for PsmServer {
     fn get_battery_charge_percentage(&mut self) -> Result<u32> {

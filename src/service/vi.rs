@@ -8,7 +8,7 @@ use crate::service::applet;
 
 pub use crate::ipc::sf::vi::*;
 
-ipc_sf_client_object_define_default_impl!(ManagerDisplayService);
+ipc_client_define_object_default!(ManagerDisplayService);
 
 impl IManagerDisplayService for ManagerDisplayService {
     fn create_managed_layer(&mut self, flags: LayerFlags, display_id: DisplayId, aruid: applet::AppletResourceUserId) -> Result<LayerId> {
@@ -20,7 +20,7 @@ impl IManagerDisplayService for ManagerDisplayService {
     }
 }
 
-ipc_sf_client_object_define_default_impl!(SystemDisplayService);
+ipc_client_define_object_default!(SystemDisplayService);
 
 impl ISystemDisplayService for SystemDisplayService {
     fn get_z_order_count_min(&mut self, display_id: DisplayId) -> Result<i64> {
@@ -48,7 +48,7 @@ impl ISystemDisplayService for SystemDisplayService {
     }
 }
 
-ipc_sf_client_object_define_default_impl!(ApplicationDisplayService);
+ipc_client_define_object_default!(ApplicationDisplayService);
 
 impl IApplicationDisplayService for ApplicationDisplayService {
     fn get_relay_service(&mut self) -> Result<mem::Shared<dyn dispdrv::IHOSBinderDriver>> {
@@ -88,7 +88,7 @@ impl IApplicationDisplayService for ApplicationDisplayService {
     }
 }
 
-ipc_sf_client_object_define_default_impl!(ApplicationRootService);
+ipc_client_define_object_default!(ApplicationRootService);
 
 impl IApplicationRootService for ApplicationRootService {
     fn get_display_service(&mut self, mode: DisplayServiceMode) -> Result<mem::Shared<dyn IApplicationDisplayService>> {
@@ -110,7 +110,7 @@ impl service::IService for ApplicationRootService {
     }
 }
 
-ipc_sf_client_object_define_default_impl!(SystemRootService);
+ipc_client_define_object_default!(SystemRootService);
 
 impl ISystemRootService for SystemRootService {
     fn get_display_service(&mut self, mode: DisplayServiceMode) -> Result<mem::Shared<dyn IApplicationDisplayService>> {
@@ -132,7 +132,7 @@ impl service::IService for SystemRootService {
     }
 }
 
-ipc_sf_client_object_define_default_impl!(ManagerRootService);
+ipc_client_define_object_default!(ManagerRootService);
 
 impl IManagerRootService for ManagerRootService {
     fn get_display_service(&mut self, mode: DisplayServiceMode) -> Result<mem::Shared<dyn IApplicationDisplayService>> {

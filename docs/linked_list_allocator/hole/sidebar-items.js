@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":[["HoleList","A sorted list of holes. It uses the the holes itself to store its nodes."]]};

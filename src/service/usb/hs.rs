@@ -6,7 +6,7 @@ use crate::ipc::sf::usb;
 
 pub use crate::ipc::sf::usb::hs::*;
 
-ipc_sf_client_object_define_default_impl!(ClientEpSession);
+ipc_client_define_object_default!(ClientEpSession);
 
 impl IClientEpSession for ClientEpSession {
     fn submit_out_request(&mut self, size: u32, unk: u32, buf: sf::InMapAliasBuffer<u8>) -> Result<u32> {
@@ -70,7 +70,7 @@ impl IClientEpSession for ClientEpSession {
     }
 }
 
-ipc_sf_client_object_define_default_impl!(ClientIfSession);
+ipc_client_define_object_default!(ClientIfSession);
 
 impl IClientIfSession for ClientIfSession {
     fn get_state_change_event(&mut self) -> Result<sf::CopyHandle> {
@@ -130,7 +130,7 @@ impl IClientIfSession for ClientIfSession {
     }
 }
 
-ipc_sf_client_object_define_default_impl!(ClientRootSession);
+ipc_client_define_object_default!(ClientRootSession);
 
 impl IClientRootSession for ClientRootSession {
     fn bind_client_process(&mut self, self_process_handle: sf::CopyHandle) -> Result<()> {

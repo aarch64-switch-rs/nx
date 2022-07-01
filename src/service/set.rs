@@ -5,7 +5,7 @@ use crate::service;
 
 pub use crate::ipc::sf::set::*;
 
-ipc_sf_client_object_define_default_impl!(SystemSettingsServer);
+ipc_client_define_object_default!(SystemSettingsServer);
 
 impl ISystemSettingsServer for SystemSettingsServer {
     fn get_firmware_version(&mut self, out_version: sf::OutFixedPointerBuffer<FirmwareVersion>) -> Result<()> {

@@ -5,7 +5,7 @@ use crate::service;
 
 pub use crate::ipc::sf::ldr::*;
 
-ipc_sf_client_object_define_default_impl!(ShellInterface);
+ipc_client_define_object_default!(ShellInterface);
 
 impl IShellInterface for ShellInterface {
     fn set_program_argument_deprecated(&mut self, program_id: u64, args_size: u32, args_buf: sf::InPointerBuffer<u8>) -> Result<()> {

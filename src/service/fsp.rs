@@ -4,7 +4,7 @@ use crate::mem;
 
 pub use crate::ipc::sf::fsp::*;
 
-ipc_sf_client_object_define_default_impl!(Directory);
+ipc_client_define_object_default!(Directory);
 
 impl IDirectory for Directory {
     fn read(&mut self, out_entries: sf::OutMapAliasBuffer<DirectoryEntry>) -> Result<u64> {
@@ -16,7 +16,7 @@ impl IDirectory for Directory {
     }
 }
 
-ipc_sf_client_object_define_default_impl!(File);
+ipc_client_define_object_default!(File);
 
 impl IFile for File {
     fn read(&mut self, option: FileReadOption, offset: usize, size: usize, buf: sf::OutNonSecureMapAliasBuffer<u8>) -> Result<usize> {
@@ -48,7 +48,7 @@ impl IFile for File {
     }
 }
 
-ipc_sf_client_object_define_default_impl!(FileSystem);
+ipc_client_define_object_default!(FileSystem);
 
 impl IFileSystem for FileSystem {
     fn create_file(&mut self, attribute: FileAttribute, size: usize, path_buf: sf::InFixedPointerBuffer<Path>) -> Result<()> {

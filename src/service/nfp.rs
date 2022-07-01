@@ -8,7 +8,7 @@ use crate::mem;
 
 pub use crate::ipc::sf::nfp::*;
 
-ipc_sf_client_object_define_default_impl!(User);
+ipc_client_define_object_default!(User);
 
 impl IUser for User {
     fn initialize(&mut self, aruid: applet::AppletResourceUserId, process_id: sf::ProcessId, mcu_data: sf::InMapAliasBuffer<McuVersionData>) -> Result<()> {
@@ -112,7 +112,7 @@ impl IUser for User {
     }
 }
 
-ipc_sf_client_object_define_default_impl!(UserManager);
+ipc_client_define_object_default!(UserManager);
 
 impl IUserManager for UserManager {
     fn create_user_interface(&mut self) -> Result<mem::Shared<dyn IUser>> {
@@ -134,7 +134,7 @@ impl service::IService for UserManager {
     }
 }
 
-ipc_sf_client_object_define_default_impl!(System);
+ipc_client_define_object_default!(System);
 
 impl ISystem for System {
     fn initialize_system(&mut self, aruid: applet::AppletResourceUserId, process_id: sf::ProcessId, mcu_data: sf::InMapAliasBuffer<McuVersionData>) -> Result<()> {
@@ -242,7 +242,7 @@ impl ISystem for System {
     }
 }
 
-ipc_sf_client_object_define_default_impl!(SystemManager);
+ipc_client_define_object_default!(SystemManager);
 
 impl ISystemManager for SystemManager {
     fn create_system_interface(&mut self) -> Result<mem::Shared<dyn ISystem>> {
@@ -264,7 +264,7 @@ impl service::IService for SystemManager {
     }
 }
 
-ipc_sf_client_object_define_default_impl!(Debug);
+ipc_client_define_object_default!(Debug);
 
 impl IDebug for Debug {
     fn initialize_debug(&mut self, aruid: applet::AppletResourceUserId, process_id: sf::ProcessId, mcu_data: sf::InMapAliasBuffer<McuVersionData>) -> Result<()> {
@@ -424,7 +424,7 @@ impl IDebug for Debug {
     }
 }
 
-ipc_sf_client_object_define_default_impl!(DebugManager);
+ipc_client_define_object_default!(DebugManager);
 
 impl IDebugManager for DebugManager {
     fn create_debug_interface(&mut self) -> Result<mem::Shared<dyn IDebug>> {

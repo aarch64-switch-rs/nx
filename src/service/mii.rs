@@ -6,7 +6,7 @@ use crate::mem;
 
 pub use crate::ipc::sf::mii::*;
 
-ipc_sf_client_object_define_default_impl!(DatabaseService);
+ipc_client_define_object_default!(DatabaseService);
 
 impl IDatabaseService for DatabaseService {
     fn is_updated(&mut self, flag: SourceFlag) -> Result<bool> {
@@ -30,7 +30,7 @@ impl IDatabaseService for DatabaseService {
     }
 }
 
-ipc_sf_client_object_define_default_impl!(StaticService);
+ipc_client_define_object_default!(StaticService);
 
 impl IStaticService for StaticService {
     fn get_database_service(&mut self, key_code: SpecialKeyCode) -> Result<mem::Shared<dyn IDatabaseService>> {

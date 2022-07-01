@@ -6,7 +6,7 @@ use crate::mem;
 
 pub use crate::ipc::sf::applet::*;
 
-ipc_sf_client_object_define_default_impl!(StorageAccessor);
+ipc_client_define_object_default!(StorageAccessor);
 
 impl IStorageAccessor for StorageAccessor {
     fn get_size(&mut self) -> Result<usize> {
@@ -22,7 +22,7 @@ impl IStorageAccessor for StorageAccessor {
     }
 }
 
-ipc_sf_client_object_define_default_impl!(Storage);
+ipc_client_define_object_default!(Storage);
 
 impl IStorage for Storage {
     fn open(&mut self) -> Result<mem::Shared<dyn IStorageAccessor>> {
@@ -30,7 +30,7 @@ impl IStorage for Storage {
     }
 }
 
-ipc_sf_client_object_define_default_impl!(LibraryAppletAccessor);
+ipc_client_define_object_default!(LibraryAppletAccessor);
 
 impl ILibraryAppletAccessor for LibraryAppletAccessor {
     fn get_applet_state_changed_event(&mut self) -> Result<sf::CopyHandle> {
@@ -50,7 +50,7 @@ impl ILibraryAppletAccessor for LibraryAppletAccessor {
     }
 }
 
-ipc_sf_client_object_define_default_impl!(LibraryAppletCreator);
+ipc_client_define_object_default!(LibraryAppletCreator);
 
 impl ILibraryAppletCreator for LibraryAppletCreator {
     fn create_library_applet(&mut self, id: AppletId, mode: LibraryAppletMode) -> Result<mem::Shared<dyn ILibraryAppletAccessor>> {
@@ -62,7 +62,7 @@ impl ILibraryAppletCreator for LibraryAppletCreator {
     }
 }
 
-ipc_sf_client_object_define_default_impl!(WindowController);
+ipc_client_define_object_default!(WindowController);
 
 impl IWindowController for WindowController {
     fn acquire_foreground_rights(&mut self) -> Result<()> {
@@ -70,7 +70,7 @@ impl IWindowController for WindowController {
     }
 }
 
-ipc_sf_client_object_define_default_impl!(SelfController);
+ipc_client_define_object_default!(SelfController);
 
 impl ISelfController for SelfController {
     fn set_screenshot_permission(&mut self, permission: ScreenShotPermission) -> Result<()> {
@@ -78,7 +78,7 @@ impl ISelfController for SelfController {
     }
 }
 
-ipc_sf_client_object_define_default_impl!(LibraryAppletProxy);
+ipc_client_define_object_default!(LibraryAppletProxy);
 
 impl ILibraryAppletProxy for LibraryAppletProxy {
     fn get_self_controller(&mut self) -> Result<mem::Shared<dyn ISelfController>> {
@@ -94,7 +94,7 @@ impl ILibraryAppletProxy for LibraryAppletProxy {
     }
 }
 
-ipc_sf_client_object_define_default_impl!(AllSystemAppletProxiesService);
+ipc_client_define_object_default!(AllSystemAppletProxiesService);
 
 impl IAllSystemAppletProxiesService for AllSystemAppletProxiesService {
     fn open_library_applet_proxy(&mut self, process_id: sf::ProcessId, self_process_handle: sf::CopyHandle, applet_attribute: sf::InMapAliasBuffer<AppletAttribute>) -> Result<mem::Shared<dyn ILibraryAppletProxy>> {

@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["ApplicationDisplayService",""],["ApplicationRootService",""],["ManagerDisplayService",""],["ManagerRootService",""],["SystemDisplayService",""],["SystemRootService",""]]});

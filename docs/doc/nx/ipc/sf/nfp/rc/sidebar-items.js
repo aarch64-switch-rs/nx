@@ -1,1 +1,0 @@
-initSidebarItems({"constant":[["RESULT_MODULE",""]],"struct":[["ResultAccessIdMismatch",""],["ResultAreaAlreadyCreated",""],["ResultAreaNeedsToBeCreated",""],["ResultDeviceNotFound",""],["ResultNeedRestart",""]]});

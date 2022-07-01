@@ -4,7 +4,7 @@ use crate::service;
 
 pub use crate::ipc::sf::pm::*;
 
-ipc_sf_client_object_define_default_impl!(InformationInterface);
+ipc_client_define_object_default!(InformationInterface);
 
 impl IInformationInterface for InformationInterface {
     fn get_program_id(&mut self, process_id: u64) -> Result<u64> {
@@ -26,7 +26,7 @@ impl service::IService for InformationInterface {
     }
 }
 
-ipc_sf_client_object_define_default_impl!(DebugMonitorInterface);
+ipc_client_define_object_default!(DebugMonitorInterface);
 
 impl IDebugMonitorInterface for DebugMonitorInterface {
     fn get_application_process_id_deprecated(&mut self) -> Result<u64> {

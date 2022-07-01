@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":[["RESULT_MODULE",""]],"struct":[["ResultCancelled",""],["ResultDebug",""],["ResultInvalidAddress",""],["ResultInvalidHandle",""],["ResultInvalidSize",""],["ResultNotHandled",""],["ResultSessionClosed",""],["ResultTimedOut",""]]};

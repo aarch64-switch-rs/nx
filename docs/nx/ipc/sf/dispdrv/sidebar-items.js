@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":[["NativeHandleType",""],["ParcelTransactionId",""],["RefcountType",""]],"trait":[["IHOSBinderDriver",""]],"type":[["BinderHandle",""]]};

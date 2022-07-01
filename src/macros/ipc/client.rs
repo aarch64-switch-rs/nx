@@ -1,6 +1,29 @@
 #![macro_use]
 
 #[macro_export]
+macro_rules! ipc_client_define_object_default {
+    ($t:ident) => {
+        pub struct $t {
+            session: sf::Session
+        }        
+
+        impl $crate::ipc::sf::IObject for $t {
+            $crate::ipc_sf_object_impl_default_command_metadata!();
+
+            fn get_session(&mut self) -> &mut sf::Session {
+                &mut self.session
+            }
+        }
+
+        impl $crate::ipc::client::IClientObject for $t {
+            fn new(session: sf::Session) -> Self {
+                Self { session }
+            }
+        }
+    };
+}
+
+#[macro_export]
 macro_rules! ipc_client_send_request_command {
     ([$session:expr; $rq_id:expr] ( $( $in_param:expr ),* ) => ( $( $out_param:ident: $out_param_type:ty ),* )) => {{
         let mut ctx = $crate::ipc::CommandContext::new_client($session);

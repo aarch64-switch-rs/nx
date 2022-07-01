@@ -6,7 +6,7 @@ use crate::mem;
 
 pub use crate::ipc::sf::psc::*;
 
-ipc_sf_client_object_define_default_impl!(PmModule);
+ipc_client_define_object_default!(PmModule);
 
 impl IPmModule for PmModule {
     fn initialize(&mut self, id: ModuleId, dependencies: sf::InMapAliasBuffer<ModuleId>) -> Result<sf::CopyHandle> {
@@ -30,7 +30,7 @@ impl IPmModule for PmModule {
     }
 }
 
-ipc_sf_client_object_define_default_impl!(PmService);
+ipc_client_define_object_default!(PmService);
 
 impl IPmService for PmService {
     fn get_pm_module(&mut self) -> Result<mem::Shared<dyn IPmModule>> {

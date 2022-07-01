@@ -6,7 +6,7 @@ use crate::mem;
 
 pub use crate::ipc::sf::lm::*;
 
-ipc_sf_client_object_define_default_impl!(Logger);
+ipc_client_define_object_default!(Logger);
 
 impl ILogger for Logger {
     fn log(&mut self, log_buf: sf::InAutoSelectBuffer<u8>) -> Result<()> {
@@ -18,7 +18,7 @@ impl ILogger for Logger {
     }
 }
 
-ipc_sf_client_object_define_default_impl!(LogService);
+ipc_client_define_object_default!(LogService);
 
 impl ILogService for LogService {
     fn open_logger(&mut self, process_id: sf::ProcessId) -> Result<mem::Shared<dyn ILogger>> {

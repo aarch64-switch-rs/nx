@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":[["create_library_applet",""],["create_write_storage",""],["finalize",""],["initialize",""],["is_initialized",""],["launch_wait_simple",""],["read_storage",""],["write_storage",""]],"mod":[["psel",""]],"struct":[["CommonArguments",""],["LibraryAppletHolder",""]]};

@@ -39,6 +39,11 @@ impl LibraryAppletHolder {
     }
 
     #[inline]
+    pub fn get_accessor(&self) -> mem::Shared<dyn ILibraryAppletAccessor> {
+        self.accessor.clone()
+    }
+
+    #[inline]
     pub fn push_in_data_storage(&mut self, storage: mem::Shared<dyn IStorage>) -> Result<()> {
         self.accessor.get().push_in_data(storage)
     }
@@ -48,15 +53,18 @@ impl LibraryAppletHolder {
         self.push_in_data_storage(t_st)
     }
 
+    #[inline]
     pub fn start(&mut self) -> Result<()> {
         self.accessor.get().start()
     }
 
+    #[inline]
     pub fn join(&mut self) -> Result<()> {
         wait::wait_handles(&[self.state_changed_event_handle], -1)?;
         Ok(())
     }
 
+    #[inline]
     pub fn pop_out_data_storage(&mut self) -> Result<mem::Shared<dyn IStorage>> {
         self.accessor.get().pop_out_data()
     }
@@ -132,13 +140,12 @@ pub fn create_library_applet(id: applet::AppletId, mode: applet::LibraryAppletMo
 
     let accessor = get_creator_ref().get().create_library_applet(id, mode)?;
 
+    let mut holder = LibraryAppletHolder::new(accessor)?;
+    
     common_args.system_tick = arm::get_system_tick();
-    {
-        let common_args_st = create_write_storage(common_args)?;
-        accessor.get().push_in_data(common_args_st)?;
-    }
+    holder.push_in_data(common_args)?;
 
-    LibraryAppletHolder::new(accessor)
+    Ok(holder)
 }
 
 pub fn launch_wait_simple<I: Copy, O: Copy + Default>(id: applet::AppletId, common_args: CommonArguments, input: I) -> Result<O> {
