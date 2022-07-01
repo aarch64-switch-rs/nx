@@ -116,4 +116,27 @@ macro_rules! ipc_sf_object_impl_default_command_metadata {
     };
 }
 
+#[macro_export]
+macro_rules! ipc_sf_client_object_define_default_impl {
+    ($t:ident) => {
+        pub struct $t {
+            session: sf::Session
+        }        
+
+        impl $crate::ipc::sf::IObject for $t {
+            $crate::ipc_sf_object_impl_default_command_metadata!();
+
+            fn get_session(&mut self) -> &mut sf::Session {
+                &mut self.session
+            }
+        }
+
+        impl $crate::ipc::client::IClientObject for $t {
+            fn new(session: sf::Session) -> Self {
+                Self { session }
+            }
+        }
+    };
+}
+
 // TODO: better system than using ipc_sf_object_impl_default_command_metadata!(), enforce command version when invoking it (only on client implementations, etc.), more

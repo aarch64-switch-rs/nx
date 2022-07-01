@@ -1,19 +1,12 @@
 use crate::ipc::sf::sm;
 use crate::result::*;
 use crate::ipc::sf;
-use crate::ipc::client;
 use crate::service;
 use crate::mem;
 
 pub use crate::ipc::sf::lm::*;
 
-pub struct Logger {
-    session: sf::Session
-}
-
-impl sf::IObject for Logger {
-    ipc_sf_object_impl_default_command_metadata!();
-}
+ipc_sf_client_object_define_default_impl!(Logger);
 
 impl ILogger for Logger {
     fn log(&mut self, log_buf: sf::InAutoSelectBuffer<u8>) -> Result<()> {
@@ -25,37 +18,11 @@ impl ILogger for Logger {
     }
 }
 
-impl client::IClientObject for Logger {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-}
-
-pub struct LogService {
-    session: sf::Session
-}
-
-impl sf::IObject for LogService {
-    ipc_sf_object_impl_default_command_metadata!();
-}
+ipc_sf_client_object_define_default_impl!(LogService);
 
 impl ILogService for LogService {
     fn open_logger(&mut self, process_id: sf::ProcessId) -> Result<mem::Shared<dyn ILogger>> {
         ipc_client_send_request_command!([self.session.object_info; 0] (process_id) => (logger: mem::Shared<Logger>))
-    }
-}
-
-impl client::IClientObject for LogService {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
     }
 }
 

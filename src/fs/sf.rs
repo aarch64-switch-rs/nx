@@ -10,17 +10,25 @@ use crate::ipc::sf::fsp::IFileSystem;
 // These types are helper object types to translate from our fs objects to IPC fs objects
 
 pub struct Directory {
-    dir_obj: mem::Shared<dyn super::Directory>
+    dir_obj: mem::Shared<dyn super::Directory>,
+    dummy_session: sf::Session
 }
 
 impl Directory {
     pub fn new(dir_obj: mem::Shared<dyn super::Directory>) -> Self {
-        Self { dir_obj }
+        Self {
+            dir_obj,
+            dummy_session: sf::Session::new()
+        }
     }
 }
 
 impl sf::IObject for Directory {
     ipc_sf_object_impl_default_command_metadata!();
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.dummy_session
+    }
 }
 
 impl IDirectory for Directory {
@@ -36,17 +44,25 @@ impl IDirectory for Directory {
 impl server::ISessionObject for Directory {}
 
 pub struct File {
-    file_obj: mem::Shared<dyn super::File>
+    file_obj: mem::Shared<dyn super::File>,
+    dummy_session: sf::Session
 }
 
 impl File {
     pub fn new(file_obj: mem::Shared<dyn super::File>) -> Self {
-        Self { file_obj }
+        Self {
+            file_obj,
+            dummy_session: sf::Session::new()
+        }
     }
 }
 
 impl sf::IObject for File {
     ipc_sf_object_impl_default_command_metadata!();
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.dummy_session
+    }
 }
 
 impl IFile for File {
@@ -82,17 +98,25 @@ impl IFile for File {
 impl server::ISessionObject for File {}
 
 pub struct FileSystem {
-    fs_obj: mem::Shared<dyn super::FileSystem>
+    fs_obj: mem::Shared<dyn super::FileSystem>,
+    dummy_session: sf::Session
 }
 
 impl FileSystem {
     pub fn new(fs_obj: mem::Shared<dyn super::FileSystem>) -> Self {
-        Self { fs_obj }
+        Self {
+            fs_obj,
+            dummy_session: sf::Session::new()
+        }
     }
 }
 
 impl sf::IObject for FileSystem {
     ipc_sf_object_impl_default_command_metadata!();
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.dummy_session
+    }
 }
 
 impl IFileSystem for FileSystem {

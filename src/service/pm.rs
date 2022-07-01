@@ -1,31 +1,14 @@
 use crate::result::*;
 use crate::ipc::sf::{self, sm};
-use crate::ipc::client;
 use crate::service;
 
 pub use crate::ipc::sf::pm::*;
 
-pub struct InformationInterface {
-    session: sf::Session
-}
-
-impl sf::IObject for InformationInterface {
-    ipc_sf_object_impl_default_command_metadata!();
-}
+ipc_sf_client_object_define_default_impl!(InformationInterface);
 
 impl IInformationInterface for InformationInterface {
     fn get_program_id(&mut self, process_id: u64) -> Result<u64> {
         ipc_client_send_request_command!([self.session.object_info; 0] (process_id) => (program_id: u64))
-    }
-}
-
-impl client::IClientObject for InformationInterface {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
     }
 }
 
@@ -43,13 +26,7 @@ impl service::IService for InformationInterface {
     }
 }
 
-pub struct DebugMonitorInterface {
-    session: sf::Session
-}
-
-impl sf::IObject for DebugMonitorInterface {
-    ipc_sf_object_impl_default_command_metadata!();
-}
+ipc_sf_client_object_define_default_impl!(DebugMonitorInterface);
 
 impl IDebugMonitorInterface for DebugMonitorInterface {
     fn get_application_process_id_deprecated(&mut self) -> Result<u64> {
@@ -58,16 +35,6 @@ impl IDebugMonitorInterface for DebugMonitorInterface {
 
     fn get_application_process_id(&mut self) -> Result<u64> {
         ipc_client_send_request_command!([self.session.object_info; 4] () => (process_id: u64))
-    }
-}
-
-impl client::IClientObject for DebugMonitorInterface {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
     }
 }
 

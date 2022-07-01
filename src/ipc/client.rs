@@ -80,7 +80,7 @@ impl !ResponseCommandParameter<sf::ProcessId> for sf::ProcessId {}
 
 impl<S: sf::IObject + ?Sized> RequestCommandParameter for mem::Shared<S> {
     fn before_request_write(session: &Self, _walker: &mut DataWalker, ctx: &mut CommandContext) -> Result<()> {
-        ctx.in_params.add_object(session.to::<dyn IClientObject>().get().get_info())
+        ctx.in_params.add_object(session.get().get_session().object_info)
     }
 
     fn before_send_sync_request(_session: &Self, _walker: &mut DataWalker, _ctx: &mut CommandContext) -> Result<()> {
@@ -97,8 +97,6 @@ impl<S: IClientObject + 'static + Sized> ResponseCommandParameter<mem::Shared<S>
 
 pub trait IClientObject: sf::IObject {
     fn new(session: sf::Session) -> Self where Self: Sized;
-
-    fn get_session(&mut self) -> &mut sf::Session;
 
     fn get_info(&mut self) -> ObjectInfo {
         self.get_session().object_info

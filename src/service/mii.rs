@@ -1,19 +1,12 @@
 use crate::ipc::sf::sm;
 use crate::result::*;
 use crate::ipc::sf;
-use crate::ipc::client;
 use crate::service;
 use crate::mem;
 
 pub use crate::ipc::sf::mii::*;
 
-pub struct DatabaseService {
-    session: sf::Session
-}
-
-impl sf::IObject for DatabaseService {
-    ipc_sf_object_impl_default_command_metadata!();
-}
+ipc_sf_client_object_define_default_impl!(DatabaseService);
 
 impl IDatabaseService for DatabaseService {
     fn is_updated(&mut self, flag: SourceFlag) -> Result<bool> {
@@ -37,37 +30,11 @@ impl IDatabaseService for DatabaseService {
     }
 }
 
-impl client::IClientObject for DatabaseService {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-}
-
-pub struct StaticService {
-    session: sf::Session
-}
-
-impl sf::IObject for StaticService {
-    ipc_sf_object_impl_default_command_metadata!();
-}
+ipc_sf_client_object_define_default_impl!(StaticService);
 
 impl IStaticService for StaticService {
     fn get_database_service(&mut self, key_code: SpecialKeyCode) -> Result<mem::Shared<dyn IDatabaseService>> {
         ipc_client_send_request_command!([self.session.object_info; 0] (key_code) => (database_service: mem::Shared<DatabaseService>))
-    }
-}
-
-impl client::IClientObject for StaticService {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
     }
 }
 

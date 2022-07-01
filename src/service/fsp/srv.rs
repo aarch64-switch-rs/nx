@@ -1,19 +1,12 @@
 use crate::ipc::sf::sm;
 use crate::result::*;
 use crate::ipc::sf;
-use crate::ipc::client;
 use crate::service;
 use crate::mem;
 
 pub use crate::ipc::sf::fsp::srv::*;
 
-pub struct FileSystemProxy {
-    session: sf::Session
-}
-
-impl sf::IObject for FileSystemProxy {
-    ipc_sf_object_impl_default_command_metadata!();
-}
+ipc_sf_client_object_define_default_impl!(FileSystemProxy);
 
 impl IFileSystemProxy for FileSystemProxy {
     fn set_current_process(&mut self, process_id: sf::ProcessId) -> Result<()> {
@@ -26,16 +19,6 @@ impl IFileSystemProxy for FileSystemProxy {
 
     fn output_access_log_to_sd_card(&mut self, access_log: sf::InMapAliasBuffer<u8>) -> Result<()> {
         ipc_client_send_request_command!([self.session.object_info; 1006] (access_log) => ())
-    }
-}
-
-impl client::IClientObject for FileSystemProxy {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
     }
 }
 

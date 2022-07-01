@@ -13,7 +13,6 @@
 #![feature(fn_traits)]
 #![feature(untagged_unions)]
 #![feature(negative_impls)]
-#![feature(const_intrinsic_copy)]
 #![feature(const_ptr_write)]
 #![feature(stdsimd)]
 #![macro_use]
@@ -88,5 +87,7 @@ pub mod version;
 pub mod rand;
 
 pub mod crypto;
+
+pub mod la;
 
 pub use paste;

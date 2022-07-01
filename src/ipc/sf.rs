@@ -313,6 +313,8 @@ impl CommandMetadata {
 // TODO: think of a proper way to migrate call_self_server_command / command_fn stuff to server and avoid it being on every single IObject?
 
 pub trait IObject {
+    fn get_session(&mut self) -> &mut Session;
+
     fn get_command_metadata_table(&self) -> CommandMetadataTable;
 
     fn call_self_server_command(&mut self, command_fn: server::CommandFn, protocol: CommandProtocol, ctx: &mut server::ServerContext) -> Result<()> {

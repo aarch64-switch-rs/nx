@@ -1,19 +1,12 @@
 use crate::result::*;
 use crate::ipc::sf::{self, sm};
-use crate::ipc::client;
 use crate::service;
 use crate::mem;
 use crate::ipc::sf::usb;
 
 pub use crate::ipc::sf::usb::hs::*;
 
-pub struct ClientEpSession {
-    session: sf::Session
-}
-
-impl sf::IObject for ClientEpSession {
-    ipc_sf_object_impl_default_command_metadata!();
-}
+ipc_sf_client_object_define_default_impl!(ClientEpSession);
 
 impl IClientEpSession for ClientEpSession {
     fn submit_out_request(&mut self, size: u32, unk: u32, buf: sf::InMapAliasBuffer<u8>) -> Result<u32> {
@@ -77,23 +70,7 @@ impl IClientEpSession for ClientEpSession {
     }
 }
 
-impl client::IClientObject for ClientEpSession {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-}
-
-pub struct ClientIfSession {
-    session: sf::Session
-}
-
-impl sf::IObject for ClientIfSession {
-    ipc_sf_object_impl_default_command_metadata!();
-}
+ipc_sf_client_object_define_default_impl!(ClientIfSession);
 
 impl IClientIfSession for ClientIfSession {
     fn get_state_change_event(&mut self) -> Result<sf::CopyHandle> {
@@ -153,23 +130,7 @@ impl IClientIfSession for ClientIfSession {
     }
 }
 
-impl client::IClientObject for ClientIfSession {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-}
-
-pub struct ClientRootSession {
-    session: sf::Session
-}
-
-impl sf::IObject for ClientRootSession {
-    ipc_sf_object_impl_default_command_metadata!();
-}
+ipc_sf_client_object_define_default_impl!(ClientRootSession);
 
 impl IClientRootSession for ClientRootSession {
     fn bind_client_process(&mut self, self_process_handle: sf::CopyHandle) -> Result<()> {
@@ -238,16 +199,6 @@ impl IClientRootSession for ClientRootSession {
 
     fn reset_device(&mut self, unk: u32) -> Result<()> {
         ipc_client_send_request_command!([self.session.object_info; 8] (unk) => ())
-    }
-}
-
-impl client::IClientObject for ClientRootSession {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
     }
 }
 

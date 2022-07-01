@@ -117,7 +117,7 @@ impl<S: sf::IObject + ?Sized> RequestCommandParameter<mem::Shared<S>> for mem::S
 
 impl<S: sf::IObject + ?Sized> ResponseCommandParameter for mem::Shared<S> {
     fn before_response_write(session: &Self, ctx: &mut ServerContext) -> Result<()> {
-        let session_copy = session.copy().to::<dyn ISessionObject>();
+        let session_copy = session.clone().to::<dyn ISessionObject>();
         if ctx.ctx.object_info.is_domain() {
             let domain_object_id = ctx.domain_table.get().allocate_id()?;
             ctx.ctx.out_params.push_domain_object(domain_object_id)?;
@@ -323,12 +323,19 @@ pub struct HipcManager<'a> {
     server_holder: &'a mut ServerHolder,
     pointer_buf_size: usize,
     pub cloned_object_server_handle: svc::Handle,
-    pub cloned_object_forward_handle: svc::Handle
+    pub cloned_object_forward_handle: svc::Handle,
+    dummy_session: sf::Session
 }
 
 impl<'a> HipcManager<'a> {
     pub fn new(server_holder: &'a mut ServerHolder, pointer_buf_size: usize) -> Self {
-        Self { server_holder, pointer_buf_size, cloned_object_server_handle: 0, cloned_object_forward_handle: 0 }
+        Self {
+            server_holder,
+            pointer_buf_size,
+            cloned_object_server_handle: svc::INVALID_HANDLE,
+            cloned_object_forward_handle: svc::INVALID_HANDLE,
+            dummy_session: sf::Session::new()
+        }
     }
 
     pub fn has_cloned_object(&self) -> bool {
@@ -342,6 +349,10 @@ impl<'a> HipcManager<'a> {
 
 impl<'a> sf::IObject for HipcManager<'a> {
     ipc_sf_object_impl_default_command_metadata!();
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.dummy_session
+    }
 }
 
 impl<'a> IHipcManager for HipcManager<'a> {
@@ -381,17 +392,25 @@ impl<'a> IHipcManager for HipcManager<'a> {
 impl<'a> ISessionObject for HipcManager<'a> {}
 
 pub struct MitmQueryService<S: IMitmService> {
-    phantom: core::marker::PhantomData<S>
+    phantom: core::marker::PhantomData<S>,
+    dummy_session: sf::Session
 }
 
 impl<S: IMitmService> MitmQueryService<S> {
     pub fn new() -> Self {
-        Self { phantom: core::marker::PhantomData }
+        Self {
+            phantom: core::marker::PhantomData,
+            dummy_session: sf::Session::new()
+        }
     }
 }
 
 impl<S: IMitmService> sf::IObject for MitmQueryService<S> {
     ipc_sf_object_impl_default_command_metadata!();
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.dummy_session
+    }
 }
 
 impl<S: IMitmService> IMitmQueryService for MitmQueryService<S> {

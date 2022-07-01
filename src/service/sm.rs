@@ -1,19 +1,12 @@
 use crate::result::*;
 use crate::ipc;
 use crate::ipc::sf;
-use crate::ipc::client;
 use crate::service;
 use crate::version;
 
 pub use crate::ipc::sf::sm::*;
 
-pub struct UserInterface {
-    session: sf::Session
-}
-
-impl sf::IObject for UserInterface {
-    ipc_sf_object_impl_default_command_metadata!();
-}
+ipc_sf_client_object_define_default_impl!(UserInterface);
 
 impl IUserInterface for UserInterface {
     fn register_client(&mut self, process_id: sf::ProcessId) -> Result<()> {
@@ -73,16 +66,6 @@ impl IUserInterface for UserInterface {
 
     fn atmosphere_wait_service(&mut self, name: ServiceName) -> Result<()> {
         ipc_client_send_request_command!([self.session.object_info; 65101] (name) => ())
-    }
-}
-
-impl client::IClientObject for UserInterface {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
     }
 }
 

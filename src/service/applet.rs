@@ -1,19 +1,12 @@
 use crate::ipc::sf::sm;
 use crate::result::*;
 use crate::ipc::sf;
-use crate::ipc::client;
 use crate::service;
 use crate::mem;
 
 pub use crate::ipc::sf::applet::*;
 
-pub struct StorageAccessor {
-    session: sf::Session
-}
-
-impl sf::IObject for StorageAccessor {
-    ipc_sf_object_impl_default_command_metadata!();
-}
+ipc_sf_client_object_define_default_impl!(StorageAccessor);
 
 impl IStorageAccessor for StorageAccessor {
     fn get_size(&mut self) -> Result<usize> {
@@ -29,23 +22,7 @@ impl IStorageAccessor for StorageAccessor {
     }
 }
 
-impl client::IClientObject for StorageAccessor {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-}
-
-pub struct Storage {
-    session: sf::Session
-}
-
-impl sf::IObject for Storage {
-    ipc_sf_object_impl_default_command_metadata!();
-}
+ipc_sf_client_object_define_default_impl!(Storage);
 
 impl IStorage for Storage {
     fn open(&mut self) -> Result<mem::Shared<dyn IStorageAccessor>> {
@@ -53,23 +30,7 @@ impl IStorage for Storage {
     }
 }
 
-impl client::IClientObject for Storage {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-}
-
-pub struct LibraryAppletAccessor {
-    session: sf::Session
-}
-
-impl sf::IObject for LibraryAppletAccessor {
-    ipc_sf_object_impl_default_command_metadata!();
-}
+ipc_sf_client_object_define_default_impl!(LibraryAppletAccessor);
 
 impl ILibraryAppletAccessor for LibraryAppletAccessor {
     fn get_applet_state_changed_event(&mut self) -> Result<sf::CopyHandle> {
@@ -83,25 +44,13 @@ impl ILibraryAppletAccessor for LibraryAppletAccessor {
     fn push_in_data(&mut self, storage: mem::Shared<dyn IStorage>) -> Result<()> {
         ipc_client_send_request_command!([self.session.object_info; 100] (storage) => ())
     }
-}
 
-impl client::IClientObject for LibraryAppletAccessor {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
+    fn pop_out_data(&mut self) -> Result<mem::Shared<dyn IStorage>> {
+        ipc_client_send_request_command!([self.session.object_info; 101] () => (storage: mem::Shared<Storage>))
     }
 }
 
-pub struct LibraryAppletCreator {
-    session: sf::Session
-}
-
-impl sf::IObject for LibraryAppletCreator {
-    ipc_sf_object_impl_default_command_metadata!();
-}
+ipc_sf_client_object_define_default_impl!(LibraryAppletCreator);
 
 impl ILibraryAppletCreator for LibraryAppletCreator {
     fn create_library_applet(&mut self, id: AppletId, mode: LibraryAppletMode) -> Result<mem::Shared<dyn ILibraryAppletAccessor>> {
@@ -113,23 +62,7 @@ impl ILibraryAppletCreator for LibraryAppletCreator {
     }
 }
 
-impl client::IClientObject for LibraryAppletCreator {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-}
-
-pub struct WindowController {
-    session: sf::Session
-}
-
-impl sf::IObject for WindowController {
-    ipc_sf_object_impl_default_command_metadata!();
-}
+ipc_sf_client_object_define_default_impl!(WindowController);
 
 impl IWindowController for WindowController {
     fn acquire_foreground_rights(&mut self) -> Result<()> {
@@ -137,23 +70,7 @@ impl IWindowController for WindowController {
     }
 }
 
-impl client::IClientObject for WindowController {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-}
-
-pub struct SelfController {
-    session: sf::Session
-}
-
-impl sf::IObject for SelfController {
-    ipc_sf_object_impl_default_command_metadata!();
-}
+ipc_sf_client_object_define_default_impl!(SelfController);
 
 impl ISelfController for SelfController {
     fn set_screenshot_permission(&mut self, permission: ScreenShotPermission) -> Result<()> {
@@ -161,23 +78,7 @@ impl ISelfController for SelfController {
     }
 }
 
-impl client::IClientObject for SelfController {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-}
-
-pub struct LibraryAppletProxy {
-    session: sf::Session
-}
-
-impl sf::IObject for LibraryAppletProxy {
-    ipc_sf_object_impl_default_command_metadata!();
-}
+ipc_sf_client_object_define_default_impl!(LibraryAppletProxy);
 
 impl ILibraryAppletProxy for LibraryAppletProxy {
     fn get_self_controller(&mut self) -> Result<mem::Shared<dyn ISelfController>> {
@@ -193,37 +94,11 @@ impl ILibraryAppletProxy for LibraryAppletProxy {
     }
 }
 
-impl client::IClientObject for LibraryAppletProxy {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-}
-
-pub struct AllSystemAppletProxiesService {
-    session: sf::Session
-}
-
-impl sf::IObject for AllSystemAppletProxiesService {
-    ipc_sf_object_impl_default_command_metadata!();
-}
+ipc_sf_client_object_define_default_impl!(AllSystemAppletProxiesService);
 
 impl IAllSystemAppletProxiesService for AllSystemAppletProxiesService {
     fn open_library_applet_proxy(&mut self, process_id: sf::ProcessId, self_process_handle: sf::CopyHandle, applet_attribute: sf::InMapAliasBuffer<AppletAttribute>) -> Result<mem::Shared<dyn ILibraryAppletProxy>> {
         ipc_client_send_request_command!([self.session.object_info; 201] (process_id, self_process_handle, applet_attribute) => (library_applet_proxy: mem::Shared<LibraryAppletProxy>))
-    }
-}
-
-impl client::IClientObject for AllSystemAppletProxiesService {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
     }
 }
 

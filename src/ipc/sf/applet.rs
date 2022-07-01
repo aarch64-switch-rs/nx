@@ -88,7 +88,7 @@ ipc_sf_define_interface_trait! {
     }
 }
 
-crate::ipc_sf_define_interface_trait! {
+ipc_sf_define_interface_trait! {
     trait IStorage {
         open [0, version::VersionInterval::all()]: () => (storage_accessor: mem::Shared<dyn IStorageAccessor>);
     }
@@ -99,6 +99,7 @@ ipc_sf_define_interface_trait! {
         get_applet_state_changed_event [0, version::VersionInterval::all()]: () => (applet_state_changed_event: sf::CopyHandle);
         start [10, version::VersionInterval::all()]: () => ();
         push_in_data [100, version::VersionInterval::all()]: (storage: mem::Shared<dyn IStorage>) => ();
+        pop_out_data [101, version::VersionInterval::all()]: () => (storage: mem::Shared<dyn IStorage>);
     }
 }
 

@@ -1,18 +1,11 @@
 use crate::result::*;
 use crate::ipc::sf::{self, sm};
 use crate::ipc::sf::mii;
-use crate::ipc::client;
 use crate::service;
 
 pub use crate::ipc::sf::set::*;
 
-pub struct SystemSettingsServer {
-    session: sf::Session
-}
-
-impl sf::IObject for SystemSettingsServer {
-    ipc_sf_object_impl_default_command_metadata!();
-}
+ipc_sf_client_object_define_default_impl!(SystemSettingsServer);
 
 impl ISystemSettingsServer for SystemSettingsServer {
     fn get_firmware_version(&mut self, out_version: sf::OutFixedPointerBuffer<FirmwareVersion>) -> Result<()> {
@@ -25,16 +18,6 @@ impl ISystemSettingsServer for SystemSettingsServer {
 
     fn get_mii_author_id(&mut self) -> Result<mii::CreateId> {
         ipc_client_send_request_command!([self.session.object_info; 90] () => (id: mii::CreateId))
-    }
-}
-
-impl client::IClientObject for SystemSettingsServer {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
     }
 }
 

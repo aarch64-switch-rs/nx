@@ -27,25 +27,9 @@ impl<S: NvDrvService> INvDrvServices for S {
     }
 }
 
-pub struct ApplicationNvDrvService {
-    session: sf::Session
-}
-
-impl sf::IObject for ApplicationNvDrvService {
-    ipc_sf_object_impl_default_command_metadata!();
-}
+ipc_sf_client_object_define_default_impl!(ApplicationNvDrvService);
 
 impl NvDrvService for ApplicationNvDrvService {}
-
-impl client::IClientObject for ApplicationNvDrvService {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-}
 
 impl service::IService for ApplicationNvDrvService {
     fn get_name() -> sm::ServiceName {
@@ -61,25 +45,9 @@ impl service::IService for ApplicationNvDrvService {
     }
 }
 
-pub struct AppletNvDrvService {
-    session: sf::Session
-}
-
-impl sf::IObject for AppletNvDrvService {
-    ipc_sf_object_impl_default_command_metadata!();
-}
+ipc_sf_client_object_define_default_impl!(AppletNvDrvService);
 
 impl NvDrvService for AppletNvDrvService {}
-
-impl client::IClientObject for AppletNvDrvService {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-}
 
 impl service::IService for AppletNvDrvService {
     fn get_name() -> sm::ServiceName {
@@ -95,25 +63,9 @@ impl service::IService for AppletNvDrvService {
     }
 }
 
-pub struct SystemNvDrvService {
-    session: sf::Session
-}
-
-impl sf::IObject for SystemNvDrvService {
-    ipc_sf_object_impl_default_command_metadata!();
-}
+ipc_sf_client_object_define_default_impl!(SystemNvDrvService);
 
 impl NvDrvService for SystemNvDrvService {}
-
-impl client::IClientObject for SystemNvDrvService {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-}
 
 impl service::IService for SystemNvDrvService {
     fn get_name() -> sm::ServiceName {

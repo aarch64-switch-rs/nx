@@ -1,31 +1,14 @@
 use crate::result::*;
 use crate::ipc::sf::{self, sm};
-use crate::ipc::client;
 use crate::service;
 
 pub use crate::ipc::sf::psm::*;
 
-pub struct PsmServer {
-    session: sf::Session
-}
-
-impl sf::IObject for PsmServer {
-    ipc_sf_object_impl_default_command_metadata!();
-}
+ipc_sf_client_object_define_default_impl!(PsmServer);
 
 impl IPsmServer for PsmServer {
     fn get_battery_charge_percentage(&mut self) -> Result<u32> {
         ipc_client_send_request_command!([self.session.object_info; 0] () => (charge: u32))
-    }
-}
-
-impl client::IClientObject for PsmServer {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
     }
 }
 

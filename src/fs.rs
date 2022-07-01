@@ -452,10 +452,20 @@ pub fn initialize_fspsrv_session() -> Result<()> {
     Ok(())
 }
 
-pub fn is_fspsrv_session_initialized() -> bool {
-    !get_fspsrv_session_ref().is_null()
+pub fn initialize_with_fspsrv_session(session: mem::Shared<dyn IFileSystemProxy>) -> Result<()> {
+    unsafe {
+        G_FSPSRV_SESSION.set(session);
+    }
+
+    Ok(())
 }
 
+#[inline]
+pub fn is_fspsrv_session_initialized() -> bool {
+    get_fspsrv_session_ref().is_valid()
+}
+
+#[inline]
 pub fn finalize_fspsrv_session() {
     get_fspsrv_session_ref().reset();
 }

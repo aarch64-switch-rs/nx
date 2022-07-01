@@ -411,12 +411,12 @@ FN_START __nx_svc_create_event
 FN_END
 
 FN_START __nx_svc_map_io_region
-	svc 0x48
+	svc 0x46
 	ret
 FN_END
 
 FN_START __nx_svc_unmap_io_region
-	svc 0x49
+	svc 0x47
 	ret
 FN_END
 

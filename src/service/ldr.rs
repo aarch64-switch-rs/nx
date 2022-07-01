@@ -1,18 +1,11 @@
 use crate::ipc::sf::sm;
 use crate::result::*;
 use crate::ipc::sf;
-use crate::ipc::client;
 use crate::service;
 
 pub use crate::ipc::sf::ldr::*;
 
-pub struct ShellInterface {
-    session: sf::Session
-}
-
-impl sf::IObject for ShellInterface {
-    ipc_sf_object_impl_default_command_metadata!();
-}
+ipc_sf_client_object_define_default_impl!(ShellInterface);
 
 impl IShellInterface for ShellInterface {
     fn set_program_argument_deprecated(&mut self, program_id: u64, args_size: u32, args_buf: sf::InPointerBuffer<u8>) -> Result<()> {
@@ -33,16 +26,6 @@ impl IShellInterface for ShellInterface {
 
     fn atmosphere_unregister_external_code(&mut self, program_id: u64) -> Result<()> {
         ipc_client_send_request_command!([self.session.object_info; 65001] (program_id) => ())
-    }
-}
-
-impl client::IClientObject for ShellInterface {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
     }
 }
 

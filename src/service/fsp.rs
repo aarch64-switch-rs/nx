@@ -1,17 +1,10 @@
 use crate::result::*;
 use crate::ipc::sf;
-use crate::ipc::client;
 use crate::mem;
 
 pub use crate::ipc::sf::fsp::*;
 
-pub struct Directory {
-    session: sf::Session
-}
-
-impl sf::IObject for Directory {
-    ipc_sf_object_impl_default_command_metadata!();
-}
+ipc_sf_client_object_define_default_impl!(Directory);
 
 impl IDirectory for Directory {
     fn read(&mut self, out_entries: sf::OutMapAliasBuffer<DirectoryEntry>) -> Result<u64> {
@@ -23,23 +16,7 @@ impl IDirectory for Directory {
     }
 }
 
-impl client::IClientObject for Directory {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-}
-
-pub struct File {
-    session: sf::Session
-}
-
-impl sf::IObject for File {
-    ipc_sf_object_impl_default_command_metadata!();
-}
+ipc_sf_client_object_define_default_impl!(File);
 
 impl IFile for File {
     fn read(&mut self, option: FileReadOption, offset: usize, size: usize, buf: sf::OutNonSecureMapAliasBuffer<u8>) -> Result<usize> {
@@ -71,23 +48,7 @@ impl IFile for File {
     }
 }
 
-impl client::IClientObject for File {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-}
-
-pub struct FileSystem {
-    session: sf::Session
-}
-
-impl sf::IObject for FileSystem {
-    ipc_sf_object_impl_default_command_metadata!();
-}
+ipc_sf_client_object_define_default_impl!(FileSystem);
 
 impl IFileSystem for FileSystem {
     fn create_file(&mut self, attribute: FileAttribute, size: usize, path_buf: sf::InFixedPointerBuffer<Path>) -> Result<()> {
@@ -152,16 +113,6 @@ impl IFileSystem for FileSystem {
 
     fn query_entry(&mut self, path_buf: sf::InFixedPointerBuffer<Path>, query_id: QueryId, in_buf: sf::InNonSecureMapAliasBuffer<u8>, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) -> Result<()> {
         ipc_client_send_request_command!([self.session.object_info; 15] (path_buf, query_id, in_buf, out_buf) => ())
-    }
-}
-
-impl client::IClientObject for FileSystem {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
     }
 }
 

@@ -8,12 +8,16 @@ use crate::ipc::sf::fsp::IFileSystem;
 use crate::fs::sf as fs_sf;
 
 pub struct FileSystem {
-    sub_dir: String
+    sub_dir: String,
+    dummy_session: sf::Session
 }
 
 impl FileSystem {
     pub fn new(sub_dir: String) -> Self {
-        Self { sub_dir }
+        Self {
+            sub_dir,
+            dummy_session: sf::Session::new()
+        }
     }
 
     fn make_path(&self, path_buf: &sf::InFixedPointerBuffer<fsp::Path>) -> Result<String> {
@@ -24,6 +28,10 @@ impl FileSystem {
 
 impl sf::IObject for FileSystem {
     ipc_sf_object_impl_default_command_metadata!();
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.dummy_session
+    }
 }
 
 impl IFileSystem for FileSystem {

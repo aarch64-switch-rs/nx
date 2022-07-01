@@ -3,19 +3,12 @@ use crate::ipc::sf::sm;
 use crate::ipc::sf::hid;
 use crate::result::*;
 use crate::ipc::sf;
-use crate::ipc::client;
 use crate::service;
 use crate::mem;
 
 pub use crate::ipc::sf::nfp::*;
 
-pub struct User {
-    session: sf::Session
-}
-
-impl sf::IObject for User {
-    ipc_sf_object_impl_default_command_metadata!();
-}
+ipc_sf_client_object_define_default_impl!(User);
 
 impl IUser for User {
     fn initialize(&mut self, aruid: applet::AppletResourceUserId, process_id: sf::ProcessId, mcu_data: sf::InMapAliasBuffer<McuVersionData>) -> Result<()> {
@@ -119,38 +112,11 @@ impl IUser for User {
     }
 }
 
-impl client::IClientObject for User {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-}
-
-
-pub struct UserManager {
-    session: sf::Session
-}
-
-impl sf::IObject for UserManager {
-    ipc_sf_object_impl_default_command_metadata!();
-}
+ipc_sf_client_object_define_default_impl!(UserManager);
 
 impl IUserManager for UserManager {
     fn create_user_interface(&mut self) -> Result<mem::Shared<dyn IUser>> {
         ipc_client_send_request_command!([self.session.object_info; 0] () => (user: mem::Shared<User>))
-    }
-}
-
-impl client::IClientObject for UserManager {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
     }
 }
 
@@ -168,13 +134,7 @@ impl service::IService for UserManager {
     }
 }
 
-pub struct System {
-    session: sf::Session
-}
-
-impl sf::IObject for System {
-    ipc_sf_object_impl_default_command_metadata!();
-}
+ipc_sf_client_object_define_default_impl!(System);
 
 impl ISystem for System {
     fn initialize_system(&mut self, aruid: applet::AppletResourceUserId, process_id: sf::ProcessId, mcu_data: sf::InMapAliasBuffer<McuVersionData>) -> Result<()> {
@@ -282,38 +242,11 @@ impl ISystem for System {
     }
 }
 
-impl client::IClientObject for System {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-}
-
-
-pub struct SystemManager {
-    session: sf::Session
-}
-
-impl sf::IObject for SystemManager {
-    ipc_sf_object_impl_default_command_metadata!();
-}
+ipc_sf_client_object_define_default_impl!(SystemManager);
 
 impl ISystemManager for SystemManager {
     fn create_system_interface(&mut self) -> Result<mem::Shared<dyn ISystem>> {
         ipc_client_send_request_command!([self.session.object_info; 0] () => (system: mem::Shared<System>))
-    }
-}
-
-impl client::IClientObject for SystemManager {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
     }
 }
 
@@ -331,13 +264,7 @@ impl service::IService for SystemManager {
     }
 }
 
-pub struct Debug {
-    session: sf::Session
-}
-
-impl sf::IObject for Debug {
-    ipc_sf_object_impl_default_command_metadata!();
-}
+ipc_sf_client_object_define_default_impl!(Debug);
 
 impl IDebug for Debug {
     fn initialize_debug(&mut self, aruid: applet::AppletResourceUserId, process_id: sf::ProcessId, mcu_data: sf::InMapAliasBuffer<McuVersionData>) -> Result<()> {
@@ -497,38 +424,11 @@ impl IDebug for Debug {
     }
 }
 
-impl client::IClientObject for Debug {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-}
-
-
-pub struct DebugManager {
-    session: sf::Session
-}
-
-impl sf::IObject for DebugManager {
-    ipc_sf_object_impl_default_command_metadata!();
-}
+ipc_sf_client_object_define_default_impl!(DebugManager);
 
 impl IDebugManager for DebugManager {
     fn create_debug_interface(&mut self) -> Result<mem::Shared<dyn IDebug>> {
         ipc_client_send_request_command!([self.session.object_info; 0] () => (debug: mem::Shared<Debug>))
-    }
-}
-
-impl client::IClientObject for DebugManager {
-    fn new(session: sf::Session) -> Self {
-        Self { session }
-    }
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
     }
 }
 
