@@ -81,31 +81,34 @@ impl Drop for LibraryAppletHolder {
     }
 }
 
-static mut G_CREATOR: sync::Locked<mem::Shared<dyn ILibraryAppletCreator>> = sync::Locked::new(false, mem::Shared::<applet::LibraryAppletCreator>::empty());
+static mut G_CREATOR: sync::Locked<Option<mem::Shared<dyn ILibraryAppletCreator>>> = sync::Locked::new(false, None);
 
 #[inline]
-fn get_creator_ref() -> &'static mut mem::Shared<dyn ILibraryAppletCreator> {
+pub fn initialize(creator: mem::Shared<dyn ILibraryAppletCreator>) {
     unsafe {
-        G_CREATOR.get()
+        G_CREATOR.set(Some(creator));
     }
-}
-
-pub fn initialize(creator: mem::Shared<dyn ILibraryAppletCreator>) -> Result<()> {
-    unsafe {
-        G_CREATOR.set(creator);
-    }
-
-    Ok(())
 }
 
 #[inline]
 pub fn is_initialized() -> bool {
-    get_creator_ref().is_valid()
+    unsafe {
+        G_CREATOR.get().is_some()
+    }
 }
 
 #[inline]
 pub fn finalize() {
-    get_creator_ref().reset();
+    unsafe {
+        G_CREATOR.set(None);
+    }
+}
+
+#[inline]
+pub fn get_creator() -> Result<&'static mem::Shared<dyn ILibraryAppletCreator>> {
+    unsafe {
+        G_CREATOR.get().as_ref().ok_or(super::rc::ResultNotInitialized::make())
+    }
 }
 
 pub fn read_storage<T: Copy + Default>(storage: mem::Shared<dyn IStorage>) -> Result<T> {
@@ -129,7 +132,7 @@ pub fn write_storage<T: Copy>(storage: mem::Shared<dyn IStorage>, t: T) -> Resul
 pub fn create_write_storage<T: Copy>(t: T) -> Result<mem::Shared<dyn IStorage>> {
     result_return_unless!(is_initialized(), super::rc::ResultNotInitialized);
 
-    let storage = get_creator_ref().get().create_storage(cmem::size_of::<T>())?;
+    let storage = get_creator()?.get().create_storage(cmem::size_of::<T>())?;
     write_storage(storage.clone(), t)?;
 
     Ok(storage)
@@ -138,7 +141,7 @@ pub fn create_write_storage<T: Copy>(t: T) -> Result<mem::Shared<dyn IStorage>> 
 pub fn create_library_applet(id: applet::AppletId, mode: applet::LibraryAppletMode, mut common_args: CommonArguments) -> Result<LibraryAppletHolder> {
     result_return_unless!(is_initialized(), super::rc::ResultNotInitialized);
 
-    let accessor = get_creator_ref().get().create_library_applet(id, mode)?;
+    let accessor = get_creator()?.get().create_library_applet(id, mode)?;
 
     let mut holder = LibraryAppletHolder::new(accessor)?;
     

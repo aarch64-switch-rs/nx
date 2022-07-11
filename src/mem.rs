@@ -10,15 +10,17 @@ use crate::util;
 pub mod alloc;
 
 #[derive(Copy, Clone)]
-struct Refcount {
+struct ReferenceCount {
     holder: *mut i64
 }
 
-impl Refcount {
+impl ReferenceCount {
+    #[inline]
     pub const fn new() -> Self {
         Self { holder: ptr::null_mut() }
     }
     
+    #[inline]
     pub fn use_count(&self) -> i64 {
         if self.holder.is_null() {
             0
@@ -59,63 +61,52 @@ impl Refcount {
 
 pub struct Shared<T: ?Sized> {
     object: *mut T,
-    refcount: Refcount
+    ref_count: ReferenceCount
 }
 
 impl<T> Shared<T> {
     pub fn new(var: T) -> Self {
         // This is done instead of just &var to avoid dropping the variable inside this function
         let object = Box::into_raw(Box::new(var));
-        let mut shared = Self { object, refcount: Refcount::new() };
-        shared.refcount.acquire(object);
+        let mut shared = Self { object, ref_count: ReferenceCount::new() };
+        shared.ref_count.acquire(object);
         shared
-    }
-
-    // TODO: custom allocator support?
-
-    pub const fn empty() -> Self {
-        Self { object: ptr::null_mut(), refcount: Refcount::new() }
     }
 }
 
 impl<T: ?Sized> Shared<T> {
     fn release(&mut self) {
-        self.refcount.release(self.object);
+        self.ref_count.release(self.object);
     }
     
     fn acquire(&mut self, object: *mut T) {
-        self.refcount.acquire(object);
+        self.ref_count.acquire(object);
         self.object = object;
     }
 
-    pub fn is_null(&self) -> bool {
-        self.object.is_null()
-    }
-
-    pub fn is_valid(&self) -> bool {
-        !self.is_null()
-    }
-
+    #[inline]
     pub fn use_count(&self) -> i64 {
-        self.refcount.use_count()
+        self.ref_count.use_count()
     }
 
     pub fn to<U: ?Sized>(&self) -> Shared<U> {
-        let mut new_shared = Shared::<U> { object: util::raw_transmute(self.object), refcount: self.refcount };
+        let mut new_shared = Shared::<U> { object: util::raw_transmute(self.object), ref_count: self.ref_count };
         new_shared.acquire(new_shared.object);
         new_shared
     }
     
+    #[inline]
     pub fn get(&self) -> &mut T {
         unsafe { &mut *self.object }
     }
 
+    #[inline]
     pub fn reset(&mut self) {
         self.release();
     }
 
     pub fn copy(&self) -> Self {
-        let mut new_shared = Self { object: self.object, refcount: self.refcount };
+        let mut new_shared = Self { object: self.object, ref_count: self.ref_count };
         new_shared.acquire(new_shared.object);
         new_shared
     }

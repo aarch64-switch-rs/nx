@@ -1677,8 +1677,8 @@ pub fn compute_crc16(data_buf: *const u8, data_size: usize, base_crc: u16, rever
 
 #[inline]
 pub fn get_device_id() -> Result<CreateId> {
-    let mut set_sys: mem::Shared<set::SystemSettingsServer> = service::new_service_object()?;
-    set_sys.get_mii_author_id()
+    let set_sys: mem::Shared<set::SystemSettingsServer> = service::new_service_object()?;
+    set_sys.get().get_mii_author_id()
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]

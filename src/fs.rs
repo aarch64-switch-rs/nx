@@ -412,8 +412,6 @@ impl FileSystemDevice {
         Self { root_name, fs }
     }
 }
-
-static mut G_FSPSRV_SESSION: sync::Locked<mem::Shared<dyn IFileSystemProxy>> = sync::Locked::new(false, mem::Shared::<fsp::srv::FileSystemProxy>::empty());
 static mut G_DEVICES: sync::Locked<Vec<FileSystemDevice>> = sync::Locked::new(false, Vec::new());
 
 fn find_device_by_name(name: &PathSegment) -> Result<mem::Shared<dyn FileSystem>> {
@@ -427,12 +425,7 @@ fn find_device_by_name(name: &PathSegment) -> Result<mem::Shared<dyn FileSystem>
     }
 }
 
-#[inline]
-fn get_fspsrv_session_ref() -> &'static mut mem::Shared<dyn IFileSystemProxy> {
-    unsafe {
-        G_FSPSRV_SESSION.get()
-    }
-}
+static mut G_FSPSRV_SESSION: sync::Locked<Option<mem::Shared<dyn IFileSystemProxy>>> = sync::Locked::new(false, None);
 
 define_bit_enum! {
     FileOpenOption (u32) {
@@ -444,34 +437,37 @@ define_bit_enum! {
     }
 }
 
-pub fn initialize_fspsrv_session() -> Result<()> {
+pub fn initialize_fspsrv_session_with(session: mem::Shared<dyn IFileSystemProxy>) {
     unsafe {
-        G_FSPSRV_SESSION.set(service::new_service_object::<fsp::srv::FileSystemProxy>()?);
+        G_FSPSRV_SESSION.set(Some(session));
     }
-
-    Ok(())
 }
 
-pub fn initialize_with_fspsrv_session(session: mem::Shared<dyn IFileSystemProxy>) -> Result<()> {
-    unsafe {
-        G_FSPSRV_SESSION.set(session);
-    }
-
+#[inline]
+pub fn initialize_fspsrv_session() -> Result<()> {
+    initialize_fspsrv_session_with(service::new_service_object::<fsp::srv::FileSystemProxy>()?);
     Ok(())
 }
 
 #[inline]
 pub fn is_fspsrv_session_initialized() -> bool {
-    get_fspsrv_session_ref().is_valid()
+    unsafe {
+        G_FSPSRV_SESSION.get().is_some()
+    }
 }
 
 #[inline]
 pub fn finalize_fspsrv_session() {
-    get_fspsrv_session_ref().reset();
+    unsafe {
+        G_FSPSRV_SESSION.set(None);
+    }
 }
 
-pub fn get_fspsrv_session() -> mem::Shared<dyn IFileSystemProxy> {
-    get_fspsrv_session_ref().clone()
+#[inline]
+pub fn get_fspsrv_session() -> Result<&'static mem::Shared<dyn IFileSystemProxy>> {
+    unsafe {
+        G_FSPSRV_SESSION.get().as_ref().ok_or(super::rc::ResultNotInitialized::make())
+    }
 }
 
 pub fn mount(name: &str, fs: mem::Shared<dyn FileSystem>) -> Result<()> {
@@ -489,9 +485,7 @@ pub fn mount_fsp_filesystem(name: &str, fs_obj: mem::Shared<dyn IFileSystem>) ->
 }
 
 pub fn mount_sd_card(name: &str) -> Result<()> {
-    result_return_unless!(is_fspsrv_session_initialized(), super::rc::ResultNotInitialized);
-    
-    let sd_fs_obj = get_fspsrv_session_ref().get().open_sd_card_filesystem()?;
+    let sd_fs_obj = get_fspsrv_session()?.get().open_sd_card_filesystem()?;
     mount_fsp_filesystem(name, sd_fs_obj)
 }
 
