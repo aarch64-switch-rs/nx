@@ -352,6 +352,14 @@
 <span id="346">346</span>
 <span id="347">347</span>
 <span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Initial code/entrypoint support and utils</span>
 <span class="doccomment">//! </span>
 <span class="doccomment">//! # Custom entrypoint</span>
@@ -361,7 +369,7 @@
 <span class="doccomment">//! Example (check [here](https://switchbrew.org/wiki/Homebrew_ABI#Entrypoint_Arguments) for more entrypoint details):</span>
 <span class="doccomment">//! ```</span>
 <span class="doccomment">//! #[no_mangle]</span>
-<span class="doccomment">//! unsafe extern &quot;C&quot; fn __nx_rrt0_entry(x0: usize, x1: usize) {</span>
+<span class="doccomment">//! unsafe extern &quot;C&quot; fn __nx_rrt0_entry(arg0: usize, arg1: usize) {</span>
 <span class="doccomment">//!     // ...</span>
 <span class="doccomment">//! }</span>
 <span class="doccomment">//! ```</span>
@@ -382,11 +390,10 @@
 <span class="doccomment">//! }</span>
 <span class="doccomment">//! ```</span>
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::dynamic::elf</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::elf</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::result</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::svc</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::mem::alloc</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::dynamic</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::svc::Handle</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::sync</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::util</span>;
@@ -527,10 +534,7 @@
     }
 }
 
-<span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">normal_entry</span>(<span class="ident">maybe_abi_cfg_entries_ptr</span>: <span class="kw-2">*const</span> <span class="ident">hbl::AbiConfigEntry</span>, <span class="ident">maybe_main_thread_handle</span>: <span class="ident">usize</span>, <span class="ident">aslr_base_address</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>, <span class="ident">dyn_section</span>: <span class="kw-2">*const</span> <span class="ident">elf::Dyn</span>, <span class="ident">lr_exit_fn</span>: <span class="ident">ExitFn</span>) {
-    <span class="comment">// First of all, relocate ourselves</span>
-    <span class="ident">dynamic::relocate_with_dyn</span>(<span class="ident">aslr_base_address</span>, <span class="ident">dyn_section</span>).<span class="ident">unwrap</span>();
-    
+<span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">normal_entry</span>(<span class="ident">maybe_abi_cfg_entries_ptr</span>: <span class="kw-2">*const</span> <span class="ident">hbl::AbiConfigEntry</span>, <span class="ident">maybe_main_thread_handle</span>: <span class="ident">usize</span>, <span class="ident">lr_exit_fn</span>: <span class="ident">ExitFn</span>) {
     <span class="kw">let</span> <span class="ident">exec_type</span> <span class="op">=</span> <span class="kw">match</span> <span class="op">!</span><span class="ident">maybe_abi_cfg_entries_ptr</span>.<span class="ident">is_null</span>() <span class="op">&amp;&amp;</span> (<span class="ident">maybe_main_thread_handle</span> <span class="op">==</span> <span class="ident">usize::MAX</span>) {
         <span class="bool-val">true</span> =&gt; <span class="ident">ExecutableType::Nro</span>,
         <span class="bool-val">false</span> =&gt; <span class="ident">ExecutableType::Nso</span>
@@ -657,7 +661,13 @@
 
 <span class="attribute">#[<span class="ident">no_mangle</span>]</span>
 <span class="attribute">#[<span class="ident">linkage</span> <span class="op">=</span> <span class="string">&quot;weak&quot;</span>]</span>
-<span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">__nx_rrt0_entry</span>(<span class="ident">x0</span>: <span class="ident">usize</span>, <span class="ident">x1</span>: <span class="ident">usize</span>) {
+<span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">__nx_rrt0_entry</span>(<span class="ident">arg0</span>: <span class="ident">usize</span>, <span class="ident">arg1</span>: <span class="ident">usize</span>) {
+    <span class="kw">let</span> <span class="ident">lr_exit_fn</span>: <span class="ident">ExitFn</span>;
+    <span class="macro">asm!</span>(
+        <span class="string">&quot;mov {}, lr&quot;</span>,
+        <span class="ident">out</span>(<span class="ident">reg</span>) <span class="ident">lr_exit_fn</span>
+    );
+
     <span class="comment">/*
     Possible entry arguments:
     - NSO/KIP: x0 = 0, x1 = &lt;main-thread-handle&gt;
@@ -665,39 +675,45 @@
     - Exception: x0 = &lt;exception-type&gt;, x1 = &lt;stack-top&gt;
     */</span>
 
-    <span class="kw">if</span> (<span class="ident">x0</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>) <span class="op">&amp;&amp;</span> (<span class="ident">x1</span> <span class="op">!</span><span class="op">=</span> <span class="ident">usize::MAX</span>) {
+    <span class="kw">if</span> (<span class="ident">arg0</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>) <span class="op">&amp;&amp;</span> (<span class="ident">arg1</span> <span class="op">!</span><span class="op">=</span> <span class="ident">usize::MAX</span>) {
         <span class="comment">// Handle exception entry</span>
-        <span class="kw">let</span> <span class="ident">exc_type</span>: <span class="ident">svc::ExceptionType</span> <span class="op">=</span> <span class="ident">mem::transmute</span>(<span class="ident">x0</span> <span class="kw">as</span> <span class="ident">u32</span>);
-        <span class="kw">let</span> <span class="ident">stack_top</span> <span class="op">=</span> <span class="ident">x1</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">u8</span>;
+        <span class="kw">let</span> <span class="ident">exc_type</span>: <span class="ident">svc::ExceptionType</span> <span class="op">=</span> <span class="ident">mem::transmute</span>(<span class="ident">arg0</span> <span class="kw">as</span> <span class="ident">u32</span>);
+        <span class="kw">let</span> <span class="ident">stack_top</span> <span class="op">=</span> <span class="ident">arg1</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">u8</span>;
         <span class="ident">exception_entry</span>(<span class="ident">exc_type</span>, <span class="ident">stack_top</span>);
     }
     <span class="kw">else</span> {
-        <span class="comment">// Clean BSS first</span>
-        <span class="kw">let</span> <span class="ident">bss_start_addr</span>: <span class="kw-2">*mut</span> <span class="ident">usize</span>;
-        <span class="macro">asm!</span>(<span class="string">&quot;adr {}, __bss_start&quot;</span>, <span class="ident">out</span>(<span class="ident">reg</span>) <span class="ident">bss_start_addr</span>);
-        <span class="kw">let</span> <span class="ident">bss_end_addr</span>: <span class="kw-2">*mut</span> <span class="ident">usize</span>;
-        <span class="macro">asm!</span>(<span class="string">&quot;adr {}, __bss_end&quot;</span>, <span class="ident">out</span>(<span class="ident">reg</span>) <span class="ident">bss_end_addr</span>);
+        <span class="comment">// TODO: why does this return the address to __nx_rrt0_entry instead of actually _start?</span>
+        <span class="comment">// Since it&#39;s a valid .text address anyway, use QueryMemory SVC to find the actual start</span>
+        <span class="kw">let</span> <span class="ident">self_base_address</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>;
+        <span class="macro">asm!</span>(
+            <span class="string">&quot;adr {}, _start&quot;</span>,
+            <span class="ident">out</span>(<span class="ident">reg</span>) <span class="ident">self_base_address</span>
+        );
+
+        <span class="kw">let</span> (<span class="ident">info</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">svc::query_memory</span>(<span class="ident">self_base_address</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">aslr_base_address</span> <span class="op">=</span> <span class="ident">info</span>.<span class="ident">base_address</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">u8</span>;
+
+        <span class="kw">let</span> <span class="ident">start_dyn</span> <span class="op">=</span> <span class="ident">elf::mod0::find_start_dyn_address</span>(<span class="ident">aslr_base_address</span>).<span class="ident">unwrap</span>();
+        <span class="ident">elf::relocate_with_dyn</span>(<span class="ident">aslr_base_address</span>, <span class="ident">start_dyn</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">elf::Dyn</span>).<span class="ident">unwrap</span>();
+
+        <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> {
+            <span class="kw">static</span> <span class="ident">__bss_start</span>: <span class="ident">u8</span>;
+            <span class="kw">static</span> <span class="ident">__bss_end</span>: <span class="ident">u8</span>;
+        }
+
+        <span class="kw">let</span> <span class="ident">bss_start_addr</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">__bss_start</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">u64</span>;
+        <span class="kw">let</span> <span class="ident">bss_end_addr</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">__bss_end</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">u64</span>;
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cur_bss_addr</span> <span class="op">=</span> <span class="ident">bss_start_addr</span>;
         <span class="kw">while</span> <span class="ident">cur_bss_addr</span> <span class="op">&lt;</span> <span class="ident">bss_end_addr</span> {
             <span class="ident">ptr::write_volatile</span>(<span class="ident">cur_bss_addr</span>, <span class="number">0</span>);
-            <span class="ident">cur_bss_addr</span> <span class="op">=</span> <span class="ident">cur_bss_addr</span>.<span class="ident">offset</span>(<span class="number">1</span>);
+            <span class="ident">cur_bss_addr</span> <span class="op">=</span> <span class="ident">cur_bss_addr</span>.<span class="ident">add</span>(<span class="number">1</span>);
         }
 
         <span class="comment">// Handle NSO/KIP/NRO normal entry</span>
-        <span class="kw">let</span> <span class="ident">aslr_base_address</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>;
-        <span class="macro">asm!</span>(<span class="string">&quot;adr {}, _start&quot;</span>, <span class="ident">out</span>(<span class="ident">reg</span>) <span class="ident">aslr_base_address</span>);
-
-        <span class="kw">let</span> <span class="ident">dyn_start_addr</span>: <span class="kw-2">*const</span> <span class="ident">elf::Dyn</span>;
-        <span class="macro">asm!</span>(<span class="string">&quot;adr {}, __dynamic_start&quot;</span>, <span class="ident">out</span>(<span class="ident">reg</span>) <span class="ident">dyn_start_addr</span>);
-
-        <span class="kw">let</span> <span class="ident">lr_exit_fn</span>: <span class="ident">ExitFn</span>;
-        <span class="macro">asm!</span>(<span class="string">&quot;mov {}, lr&quot;</span>, <span class="ident">out</span>(<span class="ident">reg</span>) <span class="ident">lr_exit_fn</span>);
-
-        <span class="kw">let</span> <span class="ident">maybe_abi_cfg_entries_ptr</span> <span class="op">=</span> <span class="ident">x0</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">hbl::AbiConfigEntry</span>;
-        <span class="kw">let</span> <span class="ident">maybe_main_thread_handle</span> <span class="op">=</span> <span class="ident">x1</span>;
-
-        <span class="ident">normal_entry</span>(<span class="ident">maybe_abi_cfg_entries_ptr</span>, <span class="ident">maybe_main_thread_handle</span>, <span class="ident">aslr_base_address</span>, <span class="ident">dyn_start_addr</span>, <span class="ident">lr_exit_fn</span>);
+        <span class="kw">let</span> <span class="ident">maybe_abi_cfg_entries_ptr</span> <span class="op">=</span> <span class="ident">arg0</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">hbl::AbiConfigEntry</span>;
+        <span class="kw">let</span> <span class="ident">maybe_main_thread_handle</span> <span class="op">=</span> <span class="ident">arg1</span>;
+        <span class="ident">normal_entry</span>(<span class="ident">maybe_abi_cfg_entries_ptr</span>, <span class="ident">maybe_main_thread_handle</span>, <span class="ident">lr_exit_fn</span>);
     }
 }</code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="nx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7425fb293 2022-06-30)" ></div>

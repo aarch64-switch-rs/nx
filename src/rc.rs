@@ -9,8 +9,8 @@
 //! List of existing submodules in the library:
 //! 
 //! * `0`: library (misc)
-//! * `100`: dynamic
-//! * `200`: dynamic/elf
+//! * `100`: elf
+//! * `200`: <unused>
 //! * `300`: util
 //! * `400`: diag
 //! * `500`: gpu

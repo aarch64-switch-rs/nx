@@ -1,7 +1,9 @@
 
 # nx
 
-> Userland AARCH64 homebrew library for Nintendo Switch, written entirely in Rust (and some assembly bits)
+> Userland library for Nintendo Switch homebrew (and other potential purposes), written in pure Rust and some assembly bits
+
+
 
 > ### API docs are hosted [here](https://aarch64-switch-rs.github.io/nx/), and examples can be found [here](https://github.com/aarch64-switch-rs/examples)
 
@@ -95,7 +97,7 @@ Note that most of these features/modules are just simplified and easy-to-use wra
 
 - Finish documenting still-undocumented modules (`ipc`, `svc` and `service`)
 
-- 32-bit support (see the corresponding PR)
+- 32-bit support (see the corresponding branch)
 
 - Console support
 

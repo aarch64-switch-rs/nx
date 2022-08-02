@@ -1,4 +1,4 @@
-//! Userland library for Nintendo Switch homebrew (and other potential purposes!), written in pure Rust and some assembly bits
+//! Userland library for Nintendo Switch homebrew (and other potential purposes), written in pure Rust and some assembly bits
 //! 
 //! # Contributing
 //! 
@@ -57,7 +57,7 @@ pub mod util;
 
 pub mod mem;
 
-pub mod dynamic;
+pub mod elf;
 
 pub mod sync;
 
