@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["Surface",""]],"type":[["LayerDestroyFn",""]]};
+window.SIDEBAR_ITEMS = {"struct":[["Surface","Represents a wrapper around layer manipulation"]],"type":[["LayerDestroyFn","Represents a `fn` with a certain layer disposing code"]]};

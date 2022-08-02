@@ -1,27 +1,54 @@
-use crate::svc;
+//! Secure monitor support and wrappers
 
+use crate::svc;
+use core::mem as cmem;
+
+/// Represents the secure monitor function IDs
+/// 
+/// Note that only those supported by this libraries are present in the enum...
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u64)]
 pub enum FunctionId {
     Invalid = 0,
     GenerateRandomBytes = 0xC3000006
-    // TODO: more
+    // TODO: more (can we generate them via some macro...? check https://switchbrew.org/wiki/SMC)
 }
 
+/// Represents the raw argument layout used in secure monitor calls
+pub type Arguments = [u64; 8];
+
+/// Represents the secure monitor call input layout (special case of [`Arguments`] for input)
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]
 pub struct Input {
-    pub function_id: FunctionId,
-    pub arguments: [u64; 7],
+    /// The calling function ID
+    pub fn_id: FunctionId,
+    /// The function-specific arguments
+    pub args: [u64; 7]
 }
-const_assert!(core::mem::size_of::<Input>() == 0x40);
+const_assert!(cmem::size_of::<Input>() == 0x40);
 
 impl Input {
-    pub const fn new(function_id: FunctionId) -> Self {
-        Self { function_id, arguments: [0; 7] }
+    /// Creates a new, empty call [`Input`] with a certain function ID
+    /// 
+    /// # Arguments
+    /// 
+    /// * `fn_id`: Function ID value
+    #[inline]
+    pub const fn new(fn_id: FunctionId) -> Self {
+        Self { fn_id, args: [0; 7] }
+    }
+
+    /// Converts this [`Input`] to the more generic [`Arguments`] layout
+    #[inline]
+    pub fn to_args(self) -> Arguments {
+        unsafe {
+            cmem::transmute(self)
+        }
     }
 }
 
+/// Represents the result values returned on secure monitor call responses
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u64)]
 pub enum Result {
@@ -35,45 +62,51 @@ pub enum Result {
     NotPermitted = 6
 }
 
+/// Represents the secure monitor call output layout (special case of [`Arguments`] for output)
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]
 pub struct Output {
+    /// The response result
     pub result: Result,
-    pub arguments: [u64; 7],
+    /// The response parameters
+    pub params: [u64; 7],
 }
-const_assert!(core::mem::size_of::<Output>() == core::mem::size_of::<Input>());
+const_assert!(cmem::size_of::<Output>() == cmem::size_of::<Input>());
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
-#[repr(C)]
-pub struct Arguments {
-    pub arguments: [u64; 8]
-}
-const_assert!(core::mem::size_of::<Arguments>() == core::mem::size_of::<Output>());
-
-impl Arguments {
-    pub fn from_input(input: Input) -> Self {
+impl Output {
+    /// Creates an [`Output`] layout from a more generic [`Arguments`] layout
+    /// 
+    /// # Arguments
+    /// 
+    /// * `args`: The layout to create from
+    #[inline]
+    pub fn from_args(args: Arguments) -> Self {
         unsafe {
-            core::mem::transmute(input)
-        }
-    }
-
-    pub fn to_output(self) -> Output {
-        unsafe {
-            core::mem::transmute(self)
+            cmem::transmute(args)
         }
     }
 }
 
+/// Represents the maximum size of the random bytes one can get in the `generate_random_bytes` SMC
+/// 
+/// This value is equivalent to the size of [`Output::params`]
 pub const GENERATE_RANDOM_BYTES_MAX_SIZE: usize = 0x38;
 
-pub fn generate_random_bytes(dst: *mut u8, size: usize) -> Result {
+/// Secure monitor call which generates random bytes
+/// 
+/// Note that the process needs to be running in processor 3 in order to be able to execute secure monitor calls
+/// 
+/// # Arguments
+/// 
+/// * `out_bytes`: Array to fill with random bytes, whose size mustn't exceed [`GENERATE_RANDOM_BYTES_MAX_SIZE`]
+pub fn generate_random_bytes(out_bytes: &mut [u8]) -> Result {
     let mut input = Input::new(FunctionId::GenerateRandomBytes);
-    input.arguments[0] = size as u64;
+    input.args[0] = out_bytes.len() as u64;
 
-    let output = svc::call_secure_monitor(input);
+    let output = Output::from_args(svc::call_secure_monitor(input.to_args()));
     if output.result == Result::Success {
         unsafe {
-            core::ptr::copy(output.arguments.as_ptr().offset(1) as *const u8, dst, size);
+            core::ptr::copy(output.params.as_ptr() as *const u8, out_bytes.as_mut_ptr(), out_bytes.len());
         }
     }
     output.result

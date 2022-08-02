@@ -1,3 +1,5 @@
+//! Hardware-accelerated 128-bit AES-CTR support
+
 use crate::crypto::aes;
 use crate::crypto::rc;
 use crate::result::*;
@@ -35,6 +37,7 @@ unsafe fn increment_ctr(ctr: aarch64::uint8x16_t) -> aarch64::uint8x16_t {
     inc
 }
 
+/// Represents the context used for 128-bit AES-CTR operations
 pub struct Context {
     aes_ctx: aes::a128::Context,
     ctr: [u8; aes::BLOCK_SIZE],
@@ -43,6 +46,14 @@ pub struct Context {
 }
 
 impl Context {
+    /// Creates a new [`Context`]
+    /// 
+    /// The key must have size [`KEY_SIZE`][`aes::a128::KEY_SIZE`] in bytes and the ctr must have size [`BLOCK_SIZE`][`aes::BLOCK_SIZE`] in bytes or this will fail with [`ResultInvalidSize`][`rc::ResultInvalidSize`]
+    /// 
+    /// # Arguments
+    /// 
+    /// * `key`: The 128-bit AES key
+    /// * `ctr`: The ctr
     pub fn new(key: &[u8], ctr: &[u8]) -> Result<Self> {
         let mut ctx = Self {
             aes_ctx: aes::a128::Context::new(key, true)?,
@@ -56,6 +67,13 @@ impl Context {
         Ok(ctx)
     }
 
+    /// Resets the [`Context`] with the provided ctr
+    /// 
+    /// The ctr must have size [`BLOCK_SIZE`][`aes::BLOCK_SIZE`] in bytes or this will fail with [`ResultInvalidSize`][`rc::ResultInvalidSize`]
+    /// 
+    /// # Argument
+    /// 
+    /// * `ctr`: The ctr to reset with
     pub fn reset_ctr(&mut self, ctr: &[u8]) -> Result<()> {
         result_return_unless!(ctr.len() == aes::BLOCK_SIZE, rc::ResultInvalidSize);
 
@@ -374,6 +392,14 @@ impl Context {
         aarch64::vst1q_u8(self.ctr.as_mut_ptr(), ctr0);
     }
 
+    /// Crypts the given data
+    /// 
+    /// Input and output data must have the same size, or this will fail with [`ResultInvalidSize`][`rc::ResultInvalidSize`]
+    /// 
+    /// # Arguments
+    /// 
+    /// * `src`: The input data
+    /// * `dst`: The output data to fill into
     pub fn crypt(&mut self, src: &[u8], dst: &mut [u8]) -> Result<()> {
         result_return_unless!(src.len() == dst.len(), rc::ResultInvalidSize);
 

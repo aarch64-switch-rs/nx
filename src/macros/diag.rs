@@ -10,6 +10,8 @@ macro_rules! diag_assert {
     }};
 }
 
+// TODO: switch to a log system without having to reopen loggers for every log? global logger object(s) like N's log observers?
+
 #[macro_export]
 macro_rules! diag_log {
     ($logger:ty { $severity:expr, $verbosity:expr } => $msg:literal) => {{

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":[["LmLogger","Represents a logger through [`LogService`][`lm::LogService`] services"]]};

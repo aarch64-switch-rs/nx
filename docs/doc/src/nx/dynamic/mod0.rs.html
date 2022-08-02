@@ -17,18 +17,60 @@
 <span id="11">11</span>
 <span id="12">12</span>
 <span id="13">13</span>
-</pre><pre class="rust"><code><span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
+<span id="14">14</span>
+<span id="15">15</span>
+<span id="16">16</span>
+<span id="17">17</span>
+<span id="18">18</span>
+<span id="19">19</span>
+<span id="20">20</span>
+<span id="21">21</span>
+<span id="22">22</span>
+<span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+</pre><pre class="rust"><code><span class="doccomment">//! MOD0 format utils</span>
+
+<span class="doccomment">/// Represents the `MOD0` header structure</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Header</span> {
+    <span class="doccomment">/// The magic, whose expected value is [`MAGIC`][`Header::MAGIC`]</span>
     <span class="kw">pub</span> <span class="ident">magic</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// The dynamic offset</span>
     <span class="kw">pub</span> <span class="ident">dynamic</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// The BSS start offset</span>
     <span class="kw">pub</span> <span class="ident">bss_start</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// The BSS end offset</span>
     <span class="kw">pub</span> <span class="ident">bss_end</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// The eh_frame_hdr start offset</span>
     <span class="kw">pub</span> <span class="ident">eh_frame_hdr_start</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// The eh_frame_hdr end offset</span>
     <span class="kw">pub</span> <span class="ident">eh_frame_hdr_end</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// The offset to runtime-generated module object</span>
     <span class="kw">pub</span> <span class="ident">module_object</span>: <span class="ident">u32</span>,
 }
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MAGIC</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="ident">u32::from_le_bytes</span>(<span class="kw-2">*</span><span class="string">b&quot;MOD0&quot;</span>);</code></pre></div>
+<span class="kw">impl</span> <span class="ident">Header</span> {
+    <span class="doccomment">/// The header magic value (`MOD0`)</span>
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MAGIC</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="ident">u32::from_le_bytes</span>(<span class="kw-2">*</span><span class="string">b&quot;MOD0&quot;</span>);
+
+    <span class="doccomment">/// Gets whether the header is valid</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// Essentially checks that the magic has the expected [`MAGIC`][`Header::MAGIC`] value</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">is_valid</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
+        <span class="self">self</span>.<span class="ident">magic</span> <span class="op">==</span> <span class="ident"><span class="self">Self</span>::MAGIC</span>
+    }
+}</code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="nx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7425fb293 2022-06-30)" ></div>
 </body></html>

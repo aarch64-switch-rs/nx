@@ -1,3 +1,5 @@
+//! Helper object types to translate from our FS objects to IPC FS interfaces
+
 use crate::ipc::server;
 use crate::result::*;
 use crate::ipc::sf;
@@ -7,14 +9,18 @@ use crate::ipc::sf::fsp::IDirectory;
 use crate::ipc::sf::fsp::IFile;
 use crate::ipc::sf::fsp::IFileSystem;
 
-// These types are helper object types to translate from our fs objects to IPC fs objects
-
+/// Represents a wrapper IPC [`IDirectory`] object around a [`Directory`][`super::Directory`] object
 pub struct Directory {
     dir_obj: mem::Shared<dyn super::Directory>,
     dummy_session: sf::Session
 }
 
 impl Directory {
+    /// Creates a new [`Directory`]
+    /// 
+    /// # Arguments
+    /// 
+    /// * `dir_obj`: The [`Directory`][`super::Directory`] object to wrap
     pub fn new(dir_obj: mem::Shared<dyn super::Directory>) -> Self {
         Self {
             dir_obj,
@@ -43,12 +49,18 @@ impl IDirectory for Directory {
 
 impl server::ISessionObject for Directory {}
 
+/// Represents a wrapper IPC [`IFile`] object around a [`File`][`super::File`] object
 pub struct File {
     file_obj: mem::Shared<dyn super::File>,
     dummy_session: sf::Session
 }
 
 impl File {
+    /// Creates a new [`File`]
+    /// 
+    /// # Arguments
+    /// 
+    /// * `file_obj`: The [`File`][`super::File`] object to wrap
     pub fn new(file_obj: mem::Shared<dyn super::File>) -> Self {
         Self {
             file_obj,
@@ -97,12 +109,18 @@ impl IFile for File {
 
 impl server::ISessionObject for File {}
 
+/// Represents a wrapper IPC [`IFileSystem`] object around a [`FileSystem`][`super::FileSystem`] object
 pub struct FileSystem {
     fs_obj: mem::Shared<dyn super::FileSystem>,
     dummy_session: sf::Session
 }
 
 impl FileSystem {
+    /// Creates a new [`FileSystem`]
+    /// 
+    /// # Arguments
+    /// 
+    /// * `fs_obj`: The [`FileSystem`][`super::FileSystem`] object to wrap
     pub fn new(fs_obj: mem::Shared<dyn super::FileSystem>) -> Self {
         Self {
             fs_obj,

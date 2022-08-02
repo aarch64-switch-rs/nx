@@ -2,10 +2,16 @@ use crate::result::*;
 use crate::ipc::sf;
 use crate::mem;
 use crate::util;
-use crate::service;
-use crate::service::set;
-use crate::service::set::ISystemSettingsServer;
 use crate::version;
+
+#[cfg(feature = "services")]
+use crate::service;
+
+#[cfg(feature = "services")]
+use crate::service::set;
+
+#[cfg(feature = "services")]
+use crate::service::set::ISystemSettingsServer;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
@@ -1675,6 +1681,7 @@ pub fn compute_crc16(data_buf: *const u8, data_size: usize, base_crc: u16, rever
     }
 }
 
+#[cfg(feature = "services")]
 #[inline]
 pub fn get_device_id() -> Result<CreateId> {
     let set_sys: mem::Shared<set::SystemSettingsServer> = service::new_service_object()?;
@@ -1692,6 +1699,7 @@ pub struct StoreData {
 const_assert!(core::mem::size_of::<StoreData>() == 0x44);
 
 impl StoreData {
+    #[cfg(feature = "services")]
     pub fn from_charinfo(char_info: CharInfo) -> Result<Self> {
         let mut store_data = Self {
             core_data: CoreData::from_charinfo(char_info)?,
@@ -1709,6 +1717,7 @@ impl StoreData {
         Ok(store_data)
     }
 
+    #[cfg(feature = "services")]
     pub fn is_valid(&self) -> bool {
         let new_data_crc = compute_crc16(&self as *const _ as *const u8, core::mem::size_of::<StoreData>() - core::mem::size_of::<u16>(), 0, false);
         

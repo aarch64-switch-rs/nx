@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["align_down",""],["align_up",""],["flush_data_cache",""]],"mod":[["alloc",""]],"struct":[["Shared",""]]};
+window.SIDEBAR_ITEMS = {"fn":[["align_down","Aligns down a given value with respect to a certain alignment"],["align_up","Aligns up a given value with respect to a certain alignment"],["flush_data_cache","Flushes data cache at a certain memory region"]],"mod":[["alloc","Allocator implementation and definitions"]],"struct":[["Shared","Represents a shared object, similar to C++’s `std::shared_ptr`"]]};

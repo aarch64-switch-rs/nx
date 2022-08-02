@@ -1,3 +1,29 @@
+//! Generic library result definitions
+//! 
+//! All `rc` modules in this library contain result definitions (usually related to/for the parent module)
+//! 
+//! All library results have module [`RESULT_MODULE`], and their descriptions are `<mod-specific submodule> + <res-value>`
+//! 
+//! For example, [`ResultNotImplemented`] has module [`RESULT_MODULE`] and description [`RESULT_SUBMODULE`] + `1`
+//! 
+//! List of existing submodules in the library:
+//! 
+//! * `0`: library (misc)
+//! * `100`: dynamic
+//! * `200`: dynamic/elf
+//! * `300`: util
+//! * `400`: diag
+//! * `500`: gpu
+//! * `600`: ipc
+//! * `700`: fs
+//! * `800`: input
+//! * `900`: thread
+//! * `1000`: mem
+//! * `1100`: gpu/binder
+//! * `1200`: gpu/parcel
+//! * `1300`: ipc/server
+//! * `1400`: crypto
+
 pub const RESULT_MODULE: u32 = 430;
 
 pub const RESULT_SUBMODULE: u32 = 0;

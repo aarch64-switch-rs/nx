@@ -126,7 +126,19 @@
 <span id="120">120</span>
 <span id="121">121</span>
 <span id="122">122</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ipc::server</span>;
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Helper object types for treating FS subdirectories as IPC filesystems</span>
+
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ipc::server</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::result</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ipc::sf</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::mem</span>;
@@ -135,12 +147,20 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ipc::sf::fsp::IFileSystem</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fs::sf</span> <span class="kw">as</span> <span class="ident">fs_sf</span>;
 
+<span class="comment">// TODO: subdir FS object, non-IPC version?</span>
+
+<span class="doccomment">/// Represents an IPC [`IFileSystem`] object wrapping around a FS subdirectory path</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FileSystem</span> {
     <span class="ident">sub_dir</span>: <span class="ident">String</span>,
     <span class="ident">dummy_session</span>: <span class="ident">sf::Session</span>
 }
 
 <span class="kw">impl</span> <span class="ident">FileSystem</span> {
+    <span class="doccomment">/// Creates a new [`FileSystem`]</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// * `sub_dir`: The subdirectory path to wrap</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">sub_dir</span>: <span class="ident">String</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">sub_dir</span>,

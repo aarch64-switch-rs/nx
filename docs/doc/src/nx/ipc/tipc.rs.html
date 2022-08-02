@@ -16,8 +16,18 @@
 <span id="10">10</span>
 <span id="11">11</span>
 <span id="12">12</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span id="13">13</span>
+<span id="14">14</span>
+<span id="15">15</span>
+<span id="16">16</span>
+<span id="17">17</span>
+</pre><pre class="rust"><code><span class="doccomment">//! TIPC (&quot;tiny IPC&quot;) protocol support</span>
 
+<span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+
+<span class="doccomment">/// Represents special TIPC command types</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// Note that regular/&quot;Request&quot; commands use `16 + &lt;request-id&gt;` as their command type</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">u32</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">CommandType</span> {

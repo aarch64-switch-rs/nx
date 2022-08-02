@@ -1,5 +1,18 @@
 #![macro_use]
 
+/// Gets a value corresponding to the given bit
+/// 
+/// # Arguments
+/// 
+/// * `val`: Bit index
+/// 
+/// # Examples
+/// 
+/// ```
+/// assert_eq!(bit!(0), 0b1);
+/// assert_eq!(bit!(1), 0b10);
+/// assert_eq!(bit!(5), 0b100000);
+/// ```
 #[macro_export]
 macro_rules! bit {
     ($val:expr) => {
@@ -7,13 +20,30 @@ macro_rules! bit {
     };
 }
 
+/// Defines a type meant to serve as a bitflag enum-like type
+/// 
+/// # Examples
+/// 
+/// ```
+/// bit_enum! {
+///    Test (u32) {
+///        A = bit!(1),
+///        B = bit!(2)
+///    }
+/// }
+/// ```
 #[macro_export]
 macro_rules! define_bit_enum {
     (
+        $(#[$a_meta:meta])*
         $name:ident ($base:ty) {
-            $( $entry_name:ident = $entry_value:expr ),*
+            $(
+                $(#[$b_meta:meta])*
+                $entry_name:ident = $entry_value:expr
+            ),*
         }
     ) => {
+        $(#[$a_meta])*
         #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
         #[repr(C)]
         pub struct $name($base);
@@ -33,6 +63,7 @@ macro_rules! define_bit_enum {
             }
         
             $(
+                $(#[$b_meta])*
                 pub const fn $entry_name() -> Self {
                     Self($entry_value)
                 }
@@ -82,6 +113,21 @@ macro_rules! define_bit_enum {
     };
 }
 
+/// Constructs a `bit_enum` type value from various flags
+/// 
+/// # Examples
+/// 
+/// ```
+/// bit_enum! {
+///    Test (u32) {
+///        A = bit!(1),
+///        B = bit!(2)
+///    }
+/// }
+/// 
+/// // The equivalent to what would be "A | B"
+/// let test_ab = bit_group! { Test [A, B] };
+/// ```
 #[macro_export]
 macro_rules! bit_group {
     ($base:ty [ $( $val:ident ),* ]) => {
@@ -89,23 +135,23 @@ macro_rules! bit_group {
     };
 }
 
-#[macro_export]
-macro_rules! util_return_if {
-    ($cond_expr:expr, $ret_expr:expr) => {{
-        let cond = $cond_expr;
-        if cond {
-            return $ret_expr;
-        }
-    }};
-}
-
-#[macro_export]
-macro_rules! util_return_unless {
-    ($cond_expr:expr, $ret_expr:expr) => {{
-        $crate::util_return_if!(!$cond_expr, $ret_expr);
-    }};
-}
-
+/// Writes bits into a given value
+/// 
+/// # Arguments
+/// 
+/// * `start`: The start bit index (inclusive)
+/// * `end`: The end bit index (inclusive)
+/// * `value`: The value to write into
+/// * `data`: The value to set
+/// 
+/// # Examples
+/// 
+/// ```
+/// let value = 0u8;
+/// write_bits!(0, 3, value, 0b0110);
+/// write_bits!(4, 7, value, 0b1001);
+/// assert_eq!(value, 0b10010110);
+/// ```
 #[macro_export]
 macro_rules! write_bits {
     ($start:expr, $end:expr, $value:expr, $data:expr) => {
@@ -113,6 +159,21 @@ macro_rules! write_bits {
     };
 }
 
+/// Reads bits from a given value
+/// 
+/// # Arguments
+/// 
+/// * `start`: The start bit index (inclusive)
+/// * `end`: The end bit index (inclusive)
+/// * `value`: The value
+/// 
+/// # Examples
+/// 
+/// ```
+/// let value = 0b11110000u8;
+/// assert_eq!(read_bits!(value, 0, 3), 0b0000);
+/// assert_eq!(read_bits!(value, 4, 7), 0b1111);
+/// ```
 #[macro_export]
 macro_rules! read_bits {
     ($start:expr, $end:expr, $value:expr) => {
@@ -120,6 +181,17 @@ macro_rules! read_bits {
     };
 }
 
+/// Creates a NUL-terminated string literal
+/// 
+/// # Arguments
+/// 
+/// * `lit`: The string literal
+/// 
+/// # Examples
+/// 
+/// ```
+/// assert_eq!("demo\0", nul!("demo"));
+/// ```
 #[macro_export]
 macro_rules! nul {
     ($lit:literal) => {
@@ -127,6 +199,15 @@ macro_rules! nul {
     };
 }
 
+/// Gets the current function name
+/// 
+/// # Examples
+/// 
+/// ```
+/// fn test() {
+///     assert_eq!(cur_fn_name!(), "test");
+/// }
+/// ```
 #[macro_export]
 macro_rules! cur_fn_name {
     () => {{

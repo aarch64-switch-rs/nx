@@ -1,3 +1,5 @@
+//! Synchronization support and utils
+
 use crate::diag::abort;
 use crate::svc;
 use crate::thread;
@@ -117,6 +119,7 @@ fn try_lock_impl(handle_ref: *mut u32) -> bool {
     false
 }
 
+/// Represents a locking/unlocking type
 pub struct Mutex {
     value: u32,
     is_recursive: bool,
@@ -125,10 +128,17 @@ pub struct Mutex {
 }
 
 impl Mutex {
-    pub const fn new(recursive: bool) -> Self {
-        Self { value: 0, is_recursive: recursive, counter: 0, thread_handle: 0 }
+    /// Creates a new [`Mutex`]
+    /// 
+    /// # Arguments
+    /// 
+    /// * `is_recursive`: Whether the [`Mutex`] is recursive (in that case, multiple (un)locking attempts in the same thread are allowed)
+    #[inline]
+    pub const fn new(is_recursive: bool) -> Self {
+        Self { value: 0, is_recursive, counter: 0, thread_handle: 0 }
     }
 
+    /// Locks the [`Mutex`]
     pub fn lock(&mut self) {
         let mut do_lock = true;
         if self.is_recursive {
@@ -146,6 +156,7 @@ impl Mutex {
         }
     }
 
+    /// Unlocks the [`Mutex`]
     pub fn unlock(&mut self) {
         let mut do_unlock = true;
         if self.is_recursive {
@@ -162,6 +173,7 @@ impl Mutex {
         }
     }
 
+    /// Attempts to lock the [`Mutex`], returning whether it was successful
     pub fn try_lock(&mut self) -> bool {
         if self.is_recursive {
             let thr_handle = get_current_thread_handle();
@@ -180,11 +192,17 @@ impl Mutex {
     }
 }
 
+/// Represents a type which will lock a given [`Mutex`] on creation and unlock it on destruction, effectively guarding it
 pub struct ScopedLock<'a> {
     lock: &'a mut Mutex,
 }
 
 impl<'a> ScopedLock<'a> {
+    /// Creates a new [`ScopedLock`] for a given [`Mutex`]
+    /// 
+    /// # Arguments
+    /// 
+    /// * `lock`: The [`Mutex`] to guard
     pub fn new(lock: &'a mut Mutex) -> Self {
         lock.lock();
         Self { lock }
@@ -192,27 +210,39 @@ impl<'a> ScopedLock<'a> {
 }
 
 impl<'a> Drop for ScopedLock<'a> {
+    /// Unlocks the [`Mutex`] as the [`ScopedLock`] is destroyed (likely out of scope)
     fn drop(&mut self) {
         self.lock.unlock();
     }
 }
 
+/// Represents a value whose access is controlled by an inner [`Mutex`]
 pub struct Locked<T> {
     lock_cell: UnsafeCell<Mutex>,
     object_cell: UnsafeCell<T>,
 }
 
 impl<T> Locked<T> {
-    pub const fn new(recursive: bool, t: T) -> Self {
-        Self { lock_cell: UnsafeCell::new(Mutex::new(recursive)), object_cell: UnsafeCell::new(t) }
+    /// Creates a new [`Locked`] with a value
+    /// 
+    /// # Arguments
+    /// 
+    /// * `is_recursive`: Whether the inner [`Mutex`] is recursive
+    /// * `t`: The value to store
+    #[inline]
+    pub const fn new(is_recursive: bool, t: T) -> Self {
+        Self { lock_cell: UnsafeCell::new(Mutex::new(is_recursive)), object_cell: UnsafeCell::new(t) }
     }
 
+    /// Gets a reference to the inner [`Mutex`]
+    #[inline]
     pub const fn get_lock(&self) -> &mut Mutex {
         unsafe {
             &mut *self.lock_cell.get()
         }
     }
 
+    /// Gets a reference of the value, doing a lock-unlock operation in the process
     pub fn get(&self) -> &mut T {
         self.get_lock().lock();
         let obj_ref = unsafe {
@@ -222,6 +252,7 @@ impl<T> Locked<T> {
         obj_ref
     }
 
+    /// Sets a value, doing a lock-unlock operation in the process
     pub fn set(&mut self, t: T) {
         self.get_lock().lock();
         self.object_cell = UnsafeCell::new(t);
@@ -230,6 +261,7 @@ impl<T> Locked<T> {
 }
 
 impl<T: Copy> Locked<T> {
+    /// Gets a copy of the value, doing a lock-unlock operation in the process
     pub fn get_val(&self) -> T {
         self.get_lock().lock();
         let obj_copy = unsafe {

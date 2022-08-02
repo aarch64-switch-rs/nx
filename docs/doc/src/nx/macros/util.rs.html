@@ -147,8 +147,102 @@
 <span id="141">141</span>
 <span id="142">142</span>
 <span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
 </pre><pre class="rust"><code><span class="attribute">#![<span class="ident">macro_use</span>]</span>
 
+<span class="doccomment">/// Gets a value corresponding to the given bit</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// # Arguments</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// * `val`: Bit index</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// # Examples</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">/// assert_eq!(bit!(0), 0b1);</span>
+<span class="doccomment">/// assert_eq!(bit!(1), 0b10);</span>
+<span class="doccomment">/// assert_eq!(bit!(5), 0b100000);</span>
+<span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">bit</span> {
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">val</span>:<span class="ident">expr</span>) =&gt; {
@@ -156,13 +250,30 @@
     };
 }
 
+<span class="doccomment">/// Defines a type meant to serve as a bitflag enum-like type</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// # Examples</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">/// bit_enum! {</span>
+<span class="doccomment">///    Test (u32) {</span>
+<span class="doccomment">///        A = bit!(1),</span>
+<span class="doccomment">///        B = bit!(2)</span>
+<span class="doccomment">///    }</span>
+<span class="doccomment">/// }</span>
+<span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">define_bit_enum</span> {
     (
+        $(<span class="attribute">#[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">a_meta</span>:<span class="ident">meta</span>]</span>)<span class="op">*</span>
         <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">base</span>:<span class="ident">ty</span>) {
-            $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">entry_name</span>:<span class="ident">ident</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">entry_value</span>:<span class="ident">expr</span> ),<span class="op">*</span>
+            $(
+                $(<span class="attribute">#[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">b_meta</span>:<span class="ident">meta</span>]</span>)<span class="op">*</span>
+                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">entry_name</span>:<span class="ident">ident</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">entry_value</span>:<span class="ident">expr</span>
+            ),<span class="op">*</span>
         }
     ) =&gt; {
+        $(<span class="attribute">#[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">a_meta</span>]</span>)<span class="op">*</span>
         <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
         <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
         <span class="kw">pub</span> <span class="kw">struct</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">base</span>);
@@ -182,6 +293,7 @@
             }
         
             $(
+                $(<span class="attribute">#[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">b_meta</span>]</span>)<span class="op">*</span>
                 <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">entry_name</span>() -&gt; <span class="self">Self</span> {
                     <span class="self">Self</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">entry_value</span>)
                 }
@@ -231,6 +343,21 @@
     };
 }
 
+<span class="doccomment">/// Constructs a `bit_enum` type value from various flags</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// # Examples</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">/// bit_enum! {</span>
+<span class="doccomment">///    Test (u32) {</span>
+<span class="doccomment">///        A = bit!(1),</span>
+<span class="doccomment">///        B = bit!(2)</span>
+<span class="doccomment">///    }</span>
+<span class="doccomment">/// }</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// // The equivalent to what would be &quot;A | B&quot;</span>
+<span class="doccomment">/// let test_ab = bit_group! { Test [A, B] };</span>
+<span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">bit_group</span> {
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">base</span>:<span class="ident">ty</span> [ $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">val</span>:<span class="ident">ident</span> ),<span class="op">*</span> ]) =&gt; {
@@ -238,23 +365,23 @@
     };
 }
 
-<span class="attribute">#[<span class="ident">macro_export</span>]</span>
-<span class="macro">macro_rules!</span> <span class="ident">util_return_if</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">cond_expr</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ret_expr</span>:<span class="ident">expr</span>) =&gt; {{
-        <span class="kw">let</span> <span class="ident">cond</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">cond_expr</span>;
-        <span class="kw">if</span> <span class="ident">cond</span> {
-            <span class="kw">return</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ret_expr</span>;
-        }
-    }};
-}
-
-<span class="attribute">#[<span class="ident">macro_export</span>]</span>
-<span class="macro">macro_rules!</span> <span class="ident">util_return_unless</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">cond_expr</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ret_expr</span>:<span class="ident">expr</span>) =&gt; {{
-        <span class="macro-nonterminal">$</span><span class="macro">crate::util_return_if!</span>(<span class="op">!</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">cond_expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ret_expr</span>);
-    }};
-}
-
+<span class="doccomment">/// Writes bits into a given value</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// # Arguments</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// * `start`: The start bit index (inclusive)</span>
+<span class="doccomment">/// * `end`: The end bit index (inclusive)</span>
+<span class="doccomment">/// * `value`: The value to write into</span>
+<span class="doccomment">/// * `data`: The value to set</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// # Examples</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">/// let value = 0u8;</span>
+<span class="doccomment">/// write_bits!(0, 3, value, 0b0110);</span>
+<span class="doccomment">/// write_bits!(4, 7, value, 0b1001);</span>
+<span class="doccomment">/// assert_eq!(value, 0b10010110);</span>
+<span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">write_bits</span> {
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">start</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">end</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">value</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">data</span>:<span class="ident">expr</span>) =&gt; {
@@ -262,6 +389,21 @@
     };
 }
 
+<span class="doccomment">/// Reads bits from a given value</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// # Arguments</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// * `start`: The start bit index (inclusive)</span>
+<span class="doccomment">/// * `end`: The end bit index (inclusive)</span>
+<span class="doccomment">/// * `value`: The value</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// # Examples</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">/// let value = 0b11110000u8;</span>
+<span class="doccomment">/// assert_eq!(read_bits!(value, 0, 3), 0b0000);</span>
+<span class="doccomment">/// assert_eq!(read_bits!(value, 4, 7), 0b1111);</span>
+<span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">read_bits</span> {
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">start</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">end</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">value</span>:<span class="ident">expr</span>) =&gt; {
@@ -269,6 +411,17 @@
     };
 }
 
+<span class="doccomment">/// Creates a NUL-terminated string literal</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// # Arguments</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// * `lit`: The string literal</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// # Examples</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">/// assert_eq!(&quot;demo\0&quot;, nul!(&quot;demo&quot;));</span>
+<span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">nul</span> {
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">lit</span>:<span class="ident">literal</span>) =&gt; {
@@ -276,6 +429,15 @@
     };
 }
 
+<span class="doccomment">/// Gets the current function name</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// # Examples</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">/// fn test() {</span>
+<span class="doccomment">///     assert_eq!(cur_fn_name!(), &quot;test&quot;);</span>
+<span class="doccomment">/// }</span>
+<span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">cur_fn_name</span> {
     () =&gt; {{

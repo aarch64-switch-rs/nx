@@ -1,3 +1,13 @@
+//! Userland library for Nintendo Switch homebrew (and other potential purposes!), written in pure Rust and some assembly bits
+//! 
+//! # Contributing
+//! 
+//! You can always contribute to these libraries, report bugs, etc. at their [repository](https://github.com/aarch64-switch-rs/nx)
+//! 
+//! # Examples
+//! 
+//! Library examples are located at this other [repository](https://github.com/aarch64-switch-rs/examples)
+
 #![no_std]
 #![allow(incomplete_features)]
 #![allow(non_snake_case)]
@@ -60,18 +70,22 @@ pub mod rrt0;
 
 pub mod svc;
 
+#[cfg(feature = "smc")]
 pub mod smc;
 
 #[macro_use]
 pub mod ipc;
 
+#[cfg(feature = "services")]
 pub mod service;
 
 #[macro_use]
 pub mod diag;
 
+#[cfg(feature = "gpu")]
 pub mod gpu;
 
+#[cfg(feature = "input")]
 pub mod input;
 
 pub mod vmem;
@@ -80,14 +94,16 @@ pub mod arm;
 
 pub mod wait;
 
+#[cfg(feature = "fs")]
 pub mod fs;
 
 pub mod version;
 
+#[cfg(feature = "rand")]
 pub mod rand;
 
+#[cfg(feature = "crypto")]
 pub mod crypto;
 
+#[cfg(feature = "la")]
 pub mod la;
-
-pub use paste;

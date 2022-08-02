@@ -80,19 +80,132 @@
 <span id="74">74</span>
 <span id="75">75</span>
 <span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
+<span id="86">86</span>
+<span id="87">87</span>
+<span id="88">88</span>
+<span id="89">89</span>
+<span id="90">90</span>
+<span id="91">91</span>
+<span id="92">92</span>
+<span id="93">93</span>
+<span id="94">94</span>
+<span id="95">95</span>
+<span id="96">96</span>
+<span id="97">97</span>
+<span id="98">98</span>
+<span id="99">99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
 </pre><pre class="rust"><code><span class="attribute">#![<span class="ident">macro_use</span>]</span>
 
+<span class="doccomment">/// Creates a result definition</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// # Examples</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">/// // Defines &quot;ResultDemo&quot; result definition</span>
+<span class="doccomment">/// result_define!(Demo: 345, 6789);</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// // Creates a &quot;ResultCode&quot; of value &quot;2345-6789&quot;</span>
+<span class="doccomment">/// let rc = ResultDemo::make();</span>
+<span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">result_define</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">module</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">description</span>:<span class="ident">expr</span>) =&gt; {
+    (
+        $(<span class="attribute">#[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">meta</span>:<span class="ident">meta</span>]</span>)<span class="op">*</span>
+        <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">module</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">description</span>:<span class="ident">expr</span>
+    ) =&gt; {
         <span class="macro">paste::paste!</span> {
+            $(<span class="attribute">#[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">meta</span>]</span>)<span class="op">*</span>
             <span class="kw">pub</span> <span class="kw">struct</span> [<span class="op">&lt;</span><span class="prelude-ty">Result</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span><span class="op">&gt;</span>];
 
             <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::result::ResultBase</span> <span class="kw">for</span> [<span class="op">&lt;</span><span class="prelude-ty">Result</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span><span class="op">&gt;</span>] {
                 <span class="kw">fn</span> <span class="ident">get_module</span>() -&gt; <span class="ident">u32</span> {
                     <span class="macro-nonterminal">$</span><span class="macro-nonterminal">module</span>
                 }
-                
+
                 <span class="kw">fn</span> <span class="ident">get_description</span>() -&gt; <span class="ident">u32</span> {
                     <span class="macro-nonterminal">$</span><span class="macro-nonterminal">description</span>
                 }
@@ -101,6 +214,22 @@
     };
 }
 
+<span class="doccomment">/// Creates a group of result definitions (all under the same module)</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// # Examples</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">/// // Defines &quot;ResultDemo1&quot; and &quot;ResultDemo2&quot;</span>
+<span class="doccomment">/// result_define_group!(345 =&gt; {</span>
+<span class="doccomment">///     Demo1: 12,</span>
+<span class="doccomment">///     Demo2: 15</span>
+<span class="doccomment">/// });</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// // Creates a &quot;ResultCode&quot; of value &quot;2345-0012&quot;</span>
+<span class="doccomment">/// let rc1 = ResultDemo1::make();</span>
+<span class="doccomment">/// // Creates a &quot;ResultCode&quot; of value &quot;2345-0015&quot;</span>
+<span class="doccomment">/// let rc2 = ResultDemo2::make();</span>
+<span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">result_define_group</span> {
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">module</span>:<span class="ident">expr</span> =&gt; { $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">description</span>:<span class="ident">expr</span> ),<span class="op">*</span> }) =&gt; {
@@ -108,6 +237,22 @@
     };
 }
 
+<span class="doccomment">/// Creates a group of result definitions (all under the same module and submodule)</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// # Examples</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">/// // Defines &quot;ResultDemo1&quot; and &quot;ResultDemo2&quot;</span>
+<span class="doccomment">/// result_define_subgroup!(345, 6000 =&gt; {</span>
+<span class="doccomment">///     Demo1: 12,</span>
+<span class="doccomment">///     Demo2: 15</span>
+<span class="doccomment">/// });</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// // Creates a &quot;ResultCode&quot; of value &quot;2345-6012&quot;</span>
+<span class="doccomment">/// let rc1 = ResultDemo1::make();</span>
+<span class="doccomment">/// // Creates a &quot;ResultCode&quot; of value &quot;2345-6015&quot;</span>
+<span class="doccomment">/// let rc2 = ResultDemo2::make();</span>
+<span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">result_define_subgroup</span> {
     (
@@ -119,6 +264,23 @@
     };
 }
 
+<span class="doccomment">/// Returns a given result if the given condition is true</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// # Examples</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">/// fn demo() -&gt; Result&lt;()&gt; {</span>
+<span class="doccomment">///     let cond: bool = (...);</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">///     // Specifying result definition types</span>
+<span class="doccomment">///     result_return_if!(cond, ResultTest);</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">///     // Giving raw values</span>
+<span class="doccomment">///     result_return_if!(cond, 0xBABE);</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">///     Ok(())</span>
+<span class="doccomment">/// }</span>
+<span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">result_return_if</span> {
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">cond_expr</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">res</span>:<span class="ident">ty</span>) =&gt; {
@@ -136,6 +298,23 @@
     };
 }
 
+<span class="doccomment">/// Returns a given result unless the given condition is true</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// # Examples</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">/// fn demo() -&gt; Result&lt;()&gt; {</span>
+<span class="doccomment">///     let cond: bool = (...);</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">///     // Specifying result definition types</span>
+<span class="doccomment">///     result_return_unless!(cond, ResultTest);</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">///     // Giving raw values</span>
+<span class="doccomment">///     result_return_unless!(cond, 0xBABE);</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">///     Ok(())</span>
+<span class="doccomment">/// }</span>
+<span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">result_return_unless</span> {
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">cond_expr</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">res</span>:<span class="ident">ty</span>) =&gt; {
@@ -147,6 +326,23 @@
     };
 }
 
+<span class="doccomment">/// Wraps and returns a given result if it&#39;s not successful</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// # Examples</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">/// fn demo() -&gt; Result&lt;()&gt; {</span>
+<span class="doccomment">///     // Won&#39;t do anything</span>
+<span class="doccomment">///     result_try!(ResultCode::new(0));</span>
+<span class="doccomment">///     result_try!(ResultSuccess::make());    </span>
+<span class="doccomment">/// </span>
+<span class="doccomment">///     // Will exit with the given results</span>
+<span class="doccomment">///     result_try!(ResultCode::new(0xCAFE));</span>
+<span class="doccomment">///     result_try!(ResultDemo::make());</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">///     Ok(())</span>
+<span class="doccomment">/// }</span>
+<span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">result_try</span> {
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">rc_expr</span>:<span class="ident">expr</span>) =&gt; {

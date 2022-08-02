@@ -56,10 +56,27 @@
 <span id="50">50</span>
 <span id="51">51</span>
 <span id="52">52</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::result</span>::<span class="kw-2">*</span>;
+<span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
+<span id="58">58</span>
+<span id="59">59</span>
+<span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
+<span id="63">63</span>
+<span id="64">64</span>
+<span id="65">65</span>
+<span id="66">66</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Dynamic (ELF/relocation) support</span>
+
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::result</span>::<span class="kw-2">*</span>;
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">rc</span>;
 
+<span class="doccomment">/// Represents the start layout of a base process address</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ModuleStart</span> {
@@ -67,6 +84,12 @@
     <span class="kw">pub</span> <span class="ident">magic_offset</span>: <span class="ident">u32</span>,
 }
 
+<span class="doccomment">/// Relocates a base address with its corresponding [`Dyn`][`elf::Dyn`] reference</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// # Arguments</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// * `base_address`: Base address to relocate</span>
+<span class="doccomment">/// * `dynamic`: It&#39;s [`Dyn`][`elf::Dyn`] reference</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">relocate_with_dyn</span>(<span class="ident">base_address</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>, <span class="ident">dynamic</span>: <span class="kw-2">*const</span> <span class="ident">elf::Dyn</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">unsafe</span> {
         <span class="kw">let</span> <span class="ident">rela_offset</span> <span class="op">=</span> (<span class="kw-2">*</span><span class="ident">dynamic</span>).<span class="ident">find_value</span>(<span class="ident">elf::Tag::RelaOffset</span>)<span class="question-mark">?</span>;
@@ -92,12 +115,17 @@
     <span class="prelude-val">Ok</span>(())
 }
 
+<span class="doccomment">/// Relocates a base address</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// # Arguments</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// * `base_address`: Base address to relocate</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">relocate</span>(<span class="ident">base_address</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">unsafe</span> {
         <span class="kw">let</span> <span class="ident">module_start</span> <span class="op">=</span> <span class="ident">base_address</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">ModuleStart</span>;
         <span class="kw">let</span> <span class="ident">mod_offset</span> <span class="op">=</span> (<span class="kw-2">*</span><span class="ident">module_start</span>).<span class="ident">magic_offset</span> <span class="kw">as</span> <span class="ident">isize</span>;
         <span class="kw">let</span> <span class="ident">module</span> <span class="op">=</span> <span class="ident">base_address</span>.<span class="ident">offset</span>(<span class="ident">mod_offset</span>) <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">mod0::Header</span>;
-        <span class="macro">result_return_unless!</span>((<span class="kw-2">*</span><span class="ident">module</span>).<span class="ident">magic</span> <span class="op">==</span> <span class="ident">mod0::MAGIC</span>, <span class="ident">rc::ResultInvalidModuleMagic</span>);
+        <span class="macro">result_return_unless!</span>((<span class="kw-2">*</span><span class="ident">module</span>).<span class="ident">is_valid</span>(), <span class="ident">rc::ResultInvalidModuleMagic</span>);
 
         <span class="kw">let</span> <span class="ident">dyn_offset</span> <span class="op">=</span> <span class="ident">mod_offset</span> <span class="op">+</span> (<span class="kw-2">*</span><span class="ident">module</span>).<span class="ident">dynamic</span> <span class="kw">as</span> <span class="ident">isize</span>;
         <span class="kw">let</span> <span class="ident">dynamic</span> <span class="op">=</span> <span class="ident">base_address</span>.<span class="ident">offset</span>(<span class="ident">dyn_offset</span>) <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">elf::Dyn</span>;

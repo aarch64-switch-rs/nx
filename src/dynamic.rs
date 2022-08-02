@@ -1,7 +1,10 @@
+//! Dynamic (ELF/relocation) support
+
 use crate::result::*;
 
 pub mod rc;
 
+/// Represents the start layout of a base process address
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct ModuleStart {
@@ -9,6 +12,12 @@ pub struct ModuleStart {
     pub magic_offset: u32,
 }
 
+/// Relocates a base address with its corresponding [`Dyn`][`elf::Dyn`] reference
+/// 
+/// # Arguments
+/// 
+/// * `base_address`: Base address to relocate
+/// * `dynamic`: It's [`Dyn`][`elf::Dyn`] reference
 pub fn relocate_with_dyn(base_address: *const u8, dynamic: *const elf::Dyn) -> Result<()> {
     unsafe {
         let rela_offset = (*dynamic).find_value(elf::Tag::RelaOffset)?;
@@ -34,12 +43,17 @@ pub fn relocate_with_dyn(base_address: *const u8, dynamic: *const elf::Dyn) -> R
     Ok(())
 }
 
+/// Relocates a base address
+/// 
+/// # Arguments
+/// 
+/// * `base_address`: Base address to relocate
 pub fn relocate(base_address: *const u8) -> Result<()> {
     unsafe {
         let module_start = base_address as *const ModuleStart;
         let mod_offset = (*module_start).magic_offset as isize;
         let module = base_address.offset(mod_offset) as *const mod0::Header;
-        result_return_unless!((*module).magic == mod0::MAGIC, rc::ResultInvalidModuleMagic);
+        result_return_unless!((*module).is_valid(), rc::ResultInvalidModuleMagic);
 
         let dyn_offset = mod_offset + (*module).dynamic as isize;
         let dynamic = base_address.offset(dyn_offset) as *const elf::Dyn;

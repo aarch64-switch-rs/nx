@@ -1,4 +1,4 @@
-use crate::service::hid;
+use crate::ipc::sf::hid;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]

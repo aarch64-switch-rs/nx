@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":[["BLOCK_SIZE",""]],"mod":[["a128",""],["ctr",""]]};
+window.SIDEBAR_ITEMS = {"constant":[["BLOCK_SIZE","Represents the block size for common AES operations"]],"mod":[["a128","Hardware-accelerated 128-bit AES support"],["ctr","Hardware-accelerated AES-CTR support"]]};

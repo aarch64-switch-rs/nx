@@ -23,8 +23,43 @@
 <span id="17">17</span>
 <span id="18">18</span>
 <span id="19">19</span>
+<span id="20">20</span>
+<span id="21">21</span>
+<span id="22">22</span>
+<span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
 </pre><pre class="rust"><code><span class="attribute">#![<span class="ident">macro_use</span>]</span>
 
+<span class="doccomment">/// Defines the (runtime) module name of the current project</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// Must only be called once in a project</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// # Arguments</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// * `name`: The module name</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// # Examples</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">/// rrt0_define_module_name!(&quot;custom-mod-name&quot;);</span>
+<span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">rrt0_define_module_name</span> {
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">expr</span>) =&gt; {
@@ -36,6 +71,15 @@
     };
 }
 
+<span class="doccomment">/// Defines the (runtime) module name of the current project as the package name</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// Must only be called once in a project</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// # Examples</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">/// rrt0_define_default_module_name!();</span>
+<span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">rrt0_define_default_module_name</span> {
     () =&gt; {

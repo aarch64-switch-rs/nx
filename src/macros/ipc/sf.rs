@@ -1,5 +1,22 @@
 #![macro_use]
 
+/// Defines a trait meant to be used for IPC interfaces
+/// 
+/// # Examples
+/// 
+/// ```
+/// use nx::version::{Version, VersionInterval};
+/// 
+/// // Define commands with their request ID, allowed version interval and in/out parameters
+/// ipc_sf_define_interface_trait! {
+///     trait IExampleInterface {
+///         command_1 [1, VersionInterval::all()]: (in_32: u32) => (out_16: u16);
+///         command_2 [20, VersionInterval::all()]: (in_8: u8) => ();
+///     }
+/// }
+/// 
+/// // You can impl "IExampleInterface" to create a custom object implementing the commands
+/// ```
 #[macro_export]
 macro_rules! ipc_sf_define_interface_trait {
     (
@@ -55,6 +72,9 @@ macro_rules! ipc_sf_define_interface_trait {
     };
 }
 
+/// Identical to [`ipc_sf_define_interface_trait`] but for "Control" IPC interfaces (inner trait functionality differs)
+/// 
+/// This shouldn't really be used unless you really know what you're doing
 #[macro_export]
 macro_rules! ipc_sf_define_control_interface_trait {
     (
@@ -106,6 +126,35 @@ macro_rules! ipc_sf_define_control_interface_trait {
     };
 }
 
+/// Macro to simplify defining an IPC interface impl command metadata
+/// 
+/// This is meant to only be used inside [`IObject`][`crate::ipc::sf::IObject`] impls!
+/// 
+/// Note that this only has to be manually used for non-client-IPC interface types - for client-IPC interface types, see [`ipc_client_define_object_default`]
+/// 
+/// # Example
+/// ```
+/// use nx::ipc::sf::{Session, IObject};
+/// 
+/// // Let's assume an IPC interface named "IExampleInterface" exists
+/// // Let's then create a custom implementation of that interface
+/// pub struct ExampleInterface {
+///     // Required, only effectively used on client IPC interfaces
+///     dummy_session: Session
+/// }
+/// 
+/// impl IObject for ExampleInterface {
+///     ipc_sf_object_impl_default_command_metadata!();
+/// 
+///     fn get_session(&mut self) -> &mut Session {
+///         &mut self.dummy_session
+///     }
+/// }
+/// 
+/// impl IExampleInterface for ExampleInterface {
+///     (...)
+/// }
+/// ```
 #[macro_export]
 macro_rules! ipc_sf_object_impl_default_command_metadata {
     () => {

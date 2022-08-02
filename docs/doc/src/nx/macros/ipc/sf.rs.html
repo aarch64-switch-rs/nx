@@ -123,8 +123,74 @@
 <span id="117">117</span>
 <span id="118">118</span>
 <span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
 </pre><pre class="rust"><code><span class="attribute">#![<span class="ident">macro_use</span>]</span>
 
+<span class="doccomment">/// Defines a trait meant to be used for IPC interfaces</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// # Examples</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">/// use nx::version::{Version, VersionInterval};</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// // Define commands with their request ID, allowed version interval and in/out parameters</span>
+<span class="doccomment">/// ipc_sf_define_interface_trait! {</span>
+<span class="doccomment">///     trait IExampleInterface {</span>
+<span class="doccomment">///         command_1 [1, VersionInterval::all()]: (in_32: u32) =&gt; (out_16: u16);</span>
+<span class="doccomment">///         command_2 [20, VersionInterval::all()]: (in_8: u8) =&gt; ();</span>
+<span class="doccomment">///     }</span>
+<span class="doccomment">/// }</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// // You can impl &quot;IExampleInterface&quot; to create a custom object implementing the commands</span>
+<span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">ipc_sf_define_interface_trait</span> {
     (
@@ -180,6 +246,9 @@
     };
 }
 
+<span class="doccomment">/// Identical to [`ipc_sf_define_interface_trait`] but for &quot;Control&quot; IPC interfaces (inner trait functionality differs)</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// This shouldn&#39;t really be used unless you really know what you&#39;re doing</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">ipc_sf_define_control_interface_trait</span> {
     (
@@ -231,6 +300,35 @@
     };
 }
 
+<span class="doccomment">/// Macro to simplify defining an IPC interface impl command metadata</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// This is meant to only be used inside [`IObject`][`crate::ipc::sf::IObject`] impls!</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// Note that this only has to be manually used for non-client-IPC interface types - for client-IPC interface types, see [`ipc_client_define_object_default`]</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// # Example</span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">/// use nx::ipc::sf::{Session, IObject};</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// // Let&#39;s assume an IPC interface named &quot;IExampleInterface&quot; exists</span>
+<span class="doccomment">/// // Let&#39;s then create a custom implementation of that interface</span>
+<span class="doccomment">/// pub struct ExampleInterface {</span>
+<span class="doccomment">///     // Required, only effectively used on client IPC interfaces</span>
+<span class="doccomment">///     dummy_session: Session</span>
+<span class="doccomment">/// }</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// impl IObject for ExampleInterface {</span>
+<span class="doccomment">///     ipc_sf_object_impl_default_command_metadata!();</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">///     fn get_session(&amp;mut self) -&gt; &amp;mut Session {</span>
+<span class="doccomment">///         &amp;mut self.dummy_session</span>
+<span class="doccomment">///     }</span>
+<span class="doccomment">/// }</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// impl IExampleInterface for ExampleInterface {</span>
+<span class="doccomment">///     (...)</span>
+<span class="doccomment">/// }</span>
+<span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">ipc_sf_object_impl_default_command_metadata</span> {
     () =&gt; {

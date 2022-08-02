@@ -255,7 +255,65 @@
 <span id="249">249</span>
 <span id="250">250</span>
 <span id="251">251</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Surface (gfx wrapper) implementation</span>
+
+<span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::gpu::binder</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::gpu::ioctl</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::svc</span>;
@@ -265,12 +323,17 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::service::dispdrv</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::mem</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::mem::alloc</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::wait</span>;
 <span class="kw">use</span> <span class="ident">core::mem</span> <span class="kw">as</span> <span class="ident">cmem</span>;
 
 <span class="kw">const</span> <span class="ident">MAX_BUFFERS</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">8</span>;
 
+<span class="doccomment">/// Represents a `fn` with a certain layer disposing code</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// Note that different layers (managed layers, stray layers, etc.) are destroyed in different ways</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">LayerDestroyFn</span> <span class="op">=</span> <span class="kw">fn</span>(<span class="ident">vi::LayerId</span>, <span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">vi::IApplicationDisplayService</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
 
+<span class="doccomment">/// Represents a wrapper around layer manipulation</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Surface</span> {
     <span class="ident">binder</span>: <span class="ident">binder::Binder</span>,
     <span class="ident">nvdrv_srv</span>: <span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">nv::INvDrvServices</span><span class="op">&gt;</span>,
@@ -296,6 +359,15 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Surface</span> {
+    <span class="doccomment">/// Creates a new  [`Surface`]</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// This is not meant to really be used manually, see [`Context`][`super::Context`]</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// * `binder_handle`: The binder handle to use</span>
+    <span class="doccomment">/// * `nvdrv_srv`: The [`INvDrvServices`][`nv::INvDrvServices`] object to use</span>
+    <span class="doccomment">/// * ``</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">binder_handle</span>: <span class="ident">i32</span>, <span class="ident">nvdrv_srv</span>: <span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">nv::INvDrvServices</span><span class="op">&gt;</span>, <span class="ident">application_display_service</span>: <span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">vi::IApplicationDisplayService</span><span class="op">&gt;</span>, <span class="ident">nvhost_fd</span>: <span class="ident">u32</span>, <span class="ident">nvmap_fd</span>: <span class="ident">u32</span>, <span class="ident">nvhostctrl_fd</span>: <span class="ident">u32</span>, <span class="ident">hos_binder_driver</span>: <span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">dispdrv::IHOSBinderDriver</span><span class="op">&gt;</span>, <span class="ident">buffer_count</span>: <span class="ident">u32</span>, <span class="ident">display_id</span>: <span class="ident">vi::DisplayId</span>, <span class="ident">layer_id</span>: <span class="ident">vi::LayerId</span>, <span class="ident">width</span>: <span class="ident">u32</span>, <span class="ident">height</span>: <span class="ident">u32</span>, <span class="ident">color_fmt</span>: <span class="ident">ColorFormat</span>, <span class="ident">pixel_fmt</span>: <span class="ident">PixelFormat</span>, <span class="ident">layout</span>: <span class="ident">Layout</span>, <span class="ident">layer_destroy_fn</span>: <span class="ident">LayerDestroyFn</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">binder</span> <span class="op">=</span> <span class="ident">binder::Binder::new</span>(<span class="ident">binder_handle</span>, <span class="ident">hos_binder_driver</span>)<span class="question-mark">?</span>;
         <span class="ident">binder</span>.<span class="ident">increase_refcounts</span>()<span class="question-mark">?</span>;
@@ -351,7 +423,7 @@
         <span class="ident">ioctl_alloc</span>.<span class="ident">address</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">buffer_data</span>.<span class="ident">ptr</span> <span class="kw">as</span> <span class="ident">usize</span>;
         <span class="self">self</span>.<span class="ident">do_ioctl</span>(<span class="kw-2">&amp;mut</span> <span class="ident">ioctl_alloc</span>)<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.<span class="ident">graphic_buf</span>.<span class="ident">header</span>.<span class="ident">magic</span> <span class="op">=</span> <span class="ident">GRAPHIC_BUFFER_HEADER_MAGIC</span>;
+        <span class="self">self</span>.<span class="ident">graphic_buf</span>.<span class="ident">header</span>.<span class="ident">magic</span> <span class="op">=</span> <span class="ident">GraphicBufferHeader::MAGIC</span>;
         <span class="self">self</span>.<span class="ident">graphic_buf</span>.<span class="ident">header</span>.<span class="ident">width</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">width</span>;
         <span class="self">self</span>.<span class="ident">graphic_buf</span>.<span class="ident">header</span>.<span class="ident">height</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">height</span>;
         <span class="self">self</span>.<span class="ident">graphic_buf</span>.<span class="ident">header</span>.<span class="ident">stride</span> <span class="op">=</span> <span class="ident">stride</span>;
@@ -360,7 +432,7 @@
         <span class="self">self</span>.<span class="ident">graphic_buf</span>.<span class="ident">header</span>.<span class="ident">pid</span> <span class="op">=</span> <span class="ident">pid</span>;
         <span class="self">self</span>.<span class="ident">graphic_buf</span>.<span class="ident">header</span>.<span class="ident">buffer_size</span> <span class="op">=</span> ((<span class="ident">cmem::size_of</span>::<span class="op">&lt;</span><span class="ident">GraphicBuffer</span><span class="op">&gt;</span>() <span class="op">-</span> <span class="ident">cmem::size_of</span>::<span class="op">&lt;</span><span class="ident">GraphicBufferHeader</span><span class="op">&gt;</span>()) <span class="op">/</span> <span class="ident">cmem::size_of</span>::<span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>()) <span class="kw">as</span> <span class="ident">u32</span>;
         <span class="self">self</span>.<span class="ident">graphic_buf</span>.<span class="ident">map_id</span> <span class="op">=</span> <span class="ident">ioctl_getid</span>.<span class="ident">id</span>;
-        <span class="self">self</span>.<span class="ident">graphic_buf</span>.<span class="ident">magic</span> <span class="op">=</span> <span class="ident">GRAPHIC_BUFFER_MAGIC</span>;
+        <span class="self">self</span>.<span class="ident">graphic_buf</span>.<span class="ident">magic</span> <span class="op">=</span> <span class="ident">GraphicBuffer::MAGIC</span>;
         <span class="self">self</span>.<span class="ident">graphic_buf</span>.<span class="ident">pid</span> <span class="op">=</span> <span class="ident">pid</span>;
         <span class="self">self</span>.<span class="ident">graphic_buf</span>.<span class="ident">gfx_alloc_usage</span> <span class="op">=</span> <span class="ident">usage</span>;
         <span class="self">self</span>.<span class="ident">graphic_buf</span>.<span class="ident">pixel_format</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">pixel_fmt</span>;
@@ -404,6 +476,11 @@
         <span class="ident">svc::close_handle</span>(<span class="self">self</span>.<span class="ident">vsync_event_handle</span>)
     }
 
+    <span class="doccomment">/// Dequeues a buffer, returning the buffer address, its size, its slot, whether it has fences, and those mentioned fences</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// * `is_async`: Whether to dequeue asynchronously</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dequeue_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">is_async</span>: <span class="ident">bool</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="kw-2">*mut</span> <span class="ident">u8</span>, <span class="ident">usize</span>, <span class="ident">i32</span>, <span class="ident">bool</span>, <span class="ident">MultiFence</span>)<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">slot</span>: <span class="ident">i32</span>;
         <span class="kw">let</span> <span class="ident">has_fences</span>: <span class="ident">bool</span>;
@@ -443,6 +520,12 @@
         <span class="prelude-val">Ok</span>((<span class="ident">buf</span>, <span class="self">self</span>.<span class="ident">single_buffer_size</span>, <span class="ident">slot</span>, <span class="ident">has_fences</span>, <span class="ident">fences</span>))
     }
 
+    <span class="doccomment">/// Queues a buffer</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// * `slot`: The buffer slot</span>
+    <span class="doccomment">/// * `fences`: The buffer fences</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">queue_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">slot</span>: <span class="ident">i32</span>, <span class="ident">fences</span>: <span class="ident">MultiFence</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">qbi</span>: <span class="ident">QueueBufferInput</span> <span class="op">=</span> <span class="ident">Default::default</span>();
         <span class="ident">qbi</span>.<span class="ident">swap_interval</span> <span class="op">=</span> <span class="number">1</span>;
@@ -454,6 +537,12 @@
         <span class="prelude-val">Ok</span>(())
     }
 
+    <span class="doccomment">/// Waits for the given fences</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// * `fences`: The fences</span>
+    <span class="doccomment">/// * `timeout`: The wait timeout</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">wait_fences</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">fences</span>: <span class="ident">MultiFence</span>, <span class="ident">timeout</span>: <span class="ident">i32</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">fences</span>.<span class="ident">fence_count</span> {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ioctl_syncptwait</span>: <span class="ident">ioctl::NvHostCtrlSyncptWait</span> <span class="op">=</span> <span class="ident">Default::default</span>();
@@ -468,33 +557,55 @@
         <span class="prelude-val">Ok</span>(())
     }
 
+    <span class="doccomment">/// Sets whether the surface (its layer) is visible</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// * `visible`: Whether its visible</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_visible</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">visible</span>: <span class="ident">bool</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">system_display_service</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">application_display_service</span>.<span class="ident">get</span>().<span class="ident">get_system_display_service</span>()<span class="question-mark">?</span>;
         <span class="ident">system_display_service</span>.<span class="ident">get</span>().<span class="ident">set_layer_visibility</span>(<span class="ident">visible</span>, <span class="self">self</span>.<span class="ident">layer_id</span>)
     }
 
+    <span class="doccomment">/// Waits for the buffer event</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// * `timeout`: The wait timeout</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">wait_buffer_event</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">timeout</span>: <span class="ident">i64</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="ident">svc::wait_synchronization</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">buffer_event_handle</span>, <span class="number">1</span>, <span class="ident">timeout</span>)<span class="question-mark">?</span>;
+        <span class="ident">wait::wait_handles</span>(<span class="kw-2">&amp;</span>[<span class="self">self</span>.<span class="ident">buffer_event_handle</span>], <span class="ident">timeout</span>)<span class="question-mark">?</span>;
         <span class="ident">svc::reset_signal</span>(<span class="self">self</span>.<span class="ident">buffer_event_handle</span>)
     }
 
+    <span class="doccomment">/// Waits for the vsync event</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// * `timeout`: The wait timeout</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">wait_vsync_event</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">timeout</span>: <span class="ident">i64</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="ident">svc::wait_synchronization</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">vsync_event_handle</span>, <span class="number">1</span>, <span class="ident">timeout</span>)<span class="question-mark">?</span>;
+        <span class="ident">wait::wait_handles</span>(<span class="kw-2">&amp;</span>[<span class="self">self</span>.<span class="ident">vsync_event_handle</span>], <span class="ident">timeout</span>)<span class="question-mark">?</span>;
         <span class="ident">svc::reset_signal</span>(<span class="self">self</span>.<span class="ident">vsync_event_handle</span>)
     }
 
+    <span class="doccomment">/// Gets the surface width</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_width</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u32</span> {
         <span class="self">self</span>.<span class="ident">width</span>
     }
 
+    <span class="doccomment">/// Gets the surface height</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_height</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u32</span> {
         <span class="self">self</span>.<span class="ident">height</span>
     }
 
+    <span class="doccomment">/// Gets the surface [`ColorFormat`]</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_color_format</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">ColorFormat</span> {
         <span class="self">self</span>.<span class="ident">color_fmt</span>
     }
 
+    <span class="doccomment">/// Computes and gets the surface stride</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">compute_stride</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u32</span> {
         <span class="kw">let</span> <span class="ident">bpp</span> <span class="op">=</span> <span class="ident">calculate_bpp</span>(<span class="self">self</span>.<span class="ident">color_fmt</span>);
         <span class="ident">align_width</span>(<span class="ident">bpp</span>, <span class="self">self</span>.<span class="ident">width</span>) <span class="op">*</span> <span class="ident">bpp</span>
@@ -502,6 +613,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">Surface</span> {
+    <span class="doccomment">/// Destroys the surface, closing everything it internally opened</span>
     <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">finalize</span>();
     }

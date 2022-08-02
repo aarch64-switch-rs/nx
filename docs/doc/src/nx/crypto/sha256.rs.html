@@ -315,18 +315,62 @@
 <span id="309">309</span>
 <span id="310">310</span>
 <span id="311">311</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::crypto::rc</span>;
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Hardware-accelerated SHA-256 support</span>
+
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::crypto::rc</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::result</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">core::mem</span>;
 <span class="kw">use</span> <span class="ident">core::ptr</span>;
 <span class="kw">use</span> <span class="ident">core::arch::asm</span>;
 <span class="kw">use</span> <span class="ident">core::arch::aarch64</span>;
 
+<span class="doccomment">/// Represents a block size in bytes</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">BLOCK_SIZE</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">0x40</span>;
+
+<span class="doccomment">/// Represent a block size un 4-byte units</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">BLOCK_SIZE_32</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">BLOCK_SIZE</span> <span class="op">/</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>();
+
+<span class="doccomment">/// Represents a hash size in bytes</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">HASH_SIZE</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">0x20</span>;
+
+<span class="doccomment">/// Represents a hash size in 4-byte units</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">HASH_SIZE_32</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">HASH_SIZE</span> <span class="op">/</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>();
 
+<span class="doccomment">/// Represents the 5context used for SHA-256 operations</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Context</span> {
     <span class="ident">intermediate_hash</span>: [<span class="ident">u32</span>; <span class="ident">HASH_SIZE_32</span>],
     <span class="ident">buf</span>: [<span class="ident">u8</span>; <span class="ident">BLOCK_SIZE</span>],
@@ -360,6 +404,7 @@
 ];
 
 <span class="kw">impl</span> <span class="ident">Context</span> {
+    <span class="doccomment">/// Creates a new [`Context`]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">intermediate_hash</span>: <span class="ident">H_0</span>,
@@ -370,6 +415,7 @@
         }
     }
 
+    <span class="doccomment">/// Resets this [`Context`]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reset</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
         <span class="kw-2">*</span><span class="self">self</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::new</span>();
     }
@@ -538,6 +584,11 @@
         <span class="ident">aarch64::vst1q_u32</span>(<span class="self">self</span>.<span class="ident">intermediate_hash</span>.<span class="ident">as_mut_ptr</span>().<span class="ident">offset</span>(<span class="number">4</span>), <span class="ident">cur_hash1</span>);
     }
 
+    <span class="doccomment">/// Updates the [`Context`] with the given data</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// * `data`: The data to update with</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">update</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">T</span>]) {
         <span class="kw">let</span> <span class="ident">data_size</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">len</span>() <span class="op">*</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>();
         <span class="kw">let</span> <span class="ident">data_start</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">u8</span>;
@@ -581,6 +632,13 @@
         }
     }
 
+    <span class="doccomment">/// Gets the produced hash (produces it first if not done yet)</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// The output hash array must have size [`HASH_SIZE`] in bytes or this will fail with [`ResultInvalidSize`][`rc::ResultInvalidSize`]</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// * `out_hash`: The output array to fill with the hash </span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_hash</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">out_hash</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">T</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="macro">result_return_unless!</span>(<span class="ident">out_hash</span>.<span class="ident">len</span>() <span class="op">*</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>() <span class="op">==</span> <span class="ident">HASH_SIZE</span>, <span class="ident">rc::ResultInvalidSize</span>);
 
@@ -620,8 +678,18 @@
     }
 }
 
+<span class="doccomment">/// Wrapper for directly calculating the hash of given data</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// The output hash array must have size [`HASH_SIZE`] in bytes or this will fail with [`ResultInvalidSize`][`rc::ResultInvalidSize`]</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// This essentially creates a [`Context`], updates it with the given data and produces its hash</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// # Arguments</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// * `data`: Input data</span>
+<span class="doccomment">/// * `out_hash`: Output array to fill into</span>
 <span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">calculate_hash</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">out_hash</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">T</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">calculate_hash</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">U</span><span class="op">&gt;</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">T</span>], <span class="ident">out_hash</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">U</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ctx</span> <span class="op">=</span> <span class="ident">Context::new</span>();
     <span class="ident">ctx</span>.<span class="ident">update</span>(<span class="ident">data</span>);
     <span class="ident">ctx</span>.<span class="ident">get_hash</span>(<span class="ident">out_hash</span>)

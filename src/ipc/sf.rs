@@ -302,7 +302,7 @@ impl CommandMetadata {
 
     pub fn matches(&self, rq_id: u32) -> bool {
         let cur_ver = version::get_version();
-        (self.rq_id == rq_id) && self.ver_intv.matches(cur_ver)
+        (self.rq_id == rq_id) && self.ver_intv.contains(cur_ver)
     }
 }
 

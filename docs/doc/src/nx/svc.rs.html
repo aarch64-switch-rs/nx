@@ -787,8 +787,8 @@
 <span id="781">781</span>
 <span id="782">782</span>
 <span id="783">783</span>
+<span id="784">784</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::result</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::smc</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::arm</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::util</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::version</span>;
@@ -988,6 +988,8 @@
 
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">CURRENT_THREAD_PSEUDO_HANDLE</span>: <span class="ident">Handle</span> <span class="op">=</span> <span class="number">0xFFFF8000</span>;
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">CURRENT_PROCESS_PSEUDO_HANDLE</span>: <span class="ident">Handle</span> <span class="op">=</span> <span class="number">0xFFFF8001</span>;
+
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEFAULT_PROCESS_PROCESSOR_ID</span>: <span class="ident">i32</span> <span class="op">=</span> <span class="op">-</span><span class="number">2</span>;
 
 <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_heap_size</span>(<span class="ident">size</span>: <span class="ident">Size</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">*mut</span> <span class="ident">u8</span><span class="op">&gt;</span> {
@@ -1558,16 +1560,16 @@
 }
 
 <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">call_secure_monitor</span>(<span class="ident">input</span>: <span class="ident">smc::Input</span>) -&gt; <span class="ident">smc::Output</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">call_secure_monitor</span>(<span class="ident">input</span>: [<span class="ident">u64</span>; <span class="number">8</span>]) -&gt; [<span class="ident">u64</span>; <span class="number">8</span>] {
     <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> {
-        <span class="kw">fn</span> <span class="ident">__nx_svc_call_secure_monitor</span>(<span class="ident">args</span>: <span class="kw-2">*mut</span> <span class="ident">smc::Arguments</span>) -&gt; <span class="ident">u64</span>;
+        <span class="kw">fn</span> <span class="ident">__nx_svc_call_secure_monitor</span>(<span class="ident">args</span>: <span class="kw-2">*mut</span> <span class="ident">u64</span>);
     }
 
     <span class="kw">unsafe</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">args</span> <span class="op">=</span> <span class="ident">smc::Arguments::from_input</span>(<span class="ident">input</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">args</span>: [<span class="ident">u64</span>; <span class="number">8</span>] <span class="op">=</span> <span class="ident">input</span>;
 
-        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span><span class="ident">__nx_svc_call_secure_monitor</span>(<span class="kw-2">&amp;mut</span> <span class="ident">args</span>);
-        <span class="ident">args</span>.<span class="ident">to_output</span>()
+        <span class="ident">__nx_svc_call_secure_monitor</span>(<span class="ident">args</span>.<span class="ident">as_mut_ptr</span>());
+        <span class="ident">args</span>
     }
 }
 </code></pre></div>

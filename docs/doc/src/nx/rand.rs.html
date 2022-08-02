@@ -39,12 +39,38 @@
 <span id="33">33</span>
 <span id="34">34</span>
 <span id="35">35</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::result</span>::<span class="kw-2">*</span>;
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Pseudo-RNG support</span>
+
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::result</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">core::mem</span> <span class="kw">as</span> <span class="ident">cmem</span>;
 
+<span class="doccomment">/// Represents a psudo-RNG</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">RandomGenerator</span> {
+    <span class="doccomment">/// Fills the given memory region with random bytes</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// * `buf`: Memory region address</span>
+    <span class="doccomment">/// * `size`: Memory region size</span>
     <span class="kw">fn</span> <span class="ident">random_bytes</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">buf</span>: <span class="kw-2">*mut</span> <span class="ident">u8</span>, <span class="ident">size</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
 
+    <span class="doccomment">/// Generates a value filled with random contents</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// This is, of course, meant to be used with types where filling them with random data will be a valid value</span>
     <span class="kw">fn</span> <span class="ident">random</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">Default</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">t</span>: <span class="ident">T</span> <span class="op">=</span> <span class="ident">Default::default</span>();
         <span class="self">self</span>.<span class="ident">random_bytes</span>(<span class="kw-2">&amp;mut</span> <span class="ident">t</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">u8</span>, <span class="ident">cmem::size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>())<span class="question-mark">?</span>;
@@ -58,11 +84,13 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::service::spl::IRandomInterface</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::mem</span>;
 
+<span class="doccomment">/// Represents a pseudo-RNG using [`spl`]&#39;s [`RandomInterface`][`spl::RandomInterface`] interface</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SplCsrngGenerator</span> {
     <span class="ident">csrng</span>: <span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">IRandomInterface</span><span class="op">&gt;</span>
 }
 
 <span class="kw">impl</span> <span class="ident">SplCsrngGenerator</span> {
+    <span class="doccomment">/// Creates a new [`SplCsrngGenerator`]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">csrng</span> <span class="op">=</span> <span class="ident">service::new_service_object</span>::<span class="op">&lt;</span><span class="ident">spl::RandomInterface</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="self">Self</span> { <span class="ident">csrng</span> })

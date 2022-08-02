@@ -4,12 +4,20 @@ use crate::wait;
 use crate::ipc::sf::IObject;
 use crate::ipc::sf::hipc::IHipcManager;
 use crate::ipc::sf::hipc::IMitmQueryService;
-use crate::service;
-use crate::service::sm;
-use crate::service::sm::IUserInterface;
 use crate::mem;
 use super::*;
 use alloc::vec::Vec;
+
+#[cfg(feature = "services")]
+use crate::service;
+
+#[cfg(not(feature = "services"))]
+use crate::ipc::sf::sm;
+#[cfg(feature = "services")]
+use crate::service::sm;
+
+#[cfg(feature = "services")]
+use crate::service::sm::IUserInterface;
 
 pub mod rc;
 
@@ -117,7 +125,7 @@ impl<S: sf::IObject + ?Sized> RequestCommandParameter<mem::Shared<S>> for mem::S
 
 impl<S: sf::IObject + ?Sized> ResponseCommandParameter for mem::Shared<S> {
     fn before_response_write(session: &Self, ctx: &mut ServerContext) -> Result<()> {
-        let session_copy = session.clone().to::<dyn ISessionObject>();
+        let session_copy = unsafe { session.clone().to::<dyn ISessionObject>() };
         if ctx.ctx.object_info.is_domain() {
             let domain_table = ctx.domain_table.clone().ok_or(rc::ResultDomainNotFound::make())?;
             let domain_object_id = domain_table.get().allocate_id()?;
@@ -298,12 +306,15 @@ impl ServerHolder {
 
     pub fn close(&mut self) -> Result<()> {
         if !self.service_name.is_empty() {
-            let sm = service::new_named_port_object::<sm::UserInterface>()?;
-            match self.is_mitm_service {
-                true => sm.get().atmosphere_uninstall_mitm(self.service_name)?,
-                false => sm.get().unregister_service(self.service_name)?
-            };
-            sm.get().detach_client(sf::ProcessId::new())?;
+            #[cfg(feature = "services")]
+            {
+                let sm = service::new_named_port_object::<sm::UserInterface>()?;
+                match self.is_mitm_service {
+                    true => sm.get().atmosphere_uninstall_mitm(self.service_name)?,
+                    false => sm.get().unregister_service(self.service_name)?
+                };
+                sm.get().detach_client(sf::ProcessId::new())?;
+            }
         }
 
         // Don't close our session like a normal one (like the forward session below) as we allocated the object IDs ourselves, the only thing we do have to close is the handle
@@ -668,10 +679,13 @@ impl<const P: usize> ServerManager<P> {
                         let new_handle = svc::accept_session(handle)?;
 
                         if server_holder.is_mitm_service {
-                            let sm = service::new_named_port_object::<sm::UserInterface>()?;
-                            let (info, session_handle) = sm.get().atmosphere_acknowledge_mitm_session(server_holder.service_name)?;
-                            new_sessions.push(server_holder.make_new_mitm_session(new_handle, session_handle.handle, info)?);
-                            sm.get().detach_client(sf::ProcessId::new())?;
+                            #[cfg(feature = "services")]
+                            {
+                                let sm = service::new_named_port_object::<sm::UserInterface>()?;
+                                let (info, session_handle) = sm.get().atmosphere_acknowledge_mitm_session(server_holder.service_name)?;
+                                new_sessions.push(server_holder.make_new_mitm_session(new_handle, session_handle.handle, info)?);
+                                sm.get().detach_client(sf::ProcessId::new())?;
+                            }
                         }
                         else {
                             new_sessions.push(server_holder.make_new_session(new_handle)?);
@@ -740,6 +754,7 @@ impl<const P: usize> ServerManager<P> {
         self.server_holders.push(ServerHolder::new_session(handle, session_obj));
     }
     
+    #[cfg(feature = "services")]
     pub fn register_service_server<S: IService + 'static>(&mut self) -> Result<()> {
         let service_name = S::get_name();
         
@@ -750,6 +765,7 @@ impl<const P: usize> ServerManager<P> {
         Ok(())
     }
     
+    #[cfg(feature = "services")]
     pub fn register_mitm_service_server<S: IMitmService + 'static>(&mut self) -> Result<()> {
         let service_name = S::get_name();
 

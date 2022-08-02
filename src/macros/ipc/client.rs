@@ -1,5 +1,19 @@
 #![macro_use]
 
+/// Simplifies the creation of a (client-side IPC) type implementing an IPC interface
+/// 
+/// # Examples
+/// 
+/// ```
+/// // Let's suppose a "IExampleInterface" IPC interface trait exists
+/// 
+/// // This already creates the client-IPC type and impls IObject
+/// ipc_client_define_object_default!(ExampleInterface);
+/// 
+/// impl IExampleInterface for ExampleInterface {
+///     (...)
+/// }
+/// ```
 #[macro_export]
 macro_rules! ipc_client_define_object_default {
     ($t:ident) => {
@@ -23,16 +37,33 @@ macro_rules! ipc_client_define_object_default {
     };
 }
 
+/// Sends an IPC "Request" command
+/// 
+/// # Examples
+/// 
+/// ```
+/// use nx::ipc::sf::Session;
+/// 
+/// fn demo(session: Session) -> Result<()> {
+///     let in_32: u32 = 69;
+///     let in_16: u16 = 420;
+/// 
+///     // Calls command with request ID 123 and with an input-u32 and an input-u16 expecting an output-u64, Will yield a Result<u64>
+///     let _out = ipc_client_send_request_command!([session.object_info; 123] (in_32, in_16) => (out: u64))?;
+/// 
+///     Ok(())
+/// }
+/// ```
 #[macro_export]
 macro_rules! ipc_client_send_request_command {
-    ([$session:expr; $rq_id:expr] ( $( $in_param:expr ),* ) => ( $( $out_param:ident: $out_param_type:ty ),* )) => {{
-        let mut ctx = $crate::ipc::CommandContext::new_client($session);
+    ([$obj_info:expr; $rq_id:expr] ( $( $in_param:expr ),* ) => ( $( $out_param:ident: $out_param_type:ty ),* )) => {{
+        let mut ctx = $crate::ipc::CommandContext::new_client($obj_info);
 
         let mut walker = $crate::ipc::DataWalker::new(core::ptr::null_mut());
         $( $crate::ipc::client::RequestCommandParameter::before_request_write(&$in_param, &mut walker, &mut ctx)?; )*
         ctx.in_params.data_size = walker.get_offset() as u32;
         
-        match $session.protocol {
+        match $obj_info.protocol {
             $crate::ipc::CommandProtocol::Cmif => $crate::ipc::cmif::client::write_request_command_on_msg_buffer(&mut ctx, Some($rq_id), $crate::ipc::cmif::DomainCommandType::SendMessage),
             $crate::ipc::CommandProtocol::Tipc => $crate::ipc::tipc::client::write_request_command_on_msg_buffer(&mut ctx, $rq_id)
         };
@@ -40,9 +71,9 @@ macro_rules! ipc_client_send_request_command {
         walker.reset_with(ctx.in_params.data_offset);
         $( $crate::ipc::client::RequestCommandParameter::before_send_sync_request(&$in_param, &mut walker, &mut ctx)?; )*
 
-        $crate::svc::send_sync_request($session.handle)?;
+        $crate::svc::send_sync_request($obj_info.handle)?;
 
-        match $session.protocol {
+        match $obj_info.protocol {
             $crate::ipc::CommandProtocol::Cmif => $crate::ipc::cmif::client::read_request_command_response_from_msg_buffer(&mut ctx)?,
             $crate::ipc::CommandProtocol::Tipc => $crate::ipc::tipc::client::read_request_command_response_from_msg_buffer(&mut ctx)?
         };
@@ -54,12 +85,15 @@ macro_rules! ipc_client_send_request_command {
     }};
 }
 
+/// Identical to [`ipc_client_send_request_command`] but for a "Control" command
+/// 
+/// See <https://switchbrew.org/wiki/IPC_Marshalling#Control>
 #[macro_export]
 macro_rules! ipc_client_send_control_command {
-    ([$session:expr; $rq_id:expr] ( $( $in_param:expr ),* ) => ( $( $out_param:ident: $out_param_type:ty ),* )) => {{
-        $crate::result_return_if!($session.uses_tipc_protocol(), $crate::ipc::rc::ResultInvalidProtocol);
+    ([$obj_info:expr; $rq_id:expr] ( $( $in_param:expr ),* ) => ( $( $out_param:ident: $out_param_type:ty ),* )) => {{
+        $crate::result_return_if!($obj_info.uses_tipc_protocol(), $crate::ipc::rc::ResultInvalidProtocol);
 
-        let mut ctx = $crate::ipc::CommandContext::new_client($session);
+        let mut ctx = $crate::ipc::CommandContext::new_client($obj_info);
 
         let mut walker = $crate::ipc::DataWalker::new(core::ptr::null_mut());
         $( $crate::ipc::client::RequestCommandParameter::before_request_write(&$in_param, &mut walker, &mut ctx)?; )*
@@ -70,7 +104,7 @@ macro_rules! ipc_client_send_control_command {
         walker.reset_with(ctx.in_params.data_offset);
         $( $crate::ipc::client::RequestCommandParameter::before_send_sync_request(&$in_param, &mut walker, &mut ctx)?; )*
 
-        $crate::svc::send_sync_request($session.handle)?;
+        $crate::svc::send_sync_request($obj_info.handle)?;
 
         $crate::ipc::cmif::client::read_control_command_response_from_msg_buffer(&mut ctx)?;
 

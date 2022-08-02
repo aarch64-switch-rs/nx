@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["abort",""],["log",""],["rc",""]]};
+window.SIDEBAR_ITEMS = {"mod":[["abort","Aborting implementation"],["log","Logging support and utils"],["rc","Diagnostics-related result definitions"]]};

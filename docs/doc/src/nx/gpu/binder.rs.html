@@ -218,7 +218,72 @@
 <span id="212">212</span>
 <span id="213">213</span>
 <span id="214">214</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::result</span>::<span class="kw-2">*</span>;
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Binder support and utils</span>
+
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::result</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ipc::sf</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::gpu::parcel</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::service::dispdrv</span>;
@@ -226,8 +291,10 @@
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">rc</span>;
 
+<span class="doccomment">/// Represents the interface token used for parcel transactions</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">INTERFACE_TOKEN</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;android.gui.IGraphicBufferProducer&quot;</span>;
 
+<span class="doccomment">/// Represents binder error code values</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">i32</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ErrorCode</span> {
@@ -251,6 +318,7 @@
     <span class="ident">BadType</span> <span class="op">=</span> <span class="op">-</span><span class="number">2147483647</span>,
 }
 
+<span class="doccomment">/// Converts [`ErrorCode`]s to result values</span>
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unreachable_patterns</span>)]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">convert_nv_error_code</span>(<span class="ident">err</span>: <span class="ident">ErrorCode</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">match</span> <span class="ident">err</span> {
@@ -275,13 +343,21 @@
     }
 }
 
+<span class="doccomment">/// Represents a binder object, wrapping transaction functionality</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Binder</span> {
     <span class="ident">handle</span>: <span class="ident">dispdrv::BinderHandle</span>,
     <span class="ident">hos_binder_driver</span>: <span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">dispdrv::IHOSBinderDriver</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Binder</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">handle</span>: <span class="ident">dispdrv::BinderHandle</span>, <span class="ident">hos_binder_driver</span>: <span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">dispdrv::IHOSBinderDriver</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Creates a new [`Binder`]</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// * `handle`: Binder handle to use</span>
+    <span class="doccomment">/// * `hos_binder_driver`: [`IHOSBinderDriver`][`dispdrv::IHOSBinderDriver`] object</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">handle</span>: <span class="ident">dispdrv::BinderHandle</span>, <span class="ident">hos_binder_driver</span>: <span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">dispdrv::IHOSBinderDriver</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(<span class="self">Self</span> { <span class="ident">handle</span>, <span class="ident">hos_binder_driver</span> })
     }
 
@@ -309,24 +385,35 @@
         <span class="self">self</span>.<span class="ident">transact_parcel_impl</span>(<span class="ident">transaction_id</span>, <span class="ident">payload</span>)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_handle</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">i32</span> {
+    <span class="doccomment">/// Gets this [`Binder`]&#39;s handle</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_handle</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">dispdrv::BinderHandle</span> {
         <span class="self">self</span>.<span class="ident">handle</span>
     }
 
+    <span class="doccomment">/// Gets this [`Binder`]&#39;s underlying [`IHOSBinderDriver`][`dispdrv::IHOSBinderDriver`] object</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_hos_binder_driver</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">dispdrv::IHOSBinderDriver</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">hos_binder_driver</span>.<span class="ident">clone</span>()
     }
 
+    <span class="doccomment">/// Increases the [`Binder`]&#39;s reference counts</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">increase_refcounts</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">hos_binder_driver</span>.<span class="ident">get</span>().<span class="ident">adjust_refcount</span>(<span class="self">self</span>.<span class="ident">handle</span>, <span class="number">1</span>, <span class="ident">dispdrv::RefcountType::Weak</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">hos_binder_driver</span>.<span class="ident">get</span>().<span class="ident">adjust_refcount</span>(<span class="self">self</span>.<span class="ident">handle</span>, <span class="number">1</span>, <span class="ident">dispdrv::RefcountType::Strong</span>)
     }
 
+    <span class="doccomment">/// Decreases the [`Binder`]&#39;s reference counts</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">decrease_refcounts</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">hos_binder_driver</span>.<span class="ident">get</span>().<span class="ident">adjust_refcount</span>(<span class="self">self</span>.<span class="ident">handle</span>, <span class="op">-</span><span class="number">1</span>, <span class="ident">dispdrv::RefcountType::Weak</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">hos_binder_driver</span>.<span class="ident">get</span>().<span class="ident">adjust_refcount</span>(<span class="self">self</span>.<span class="ident">handle</span>, <span class="op">-</span><span class="number">1</span>, <span class="ident">dispdrv::RefcountType::Strong</span>)
     }
 
+    <span class="doccomment">/// Performs a connection</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// * `api`: The connection API to use</span>
+    <span class="doccomment">/// * `producer_controlled_by_app`: Whether the producer is controlled by the process itself</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">connect</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">api</span>: <span class="ident">ConnectionApi</span>, <span class="ident">producer_controlled_by_app</span>: <span class="ident">bool</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">QueueBufferOutput</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">parcel</span> <span class="op">=</span> <span class="ident">parcel::Parcel::new</span>();
         <span class="self">self</span>.<span class="ident">transact_parcel_begin</span>(<span class="kw-2">&amp;mut</span> <span class="ident">parcel</span>)<span class="question-mark">?</span>;
@@ -343,6 +430,12 @@
         <span class="prelude-val">Ok</span>(<span class="ident">qbo</span>)
     }
 
+    <span class="doccomment">/// Performs a disconnection</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// * `api`: The connection API</span>
+    <span class="doccomment">/// * `mode`: The disconnection mode</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">disconnect</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">api</span>: <span class="ident">ConnectionApi</span>, <span class="ident">mode</span>: <span class="ident">DisconnectMode</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">parcel</span> <span class="op">=</span> <span class="ident">parcel::Parcel::new</span>();
         <span class="self">self</span>.<span class="ident">transact_parcel_begin</span>(<span class="kw-2">&amp;mut</span> <span class="ident">parcel</span>)<span class="question-mark">?</span>;
@@ -356,6 +449,12 @@
         <span class="prelude-val">Ok</span>(())
     }
 
+    <span class="doccomment">/// Sets a preallocated buffer</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// * `slot`: The buffer slot</span>
+    <span class="doccomment">/// * `buf`: The buffer</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_preallocated_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">slot</span>: <span class="ident">i32</span>, <span class="ident">buf</span>: <span class="ident">GraphicBuffer</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">parcel</span> <span class="op">=</span> <span class="ident">parcel::Parcel::new</span>();
         <span class="self">self</span>.<span class="ident">transact_parcel_begin</span>(<span class="kw-2">&amp;mut</span> <span class="ident">parcel</span>)<span class="question-mark">?</span>;
@@ -371,6 +470,13 @@
         <span class="prelude-val">Ok</span>(())
     }
     
+    <span class="doccomment">/// Requests a buffer at a given slot</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// This also returns whether the buffer is non-null</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// * `slot`: The slot</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">request_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">slot</span>: <span class="ident">i32</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">bool</span>, <span class="ident">GraphicBuffer</span>)<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">parcel</span> <span class="op">=</span> <span class="ident">parcel::Parcel::new</span>();
         <span class="self">self</span>.<span class="ident">transact_parcel_begin</span>(<span class="kw-2">&amp;mut</span> <span class="ident">parcel</span>)<span class="question-mark">?</span>;
@@ -389,6 +495,15 @@
         <span class="prelude-val">Ok</span>((<span class="ident">non_null</span>, <span class="ident">gfx_buf</span>))
     }
 
+    <span class="doccomment">/// Dequeues a buffer</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// * `is_async`: Whether the dequeue is asynchronous</span>
+    <span class="doccomment">/// * `width`: The width</span>
+    <span class="doccomment">/// * `height`: The height</span>
+    <span class="doccomment">/// * `get_frame_timestamps`: Whether to get frame timestamps</span>
+    <span class="doccomment">/// * `usage`: [`GraphicsAllocatorUsage`] value</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dequeue_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">is_async</span>: <span class="ident">bool</span>, <span class="ident">width</span>: <span class="ident">u32</span>, <span class="ident">height</span>: <span class="ident">u32</span>, <span class="ident">get_frame_timestamps</span>: <span class="ident">bool</span>, <span class="ident">usage</span>: <span class="ident">GraphicsAllocatorUsage</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">i32</span>, <span class="ident">bool</span>, <span class="ident">MultiFence</span>)<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">parcel</span> <span class="op">=</span> <span class="ident">parcel::Parcel::new</span>();
         <span class="self">self</span>.<span class="ident">transact_parcel_begin</span>(<span class="kw-2">&amp;mut</span> <span class="ident">parcel</span>)<span class="question-mark">?</span>;
@@ -413,6 +528,12 @@
         <span class="prelude-val">Ok</span>((<span class="ident">slot</span>, <span class="ident">has_fences</span>, <span class="ident">fences</span>))
     }
 
+    <span class="doccomment">/// Queues a buffer</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// * `slot`: The slot</span>
+    <span class="doccomment">/// * `qbi`: The input layout</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">queue_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">slot</span>: <span class="ident">i32</span>, <span class="ident">qbi</span>: <span class="ident">QueueBufferInput</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">QueueBufferOutput</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">parcel</span> <span class="op">=</span> <span class="ident">parcel::Parcel::new</span>();
         <span class="self">self</span>.<span class="ident">transact_parcel_begin</span>(<span class="kw-2">&amp;mut</span> <span class="ident">parcel</span>)<span class="question-mark">?</span>;
@@ -428,6 +549,11 @@
         <span class="prelude-val">Ok</span>(<span class="ident">qbo</span>)
     }
 
+    <span class="doccomment">/// Gets a native handle of the underlying [`IHOSBinderDriver`][`dispdrv::IHOSBinderDriver`] object</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// * `handle_type`: The [`NativeHandleType`][`dispdrv::NativeHandleType`] value</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_native_handle</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">handle_type</span>: <span class="ident">dispdrv::NativeHandleType</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">sf::CopyHandle</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">hos_binder_driver</span>.<span class="ident">get</span>().<span class="ident">get_native_handle</span>(<span class="self">self</span>.<span class="ident">handle</span>, <span class="ident">handle_type</span>)
     }

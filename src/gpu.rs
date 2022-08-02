@@ -1,3 +1,5 @@
+//! Graphics and GPU support and utils
+
 use crate::result::*;
 use crate::service;
 use crate::mem;
@@ -24,6 +26,7 @@ pub mod ioctl;
 
 pub mod surface;
 
+/// Represents layout types
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u32)]
 pub enum Layout {
@@ -34,6 +37,7 @@ pub enum Layout {
     BlockLinear = 3
 }
 
+/// Represents display scan format types
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u32)]
 pub enum DisplayScanFormat {
@@ -42,6 +46,7 @@ pub enum DisplayScanFormat {
     Interlaced = 1
 }
 
+/// Represents kinds
 #[allow(non_camel_case_types)]
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u32)]
@@ -282,6 +287,7 @@ pub enum Kind {
     Invalid = 0xff
 }
 
+/// Represents supported color formats
 #[allow(non_camel_case_types)]
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u64)]
@@ -519,6 +525,7 @@ pub enum ColorFormat {
     XYZ = 0x140A886640
 }
 
+/// Represents supported pixel formats
 #[allow(non_camel_case_types)]
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u32)]
@@ -543,6 +550,7 @@ pub enum PixelFormat {
 }
 
 define_bit_enum! {
+    /// Represents allocator usage flags
     GraphicsAllocatorUsage (u32) {
         SoftwareReadNever = 0,
         SoftwareReadRarely = 0x2,
@@ -572,6 +580,7 @@ define_bit_enum! {
     }
 }
 
+/// Represents connection APIs
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(i32)]
 pub enum ConnectionApi {
@@ -583,6 +592,7 @@ pub enum ConnectionApi {
     Camera = 4
 }
 
+/// Represents disconnect modes
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u32)]
 pub enum DisconnectMode {
@@ -591,81 +601,137 @@ pub enum DisconnectMode {
     AllLocal
 }
 
+/// Represents a queue buffer output layout
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct QueueBufferOutput {
+    /// The width
     pub width: u32,
+    /// The height
     pub height: u32,
+    /// The transform hint
     pub transform_hint: u32,
+    /// The pending buffer count
     pub pending_buffer_count: u32
 }
 
 impl QueueBufferOutput {
+    /// Creates a new, empty [`QueueBufferOutput`]
     pub const fn new() -> Self {
         Self { width: 0, height: 0, transform_hint: 0, pending_buffer_count: 0 }
     }
 }
 
+/// Represents a plane layout
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct Plane {
+    /// The width
     pub width: u32,
+    /// The height
     pub height: u32,
+    /// The color format
     pub color_format: ColorFormat,
+    /// The layout
     pub layout: Layout,
+    /// The pitch
     pub pitch: u32,
+    /// The map handle
     pub map_handle: u32,
+    /// The offset
     pub offset: u32,
+    /// The kind
     pub kind: Kind,
+    /// The base-2 log of the block height
     pub block_height_log2: u32,
+    /// The display scan format
     pub display_scan_format: DisplayScanFormat,
+    /// The second field offset
     pub second_field_offset: u32,
+    /// The flags
     pub flags: u64,
+    /// The size
     pub size: usize,
+    /// Unknown/unused
     pub unk: [u32; 6]
 }
 
+/// Represents a graphic buffer header layout
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct GraphicBufferHeader {
+    /// The magic
     pub magic: u32,
+    /// The width
     pub width: u32,
+    /// The height
     pub height: u32,
+    /// The stride
     pub stride: u32,
+    /// The pixel format
     pub pixel_format: PixelFormat,
+    /// The allocator usage
     pub gfx_alloc_usage: GraphicsAllocatorUsage,
+    /// The PID
     pub pid: u32,
+    /// The reference count
     pub refcount: u32,
+    /// The FD count
     pub fd_count: u32,
+    /// The buffer size
     pub buffer_size: u32
 }
 
-pub const GRAPHIC_BUFFER_HEADER_MAGIC: u32 = u32::from_be_bytes(*b"GBFR");
+impl GraphicBufferHeader {
+    /// Represents the magic value of this layout
+    pub const MAGIC: u32 = u32::from_be_bytes(*b"GBFR");
+}
 
+/// Represents a graphic buffer layout
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 #[repr(packed)]
 pub struct GraphicBuffer {
+    /// The header
     pub header: GraphicBufferHeader,
+    /// Empty value
     pub null: u32,
+    /// The map ID
     pub map_id: u32,
+    /// Empty value
     pub zero: u32,
+    /// The magic
     pub magic: u32,
+    /// The PID
     pub pid: u32,
+    /// The buffer type
     pub buffer_type: u32,
+    /// The allocator usage
     pub gfx_alloc_usage: GraphicsAllocatorUsage,
+    /// The pixel format
     pub pixel_format: PixelFormat,
+    /// The external pixel format
     pub external_pixel_format: PixelFormat,
+    /// The stride
     pub stride: u32,
+    /// The full size
     pub full_size: u32,
+    /// The plane count
     pub plane_count: u32,
+    /// Empty value
     pub zero_2: u32,
+    /// The planes
     pub planes: [Plane; 3],
+    /// Unused
     pub unused: u64
 }
 
-pub const GRAPHIC_BUFFER_MAGIC: u32 = 0xDAFFCAFF;
+impl GraphicBuffer {
+    /// Represents the magic value of this layout
+    pub const MAGIC: u32 = 0xDAFFCAFF;
+}
 
+/// Represents a fence layout
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct Fence {
@@ -673,6 +739,7 @@ pub struct Fence {
     value: u32
 }
 
+/// Represents a multiple fence layout
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct MultiFence {
@@ -680,6 +747,7 @@ pub struct MultiFence {
     fences: [Fence; 4]
 }
 
+/// Represenrs a rectangle layout
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct Rect {
@@ -689,6 +757,7 @@ pub struct Rect {
     bottom: i32
 }
 
+/// Represents a transform type
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u32)]
 pub enum Transform {
@@ -701,6 +770,7 @@ pub enum Transform {
     Rotate270 = 7
 }
 
+/// Represents a queue buffer input layout
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 #[repr(packed)]
@@ -716,48 +786,84 @@ pub struct QueueBufferInput {
     fences: MultiFence
 }
 
+/// Represents the base-2 log value of the block height
 pub const BLOCK_HEIGHT_LOG2: u32 = 4;
+
+/// Represents the block height
 pub const BLOCK_HEIGHT: u32 = 8 * (1 << BLOCK_HEIGHT_LOG2);
 
+/// Gets the bits-per-pixel (`bpp`) of a [`ColorFormat`] value
+/// 
+/// # Arguments
+/// 
+/// * `color_fmt`: The [`ColorFormat`]
+#[inline]
 pub const fn calculate_bpp(color_fmt: ColorFormat) -> u32 {
     (((color_fmt as u64) >> 3) & 0x1F) as u32
 }
 
+/// Aligns a width value
+/// 
+/// # Arguments
+/// 
+/// * `bpp`: The `bpp` value to align with
+/// * `width`: The width to align
+#[inline]
 pub const fn align_width(bpp: u32, width: u32) -> u32 {
-    ((width * bpp + 63) & !63) / bpp
+    (mem::align_up((width * bpp) as usize, 0x40) as u32) / bpp
 }
 
+// TODO: check this
+
+/// Aligns a height value
+/// 
+/// # Arguments
+/// 
+/// * `width`: The height to align
 pub const fn align_height(height: u32) -> u32 {
-    (height + BLOCK_HEIGHT - 1) & !(BLOCK_HEIGHT - 1)
+    mem::align_up(height as usize, BLOCK_HEIGHT as usize) as u32
 }
 
-const NVHOST_PATH: &str = nul!("/dev/nvhost-as-gpu");
+const NVHOST_AS_GPU_PATH: &str = nul!("/dev/nvhost-as-gpu");
 const NVMAP_PATH: &str = nul!("/dev/nvmap");
-const NVHOSTCTRL_PATH: &str = nul!("/dev/nvhost-ctrl");
+const NVHOST_CTRL_PATH: &str = nul!("/dev/nvhost-ctrl");
 
-const SIZE_FACTOR: f32 = 1.5; // 1920x1080 / 1280x720
-
+/// Represents the screen width
 pub const SCREEN_WIDTH: u32 = 1280;
+
+/// Represents the screen height
 pub const SCREEN_HEIGHT: u32 = 720;
 
+const SIZE_FACTOR: f32 = (SCREEN_WIDTH as f32) / (SCREEN_HEIGHT as f32);
+
+/// Represents a layer Z value
+/// 
+/// This can contain the minimum/maximum possible values, or a custom Z value
 pub enum LayerZ {
     Max,
     Min,
     Value(i64)
 }
 
+/// Represents `nvdrv:*` service kinds
 pub enum NvDrvServiceKind {
     Application,
     Applet,
     System
 }
 
+/// Represents `vi:*` service kinds
 pub enum ViServiceKind {
     Application,
     System,
     Manager
 }
 
+/// Converts [`ErrorCode`][`nv::ErrorCode`] to a regular [`Result`]
+/// 
+/// # Arguments
+/// 
+/// * `err`: The [`ErrorCode`][`nv::ErrorCode`]
 #[allow(unreachable_patterns)]
 pub fn convert_nv_error_code(err: nv::ErrorCode) -> Result<()> {
     match err {
@@ -784,6 +890,8 @@ pub fn convert_nv_error_code(err: nv::ErrorCode) -> Result<()> {
     }
 }
 
+/// Represents a graphics context
+#[allow(dead_code)]
 pub struct Context {
     vi_service: mem::Shared<dyn sf::IObject>,
     nvdrv_service: mem::Shared<dyn INvDrvServices>,
@@ -797,6 +905,15 @@ pub struct Context {
 }
 
 impl Context {
+    /// Creates a new [`Context`]
+    /// 
+    /// This automatically accesses VI and NV [`INvDrvServices`] services (of the specified kinds) and creates NV transfer memory
+    /// 
+    /// # Arguments
+    /// 
+    /// * `nv_kind`: The [`NvDrvServiceKind`]
+    /// * `vi_kind`: The [`ViServiceKind`]
+    /// * `transfer_mem_size`: The transfer memory size to use
     pub fn new(nv_kind: NvDrvServiceKind, vi_kind: ViServiceKind, transfer_mem_size: usize) -> Result<Self> {
         // Note: need to store a reference of the vi-service since it works as a domain, thus closing the original handle leaves all opened interfaces unusable
         // Storing it as a IObject shared-ptr since different vi services have different base interfaces...
@@ -836,30 +953,43 @@ impl Context {
         Self::from(vi_srv, application_display_srv, nvdrv_srv, transfer_mem_size)
     }
 
+    /// Creates a new [`Context`] with already existing service objects
+    /// 
+    /// This automatically creates NV transfer memory
+    /// 
+    /// # Arguments
+    /// 
+    /// * `vi_srv`: The VI service object
+    /// * `application_display_srv`: The VI [`IApplicationDisplayService`] interface object
+    /// * `nvdrv_srv`: The NV [`INvDrvServices`] service object
+    /// * `transfer_mem_size`: The transfer memory size to use
     pub fn from(vi_srv: mem::Shared<dyn sf::IObject>, application_display_srv: mem::Shared<dyn IApplicationDisplayService>, nvdrv_srv: mem::Shared<dyn INvDrvServices>, transfer_mem_size: usize) -> Result<Self> {
         let transfer_mem = alloc::Buffer::new(alloc::PAGE_ALIGNMENT, transfer_mem_size)?;
         let transfer_mem_handle = svc::create_transfer_memory(transfer_mem.ptr, transfer_mem_size, svc::MemoryPermission::None())?;
         nvdrv_srv.get().initialize(transfer_mem_size as u32, sf::Handle::from(svc::CURRENT_PROCESS_PSEUDO_HANDLE), sf::Handle::from(transfer_mem_handle))?;
 
-        let (nvhost_fd, nvhost_err) = nvdrv_srv.get().open(sf::Buffer::from_array(NVHOST_PATH.as_bytes()))?;
+        let (nvhost_fd, nvhost_err) = nvdrv_srv.get().open(sf::Buffer::from_array(NVHOST_AS_GPU_PATH.as_bytes()))?;
         convert_nv_error_code(nvhost_err)?;
         let (nvmap_fd, nvmap_err) = nvdrv_srv.get().open(sf::Buffer::from_array(NVMAP_PATH.as_bytes()))?;
         convert_nv_error_code(nvmap_err)?;
-        let (nvhostctrl_fd, nvhostctrl_err) = nvdrv_srv.get().open(sf::Buffer::from_array(NVHOSTCTRL_PATH.as_bytes()))?;
+        let (nvhostctrl_fd, nvhostctrl_err) = nvdrv_srv.get().open(sf::Buffer::from_array(NVHOST_CTRL_PATH.as_bytes()))?;
         convert_nv_error_code(nvhostctrl_err)?;
         
         let hos_binder_drv = application_display_srv.get().get_relay_service()?;
         Ok(Self { vi_service: vi_srv, nvdrv_service: nvdrv_srv, application_display_service: application_display_srv, hos_binder_driver: hos_binder_drv, transfer_mem, transfer_mem_handle, nvhost_fd, nvmap_fd, nvhostctrl_fd })
     }
 
+    /// Gets the underlying NV [`INvDrvServices`] service object
     pub fn get_nvdrv_service(&self) -> mem::Shared<dyn INvDrvServices> {
         self.nvdrv_service.clone()
     }
 
+    /// Gets the underlying [`IApplicationDisplayService`] object
     pub fn get_application_display_service(&self) -> mem::Shared<dyn IApplicationDisplayService> {
         self.application_display_service.clone()
     }
 
+    /// Gets the underlying [`IHOSBinderDriver`][`dispdrv::IHOSBinderDriver`] object
     pub fn get_hos_binder_driver(&self) -> mem::Shared<dyn dispdrv::IHOSBinderDriver> {
         self.hos_binder_driver.clone()
     }
@@ -881,12 +1011,21 @@ impl Context {
         surface::Surface::new(data.handle, self.nvdrv_service.clone(), self.application_display_service.clone(), self.nvhost_fd, self.nvmap_fd, self.nvhostctrl_fd, self.hos_binder_driver.clone(), buffer_count, display_id, layer_id, width, height, color_fmt, pixel_fmt, layout, layer_destroy_fn)
     }
 
+    /// Creates a [`Surface`][`surface::Surface`] based on a stray layer
+    /// 
+    /// # Arguments
+    /// 
+    /// * `display_name`: The display where the stray layer is created
+    /// * `buffer_count`: The buffer count to use internally
+    /// * `color_fmt`: The color format to use
+    /// * `pixel_fmt`: The pixel format to use
+    /// * `layout`: The layout type to use
     pub fn create_stray_layer_surface(&mut self, display_name: &str, buffer_count: u32, color_fmt: ColorFormat, pixel_fmt: PixelFormat, layout: Layout) -> Result<surface::Surface> {
         let display_id = self.application_display_service.get().open_display(vi::DisplayName::from_str(display_name))?;
         let native_window = parcel::ParcelPayload::new();
         let (layer_id, _) = self.application_display_service.get().create_stray_layer(vi::LayerFlags::Default(), display_id, sf::Buffer::from_other_var(&native_window))?;
 
-        self.create_surface_impl(buffer_count, display_id, layer_id, 1280, 720, color_fmt, pixel_fmt, layout, Self::stray_layer_destroy, native_window)
+        self.create_surface_impl(buffer_count, display_id, layer_id, SCREEN_WIDTH, SCREEN_HEIGHT, color_fmt, pixel_fmt, layout, Self::stray_layer_destroy, native_window)
     }
 
     fn set_layer_z_impl(display_id: vi::DisplayId, layer_id: vi::LayerId, z: LayerZ, system_display_service: mem::Shared<dyn vi::ISystemDisplayService>) -> Result<()> {
@@ -906,6 +1045,24 @@ impl Context {
         system_display_service.get().set_layer_position(x * SIZE_FACTOR, y * SIZE_FACTOR, layer_id)
     }
 
+    /// Creates a [`Surface`][`surface::Surface`] based on a managed layer
+    /// 
+    /// This is a more privileged layer than stray layers
+    /// 
+    /// # Arguments
+    /// 
+    /// * `display_name`: The display where the stray layer is created
+    /// * `aruid`: The [`AppletResourceUserId`][`applet::AppletResourceUserId`] value to use, can be zero
+    /// * `layer_flags`: The [`LayerFlags`][`vi::LayerFlags`] value to use
+    /// * `x`: The layer X position
+    /// * `y`: The layer Y position
+    /// * `width`: The layer width
+    /// * `height`: The layer height
+    /// * `z`: The layer Z position (depth)
+    /// * `buffer_count`: The buffer count to use internally
+    /// * `color_fmt`: The color format to use
+    /// * `pixel_fmt`: The pixel format to use
+    /// * `layout`: The layout type to use
     pub fn create_managed_layer_surface(&mut self, display_name: &str, aruid: applet::AppletResourceUserId, layer_flags: vi::LayerFlags, x: f32, y: f32, width: u32, height: u32, z: LayerZ, buffer_count: u32, color_fmt: ColorFormat, pixel_fmt: PixelFormat, layout: Layout) -> Result<surface::Surface> {
         let display_name_v = vi::DisplayName::from_str(display_name);
         let display_id = self.application_display_service.get().open_display(display_name_v)?;
@@ -924,8 +1081,8 @@ impl Context {
 }
 
 impl Drop for Context {
+    /// Destroys the [`Context`], closing everything it opened when it was created
     fn drop(&mut self) {
-        let _ = self.vi_service; // Avoid "dead code" warnings
         let _ = self.nvdrv_service.get().close(self.nvhost_fd);
         let _ = self.nvdrv_service.get().close(self.nvmap_fd);
         let _ = self.nvdrv_service.get().close(self.nvhostctrl_fd);

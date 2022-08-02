@@ -1,8 +1,11 @@
+//! ELF (aarch64) support and utils
+
 use crate::result::*;
 use core::ptr;
 
 pub mod rc;
 
+/// Represents ELF tags
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(i64)]
 pub enum Tag {
@@ -29,6 +32,7 @@ pub enum Tag {
     RelaCount = 0x6FFFFFF9
 }
 
+/// Represents ELF relocation types
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
 pub enum RelocationType {
@@ -38,14 +42,24 @@ pub enum RelocationType {
     AArch64Relative = 1027
 }
 
+/// Represents an ELF dynamic entry
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct Dyn {
+    /// The entry tag
     pub tag: Tag,
+    /// The entry value
     pub val_ptr: u64,
 }
 
 impl Dyn {
+    /// Finds a value corresponding to a certain [`Tag`]
+    /// 
+    /// This takes this [`Dyn`] as the start of contiguous [`Dyn`]s and iterates over them until the final one is reached
+    /// 
+    /// # Arguments
+    /// 
+    /// * `tag`: The [`Tag`] to use
     pub fn find_value(&self, tag: Tag) -> Result<u64> {
         unsafe {
             let mut found: *const u64 = ptr::null();
@@ -65,24 +79,34 @@ impl Dyn {
     }
 }
 
+/// Represents an ELF info symbol
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]
 pub struct InfoSymbol {
+    /// The relocation type
     pub relocation_type: RelocationType,
+    /// The symbol value
     pub symbol: u32,
 }
 
+/// Represents an info value
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub union Info {
+    /// The value
     pub value: u64,
+    /// The symbol
     pub symbol: InfoSymbol,
 }
 
+/// Represents a rela type
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct Rela {
+    /// The offset
     pub offset: u64,
+    /// The info
     pub info: Info,
+    /// The addend value
     pub addend: i64,
 }

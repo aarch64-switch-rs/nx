@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["aes",""],["hmac",""],["rc",""],["sha256",""]]};
+window.SIDEBAR_ITEMS = {"mod":[["aes","hardware-accelerated AES support (normal and CTR)"],["hmac","Hardware-accelerated HMAC support (SHA-256 HMAC)"],["rc","Crypto-related result definitions"],["sha256","Hardware-accelerated SHA-256 support"]]};

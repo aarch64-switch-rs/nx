@@ -117,27 +117,81 @@
 <span id="111">111</span>
 <span id="112">112</span>
 <span id="113">113</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::service::nv</span>;
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+</pre><pre class="rust"><code><span class="doccomment">//! `ioctl` command definitions and support</span>
+
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::service::nv</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 
+<span class="doccomment">/// Represents one of the available fds</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// Note that only the ones used so far in this library are present</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">u8</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">IoctlFd</span> {
     <span class="ident">NvHost</span>,
     <span class="ident">NvMap</span>,
-    <span class="ident">NvHostCtrl</span>,
+    <span class="ident">NvHostCtrl</span>
 }
 
+<span class="doccomment">/// Represents a type trait defining an `ioctl` command</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Ioctl</span> {
+    <span class="doccomment">/// Gets the [`IoctlId`][`nv::IoctlId`] of this command</span>
     <span class="kw">fn</span> <span class="ident">get_id</span>() -&gt; <span class="ident">nv::IoctlId</span>;
+
+    <span class="doccomment">/// Gets the [`IoctlFd`] of this command</span>
     <span class="kw">fn</span> <span class="ident">get_fd</span>() -&gt; <span class="ident">IoctlFd</span>;
 }
 
+<span class="doccomment">/// Represents the `Create` command for [`NvMap`][`IoctlFd::NvMap`] fd</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// See &lt;https://switchbrew.org/wiki/NV_services#NVMAP_IOC_CREATE&gt;</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">NvMapCreate</span> {
+    <span class="doccomment">/// The input map size</span>
     <span class="kw">pub</span> <span class="ident">size</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">handle</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// The output handle</span>
+    <span class="kw">pub</span> <span class="ident">handle</span>: <span class="ident">u32</span>
 }
 
 <span class="kw">impl</span> <span class="ident">Ioctl</span> <span class="kw">for</span> <span class="ident">NvMapCreate</span> {
@@ -150,11 +204,16 @@
     }
 }
 
+<span class="doccomment">/// Represents the `FromId` command for [`NvMap`][`IoctlFd::NvMap`] fd</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// See &lt;https://switchbrew.org/wiki/NV_services#NVMAP_IOC_FROM_ID&gt;</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">NvMapFromId</span> {
+    <span class="doccomment">/// The input ID</span>
     <span class="kw">pub</span> <span class="ident">id</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">handle</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// The output handle</span>
+    <span class="kw">pub</span> <span class="ident">handle</span>: <span class="ident">u32</span>
 }
 
 <span class="kw">impl</span> <span class="ident">Ioctl</span> <span class="kw">for</span> <span class="ident">NvMapFromId</span> {
@@ -167,23 +226,34 @@
     }
 }
 
+<span class="doccomment">/// Represents flags used in [`NvMapAlloc`] commands</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">u32</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">AllocFlags</span> {
     <span class="attribute">#[<span class="ident">default</span>]</span>
-    <span class="ident">ReadOnly</span>,
-    <span class="ident">ReadWrite</span>,
+    <span class="ident">ReadOnly</span> <span class="op">=</span> <span class="number">0</span>,
+    <span class="ident">ReadWrite</span> <span class="op">=</span> <span class="number">1</span>
 }
 
+<span class="doccomment">/// Represents the `Alloc` command for [`NvMap`][`IoctlFd::NvMap`] fd</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// See &lt;https://switchbrew.org/wiki/NV_services#NVMAP_IOC_ALLOC&gt;</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">NvMapAlloc</span> {
+    <span class="doccomment">/// The input handle</span>
     <span class="kw">pub</span> <span class="ident">handle</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// The input heao mask</span>
     <span class="kw">pub</span> <span class="ident">heap_mask</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// The input [`AllocFlags`]</span>
     <span class="kw">pub</span> <span class="ident">flags</span>: <span class="ident">AllocFlags</span>,
+    <span class="doccomment">/// The input align</span>
     <span class="kw">pub</span> <span class="ident">align</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// The input [`Kind`]</span>
     <span class="kw">pub</span> <span class="ident">kind</span>: <span class="ident">Kind</span>,
+    <span class="doccomment">/// Padding</span>
     <span class="kw">pub</span> <span class="ident">pad</span>: [<span class="ident">u8</span>; <span class="number">4</span>],
+    <span class="doccomment">/// The input address</span>
     <span class="kw">pub</span> <span class="ident">address</span>: <span class="ident">usize</span>
 }
 
@@ -197,10 +267,15 @@
     }
 }
 
+<span class="doccomment">/// Represents the `GetId` command for [`NvMap`][`IoctlFd::NvMap`] fd</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// See &lt;https://switchbrew.org/wiki/NV_services#NVMAP_IOC_GET_ID&gt;</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">NvMapGetId</span> {
+    <span class="doccomment">/// The output ID</span>
     <span class="kw">pub</span> <span class="ident">id</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// The input handle</span>
     <span class="kw">pub</span> <span class="ident">handle</span>: <span class="ident">u32</span>
 }
 
@@ -214,10 +289,15 @@
     }
 }
 
+<span class="doccomment">/// Represents the `SyncptWait` command for [`NvHostCtrl`][`IoctlFd::NvHostCtrl`] fd</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// See &lt;https://switchbrew.org/wiki/NV_services#NVHOST_IOCTL_CTRL_SYNCPT_WAIT&gt;</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">NvHostCtrlSyncptWait</span> {
+    <span class="doccomment">/// The input [`Fence`]</span>
     <span class="kw">pub</span> <span class="ident">fence</span>: <span class="ident">Fence</span>,
+    <span class="doccomment">/// The input timeout</span>
     <span class="kw">pub</span> <span class="ident">timeout</span>: <span class="ident">i32</span>
 }
 

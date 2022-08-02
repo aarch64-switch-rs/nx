@@ -97,7 +97,33 @@
 <span id="91">91</span>
 <span id="92">92</span>
 <span id="93">93</span>
-</pre><pre class="rust"><code><span class="attribute">#![<span class="ident">no_std</span>]</span>
+<span id="94">94</span>
+<span id="95">95</span>
+<span id="96">96</span>
+<span id="97">97</span>
+<span id="98">98</span>
+<span id="99">99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Userland library for Nintendo Switch homebrew (and other potential purposes!), written in pure Rust and some assembly bits</span>
+<span class="doccomment">//! </span>
+<span class="doccomment">//! # Contributing</span>
+<span class="doccomment">//! </span>
+<span class="doccomment">//! You can always contribute to these libraries, report bugs, etc. at their [repository](https://github.com/aarch64-switch-rs/nx)</span>
+<span class="doccomment">//! </span>
+<span class="doccomment">//! # Examples</span>
+<span class="doccomment">//! </span>
+<span class="doccomment">//! Library examples are located at this other [repository](https://github.com/aarch64-switch-rs/examples)</span>
+
+<span class="attribute">#![<span class="ident">no_std</span>]</span>
 <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">incomplete_features</span>)]</span>
 <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">non_snake_case</span>)]</span>
 <span class="attribute">#![<span class="ident">feature</span>(<span class="ident">alloc_error_handler</span>)]</span>
@@ -159,18 +185,22 @@
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">svc</span>;
 
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;smc&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">smc</span>;
 
 <span class="attribute">#[<span class="ident">macro_use</span>]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">ipc</span>;
 
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;services&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">service</span>;
 
 <span class="attribute">#[<span class="ident">macro_use</span>]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">diag</span>;
 
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;gpu&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">gpu</span>;
 
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;input&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">input</span>;
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">vmem</span>;
@@ -179,16 +209,18 @@
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">wait</span>;
 
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;fs&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">fs</span>;
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">version</span>;
 
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;rand&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">rand</span>;
 
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;crypto&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">crypto</span>;
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">la</span>;
-
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">paste</span>;</code></pre></div>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;la&quot;</span>)]</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">la</span>;</code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="nx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7425fb293 2022-06-30)" ></div>
 </body></html>

@@ -36,7 +36,59 @@
 <span id="30">30</span>
 <span id="31">31</span>
 <span id="32">32</span>
-</pre><pre class="rust"><code><span class="kw">pub</span> <span class="kw">const</span> <span class="ident">RESULT_MODULE</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">430</span>;
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
+<span id="58">58</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Generic library result definitions</span>
+<span class="doccomment">//! </span>
+<span class="doccomment">//! All `rc` modules in this library contain result definitions (usually related to/for the parent module)</span>
+<span class="doccomment">//! </span>
+<span class="doccomment">//! All library results have module [`RESULT_MODULE`], and their descriptions are `&lt;mod-specific submodule&gt; + &lt;res-value&gt;`</span>
+<span class="doccomment">//! </span>
+<span class="doccomment">//! For example, [`ResultNotImplemented`] has module [`RESULT_MODULE`] and description [`RESULT_SUBMODULE`] + `1`</span>
+<span class="doccomment">//! </span>
+<span class="doccomment">//! List of existing submodules in the library:</span>
+<span class="doccomment">//! </span>
+<span class="doccomment">//! * `0`: library (misc)</span>
+<span class="doccomment">//! * `100`: dynamic</span>
+<span class="doccomment">//! * `200`: dynamic/elf</span>
+<span class="doccomment">//! * `300`: util</span>
+<span class="doccomment">//! * `400`: diag</span>
+<span class="doccomment">//! * `500`: gpu</span>
+<span class="doccomment">//! * `600`: ipc</span>
+<span class="doccomment">//! * `700`: fs</span>
+<span class="doccomment">//! * `800`: input</span>
+<span class="doccomment">//! * `900`: thread</span>
+<span class="doccomment">//! * `1000`: mem</span>
+<span class="doccomment">//! * `1100`: gpu/binder</span>
+<span class="doccomment">//! * `1200`: gpu/parcel</span>
+<span class="doccomment">//! * `1300`: ipc/server</span>
+<span class="doccomment">//! * `1400`: crypto</span>
+
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">RESULT_MODULE</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">430</span>;
 
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">RESULT_SUBMODULE</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0</span>;
 

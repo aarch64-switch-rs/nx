@@ -84,6 +84,8 @@
 <span id="78">78</span>
 <span id="79">79</span>
 <span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
 </pre><pre class="rust"><code><span class="attribute">#![<span class="ident">macro_use</span>]</span>
 
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
@@ -95,6 +97,8 @@
         }
     }};
 }
+
+<span class="comment">// TODO: switch to a log system without having to reopen loggers for every log? global logger object(s) like N&#39;s log observers?</span>
 
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">diag_log</span> {

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":[["IPAD_VAL",""],["IPAD_XOR_OPAD_VAL",""],["OPAD_VAL",""]],"mod":[["sha256",""]]};
+window.SIDEBAR_ITEMS = {"constant":[["IPAD_VAL","Represents the IPAD value"],["IPAD_XOR_OPAD_VAL","Representa the IPAD value xor’d with the OPAL value"],["OPAD_VAL","Represents the OPAD value"]],"mod":[["sha256","Hardware-accelerated SHA-256 HMAC support"]]};

@@ -940,7 +940,166 @@
 <span id="934">934</span>
 <span id="935">935</span>
 <span id="936">936</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::result</span>::<span class="kw-2">*</span>;
+<span id="937">937</span>
+<span id="938">938</span>
+<span id="939">939</span>
+<span id="940">940</span>
+<span id="941">941</span>
+<span id="942">942</span>
+<span id="943">943</span>
+<span id="944">944</span>
+<span id="945">945</span>
+<span id="946">946</span>
+<span id="947">947</span>
+<span id="948">948</span>
+<span id="949">949</span>
+<span id="950">950</span>
+<span id="951">951</span>
+<span id="952">952</span>
+<span id="953">953</span>
+<span id="954">954</span>
+<span id="955">955</span>
+<span id="956">956</span>
+<span id="957">957</span>
+<span id="958">958</span>
+<span id="959">959</span>
+<span id="960">960</span>
+<span id="961">961</span>
+<span id="962">962</span>
+<span id="963">963</span>
+<span id="964">964</span>
+<span id="965">965</span>
+<span id="966">966</span>
+<span id="967">967</span>
+<span id="968">968</span>
+<span id="969">969</span>
+<span id="970">970</span>
+<span id="971">971</span>
+<span id="972">972</span>
+<span id="973">973</span>
+<span id="974">974</span>
+<span id="975">975</span>
+<span id="976">976</span>
+<span id="977">977</span>
+<span id="978">978</span>
+<span id="979">979</span>
+<span id="980">980</span>
+<span id="981">981</span>
+<span id="982">982</span>
+<span id="983">983</span>
+<span id="984">984</span>
+<span id="985">985</span>
+<span id="986">986</span>
+<span id="987">987</span>
+<span id="988">988</span>
+<span id="989">989</span>
+<span id="990">990</span>
+<span id="991">991</span>
+<span id="992">992</span>
+<span id="993">993</span>
+<span id="994">994</span>
+<span id="995">995</span>
+<span id="996">996</span>
+<span id="997">997</span>
+<span id="998">998</span>
+<span id="999">999</span>
+<span id="1000">1000</span>
+<span id="1001">1001</span>
+<span id="1002">1002</span>
+<span id="1003">1003</span>
+<span id="1004">1004</span>
+<span id="1005">1005</span>
+<span id="1006">1006</span>
+<span id="1007">1007</span>
+<span id="1008">1008</span>
+<span id="1009">1009</span>
+<span id="1010">1010</span>
+<span id="1011">1011</span>
+<span id="1012">1012</span>
+<span id="1013">1013</span>
+<span id="1014">1014</span>
+<span id="1015">1015</span>
+<span id="1016">1016</span>
+<span id="1017">1017</span>
+<span id="1018">1018</span>
+<span id="1019">1019</span>
+<span id="1020">1020</span>
+<span id="1021">1021</span>
+<span id="1022">1022</span>
+<span id="1023">1023</span>
+<span id="1024">1024</span>
+<span id="1025">1025</span>
+<span id="1026">1026</span>
+<span id="1027">1027</span>
+<span id="1028">1028</span>
+<span id="1029">1029</span>
+<span id="1030">1030</span>
+<span id="1031">1031</span>
+<span id="1032">1032</span>
+<span id="1033">1033</span>
+<span id="1034">1034</span>
+<span id="1035">1035</span>
+<span id="1036">1036</span>
+<span id="1037">1037</span>
+<span id="1038">1038</span>
+<span id="1039">1039</span>
+<span id="1040">1040</span>
+<span id="1041">1041</span>
+<span id="1042">1042</span>
+<span id="1043">1043</span>
+<span id="1044">1044</span>
+<span id="1045">1045</span>
+<span id="1046">1046</span>
+<span id="1047">1047</span>
+<span id="1048">1048</span>
+<span id="1049">1049</span>
+<span id="1050">1050</span>
+<span id="1051">1051</span>
+<span id="1052">1052</span>
+<span id="1053">1053</span>
+<span id="1054">1054</span>
+<span id="1055">1055</span>
+<span id="1056">1056</span>
+<span id="1057">1057</span>
+<span id="1058">1058</span>
+<span id="1059">1059</span>
+<span id="1060">1060</span>
+<span id="1061">1061</span>
+<span id="1062">1062</span>
+<span id="1063">1063</span>
+<span id="1064">1064</span>
+<span id="1065">1065</span>
+<span id="1066">1066</span>
+<span id="1067">1067</span>
+<span id="1068">1068</span>
+<span id="1069">1069</span>
+<span id="1070">1070</span>
+<span id="1071">1071</span>
+<span id="1072">1072</span>
+<span id="1073">1073</span>
+<span id="1074">1074</span>
+<span id="1075">1075</span>
+<span id="1076">1076</span>
+<span id="1077">1077</span>
+<span id="1078">1078</span>
+<span id="1079">1079</span>
+<span id="1080">1080</span>
+<span id="1081">1081</span>
+<span id="1082">1082</span>
+<span id="1083">1083</span>
+<span id="1084">1084</span>
+<span id="1085">1085</span>
+<span id="1086">1086</span>
+<span id="1087">1087</span>
+<span id="1088">1088</span>
+<span id="1089">1089</span>
+<span id="1090">1090</span>
+<span id="1091">1091</span>
+<span id="1092">1092</span>
+<span id="1093">1093</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Graphics and GPU support and utils</span>
+
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::result</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::service</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::mem</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::mem::alloc</span>;
@@ -966,6 +1125,7 @@
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">surface</span>;
 
+<span class="doccomment">/// Represents layout types</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">u32</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Layout</span> {
@@ -976,6 +1136,7 @@
     <span class="ident">BlockLinear</span> <span class="op">=</span> <span class="number">3</span>
 }
 
+<span class="doccomment">/// Represents display scan format types</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">u32</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">DisplayScanFormat</span> {
@@ -984,6 +1145,7 @@
     <span class="ident">Interlaced</span> <span class="op">=</span> <span class="number">1</span>
 }
 
+<span class="doccomment">/// Represents kinds</span>
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">non_camel_case_types</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">u32</span>)]</span>
@@ -1224,6 +1386,7 @@
     <span class="ident">Invalid</span> <span class="op">=</span> <span class="number">0xff</span>
 }
 
+<span class="doccomment">/// Represents supported color formats</span>
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">non_camel_case_types</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">u64</span>)]</span>
@@ -1461,6 +1624,7 @@
     <span class="ident">XYZ</span> <span class="op">=</span> <span class="number">0x140A886640</span>
 }
 
+<span class="doccomment">/// Represents supported pixel formats</span>
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">non_camel_case_types</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">u32</span>)]</span>
@@ -1485,6 +1649,7 @@
 }
 
 <span class="macro">define_bit_enum!</span> {
+    <span class="doccomment">/// Represents allocator usage flags</span>
     <span class="ident">GraphicsAllocatorUsage</span> (<span class="ident">u32</span>) {
         <span class="ident">SoftwareReadNever</span> <span class="op">=</span> <span class="number">0</span>,
         <span class="ident">SoftwareReadRarely</span> <span class="op">=</span> <span class="number">0x2</span>,
@@ -1514,6 +1679,7 @@
     }
 }
 
+<span class="doccomment">/// Represents connection APIs</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">i32</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ConnectionApi</span> {
@@ -1525,6 +1691,7 @@
     <span class="ident">Camera</span> <span class="op">=</span> <span class="number">4</span>
 }
 
+<span class="doccomment">/// Represents disconnect modes</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">u32</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">DisconnectMode</span> {
@@ -1533,81 +1700,137 @@
     <span class="ident">AllLocal</span>
 }
 
+<span class="doccomment">/// Represents a queue buffer output layout</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">QueueBufferOutput</span> {
+    <span class="doccomment">/// The width</span>
     <span class="kw">pub</span> <span class="ident">width</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// The height</span>
     <span class="kw">pub</span> <span class="ident">height</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// The transform hint</span>
     <span class="kw">pub</span> <span class="ident">transform_hint</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// The pending buffer count</span>
     <span class="kw">pub</span> <span class="ident">pending_buffer_count</span>: <span class="ident">u32</span>
 }
 
 <span class="kw">impl</span> <span class="ident">QueueBufferOutput</span> {
+    <span class="doccomment">/// Creates a new, empty [`QueueBufferOutput`]</span>
     <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> { <span class="ident">width</span>: <span class="number">0</span>, <span class="ident">height</span>: <span class="number">0</span>, <span class="ident">transform_hint</span>: <span class="number">0</span>, <span class="ident">pending_buffer_count</span>: <span class="number">0</span> }
     }
 }
 
+<span class="doccomment">/// Represents a plane layout</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Plane</span> {
+    <span class="doccomment">/// The width</span>
     <span class="kw">pub</span> <span class="ident">width</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// The height</span>
     <span class="kw">pub</span> <span class="ident">height</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// The color format</span>
     <span class="kw">pub</span> <span class="ident">color_format</span>: <span class="ident">ColorFormat</span>,
+    <span class="doccomment">/// The layout</span>
     <span class="kw">pub</span> <span class="ident">layout</span>: <span class="ident">Layout</span>,
+    <span class="doccomment">/// The pitch</span>
     <span class="kw">pub</span> <span class="ident">pitch</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// The map handle</span>
     <span class="kw">pub</span> <span class="ident">map_handle</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// The offset</span>
     <span class="kw">pub</span> <span class="ident">offset</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// The kind</span>
     <span class="kw">pub</span> <span class="ident">kind</span>: <span class="ident">Kind</span>,
+    <span class="doccomment">/// The base-2 log of the block height</span>
     <span class="kw">pub</span> <span class="ident">block_height_log2</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// The display scan format</span>
     <span class="kw">pub</span> <span class="ident">display_scan_format</span>: <span class="ident">DisplayScanFormat</span>,
+    <span class="doccomment">/// The second field offset</span>
     <span class="kw">pub</span> <span class="ident">second_field_offset</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// The flags</span>
     <span class="kw">pub</span> <span class="ident">flags</span>: <span class="ident">u64</span>,
+    <span class="doccomment">/// The size</span>
     <span class="kw">pub</span> <span class="ident">size</span>: <span class="ident">usize</span>,
+    <span class="doccomment">/// Unknown/unused</span>
     <span class="kw">pub</span> <span class="ident">unk</span>: [<span class="ident">u32</span>; <span class="number">6</span>]
 }
 
+<span class="doccomment">/// Represents a graphic buffer header layout</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">GraphicBufferHeader</span> {
+    <span class="doccomment">/// The magic</span>
     <span class="kw">pub</span> <span class="ident">magic</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// The width</span>
     <span class="kw">pub</span> <span class="ident">width</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// The height</span>
     <span class="kw">pub</span> <span class="ident">height</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// The stride</span>
     <span class="kw">pub</span> <span class="ident">stride</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// The pixel format</span>
     <span class="kw">pub</span> <span class="ident">pixel_format</span>: <span class="ident">PixelFormat</span>,
+    <span class="doccomment">/// The allocator usage</span>
     <span class="kw">pub</span> <span class="ident">gfx_alloc_usage</span>: <span class="ident">GraphicsAllocatorUsage</span>,
+    <span class="doccomment">/// The PID</span>
     <span class="kw">pub</span> <span class="ident">pid</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// The reference count</span>
     <span class="kw">pub</span> <span class="ident">refcount</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// The FD count</span>
     <span class="kw">pub</span> <span class="ident">fd_count</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// The buffer size</span>
     <span class="kw">pub</span> <span class="ident">buffer_size</span>: <span class="ident">u32</span>
 }
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">GRAPHIC_BUFFER_HEADER_MAGIC</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="ident">u32::from_be_bytes</span>(<span class="kw-2">*</span><span class="string">b&quot;GBFR&quot;</span>);
+<span class="kw">impl</span> <span class="ident">GraphicBufferHeader</span> {
+    <span class="doccomment">/// Represents the magic value of this layout</span>
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MAGIC</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="ident">u32::from_be_bytes</span>(<span class="kw-2">*</span><span class="string">b&quot;GBFR&quot;</span>);
+}
 
+<span class="doccomment">/// Represents a graphic buffer layout</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">packed</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">GraphicBuffer</span> {
+    <span class="doccomment">/// The header</span>
     <span class="kw">pub</span> <span class="ident">header</span>: <span class="ident">GraphicBufferHeader</span>,
+    <span class="doccomment">/// Empty value</span>
     <span class="kw">pub</span> <span class="ident">null</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// The map ID</span>
     <span class="kw">pub</span> <span class="ident">map_id</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// Empty value</span>
     <span class="kw">pub</span> <span class="ident">zero</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// The magic</span>
     <span class="kw">pub</span> <span class="ident">magic</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// The PID</span>
     <span class="kw">pub</span> <span class="ident">pid</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// The buffer type</span>
     <span class="kw">pub</span> <span class="ident">buffer_type</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// The allocator usage</span>
     <span class="kw">pub</span> <span class="ident">gfx_alloc_usage</span>: <span class="ident">GraphicsAllocatorUsage</span>,
+    <span class="doccomment">/// The pixel format</span>
     <span class="kw">pub</span> <span class="ident">pixel_format</span>: <span class="ident">PixelFormat</span>,
+    <span class="doccomment">/// The external pixel format</span>
     <span class="kw">pub</span> <span class="ident">external_pixel_format</span>: <span class="ident">PixelFormat</span>,
+    <span class="doccomment">/// The stride</span>
     <span class="kw">pub</span> <span class="ident">stride</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// The full size</span>
     <span class="kw">pub</span> <span class="ident">full_size</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// The plane count</span>
     <span class="kw">pub</span> <span class="ident">plane_count</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// Empty value</span>
     <span class="kw">pub</span> <span class="ident">zero_2</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// The planes</span>
     <span class="kw">pub</span> <span class="ident">planes</span>: [<span class="ident">Plane</span>; <span class="number">3</span>],
+    <span class="doccomment">/// Unused</span>
     <span class="kw">pub</span> <span class="ident">unused</span>: <span class="ident">u64</span>
 }
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">GRAPHIC_BUFFER_MAGIC</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0xDAFFCAFF</span>;
+<span class="kw">impl</span> <span class="ident">GraphicBuffer</span> {
+    <span class="doccomment">/// Represents the magic value of this layout</span>
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MAGIC</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0xDAFFCAFF</span>;
+}
 
+<span class="doccomment">/// Represents a fence layout</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Fence</span> {
@@ -1615,6 +1838,7 @@
     <span class="ident">value</span>: <span class="ident">u32</span>
 }
 
+<span class="doccomment">/// Represents a multiple fence layout</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MultiFence</span> {
@@ -1622,6 +1846,7 @@
     <span class="ident">fences</span>: [<span class="ident">Fence</span>; <span class="number">4</span>]
 }
 
+<span class="doccomment">/// Represenrs a rectangle layout</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Rect</span> {
@@ -1631,6 +1856,7 @@
     <span class="ident">bottom</span>: <span class="ident">i32</span>
 }
 
+<span class="doccomment">/// Represents a transform type</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">u32</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Transform</span> {
@@ -1643,6 +1869,7 @@
     <span class="ident">Rotate270</span> <span class="op">=</span> <span class="number">7</span>
 }
 
+<span class="doccomment">/// Represents a queue buffer input layout</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">packed</span>)]</span>
@@ -1658,48 +1885,84 @@
     <span class="ident">fences</span>: <span class="ident">MultiFence</span>
 }
 
+<span class="doccomment">/// Represents the base-2 log value of the block height</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">BLOCK_HEIGHT_LOG2</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">4</span>;
+
+<span class="doccomment">/// Represents the block height</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">BLOCK_HEIGHT</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">8</span> <span class="op">*</span> (<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">BLOCK_HEIGHT_LOG2</span>);
 
+<span class="doccomment">/// Gets the bits-per-pixel (`bpp`) of a [`ColorFormat`] value</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// # Arguments</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// * `color_fmt`: The [`ColorFormat`]</span>
+<span class="attribute">#[<span class="ident">inline</span>]</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">calculate_bpp</span>(<span class="ident">color_fmt</span>: <span class="ident">ColorFormat</span>) -&gt; <span class="ident">u32</span> {
     (((<span class="ident">color_fmt</span> <span class="kw">as</span> <span class="ident">u64</span>) <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">3</span>) <span class="op">&amp;</span> <span class="number">0x1F</span>) <span class="kw">as</span> <span class="ident">u32</span>
 }
 
+<span class="doccomment">/// Aligns a width value</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// # Arguments</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// * `bpp`: The `bpp` value to align with</span>
+<span class="doccomment">/// * `width`: The width to align</span>
+<span class="attribute">#[<span class="ident">inline</span>]</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">align_width</span>(<span class="ident">bpp</span>: <span class="ident">u32</span>, <span class="ident">width</span>: <span class="ident">u32</span>) -&gt; <span class="ident">u32</span> {
-    ((<span class="ident">width</span> <span class="op">*</span> <span class="ident">bpp</span> <span class="op">+</span> <span class="number">63</span>) <span class="op">&amp;</span> <span class="op">!</span><span class="number">63</span>) <span class="op">/</span> <span class="ident">bpp</span>
+    (<span class="ident">mem::align_up</span>((<span class="ident">width</span> <span class="op">*</span> <span class="ident">bpp</span>) <span class="kw">as</span> <span class="ident">usize</span>, <span class="number">0x40</span>) <span class="kw">as</span> <span class="ident">u32</span>) <span class="op">/</span> <span class="ident">bpp</span>
 }
 
+<span class="comment">// TODO: check this</span>
+
+<span class="doccomment">/// Aligns a height value</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// # Arguments</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// * `width`: The height to align</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">align_height</span>(<span class="ident">height</span>: <span class="ident">u32</span>) -&gt; <span class="ident">u32</span> {
-    (<span class="ident">height</span> <span class="op">+</span> <span class="ident">BLOCK_HEIGHT</span> <span class="op">-</span> <span class="number">1</span>) <span class="op">&amp;</span> <span class="op">!</span>(<span class="ident">BLOCK_HEIGHT</span> <span class="op">-</span> <span class="number">1</span>)
+    <span class="ident">mem::align_up</span>(<span class="ident">height</span> <span class="kw">as</span> <span class="ident">usize</span>, <span class="ident">BLOCK_HEIGHT</span> <span class="kw">as</span> <span class="ident">usize</span>) <span class="kw">as</span> <span class="ident">u32</span>
 }
 
-<span class="kw">const</span> <span class="ident">NVHOST_PATH</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="macro">nul!</span>(<span class="string">&quot;/dev/nvhost-as-gpu&quot;</span>);
+<span class="kw">const</span> <span class="ident">NVHOST_AS_GPU_PATH</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="macro">nul!</span>(<span class="string">&quot;/dev/nvhost-as-gpu&quot;</span>);
 <span class="kw">const</span> <span class="ident">NVMAP_PATH</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="macro">nul!</span>(<span class="string">&quot;/dev/nvmap&quot;</span>);
-<span class="kw">const</span> <span class="ident">NVHOSTCTRL_PATH</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="macro">nul!</span>(<span class="string">&quot;/dev/nvhost-ctrl&quot;</span>);
+<span class="kw">const</span> <span class="ident">NVHOST_CTRL_PATH</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="macro">nul!</span>(<span class="string">&quot;/dev/nvhost-ctrl&quot;</span>);
 
-<span class="kw">const</span> <span class="ident">SIZE_FACTOR</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="number">1.5</span>; <span class="comment">// 1920x1080 / 1280x720</span>
-
+<span class="doccomment">/// Represents the screen width</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SCREEN_WIDTH</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">1280</span>;
+
+<span class="doccomment">/// Represents the screen height</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SCREEN_HEIGHT</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">720</span>;
 
+<span class="kw">const</span> <span class="ident">SIZE_FACTOR</span>: <span class="ident">f32</span> <span class="op">=</span> (<span class="ident">SCREEN_WIDTH</span> <span class="kw">as</span> <span class="ident">f32</span>) <span class="op">/</span> (<span class="ident">SCREEN_HEIGHT</span> <span class="kw">as</span> <span class="ident">f32</span>);
+
+<span class="doccomment">/// Represents a layer Z value</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// This can contain the minimum/maximum possible values, or a custom Z value</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">LayerZ</span> {
     <span class="ident">Max</span>,
     <span class="ident">Min</span>,
     <span class="ident">Value</span>(<span class="ident">i64</span>)
 }
 
+<span class="doccomment">/// Represents `nvdrv:*` service kinds</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">NvDrvServiceKind</span> {
     <span class="ident">Application</span>,
     <span class="ident">Applet</span>,
     <span class="ident">System</span>
 }
 
+<span class="doccomment">/// Represents `vi:*` service kinds</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ViServiceKind</span> {
     <span class="ident">Application</span>,
     <span class="ident">System</span>,
     <span class="ident">Manager</span>
 }
 
+<span class="doccomment">/// Converts [`ErrorCode`][`nv::ErrorCode`] to a regular [`Result`]</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// # Arguments</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// * `err`: The [`ErrorCode`][`nv::ErrorCode`]</span>
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unreachable_patterns</span>)]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">convert_nv_error_code</span>(<span class="ident">err</span>: <span class="ident">nv::ErrorCode</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">match</span> <span class="ident">err</span> {
@@ -1726,6 +1989,8 @@
     }
 }
 
+<span class="doccomment">/// Represents a graphics context</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Context</span> {
     <span class="ident">vi_service</span>: <span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">sf::IObject</span><span class="op">&gt;</span>,
     <span class="ident">nvdrv_service</span>: <span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">INvDrvServices</span><span class="op">&gt;</span>,
@@ -1739,6 +2004,15 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Context</span> {
+    <span class="doccomment">/// Creates a new [`Context`]</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// This automatically accesses VI and NV [`INvDrvServices`] services (of the specified kinds) and creates NV transfer memory</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// * `nv_kind`: The [`NvDrvServiceKind`]</span>
+    <span class="doccomment">/// * `vi_kind`: The [`ViServiceKind`]</span>
+    <span class="doccomment">/// * `transfer_mem_size`: The transfer memory size to use</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">nv_kind</span>: <span class="ident">NvDrvServiceKind</span>, <span class="ident">vi_kind</span>: <span class="ident">ViServiceKind</span>, <span class="ident">transfer_mem_size</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="comment">// Note: need to store a reference of the vi-service since it works as a domain, thus closing the original handle leaves all opened interfaces unusable</span>
         <span class="comment">// Storing it as a IObject shared-ptr since different vi services have different base interfaces...</span>
@@ -1778,30 +2052,43 @@
         <span class="ident"><span class="self">Self</span>::from</span>(<span class="ident">vi_srv</span>, <span class="ident">application_display_srv</span>, <span class="ident">nvdrv_srv</span>, <span class="ident">transfer_mem_size</span>)
     }
 
+    <span class="doccomment">/// Creates a new [`Context`] with already existing service objects</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// This automatically creates NV transfer memory</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// * `vi_srv`: The VI service object</span>
+    <span class="doccomment">/// * `application_display_srv`: The VI [`IApplicationDisplayService`] interface object</span>
+    <span class="doccomment">/// * `nvdrv_srv`: The NV [`INvDrvServices`] service object</span>
+    <span class="doccomment">/// * `transfer_mem_size`: The transfer memory size to use</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">vi_srv</span>: <span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">sf::IObject</span><span class="op">&gt;</span>, <span class="ident">application_display_srv</span>: <span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">IApplicationDisplayService</span><span class="op">&gt;</span>, <span class="ident">nvdrv_srv</span>: <span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">INvDrvServices</span><span class="op">&gt;</span>, <span class="ident">transfer_mem_size</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">transfer_mem</span> <span class="op">=</span> <span class="ident">alloc::Buffer::new</span>(<span class="ident">alloc::PAGE_ALIGNMENT</span>, <span class="ident">transfer_mem_size</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">transfer_mem_handle</span> <span class="op">=</span> <span class="ident">svc::create_transfer_memory</span>(<span class="ident">transfer_mem</span>.<span class="ident">ptr</span>, <span class="ident">transfer_mem_size</span>, <span class="ident">svc::MemoryPermission::None</span>())<span class="question-mark">?</span>;
         <span class="ident">nvdrv_srv</span>.<span class="ident">get</span>().<span class="ident">initialize</span>(<span class="ident">transfer_mem_size</span> <span class="kw">as</span> <span class="ident">u32</span>, <span class="ident">sf::Handle::from</span>(<span class="ident">svc::CURRENT_PROCESS_PSEUDO_HANDLE</span>), <span class="ident">sf::Handle::from</span>(<span class="ident">transfer_mem_handle</span>))<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> (<span class="ident">nvhost_fd</span>, <span class="ident">nvhost_err</span>) <span class="op">=</span> <span class="ident">nvdrv_srv</span>.<span class="ident">get</span>().<span class="ident">open</span>(<span class="ident">sf::Buffer::from_array</span>(<span class="ident">NVHOST_PATH</span>.<span class="ident">as_bytes</span>()))<span class="question-mark">?</span>;
+        <span class="kw">let</span> (<span class="ident">nvhost_fd</span>, <span class="ident">nvhost_err</span>) <span class="op">=</span> <span class="ident">nvdrv_srv</span>.<span class="ident">get</span>().<span class="ident">open</span>(<span class="ident">sf::Buffer::from_array</span>(<span class="ident">NVHOST_AS_GPU_PATH</span>.<span class="ident">as_bytes</span>()))<span class="question-mark">?</span>;
         <span class="ident">convert_nv_error_code</span>(<span class="ident">nvhost_err</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> (<span class="ident">nvmap_fd</span>, <span class="ident">nvmap_err</span>) <span class="op">=</span> <span class="ident">nvdrv_srv</span>.<span class="ident">get</span>().<span class="ident">open</span>(<span class="ident">sf::Buffer::from_array</span>(<span class="ident">NVMAP_PATH</span>.<span class="ident">as_bytes</span>()))<span class="question-mark">?</span>;
         <span class="ident">convert_nv_error_code</span>(<span class="ident">nvmap_err</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> (<span class="ident">nvhostctrl_fd</span>, <span class="ident">nvhostctrl_err</span>) <span class="op">=</span> <span class="ident">nvdrv_srv</span>.<span class="ident">get</span>().<span class="ident">open</span>(<span class="ident">sf::Buffer::from_array</span>(<span class="ident">NVHOSTCTRL_PATH</span>.<span class="ident">as_bytes</span>()))<span class="question-mark">?</span>;
+        <span class="kw">let</span> (<span class="ident">nvhostctrl_fd</span>, <span class="ident">nvhostctrl_err</span>) <span class="op">=</span> <span class="ident">nvdrv_srv</span>.<span class="ident">get</span>().<span class="ident">open</span>(<span class="ident">sf::Buffer::from_array</span>(<span class="ident">NVHOST_CTRL_PATH</span>.<span class="ident">as_bytes</span>()))<span class="question-mark">?</span>;
         <span class="ident">convert_nv_error_code</span>(<span class="ident">nvhostctrl_err</span>)<span class="question-mark">?</span>;
         
         <span class="kw">let</span> <span class="ident">hos_binder_drv</span> <span class="op">=</span> <span class="ident">application_display_srv</span>.<span class="ident">get</span>().<span class="ident">get_relay_service</span>()<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="self">Self</span> { <span class="ident">vi_service</span>: <span class="ident">vi_srv</span>, <span class="ident">nvdrv_service</span>: <span class="ident">nvdrv_srv</span>, <span class="ident">application_display_service</span>: <span class="ident">application_display_srv</span>, <span class="ident">hos_binder_driver</span>: <span class="ident">hos_binder_drv</span>, <span class="ident">transfer_mem</span>, <span class="ident">transfer_mem_handle</span>, <span class="ident">nvhost_fd</span>, <span class="ident">nvmap_fd</span>, <span class="ident">nvhostctrl_fd</span> })
     }
 
+    <span class="doccomment">/// Gets the underlying NV [`INvDrvServices`] service object</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_nvdrv_service</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">INvDrvServices</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">nvdrv_service</span>.<span class="ident">clone</span>()
     }
 
+    <span class="doccomment">/// Gets the underlying [`IApplicationDisplayService`] object</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_application_display_service</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">IApplicationDisplayService</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">application_display_service</span>.<span class="ident">clone</span>()
     }
 
+    <span class="doccomment">/// Gets the underlying [`IHOSBinderDriver`][`dispdrv::IHOSBinderDriver`] object</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_hos_binder_driver</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">dispdrv::IHOSBinderDriver</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">hos_binder_driver</span>.<span class="ident">clone</span>()
     }
@@ -1823,12 +2110,21 @@
         <span class="ident">surface::Surface::new</span>(<span class="ident">data</span>.<span class="ident">handle</span>, <span class="self">self</span>.<span class="ident">nvdrv_service</span>.<span class="ident">clone</span>(), <span class="self">self</span>.<span class="ident">application_display_service</span>.<span class="ident">clone</span>(), <span class="self">self</span>.<span class="ident">nvhost_fd</span>, <span class="self">self</span>.<span class="ident">nvmap_fd</span>, <span class="self">self</span>.<span class="ident">nvhostctrl_fd</span>, <span class="self">self</span>.<span class="ident">hos_binder_driver</span>.<span class="ident">clone</span>(), <span class="ident">buffer_count</span>, <span class="ident">display_id</span>, <span class="ident">layer_id</span>, <span class="ident">width</span>, <span class="ident">height</span>, <span class="ident">color_fmt</span>, <span class="ident">pixel_fmt</span>, <span class="ident">layout</span>, <span class="ident">layer_destroy_fn</span>)
     }
 
+    <span class="doccomment">/// Creates a [`Surface`][`surface::Surface`] based on a stray layer</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// * `display_name`: The display where the stray layer is created</span>
+    <span class="doccomment">/// * `buffer_count`: The buffer count to use internally</span>
+    <span class="doccomment">/// * `color_fmt`: The color format to use</span>
+    <span class="doccomment">/// * `pixel_fmt`: The pixel format to use</span>
+    <span class="doccomment">/// * `layout`: The layout type to use</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create_stray_layer_surface</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">display_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">buffer_count</span>: <span class="ident">u32</span>, <span class="ident">color_fmt</span>: <span class="ident">ColorFormat</span>, <span class="ident">pixel_fmt</span>: <span class="ident">PixelFormat</span>, <span class="ident">layout</span>: <span class="ident">Layout</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">surface::Surface</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">display_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">application_display_service</span>.<span class="ident">get</span>().<span class="ident">open_display</span>(<span class="ident">vi::DisplayName::from_str</span>(<span class="ident">display_name</span>))<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">native_window</span> <span class="op">=</span> <span class="ident">parcel::ParcelPayload::new</span>();
         <span class="kw">let</span> (<span class="ident">layer_id</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">application_display_service</span>.<span class="ident">get</span>().<span class="ident">create_stray_layer</span>(<span class="ident">vi::LayerFlags::Default</span>(), <span class="ident">display_id</span>, <span class="ident">sf::Buffer::from_other_var</span>(<span class="kw-2">&amp;</span><span class="ident">native_window</span>))<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.<span class="ident">create_surface_impl</span>(<span class="ident">buffer_count</span>, <span class="ident">display_id</span>, <span class="ident">layer_id</span>, <span class="number">1280</span>, <span class="number">720</span>, <span class="ident">color_fmt</span>, <span class="ident">pixel_fmt</span>, <span class="ident">layout</span>, <span class="ident"><span class="self">Self</span>::stray_layer_destroy</span>, <span class="ident">native_window</span>)
+        <span class="self">self</span>.<span class="ident">create_surface_impl</span>(<span class="ident">buffer_count</span>, <span class="ident">display_id</span>, <span class="ident">layer_id</span>, <span class="ident">SCREEN_WIDTH</span>, <span class="ident">SCREEN_HEIGHT</span>, <span class="ident">color_fmt</span>, <span class="ident">pixel_fmt</span>, <span class="ident">layout</span>, <span class="ident"><span class="self">Self</span>::stray_layer_destroy</span>, <span class="ident">native_window</span>)
     }
 
     <span class="kw">fn</span> <span class="ident">set_layer_z_impl</span>(<span class="ident">display_id</span>: <span class="ident">vi::DisplayId</span>, <span class="ident">layer_id</span>: <span class="ident">vi::LayerId</span>, <span class="ident">z</span>: <span class="ident">LayerZ</span>, <span class="ident">system_display_service</span>: <span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">vi::ISystemDisplayService</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
@@ -1848,6 +2144,24 @@
         <span class="ident">system_display_service</span>.<span class="ident">get</span>().<span class="ident">set_layer_position</span>(<span class="ident">x</span> <span class="op">*</span> <span class="ident">SIZE_FACTOR</span>, <span class="ident">y</span> <span class="op">*</span> <span class="ident">SIZE_FACTOR</span>, <span class="ident">layer_id</span>)
     }
 
+    <span class="doccomment">/// Creates a [`Surface`][`surface::Surface`] based on a managed layer</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// This is a more privileged layer than stray layers</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// * `display_name`: The display where the stray layer is created</span>
+    <span class="doccomment">/// * `aruid`: The [`AppletResourceUserId`][`applet::AppletResourceUserId`] value to use, can be zero</span>
+    <span class="doccomment">/// * `layer_flags`: The [`LayerFlags`][`vi::LayerFlags`] value to use</span>
+    <span class="doccomment">/// * `x`: The layer X position</span>
+    <span class="doccomment">/// * `y`: The layer Y position</span>
+    <span class="doccomment">/// * `width`: The layer width</span>
+    <span class="doccomment">/// * `height`: The layer height</span>
+    <span class="doccomment">/// * `z`: The layer Z position (depth)</span>
+    <span class="doccomment">/// * `buffer_count`: The buffer count to use internally</span>
+    <span class="doccomment">/// * `color_fmt`: The color format to use</span>
+    <span class="doccomment">/// * `pixel_fmt`: The pixel format to use</span>
+    <span class="doccomment">/// * `layout`: The layout type to use</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create_managed_layer_surface</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">display_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">aruid</span>: <span class="ident">applet::AppletResourceUserId</span>, <span class="ident">layer_flags</span>: <span class="ident">vi::LayerFlags</span>, <span class="ident">x</span>: <span class="ident">f32</span>, <span class="ident">y</span>: <span class="ident">f32</span>, <span class="ident">width</span>: <span class="ident">u32</span>, <span class="ident">height</span>: <span class="ident">u32</span>, <span class="ident">z</span>: <span class="ident">LayerZ</span>, <span class="ident">buffer_count</span>: <span class="ident">u32</span>, <span class="ident">color_fmt</span>: <span class="ident">ColorFormat</span>, <span class="ident">pixel_fmt</span>: <span class="ident">PixelFormat</span>, <span class="ident">layout</span>: <span class="ident">Layout</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">surface::Surface</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">display_name_v</span> <span class="op">=</span> <span class="ident">vi::DisplayName::from_str</span>(<span class="ident">display_name</span>);
         <span class="kw">let</span> <span class="ident">display_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">application_display_service</span>.<span class="ident">get</span>().<span class="ident">open_display</span>(<span class="ident">display_name_v</span>)<span class="question-mark">?</span>;
@@ -1866,8 +2180,8 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">Context</span> {
+    <span class="doccomment">/// Destroys the [`Context`], closing everything it opened when it was created</span>
     <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">vi_service</span>; <span class="comment">// Avoid &quot;dead code&quot; warnings</span>
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">nvdrv_service</span>.<span class="ident">get</span>().<span class="ident">close</span>(<span class="self">self</span>.<span class="ident">nvhost_fd</span>);
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">nvdrv_service</span>.<span class="ident">get</span>().<span class="ident">close</span>(<span class="self">self</span>.<span class="ident">nvmap_fd</span>);
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">nvdrv_service</span>.<span class="ident">get</span>().<span class="ident">close</span>(<span class="self">self</span>.<span class="ident">nvhostctrl_fd</span>);

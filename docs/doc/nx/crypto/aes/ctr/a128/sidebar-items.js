@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["Context",""]]};
+window.SIDEBAR_ITEMS = {"struct":[["Context","Represents the context used for 128-bit AES-CTR operations"]]};

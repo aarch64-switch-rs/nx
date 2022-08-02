@@ -1,24 +1,38 @@
+//! Sync/waiting utilities and wrappers
+
 use crate::result::*;
 use crate::svc;
 use crate::arm;
 
+/// Represents an event via a remote handle
 pub struct RemoteEvent {
+    /// The remote handle
     pub handle: svc::Handle
 }
 
 impl RemoteEvent {
-    pub const fn empty() -> Self {
-        Self { handle: svc::INVALID_HANDLE }
-    }
-    
+    /// Creates a [`RemoteEvent`] from a remote handle
+    ///
+    /// # Arguments
+    ///
+    /// * `handle` - The remote handle
+    #[inline]
     pub const fn new(handle: svc::Handle) -> Self {
         Self { handle }
     }
 
+    /// Resets the [`RemoteEvent`]
+    #[inline]
     pub fn reset(&self) -> Result<()> {
         svc::reset_signal(self.handle)
     }
 
+    /// Waits for the [`RemoteEvent`] with a given timeout, then resets it
+    ///
+    /// # Arguments
+    ///
+    /// * `timeout` - Wait timeout in nanoseconds, `-1` can be used to wait indefinitely
+    #[inline]
     pub fn wait(&self, timeout: i64) -> Result<()> {
         wait_handles(&[self.handle], timeout)?;
         self.reset()
@@ -26,45 +40,56 @@ impl RemoteEvent {
 }
 
 impl Drop for RemoteEvent {
+    /// Destroys the [`RemoteEvent`], closing its handle
     fn drop(&mut self) {
         let _ = svc::close_handle(self.handle);
     }
 }
 
+/// Represents a system event with server and client handles
 pub struct SystemEvent {
+    /// The event's server handle
     pub server_handle: svc::Handle,
+    /// The event's client handle
     pub client_handle: svc::Handle
 }
 
 impl SystemEvent {
-    pub const fn empty() -> Self {
-        Self { server_handle: 0, client_handle: 0 }
-    }
-    
+    /// Creates a new [`SystemEvent`] via the client/server handles obtained from [`svc::create_event`]
+    ///
+    /// # Arguments
+    ///
+    /// * `timeout` - Wait timeout in nanoseconds, `-1` can be used to wait indefinitely
     pub fn new() -> Result<Self> {
         let (server_handle, client_handle) = svc::create_event()?;
         Ok(Self { server_handle, client_handle })
     }
 
+    /// Signals the [`SystemEvent`] (via the server handle)
+    #[inline]
     pub fn signal(&self) -> Result<()> {
         svc::signal_event(self.server_handle)
     }
 }
 
 impl Drop for SystemEvent {
+    /// Destroys the [`SystemEvent`], closing both server/client handles
     fn drop(&mut self) {
-        let _ = svc::close_handle(self.client_handle);
         let _ = svc::close_handle(self.server_handle);
+        let _ = svc::close_handle(self.client_handle);
     }
 }
 
+/// Represents how a waiter operates (essentially, whether it gets automatically cleared after being signaled)
 pub enum WaiterType {
     Handle,
     HandleWithClear
 }
 
+/// Represents the max amount of objects the Nintendo Switch kernel can wait-sync on at the same time (like Windows)
 pub const MAX_OBJECT_COUNT: u32 = 0x40;
 
+/// Represents a waiting object for a handle
 #[allow(dead_code)]
 pub struct Waiter {
     handle: svc::Handle,
@@ -72,14 +97,33 @@ pub struct Waiter {
 }
 
 impl Waiter {
+    /// Creates a new [`Waiter`] from a handle and a type
+    ///
+    /// # Arguments
+    ///
+    /// * `handle` - The waiter handle
+    /// * `wait_type` - Thr waiter type
+    #[inline]
     pub const fn from(handle: svc::Handle, wait_type: WaiterType) -> Self {
         Self { handle, wait_type }
     }
     
+    /// Creates a new [`Waiter`] from a handle and [`WaiterType::Handle`] type
+    ///
+    /// # Arguments
+    ///
+    /// * `handle` - The waiter handle
+    #[inline]
     pub const fn from_handle(handle: svc::Handle) -> Self {
         Self::from(handle, WaiterType::Handle)
     }
 
+    /// Creates a new `Waiter` from a handle and [`WaiterType::HandleWithClear`] type
+    ///
+    /// # Arguments
+    ///
+    /// * `handle` - The waiter handle
+    #[inline]
     pub const fn from_handle_with_clear(handle: svc::Handle) -> Self {
         Self::from(handle, WaiterType::HandleWithClear)
     }
@@ -88,7 +132,7 @@ impl Waiter {
 type WaitFn<W> = fn(&[W], i64) -> Result<usize>;
 
 fn handles_wait_fn(handles: &[svc::Handle], timeout: i64) -> Result<usize> {
-    Ok(svc::wait_synchronization(handles.as_ptr(), handles.len() as u32, timeout)? as usize)
+    svc::wait_synchronization(handles.as_ptr(), handles.len() as u32, timeout).map(|idx| idx as usize)
 }
 
 fn waiters_wait_fn(_waiters: &[Waiter], _timeout: i64) -> Result<usize> {
@@ -126,10 +170,24 @@ fn wait_impl<W>(wait_objects: &[W], timeout: i64, wait_fn: WaitFn<W>) -> Result<
     }
 }
 
+/// Waits for several [`Waiter`]s for a specified timeout, returning the index of the waiter which signals first
+///
+/// # Arguments
+///
+/// * `waiters` - [`Waiter`]s to wait for
+/// * `timeout` - Wait timeout in nanoseconds, `-1` can be used to wait indefinitely
+#[inline]
 pub fn wait(waiters: &[Waiter], timeout: i64) -> Result<usize> {
     wait_impl(waiters, timeout, waiters_wait_fn)
 }
 
+/// Waits for several handles for a specified timeout, returning the index of the handle which signals first
+///
+/// # Arguments
+///
+/// * `handles` - Handles to wait for
+/// * `timeout` - Wait timeout in nanoseconds, `-1` can be used to wait indefinitely
+#[inline]
 pub fn wait_handles(handles: &[svc::Handle], timeout: i64) -> Result<usize> {
     wait_impl(handles, timeout, handles_wait_fn)
 }

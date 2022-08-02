@@ -1,3 +1,5 @@
+//! Hardware-accelerated 128-bit AES support
+
 use crate::crypto::rc;
 use crate::result::*;
 use core::mem;
@@ -5,8 +7,13 @@ use core::ptr;
 use core::arch::asm;
 use core::arch::aarch64;
 
+/// Represents the key size in bytes
 pub const KEY_SIZE: usize = 0x10;
+
+/// Represents the key size in 4-byte units
 pub const KEY_SIZE_32: usize = KEY_SIZE / mem::size_of::<u32>();
+
+/// Represents the round count in decryption/encryption processing
 pub const ROUND_COUNT: usize = 10;
 
 const SUB_BYTES_TABLE: [u8; 0x100] = [
@@ -48,11 +55,21 @@ const fn rotate_bytes(tmp: u32) -> u32 {
     (((tmp >> 0x18) & 0xFF) << 0x10)
 }
 
+/// Represents the context used for 128-bit AES operations
 pub struct Context {
+    /// The round keys
     pub round_keys: [[u8; super::BLOCK_SIZE]; ROUND_COUNT + 1]
 }
 
 impl Context {
+    /// Creates a new [`Context`] with the given key
+    /// 
+    /// The key must have size [`KEY_SIZE`] in bytes or this will fail with [`ResultInvalidSize`][`rc::ResultInvalidSize`]
+    /// 
+    /// # Arguments
+    /// 
+    /// * `key`: The key to use
+    /// * `is_encryptor`: Whether this context will be used for encrypting or decrypting
     pub fn new(key: &[u8], is_encryptor: bool) -> Result<Self> {
         result_return_unless!(key.len() == KEY_SIZE, rc::ResultInvalidSize);
 
@@ -99,6 +116,12 @@ impl Context {
         Ok(ctx)
     }
 
+    /// Encrypts the given data
+    /// 
+    /// # Arguments
+    /// 
+    /// * `src`: The input data
+    /// * `dst`: The output data to fill into
     pub fn encrypt_block(&self, src: &[u8], dst: &mut [u8]) {
         unsafe {
             let mut tmp = aarch64::vld1q_u8(src.as_ptr());
@@ -169,6 +192,12 @@ impl Context {
         }
     }
 
+    /// Decrypts the given data
+    /// 
+    /// # Arguments
+    /// 
+    /// * `src`: The input data
+    /// * `dst`: The output data to fill into
     pub fn decrypt_block(&self, src: &[u8], dst: &mut [u8]) {
         unsafe {
             let mut tmp = aarch64::vld1q_u8(src.as_ptr());

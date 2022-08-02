@@ -1,3 +1,5 @@
+//! Helper object types for treating FS subdirectories as IPC filesystems
+
 use crate::ipc::server;
 use crate::result::*;
 use crate::ipc::sf;
@@ -7,12 +9,20 @@ use crate::ipc::sf::fsp;
 use crate::ipc::sf::fsp::IFileSystem;
 use crate::fs::sf as fs_sf;
 
+// TODO: subdir FS object, non-IPC version?
+
+/// Represents an IPC [`IFileSystem`] object wrapping around a FS subdirectory path
 pub struct FileSystem {
     sub_dir: String,
     dummy_session: sf::Session
 }
 
 impl FileSystem {
+    /// Creates a new [`FileSystem`]
+    /// 
+    /// # Arguments
+    /// 
+    /// * `sub_dir`: The subdirectory path to wrap
     pub fn new(sub_dir: String) -> Self {
         Self {
             sub_dir,

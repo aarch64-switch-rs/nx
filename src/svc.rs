@@ -1,5 +1,4 @@
 use crate::result::*;
-use crate::smc;
 use crate::arm;
 use crate::util;
 use crate::version;
@@ -199,6 +198,8 @@ pub const INVALID_HANDLE: Handle = 0;
 
 pub const CURRENT_THREAD_PSEUDO_HANDLE: Handle = 0xFFFF8000;
 pub const CURRENT_PROCESS_PSEUDO_HANDLE: Handle = 0xFFFF8001;
+
+pub const DEFAULT_PROCESS_PROCESSOR_ID: i32 = -2;
 
 #[inline(always)]
 pub fn set_heap_size(size: Size) -> Result<*mut u8> {
@@ -769,15 +770,15 @@ pub fn manage_named_port(name: Address, max_sessions: i32) -> Result<Handle> {
 }
 
 #[inline(always)]
-pub fn call_secure_monitor(input: smc::Input) -> smc::Output {
+pub fn call_secure_monitor(input: [u64; 8]) -> [u64; 8] {
     extern "C" {
-        fn __nx_svc_call_secure_monitor(args: *mut smc::Arguments) -> u64;
+        fn __nx_svc_call_secure_monitor(args: *mut u64);
     }
 
     unsafe {
-        let mut args = smc::Arguments::from_input(input);
+        let mut args: [u64; 8] = input;
 
-        let _ =__nx_svc_call_secure_monitor(&mut args);
-        args.to_output()
+        __nx_svc_call_secure_monitor(args.as_mut_ptr());
+        args
     }
 }

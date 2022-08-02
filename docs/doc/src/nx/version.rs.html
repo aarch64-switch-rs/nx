@@ -127,22 +127,95 @@
 <span id="121">121</span>
 <span id="122">122</span>
 <span id="123">123</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::sync</span>;
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+</pre><pre class="rust"><code><span class="doccomment">//! System version utils</span>
+
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::sync</span>;
 <span class="kw">use</span> <span class="ident">core::cmp</span>;
 <span class="kw">use</span> <span class="ident">core::fmt</span>;
 
+<span class="doccomment">/// Represents a version with major, minor and micro components</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Version</span> {
+    <span class="doccomment">/// The major component</span>
     <span class="kw">pub</span> <span class="ident">major</span>: <span class="ident">u8</span>,
+    <span class="doccomment">/// The minor component</span>
     <span class="kw">pub</span> <span class="ident">minor</span>: <span class="ident">u8</span>,
+    <span class="doccomment">/// The micro component</span>
     <span class="kw">pub</span> <span class="ident">micro</span>: <span class="ident">u8</span>
 }
 
 <span class="kw">impl</span> <span class="ident">Version</span> {
+    <span class="doccomment">/// Creates an empty [`Version`] (with value `0.0.0`)</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">empty</span>() -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> { <span class="ident">major</span>: <span class="number">0</span>, <span class="ident">minor</span>: <span class="number">0</span>, <span class="ident">micro</span>: <span class="number">0</span> }
     }
 
+    <span class="doccomment">/// Creates a [`Version`] with the supplied components</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// * `major`: The major component</span>
+    <span class="doccomment">/// * `minor`: The minor component</span>
+    <span class="doccomment">/// * `micro`: The micro component</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">major</span>: <span class="ident">u8</span>, <span class="ident">minor</span>: <span class="ident">u8</span>, <span class="ident">micro</span>: <span class="ident">u8</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> { <span class="ident">major</span>, <span class="ident">minor</span>, <span class="ident">micro</span> }
     }
@@ -187,12 +260,19 @@
     }
 }
 
+<span class="doccomment">/// Represents an interval between versions, being optionally limited on both sides</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// An interval limited on both sides is, for example, `1.0.0-5.1.0` (inclusive)</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// An interval limited on one side is, for example, `*-3.0.0` (any version lower or equal to `3.0.0`) or `2.3.0-*` (any version higher or equal to `2.3.0`)</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">VersionInterval</span> {
     <span class="ident">min</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Version</span><span class="op">&gt;</span>,
     <span class="ident">max</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Version</span><span class="op">&gt;</span>
 }
 
 <span class="kw">impl</span> <span class="ident">VersionInterval</span> {
+    <span class="doccomment">/// Creates a non-limited [`VersionInterval`], essentially an interval allowing any versions</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">all</span>() -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">min</span>: <span class="prelude-val">None</span>,
@@ -200,6 +280,12 @@
         }
     }
 
+    <span class="doccomment">/// Creates a left-limited [`VersionInterval`], including any version higher or equal to `min`</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// * `min`: The minimum [`Version`] limiting the interval</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">min</span>: <span class="ident">Version</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">min</span>: <span class="prelude-val">Some</span>(<span class="ident">min</span>),
@@ -207,6 +293,12 @@
         }
     }
 
+    <span class="doccomment">/// Creates a right-limited [`VersionInterval`], including any version lower or equal to `max`</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// * `max`: The maximum [`Version`] limiting the interval</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">to</span>(<span class="ident">max</span>: <span class="ident">Version</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">min</span>: <span class="prelude-val">None</span>,
@@ -214,6 +306,13 @@
         }
     }
 
+    <span class="doccomment">/// Creates a limited [`VersionInterval`], including any version between `min` and `max` (inclusive)</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// * `min`: The minimum [`Version`] limiting the interval</span>
+    <span class="doccomment">/// * `max`: The maximum [`Version`] limiting the interval</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">from_to</span>(<span class="ident">min</span>: <span class="ident">Version</span>, <span class="ident">max</span>: <span class="ident">Version</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">min</span>: <span class="prelude-val">Some</span>(<span class="ident">min</span>),
@@ -221,7 +320,12 @@
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">matches</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ver</span>: <span class="ident">Version</span>) -&gt; <span class="ident">bool</span> {
+    <span class="doccomment">/// Returns whether `ver` is contained in the interval</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// * `ver`: The [`Version`] to check</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ver</span>: <span class="ident">Version</span>) -&gt; <span class="ident">bool</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">min_v</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">min</span> {
             <span class="kw">if</span> <span class="ident">ver</span> <span class="op">&lt;</span> <span class="ident">min_v</span> {
                 <span class="kw">return</span> <span class="bool-val">false</span>;
@@ -239,15 +343,25 @@
 
 <span class="kw">static</span> <span class="kw-2">mut</span> <span class="ident">G_VERSION</span>: <span class="ident">sync::Locked</span><span class="op">&lt;</span><span class="ident">Version</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">sync::Locked::new</span>(<span class="bool-val">false</span>, <span class="ident">Version::empty</span>());
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_version</span>(<span class="ident">version</span>: <span class="ident">Version</span>) {
+<span class="doccomment">/// Sets the global [`Version`], used in the library as the system [`Version`]</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// This is used on [`rrt0`][`crate::rrt0`] to set the actual system version, and shouldn&#39;t be used for other purposes unless you really know what you&#39;re doing</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// # Arguments</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// * `ver`: The system [`Version`] to set globally for the library</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_version</span>(<span class="ident">ver</span>: <span class="ident">Version</span>) {
     <span class="kw">unsafe</span> {
-        <span class="ident">G_VERSION</span>.<span class="ident">set</span>(<span class="ident">version</span>);
+        <span class="ident">G_VERSION</span>.<span class="ident">set</span>(<span class="ident">ver</span>);
     }
 }
 
+<span class="doccomment">/// Gets the global library value for the system [`Version`]</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// This value is set on [`rrt0`][`crate::rrt0`] to the actual system version</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_version</span>() -&gt; <span class="ident">Version</span> {
     <span class="kw">unsafe</span> {
-        <span class="kw-2">*</span><span class="ident">G_VERSION</span>.<span class="ident">get</span>()
+        <span class="ident">G_VERSION</span>.<span class="ident">get_val</span>()
     }
 }</code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="nx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7425fb293 2022-06-30)" ></div>

@@ -1,3 +1,5 @@
+//! Binder support and utils
+
 use crate::result::*;
 use crate::ipc::sf;
 use crate::gpu::parcel;
@@ -6,8 +8,10 @@ use super::*;
 
 pub mod rc;
 
+/// Represents the interface token used for parcel transactions
 pub const INTERFACE_TOKEN: &str = "android.gui.IGraphicBufferProducer";
 
+/// Represents binder error code values
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(i32)]
 pub enum ErrorCode {
@@ -31,6 +35,7 @@ pub enum ErrorCode {
     BadType = -2147483647,
 }
 
+/// Converts [`ErrorCode`]s to result values
 #[allow(unreachable_patterns)]
 pub fn convert_nv_error_code(err: ErrorCode) -> Result<()> {
     match err {
@@ -55,13 +60,21 @@ pub fn convert_nv_error_code(err: ErrorCode) -> Result<()> {
     }
 }
 
+/// Represents a binder object, wrapping transaction functionality
 pub struct Binder {
     handle: dispdrv::BinderHandle,
     hos_binder_driver: mem::Shared<dyn dispdrv::IHOSBinderDriver>,
 }
 
 impl Binder {
-    pub fn new(handle: dispdrv::BinderHandle, hos_binder_driver: mem::Shared<dyn dispdrv::IHOSBinderDriver>) -> Result<Self> {
+    /// Creates a new [`Binder`]
+    /// 
+    /// # Arguments
+    /// 
+    /// * `handle`: Binder handle to use
+    /// * `hos_binder_driver`: [`IHOSBinderDriver`][`dispdrv::IHOSBinderDriver`] object
+    #[inline]
+    pub const fn new(handle: dispdrv::BinderHandle, hos_binder_driver: mem::Shared<dyn dispdrv::IHOSBinderDriver>) -> Result<Self> {
         Ok(Self { handle, hos_binder_driver })
     }
 
@@ -89,24 +102,35 @@ impl Binder {
         self.transact_parcel_impl(transaction_id, payload)
     }
 
-    pub fn get_handle(&self) -> i32 {
+    /// Gets this [`Binder`]'s handle
+    #[inline]
+    pub fn get_handle(&self) -> dispdrv::BinderHandle {
         self.handle
     }
 
+    /// Gets this [`Binder`]'s underlying [`IHOSBinderDriver`][`dispdrv::IHOSBinderDriver`] object
     pub fn get_hos_binder_driver(&mut self) -> mem::Shared<dyn dispdrv::IHOSBinderDriver> {
         self.hos_binder_driver.clone()
     }
 
+    /// Increases the [`Binder`]'s reference counts
     pub fn increase_refcounts(&mut self) -> Result<()> {
         self.hos_binder_driver.get().adjust_refcount(self.handle, 1, dispdrv::RefcountType::Weak)?;
         self.hos_binder_driver.get().adjust_refcount(self.handle, 1, dispdrv::RefcountType::Strong)
     }
 
+    /// Decreases the [`Binder`]'s reference counts
     pub fn decrease_refcounts(&mut self) -> Result<()> {
         self.hos_binder_driver.get().adjust_refcount(self.handle, -1, dispdrv::RefcountType::Weak)?;
         self.hos_binder_driver.get().adjust_refcount(self.handle, -1, dispdrv::RefcountType::Strong)
     }
 
+    /// Performs a connection
+    /// 
+    /// # Arguments
+    /// 
+    /// * `api`: The connection API to use
+    /// * `producer_controlled_by_app`: Whether the producer is controlled by the process itself
     pub fn connect(&mut self, api: ConnectionApi, producer_controlled_by_app: bool) -> Result<QueueBufferOutput> {
         let mut parcel = parcel::Parcel::new();
         self.transact_parcel_begin(&mut parcel)?;
@@ -123,6 +147,12 @@ impl Binder {
         Ok(qbo)
     }
 
+    /// Performs a disconnection
+    /// 
+    /// # Arguments
+    /// 
+    /// * `api`: The connection API
+    /// * `mode`: The disconnection mode
     pub fn disconnect(&mut self, api: ConnectionApi, mode: DisconnectMode) -> Result<()> {
         let mut parcel = parcel::Parcel::new();
         self.transact_parcel_begin(&mut parcel)?;
@@ -136,6 +166,12 @@ impl Binder {
         Ok(())
     }
 
+    /// Sets a preallocated buffer
+    /// 
+    /// # Arguments
+    /// 
+    /// * `slot`: The buffer slot
+    /// * `buf`: The buffer
     pub fn set_preallocated_buffer(&mut self, slot: i32, buf: GraphicBuffer) -> Result<()> {
         let mut parcel = parcel::Parcel::new();
         self.transact_parcel_begin(&mut parcel)?;
@@ -151,6 +187,13 @@ impl Binder {
         Ok(())
     }
     
+    /// Requests a buffer at a given slot
+    /// 
+    /// This also returns whether the buffer is non-null
+    /// 
+    /// # Arguments
+    /// 
+    /// * `slot`: The slot
     pub fn request_buffer(&mut self, slot: i32) -> Result<(bool, GraphicBuffer)> {
         let mut parcel = parcel::Parcel::new();
         self.transact_parcel_begin(&mut parcel)?;
@@ -169,6 +212,15 @@ impl Binder {
         Ok((non_null, gfx_buf))
     }
 
+    /// Dequeues a buffer
+    /// 
+    /// # Arguments
+    /// 
+    /// * `is_async`: Whether the dequeue is asynchronous
+    /// * `width`: The width
+    /// * `height`: The height
+    /// * `get_frame_timestamps`: Whether to get frame timestamps
+    /// * `usage`: [`GraphicsAllocatorUsage`] value
     pub fn dequeue_buffer(&mut self, is_async: bool, width: u32, height: u32, get_frame_timestamps: bool, usage: GraphicsAllocatorUsage) -> Result<(i32, bool, MultiFence)> {
         let mut parcel = parcel::Parcel::new();
         self.transact_parcel_begin(&mut parcel)?;
@@ -193,6 +245,12 @@ impl Binder {
         Ok((slot, has_fences, fences))
     }
 
+    /// Queues a buffer
+    /// 
+    /// # Arguments
+    /// 
+    /// * `slot`: The slot
+    /// * `qbi`: The input layout
     pub fn queue_buffer(&mut self, slot: i32, qbi: QueueBufferInput) -> Result<QueueBufferOutput> {
         let mut parcel = parcel::Parcel::new();
         self.transact_parcel_begin(&mut parcel)?;
@@ -208,6 +266,11 @@ impl Binder {
         Ok(qbo)
     }
 
+    /// Gets a native handle of the underlying [`IHOSBinderDriver`][`dispdrv::IHOSBinderDriver`] object
+    /// 
+    /// # Arguments
+    /// 
+    /// * `handle_type`: The [`NativeHandleType`][`dispdrv::NativeHandleType`] value
     pub fn get_native_handle(&mut self, handle_type: dispdrv::NativeHandleType) -> Result<sf::CopyHandle> {
         self.hos_binder_driver.get().get_native_handle(self.handle, handle_type)
     }

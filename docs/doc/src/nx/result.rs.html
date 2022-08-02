@@ -118,7 +118,75 @@
 <span id="112">112</span>
 <span id="113">113</span>
 <span id="114">114</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">core::result</span>;
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Common result support</span>
+
+<span class="kw">use</span> <span class="ident">core::result</span>;
 <span class="kw">use</span> <span class="ident">core::fmt</span>;
 
 <span class="kw">const</span> <span class="ident">MODULE_BITS</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">9</span>;
@@ -126,18 +194,28 @@
 <span class="kw">const</span> <span class="ident">DEFAULT_VALUE</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0</span>;
 <span class="kw">const</span> <span class="ident">SUCCESS_VALUE</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="ident">DEFAULT_VALUE</span>;
 
+<span class="attribute">#[<span class="ident">inline</span>]</span>
 <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">pack_value</span>(<span class="ident">module</span>: <span class="ident">u32</span>, <span class="ident">description</span>: <span class="ident">u32</span>) -&gt; <span class="ident">u32</span> {
     <span class="ident">module</span> <span class="op">|</span> (<span class="ident">description</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">MODULE_BITS</span>)
 }
 
+<span class="attribute">#[<span class="ident">inline</span>]</span>
 <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">unpack_module</span>(<span class="ident">value</span>: <span class="ident">u32</span>) -&gt; <span class="ident">u32</span> {
     <span class="ident">value</span> <span class="op">&amp;</span> <span class="op">!</span>(<span class="op">!</span><span class="ident">DEFAULT_VALUE</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">MODULE_BITS</span>)
 }
 
+<span class="attribute">#[<span class="ident">inline</span>]</span>
 <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">unpack_description</span>(<span class="ident">value</span>: <span class="ident">u32</span>) -&gt; <span class="ident">u32</span> {
     (<span class="ident">value</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">MODULE_BITS</span>) <span class="op">&amp;</span> <span class="op">!</span>(<span class="op">!</span><span class="ident">DEFAULT_VALUE</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">DESCRIPTION_BITS</span>)
 }
 
+<span class="doccomment">/// Represents a (raw) result value used all over the OS</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// These are referred as `Result` on docs/official code, but we intentionally name it as [`ResultCode`] to distinguish it from the [`Result`] enum type</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// Results are often displayed/shown, for example, like `2168-0002`, which corresponds to `&lt;2000 + module&gt;-&lt;description&gt;`</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// [`Debug`][`fmt::Debug`] formatting formats the results as a hex-value (`0x4A8`), while [`Display`][`fmt::Display`] formatting formats the result in the format described above (`2168-0002`)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Default</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ResultCode</span> {
@@ -145,30 +223,56 @@
 }
 
 <span class="kw">impl</span> <span class="ident">ResultCode</span> {
+    <span class="doccomment">/// Creates a [`ResultCode`] from a raw value</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// * `value`: The raw value</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">value</span>: <span class="ident">u32</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> { <span class="ident">value</span> }
     }
 
+    <span class="doccomment">/// Wrapper for creating a new [`Result::Err`] value with the following raw result</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// * `value`: The raw value, note that it mustn&#39;t be `0`/success (that would be undefined behaviour)</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">new_err</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">value</span>: <span class="ident">u32</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
         <span class="prelude-val">Err</span>(<span class="ident"><span class="self">Self</span>::new</span>(<span class="ident">value</span>))
     }
     
+    <span class="doccomment">/// Returns whether the [`ResultCode`] is successful</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// A result value of `0` is a successful value, this essentially checks that</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">is_success</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
         <span class="self">self</span>.<span class="ident">value</span> <span class="op">==</span> <span class="ident">SUCCESS_VALUE</span>
     }
     
+    <span class="doccomment">/// Returns whether the [`ResultCode`] is not successful</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// This is the exact opposite of [`is_success`][`ResultCode::is_success`]</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">is_failure</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
         <span class="op">!</span><span class="self">self</span>.<span class="ident">is_success</span>()
     }
     
+    <span class="doccomment">/// Gets the raw value of the [`ResultCode`]</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">get_value</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u32</span> {
         <span class="self">self</span>.<span class="ident">value</span>
     }
     
+    <span class="doccomment">/// Gets the module of the [`ResultCode`]</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">get_module</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u32</span> {
         <span class="ident">unpack_module</span>(<span class="self">self</span>.<span class="ident">value</span>)
     }
     
+    <span class="doccomment">/// Gets the description of the [`ResultCode`]</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">get_description</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u32</span> {
         <span class="ident">unpack_description</span>(<span class="self">self</span>.<span class="ident">value</span>)
     }
@@ -186,8 +290,15 @@
     }
 }
 
+<span class="doccomment">/// Represents a result holding a certain value or a  [`ResultCode`] as an indication of failure</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">result::Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">ResultCode</span><span class="op">&gt;</span>;
 
+<span class="doccomment">/// Produces a `Result` whose value will depend on whether the supplied [`ResultCode`] was successful</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// # Arguments</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// * `rc`: The [`ResultCode`] value</span>
+<span class="doccomment">/// * `value`: The value to pack if the [`ResultCode`] is successful</span>
 <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pack</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">rc</span>: <span class="ident">ResultCode</span>, <span class="ident">value</span>: <span class="ident">T</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
     <span class="kw">if</span> <span class="ident">rc</span>.<span class="ident">is_success</span>() {
@@ -198,6 +309,11 @@
     }
 }
 
+<span class="doccomment">/// Produces the [`ResultCode`] corresponding to a packed result</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// # Arguments</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// * `rc`: The [`Result`] to unpack</span>
 <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">unpack</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">rc</span>: <span class="kw-2">&amp;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) -&gt; <span class="ident">ResultCode</span> {
     <span class="kw">match</span> <span class="ident">rc</span> {
@@ -206,31 +322,47 @@
     }
 }
 
+<span class="doccomment">/// Represents a base trait for result value definitions to follow</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">ResultBase</span> {
+    <span class="doccomment">/// Gets the result definition&#39;s module</span>
     <span class="kw">fn</span> <span class="ident">get_module</span>() -&gt; <span class="ident">u32</span>;
+
+    <span class="doccomment">/// Gets the result definition&#39;s description</span>
     <span class="kw">fn</span> <span class="ident">get_description</span>() -&gt; <span class="ident">u32</span>;
 
+    <span class="doccomment">/// Gets the result definition&#39;s raw value</span>
     <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
     <span class="kw">fn</span> <span class="ident">get_value</span>() -&gt; <span class="ident">u32</span> {
         <span class="ident">pack_value</span>(<span class="ident"><span class="self">Self</span>::get_module</span>(), <span class="ident"><span class="self">Self</span>::get_description</span>())
     }
 
+    <span class="doccomment">/// Produces a [`ResultCode`] from this result definition</span>
     <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
     <span class="kw">fn</span> <span class="ident">make</span>() -&gt; <span class="ident">ResultCode</span> {
         <span class="ident">ResultCode::new</span>(<span class="ident"><span class="self">Self</span>::get_value</span>())
     }
 
+    <span class="doccomment">/// Produces a [`Result::Err`] value from this result definition</span>
     <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
     <span class="kw">fn</span> <span class="ident">make_err</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Err</span>(<span class="ident"><span class="self">Self</span>::make</span>())
+        <span class="ident">ResultCode::new_err</span>(<span class="ident"><span class="self">Self</span>::get_value</span>())
     }
 
+    <span class="doccomment">/// Returns whether the given [`ResultCode`] matches this result definition</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// * `rc`: The [`ResultCode`] to check</span>
     <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
     <span class="kw">fn</span> <span class="ident">matches</span>(<span class="ident">rc</span>: <span class="ident">ResultCode</span>) -&gt; <span class="ident">bool</span> {
         <span class="ident">rc</span>.<span class="ident">get_value</span>() <span class="op">==</span> <span class="ident"><span class="self">Self</span>::get_value</span>()
     }
 }
 
-<span class="macro">result_define!</span>(<span class="ident">Success</span>: <span class="number">0</span>, <span class="number">0</span>);</code></pre></div>
+<span class="comment">// TODO: document all results? are the names not explicit enough?</span>
+
+<span class="macro">result_define!</span> {
+    <span class="ident">Success</span>: <span class="number">0</span>, <span class="number">0</span>
+}</code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="nx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7425fb293 2022-06-30)" ></div>
 </body></html>

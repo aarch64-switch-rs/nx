@@ -1,3 +1,5 @@
+//! ELF-related result definitions
+
 use crate::rc;
 
 pub const RESULT_SUBMODULE: u32 = 200;

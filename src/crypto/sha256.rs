@@ -1,3 +1,5 @@
+//! Hardware-accelerated SHA-256 support
+
 use crate::crypto::rc;
 use crate::result::*;
 use core::mem;
@@ -5,11 +7,19 @@ use core::ptr;
 use core::arch::asm;
 use core::arch::aarch64;
 
+/// Represents a block size in bytes
 pub const BLOCK_SIZE: usize = 0x40;
+
+/// Represent a block size un 4-byte units
 pub const BLOCK_SIZE_32: usize = BLOCK_SIZE / mem::size_of::<u32>();
+
+/// Represents a hash size in bytes
 pub const HASH_SIZE: usize = 0x20;
+
+/// Represents a hash size in 4-byte units
 pub const HASH_SIZE_32: usize = HASH_SIZE / mem::size_of::<u32>();
 
+/// Represents the 5context used for SHA-256 operations
 pub struct Context {
     intermediate_hash: [u32; HASH_SIZE_32],
     buf: [u8; BLOCK_SIZE],
@@ -43,6 +53,7 @@ const H_0: [u32; HASH_SIZE_32] = [
 ];
 
 impl Context {
+    /// Creates a new [`Context`]
     pub fn new() -> Self {
         Self {
             intermediate_hash: H_0,
@@ -53,6 +64,7 @@ impl Context {
         }
     }
 
+    /// Resets this [`Context`]
     pub fn reset(&mut self) {
         *self = Self::new();
     }
@@ -221,6 +233,11 @@ impl Context {
         aarch64::vst1q_u32(self.intermediate_hash.as_mut_ptr().offset(4), cur_hash1);
     }
 
+    /// Updates the [`Context`] with the given data
+    /// 
+    /// # Arguments
+    /// 
+    /// * `data`: The data to update with
     pub fn update<T>(&mut self, data: &[T]) {
         let data_size = data.len() * mem::size_of::<T>();
         let data_start = data.as_ptr() as *const u8;
@@ -264,6 +281,13 @@ impl Context {
         }
     }
 
+    /// Gets the produced hash (produces it first if not done yet)
+    /// 
+    /// The output hash array must have size [`HASH_SIZE`] in bytes or this will fail with [`ResultInvalidSize`][`rc::ResultInvalidSize`]
+    /// 
+    /// # Arguments
+    /// 
+    /// * `out_hash`: The output array to fill with the hash 
     pub fn get_hash<T>(&mut self, out_hash: &mut [T]) -> Result<()> {
         result_return_unless!(out_hash.len() * mem::size_of::<T>() == HASH_SIZE, rc::ResultInvalidSize);
 
@@ -303,8 +327,18 @@ impl Context {
     }
 }
 
+/// Wrapper for directly calculating the hash of given data
+/// 
+/// The output hash array must have size [`HASH_SIZE`] in bytes or this will fail with [`ResultInvalidSize`][`rc::ResultInvalidSize`]
+/// 
+/// This essentially creates a [`Context`], updates it with the given data and produces its hash
+/// 
+/// # Arguments
+/// 
+/// * `data`: Input data
+/// * `out_hash`: Output array to fill into
 #[inline]
-pub fn calculate_hash<T>(data: &[u8], out_hash: &mut [T]) -> Result<()> {
+pub fn calculate_hash<T, U>(data: &[T], out_hash: &mut [U]) -> Result<()> {
     let mut ctx = Context::new();
     ctx.update(data);
     ctx.get_hash(out_hash)

@@ -1,3 +1,5 @@
+//! Hardware-accelerated crypto support
+
 pub mod rc;
 
 pub mod sha256;

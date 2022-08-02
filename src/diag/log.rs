@@ -1,23 +1,40 @@
-use crate::rrt0;
+//! Logging support and utils
+
 use crate::thread;
-use crate::result::*;
-use crate::mem;
-use crate::ipc::sf;
 use alloc::string::String;
 
+/// Represents the logging severity
 pub type LogSeverity = logpacket::detail::LogSeverity;
 
+/// Represents the metadata used on a logging context
 pub struct LogMetadata {
+    /// The log severity
     pub severity: LogSeverity,
+    /// Whether the log is verbose
     pub verbosity: bool,
+    /// The log message
     pub msg: String,
+    /// The source file name
     pub file_name: &'static str,
+    /// The source function name
     pub fn_name: &'static str,
+    /// The source line number
     pub line_number: u32
 }
 
 impl LogMetadata {
-    pub fn new(severity: LogSeverity, verbosity: bool, msg: String, file_name: &'static str, fn_name: &'static str, line_number: u32) -> Self {
+    /// Creates a new [`LogMetadata`]
+    /// 
+    /// # Arguments
+    /// 
+    /// * `severity`: The log severity
+    /// * `verbosity`: Whether the log is verbose
+    /// * `msg`: The log message
+    /// * `file_name`: The source file name
+    /// * `fn_name`: The source function name
+    /// * `line_number`: The source line number
+    #[inline]
+    pub const fn new(severity: LogSeverity, verbosity: bool, msg: String, file_name: &'static str, fn_name: &'static str, line_number: u32) -> Self {
         Self {
             severity,
             verbosity,
@@ -29,11 +46,25 @@ impl LogMetadata {
     }
 }
 
+/// Represents a logging object
 pub trait Logger {
+    /// Creates a new logging object
     fn new() -> Self;
+    /// Logs with the given metadata
+    /// 
+    /// # Arguments
+    /// 
+    /// * `metadata`: The metadata to log
     fn log(&mut self, metadata: &LogMetadata);
 }
 
+/// Wrapper for logging a single log
+/// 
+/// Essentially creates a [`Logger`] and logs with it
+/// 
+/// # Arguments
+/// 
+/// * `metadata`: The metadata to log
 pub fn log_with<L: Logger>(metadata: &LogMetadata) {
     let mut logger = L::new();
     logger.log(metadata);
@@ -54,102 +85,10 @@ fn format_plain_string_log_impl(metadata: &LogMetadata, log_type: &str) -> Strin
     format!("[ {} (severity: {}, verbosity: {}) from {} in thread {}, at {}:{} ] {}", log_type, severity_str, metadata.verbosity, metadata.fn_name, thread_name, metadata.file_name, metadata.line_number, metadata.msg)
 }
 
-use crate::svc;
+pub mod svc;
 
-pub struct SvcOutputLogger;
+#[cfg(feature = "services")]
+pub mod fs;
 
-impl Logger for SvcOutputLogger {
-    fn new() -> Self {
-        Self {}
-    }
-
-    fn log(&mut self, metadata: &LogMetadata) {
-        let msg = format_plain_string_log_impl(metadata, "SvcOutputLog");
-        let _ = svc::output_debug_string(msg.as_ptr(), msg.len());
-    }
-}
-
-use crate::service;
-use crate::service::fsp::srv;
-use crate::service::fsp::srv::IFileSystemProxy;
-
-pub struct FsAccessLogLogger {
-    service: Result<mem::Shared<srv::FileSystemProxy>>
-}
-
-impl Logger for FsAccessLogLogger {
-    fn new() -> Self {
-        Self { service: service::new_service_object() }
-    }
-
-    fn log(&mut self, metadata: &LogMetadata) {
-        let msg = format_plain_string_log_impl(metadata, "FsAccessLog");
-        match self.service {
-            Ok(ref mut fspsrv) => {
-                let _ = fspsrv.get().output_access_log_to_sd_card(sf::Buffer::from_array(msg.as_bytes()));
-            },
-            _ => {}
-        }
-    }
-}
-
-use crate::service::lm;
-use crate::service::lm::ILogService;
-use crate::service::lm::ILogger;
-
-pub struct LmLogger {
-    logger: Option<mem::Shared<dyn ILogger>>
-}
-
-impl Logger for LmLogger {
-    fn new() -> Self {
-        let logger = match service::new_service_object::<lm::LogService>() {
-            Ok(log_srv) => {
-                match log_srv.get().open_logger(sf::ProcessId::new()) {
-                    Ok(logger_obj) => Some(logger_obj),
-                    Err(_) => None
-                }
-            },
-            Err(_) => None
-        };
-
-        Self { logger }
-    }
-
-    fn log(&mut self, metadata: &LogMetadata) {
-        if let Some(logger_obj) = &self.logger {
-            let mut log_packet = logpacket::LogPacket::new();
-
-            if let Ok(process_id) = svc::get_process_id(svc::CURRENT_PROCESS_PSEUDO_HANDLE) {
-                log_packet.set_process_id(process_id);
-            }
-
-            let cur_thread = thread::get_current_thread();
-            if let Ok(thread_id) = cur_thread.get_id() {
-                log_packet.set_thread_id(thread_id);
-            }
-
-            log_packet.set_file_name(String::from(metadata.file_name));
-            log_packet.set_function_name(String::from(metadata.fn_name));
-            log_packet.set_line_number(metadata.line_number);
-    
-            let mod_name = match rrt0::get_module_name().path.get_string() {
-                Ok(name) => name,
-                Err(_) => String::from("aarch64-switch-rs (invalid module name)")
-            };
-            log_packet.set_module_name(mod_name);
-
-            log_packet.set_text_log(metadata.msg.clone());
-
-            let thread_name = match cur_thread.name.get_str() {
-                Ok(name) => name,
-                _ => "aarch64-switch-rs (invalid thread name)",
-            };
-            log_packet.set_thread_name(String::from(thread_name));
-
-            for packet in log_packet.encode_packet() {
-                let _ = logger_obj.get().log(sf::Buffer::from_array(&packet));
-            }
-        }
-    }
-}
+#[cfg(feature = "services")]
+pub mod lm;

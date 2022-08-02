@@ -163,7 +163,96 @@
 <span id="157">157</span>
 <span id="158">158</span>
 <span id="159">159</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::arm</span>;
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Library applet support and utils</span>
+
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::arm</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::result</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::sync</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::mem</span>;
@@ -176,24 +265,38 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::svc</span>;
 <span class="kw">use</span> <span class="ident">core::mem</span> <span class="kw">as</span> <span class="ident">cmem</span>;
 
+<span class="doccomment">/// Represents the common arguments layout sent as starting input by/to all library applets</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CommonArguments</span> {
+    <span class="doccomment">/// Represents the [`CommonArguments`] version</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// Usually value `1` is used</span>
     <span class="kw">pub</span> <span class="ident">version</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// [`CommonArguments`] size (essentially the [`size_of`][`cmem::size_of`] this struct)</span>
     <span class="kw">pub</span> <span class="ident">size</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// Represents the API version of the specific library applet being launched</span>
     <span class="kw">pub</span> <span class="ident">la_api_version</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// Represents the theme color for the library applet to use</span>
     <span class="kw">pub</span> <span class="ident">theme_color</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// Represents whether the library applet should make a startup sound when launched</span>
     <span class="kw">pub</span> <span class="ident">play_startup_sound</span>: <span class="ident">bool</span>,
+    <span class="doccomment">/// Padding bytes</span>
     <span class="kw">pub</span> <span class="ident">pad</span>: [<span class="ident">u8</span>; <span class="number">7</span>],
+    <span class="doccomment">/// Represents the system tick of when the library applet gets launched</span>
     <span class="kw">pub</span> <span class="ident">system_tick</span>: <span class="ident">u64</span>
 }
 
+<span class="doccomment">/// Represents a wrapper type for using library applets</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">LibraryAppletHolder</span> {
     <span class="ident">accessor</span>: <span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">ILibraryAppletAccessor</span><span class="op">&gt;</span>,
     <span class="ident">state_changed_event_handle</span>: <span class="ident">svc::Handle</span>
 }
 
 <span class="kw">impl</span> <span class="ident">LibraryAppletHolder</span> {
+    <span class="doccomment">/// Creates a [`LibraryAppletHolder`] from an existing [`ILibraryAppletAccessor`] shared object</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// This shouldn&#39;t be manually created unless the accessor object was obtained manually (see [`create_library_applet`])</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">accessor</span>: <span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">ILibraryAppletAccessor</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">state_changed_event_h</span> <span class="op">=</span> <span class="ident">accessor</span>.<span class="ident">get</span>().<span class="ident">get_applet_state_changed_event</span>()<span class="question-mark">?</span>;
 
@@ -203,78 +306,112 @@
         })
     }
 
+    <span class="doccomment">/// Gets the underlying [`ILibraryAppletAccessor`] shared object</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_accessor</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">ILibraryAppletAccessor</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">accessor</span>.<span class="ident">clone</span>()
     }
 
+    <span class="doccomment">/// Pushes an input [`IStorage`] shared object to the library applet</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push_in_data_storage</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">storage</span>: <span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">IStorage</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">accessor</span>.<span class="ident">get</span>().<span class="ident">push_in_data</span>(<span class="ident">storage</span>)
     }
     
+    <span class="doccomment">/// Pushes input data to the library applet</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// This is a wrapper which creates an [`IStorage`] object with the given value and pushes it</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push_in_data</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Copy</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">t</span>: <span class="ident">T</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">t_st</span> <span class="op">=</span> <span class="ident">create_write_storage</span>(<span class="ident">t</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">push_in_data_storage</span>(<span class="ident">t_st</span>)
     }
 
+    <span class="doccomment">/// Starts the library applet</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">start</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">accessor</span>.<span class="ident">get</span>().<span class="ident">start</span>()
     }
 
+    <span class="doccomment">/// Waits until the library applet&#39;s state-changed event signals</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// This effectively waits until the library applet exits</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">join</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="ident">wait::wait_handles</span>(<span class="kw-2">&amp;</span>[<span class="self">self</span>.<span class="ident">state_changed_event_handle</span>], <span class="op">-</span><span class="number">1</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 
+    <span class="doccomment">/// Pops an output [`IStorage`] shared object from the library applet</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pop_out_data_storage</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">IStorage</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">accessor</span>.<span class="ident">get</span>().<span class="ident">pop_out_data</span>()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pop_out_data</span><span class="op">&lt;</span><span class="ident">O</span>: <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">Default</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">O</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Pops output data from the library applet</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// This is a wrapper which pops an [`IStorage`] object and reads its data (reads [`size_of`][`cmem::size_of`] `O` bytes and returns that data)</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pop_out_data</span><span class="op">&lt;</span><span class="ident">O</span>: <span class="ident">Copy</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">O</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">o_st</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">pop_out_data_storage</span>()<span class="question-mark">?</span>;
         <span class="ident">read_storage</span>(<span class="ident">o_st</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">LibraryAppletHolder</span> {
+    <span class="doccomment">/// Drops the [`LibraryAppletHolder`], closing the [`ILibraryAppletAccessor`] object instance and the acquired state-changed event handle</span>
     <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">svc::close_handle</span>(<span class="self">self</span>.<span class="ident">state_changed_event_handle</span>);
     }
 }
 
-<span class="kw">static</span> <span class="kw-2">mut</span> <span class="ident">G_CREATOR</span>: <span class="ident">sync::Locked</span><span class="op">&lt;</span><span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">ILibraryAppletCreator</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">sync::Locked::new</span>(<span class="bool-val">false</span>, <span class="ident">mem::Shared</span>::<span class="op">&lt;</span><span class="ident">applet::LibraryAppletCreator</span><span class="op">&gt;</span><span class="ident">::empty</span>());
+<span class="kw">static</span> <span class="kw-2">mut</span> <span class="ident">G_CREATOR</span>: <span class="ident">sync::Locked</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">ILibraryAppletCreator</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">sync::Locked::new</span>(<span class="bool-val">false</span>, <span class="prelude-val">None</span>);
 
+<span class="doccomment">/// Initializes library applet support with the provided [`ILibraryAppletCreator`] shared object</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// # Arguments</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// * `creator`: The shared object to use globally</span>
 <span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">fn</span> <span class="ident">get_creator_ref</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="kw-2">mut</span> <span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">ILibraryAppletCreator</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">initialize</span>(<span class="ident">creator</span>: <span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">ILibraryAppletCreator</span><span class="op">&gt;</span>) {
     <span class="kw">unsafe</span> {
-        <span class="ident">G_CREATOR</span>.<span class="ident">get</span>()
+        <span class="ident">G_CREATOR</span>.<span class="ident">set</span>(<span class="prelude-val">Some</span>(<span class="ident">creator</span>));
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">initialize</span>(<span class="ident">creator</span>: <span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">ILibraryAppletCreator</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">unsafe</span> {
-        <span class="ident">G_CREATOR</span>.<span class="ident">set</span>(<span class="ident">creator</span>);
-    }
-
-    <span class="prelude-val">Ok</span>(())
-}
-
+<span class="doccomment">/// Gets whether library applet support was initialized</span>
 <span class="attribute">#[<span class="ident">inline</span>]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_initialized</span>() -&gt; <span class="ident">bool</span> {
-    <span class="ident">get_creator_ref</span>().<span class="ident">is_valid</span>()
+    <span class="kw">unsafe</span> {
+        <span class="ident">G_CREATOR</span>.<span class="ident">get</span>().<span class="ident">is_some</span>()
+    }
 }
 
+<span class="doccomment">/// Finalizes library applet support, dropping the inner [`ILibraryAppletCreator`] shared object instance</span>
 <span class="attribute">#[<span class="ident">inline</span>]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">finalize</span>() {
-    <span class="ident">get_creator_ref</span>().<span class="ident">reset</span>();
+    <span class="kw">unsafe</span> {
+        <span class="ident">G_CREATOR</span>.<span class="ident">set</span>(<span class="prelude-val">None</span>);
+    }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read_storage</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">Default</span><span class="op">&gt;</span>(<span class="ident">storage</span>: <span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">IStorage</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">t</span>: <span class="ident">T</span> <span class="op">=</span> <span class="ident">Default::default</span>();
+<span class="doccomment">/// Gets access to the global [`ILibraryAppletCreator`] shared object instance</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// This will fail with [`ResultNotInitialized`][`super::rc::ResultNotInitialized`] if library applet support isn&#39;t initialized</span>
+<span class="attribute">#[<span class="ident">inline</span>]</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_creator</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">ILibraryAppletCreator</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">unsafe</span> {
+        <span class="ident">G_CREATOR</span>.<span class="ident">get</span>().<span class="ident">as_ref</span>().<span class="ident">ok_or</span>(<span class="ident"><span class="kw">super</span>::rc::ResultNotInitialized::make</span>())
+    }
+}
+
+<span class="doccomment">/// Wrapper for reading data from a [`IStorage`] shared object</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// This will try to read [`size_of`][`cmem::size_of`] `T` bytes from the storage and return them as the expected value</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// # Arguments</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// * `storage`: The storage to read from</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read_storage</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Copy</span><span class="op">&gt;</span>(<span class="ident">storage</span>: <span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">IStorage</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">t</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">cmem::zeroed</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>() };
 
     <span class="kw">let</span> <span class="ident">storage_accessor</span> <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">get</span>().<span class="ident">open</span>()<span class="question-mark">?</span>;
     <span class="ident">storage_accessor</span>.<span class="ident">get</span>().<span class="ident">read</span>(<span class="number">0</span>, <span class="ident">sf::Buffer::from_other_mut_var</span>(<span class="kw-2">&amp;mut</span> <span class="ident">t</span>))<span class="question-mark">?</span>;
@@ -282,6 +419,14 @@
     <span class="prelude-val">Ok</span>(<span class="ident">t</span>)
 }
 
+<span class="doccomment">/// Wrapper for writing data to a [`IStorage`] shared object</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// This will try to write [`size_of`][`cmem::size_of`] `T` bytes to the storage from the given value</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// # Arguments</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// * `storage`: The storage to write to</span>
+<span class="doccomment">/// * `t`: The value to write</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write_storage</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Copy</span><span class="op">&gt;</span>(<span class="ident">storage</span>: <span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">IStorage</span><span class="op">&gt;</span>, <span class="ident">t</span>: <span class="ident">T</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="macro">result_return_unless!</span>(<span class="ident">is_initialized</span>(), <span class="ident"><span class="kw">super</span>::rc::ResultNotInitialized</span>);
 
@@ -291,19 +436,37 @@
     <span class="prelude-val">Ok</span>(())
 }
 
+<span class="doccomment">/// Wrapper for creating a [`IStorage`] shared object from the given value</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// This will fail with [`ResultNotInitialized`][`super::rc::ResultNotInitialized`] if library applet support isn&#39;t initialized</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// This will create a [`IStorage`] object using the global [`ILibraryAppletCreator`] object and write the given value to it</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// # Arguments</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// * `t`: The value to write</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create_write_storage</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Copy</span><span class="op">&gt;</span>(<span class="ident">t</span>: <span class="ident">T</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">mem::Shared</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">IStorage</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="macro">result_return_unless!</span>(<span class="ident">is_initialized</span>(), <span class="ident"><span class="kw">super</span>::rc::ResultNotInitialized</span>);
 
-    <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">get_creator_ref</span>().<span class="ident">get</span>().<span class="ident">create_storage</span>(<span class="ident">cmem::size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>())<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">get_creator</span>()<span class="question-mark">?</span>.<span class="ident">get</span>().<span class="ident">create_storage</span>(<span class="ident">cmem::size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>())<span class="question-mark">?</span>;
     <span class="ident">write_storage</span>(<span class="ident">storage</span>.<span class="ident">clone</span>(), <span class="ident">t</span>)<span class="question-mark">?</span>;
 
     <span class="prelude-val">Ok</span>(<span class="ident">storage</span>)
 }
 
+<span class="doccomment">/// Creates a [`LibraryAppletHolder`] from the given library applet params</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// This automatically sets the [`CommonArguments`] `system_tick` value to the current system tick and pushes it as input using [`push_in_data`][`LibraryAppletHolder::push_in_data`]</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// # Arguments</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// * `id`: The [`AppletId`][`applet::AppletId`] of the library applet to create</span>
+<span class="doccomment">/// * `mode`: The [`LibraryAppletMode`][`applet::LibraryAppletMode`] to create the library applet with</span>
+<span class="doccomment">/// * `common_args`: The library applet-specific [`CommonArguments`] to send as input</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create_library_applet</span>(<span class="ident">id</span>: <span class="ident">applet::AppletId</span>, <span class="ident">mode</span>: <span class="ident">applet::LibraryAppletMode</span>, <span class="kw-2">mut</span> <span class="ident">common_args</span>: <span class="ident">CommonArguments</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">LibraryAppletHolder</span><span class="op">&gt;</span> {
     <span class="macro">result_return_unless!</span>(<span class="ident">is_initialized</span>(), <span class="ident"><span class="kw">super</span>::rc::ResultNotInitialized</span>);
 
-    <span class="kw">let</span> <span class="ident">accessor</span> <span class="op">=</span> <span class="ident">get_creator_ref</span>().<span class="ident">get</span>().<span class="ident">create_library_applet</span>(<span class="ident">id</span>, <span class="ident">mode</span>)<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">accessor</span> <span class="op">=</span> <span class="ident">get_creator</span>()<span class="question-mark">?</span>.<span class="ident">get</span>().<span class="ident">create_library_applet</span>(<span class="ident">id</span>, <span class="ident">mode</span>)<span class="question-mark">?</span>;
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">holder</span> <span class="op">=</span> <span class="ident">LibraryAppletHolder::new</span>(<span class="ident">accessor</span>)<span class="question-mark">?</span>;
     
@@ -313,7 +476,18 @@
     <span class="prelude-val">Ok</span>(<span class="ident">holder</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">launch_wait_simple</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">Copy</span>, <span class="ident">O</span>: <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">Default</span><span class="op">&gt;</span>(<span class="ident">id</span>: <span class="ident">applet::AppletId</span>, <span class="ident">common_args</span>: <span class="ident">CommonArguments</span>, <span class="ident">input</span>: <span class="ident">I</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">O</span><span class="op">&gt;</span> {
+<span class="doccomment">/// Wrapper to create, launch and wait for a library applet, expecting simple input and output data</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// The mode used (since all simple library applets expect it) is [`LibraryAppletMode::AllForeground`][`applet::LibraryAppletMode::AllForeground`]</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// Note that this won&#39;t be useful, for instance, with library applets taking interactive in/out data, like [`AppletId::LibraryAppletSwkbd`][`applet::AppletId::LibraryAppletSwkbd`]</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// # Arguments</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">/// * `id`: The [`AppletId`][`applet::AppletId`] of the library applet to create</span>
+<span class="doccomment">/// * `common_args`: The library applet-specific [`CommonArguments`] to send as input</span>
+<span class="doccomment">/// * `input`: The only input data to send after the [`CommonArguments`]</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">launch_wait_library_applet</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">Copy</span>, <span class="ident">O</span>: <span class="ident">Copy</span><span class="op">&gt;</span>(<span class="ident">id</span>: <span class="ident">applet::AppletId</span>, <span class="ident">common_args</span>: <span class="ident">CommonArguments</span>, <span class="ident">input</span>: <span class="ident">I</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">O</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">holder</span> <span class="op">=</span> <span class="ident">create_library_applet</span>(<span class="ident">id</span>, <span class="ident">applet::LibraryAppletMode::AllForeground</span>, <span class="ident">common_args</span>)<span class="question-mark">?</span>;
     <span class="ident">holder</span>.<span class="ident">push_in_data</span>(<span class="ident">input</span>)<span class="question-mark">?</span>;
     <span class="ident">holder</span>.<span class="ident">start</span>()<span class="question-mark">?</span>;
@@ -321,6 +495,6 @@
     <span class="ident">holder</span>.<span class="ident">pop_out_data</span>()
 }
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">psel</span>;</code></pre></div>
+<span class="comment">// TODO: specific library applet implementations in submodules (err, psel, swkbd, etc.)</span></code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="nx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7425fb293 2022-06-30)" ></div>
 </body></html>

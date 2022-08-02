@@ -139,27 +139,99 @@
 <span id="133">133</span>
 <span id="134">134</span>
 <span id="135">135</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::result</span>::<span class="kw-2">*</span>;
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Sync/waiting utilities and wrappers</span>
+
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::result</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::svc</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::arm</span>;
 
+<span class="doccomment">/// Represents an event via a remote handle</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RemoteEvent</span> {
+    <span class="doccomment">/// The remote handle</span>
     <span class="kw">pub</span> <span class="ident">handle</span>: <span class="ident">svc::Handle</span>
 }
 
 <span class="kw">impl</span> <span class="ident">RemoteEvent</span> {
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">empty</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> { <span class="ident">handle</span>: <span class="ident">svc::INVALID_HANDLE</span> }
-    }
-    
+    <span class="doccomment">/// Creates a [`RemoteEvent`] from a remote handle</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// * `handle` - The remote handle</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">handle</span>: <span class="ident">svc::Handle</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> { <span class="ident">handle</span> }
     }
 
+    <span class="doccomment">/// Resets the [`RemoteEvent`]</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reset</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="ident">svc::reset_signal</span>(<span class="self">self</span>.<span class="ident">handle</span>)
     }
 
+    <span class="doccomment">/// Waits for the [`RemoteEvent`] with a given timeout, then resets it</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// * `timeout` - Wait timeout in nanoseconds, `-1` can be used to wait indefinitely</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">wait</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">timeout</span>: <span class="ident">i64</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="ident">wait_handles</span>(<span class="kw-2">&amp;</span>[<span class="self">self</span>.<span class="ident">handle</span>], <span class="ident">timeout</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">reset</span>()
@@ -167,45 +239,56 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">RemoteEvent</span> {
+    <span class="doccomment">/// Destroys the [`RemoteEvent`], closing its handle</span>
     <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">svc::close_handle</span>(<span class="self">self</span>.<span class="ident">handle</span>);
     }
 }
 
+<span class="doccomment">/// Represents a system event with server and client handles</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SystemEvent</span> {
+    <span class="doccomment">/// The event&#39;s server handle</span>
     <span class="kw">pub</span> <span class="ident">server_handle</span>: <span class="ident">svc::Handle</span>,
+    <span class="doccomment">/// The event&#39;s client handle</span>
     <span class="kw">pub</span> <span class="ident">client_handle</span>: <span class="ident">svc::Handle</span>
 }
 
 <span class="kw">impl</span> <span class="ident">SystemEvent</span> {
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">empty</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> { <span class="ident">server_handle</span>: <span class="number">0</span>, <span class="ident">client_handle</span>: <span class="number">0</span> }
-    }
-    
+    <span class="doccomment">/// Creates a new [`SystemEvent`] via the client/server handles obtained from [`svc::create_event`]</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// * `timeout` - Wait timeout in nanoseconds, `-1` can be used to wait indefinitely</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">server_handle</span>, <span class="ident">client_handle</span>) <span class="op">=</span> <span class="ident">svc::create_event</span>()<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="self">Self</span> { <span class="ident">server_handle</span>, <span class="ident">client_handle</span> })
     }
 
+    <span class="doccomment">/// Signals the [`SystemEvent`] (via the server handle)</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">signal</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="ident">svc::signal_event</span>(<span class="self">self</span>.<span class="ident">server_handle</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">SystemEvent</span> {
+    <span class="doccomment">/// Destroys the [`SystemEvent`], closing both server/client handles</span>
     <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">svc::close_handle</span>(<span class="self">self</span>.<span class="ident">client_handle</span>);
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">svc::close_handle</span>(<span class="self">self</span>.<span class="ident">server_handle</span>);
+        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">svc::close_handle</span>(<span class="self">self</span>.<span class="ident">client_handle</span>);
     }
 }
 
+<span class="doccomment">/// Represents how a waiter operates (essentially, whether it gets automatically cleared after being signaled)</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">WaiterType</span> {
     <span class="ident">Handle</span>,
     <span class="ident">HandleWithClear</span>
 }
 
+<span class="doccomment">/// Represents the max amount of objects the Nintendo Switch kernel can wait-sync on at the same time (like Windows)</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MAX_OBJECT_COUNT</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0x40</span>;
 
+<span class="doccomment">/// Represents a waiting object for a handle</span>
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Waiter</span> {
     <span class="ident">handle</span>: <span class="ident">svc::Handle</span>,
@@ -213,14 +296,33 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Waiter</span> {
+    <span class="doccomment">/// Creates a new [`Waiter`] from a handle and a type</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// * `handle` - The waiter handle</span>
+    <span class="doccomment">/// * `wait_type` - Thr waiter type</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">handle</span>: <span class="ident">svc::Handle</span>, <span class="ident">wait_type</span>: <span class="ident">WaiterType</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> { <span class="ident">handle</span>, <span class="ident">wait_type</span> }
     }
     
+    <span class="doccomment">/// Creates a new [`Waiter`] from a handle and [`WaiterType::Handle`] type</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// * `handle` - The waiter handle</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">from_handle</span>(<span class="ident">handle</span>: <span class="ident">svc::Handle</span>) -&gt; <span class="self">Self</span> {
         <span class="ident"><span class="self">Self</span>::from</span>(<span class="ident">handle</span>, <span class="ident">WaiterType::Handle</span>)
     }
 
+    <span class="doccomment">/// Creates a new `Waiter` from a handle and [`WaiterType::HandleWithClear`] type</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// * `handle` - The waiter handle</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">from_handle_with_clear</span>(<span class="ident">handle</span>: <span class="ident">svc::Handle</span>) -&gt; <span class="self">Self</span> {
         <span class="ident"><span class="self">Self</span>::from</span>(<span class="ident">handle</span>, <span class="ident">WaiterType::HandleWithClear</span>)
     }
@@ -229,7 +331,7 @@
 <span class="kw">type</span> <span class="ident">WaitFn</span><span class="op">&lt;</span><span class="ident">W</span><span class="op">&gt;</span> <span class="op">=</span> <span class="kw">fn</span>(<span class="kw-2">&amp;</span>[<span class="ident">W</span>], <span class="ident">i64</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>;
 
 <span class="kw">fn</span> <span class="ident">handles_wait_fn</span>(<span class="ident">handles</span>: <span class="kw-2">&amp;</span>[<span class="ident">svc::Handle</span>], <span class="ident">timeout</span>: <span class="ident">i64</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-    <span class="prelude-val">Ok</span>(<span class="ident">svc::wait_synchronization</span>(<span class="ident">handles</span>.<span class="ident">as_ptr</span>(), <span class="ident">handles</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u32</span>, <span class="ident">timeout</span>)<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">usize</span>)
+    <span class="ident">svc::wait_synchronization</span>(<span class="ident">handles</span>.<span class="ident">as_ptr</span>(), <span class="ident">handles</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u32</span>, <span class="ident">timeout</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">idx</span><span class="op">|</span> <span class="ident">idx</span> <span class="kw">as</span> <span class="ident">usize</span>)
 }
 
 <span class="kw">fn</span> <span class="ident">waiters_wait_fn</span>(<span class="ident">_waiters</span>: <span class="kw-2">&amp;</span>[<span class="ident">Waiter</span>], <span class="ident">_timeout</span>: <span class="ident">i64</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
@@ -267,10 +369,24 @@
     }
 }
 
+<span class="doccomment">/// Waits for several [`Waiter`]s for a specified timeout, returning the index of the waiter which signals first</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// # Arguments</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// * `waiters` - [`Waiter`]s to wait for</span>
+<span class="doccomment">/// * `timeout` - Wait timeout in nanoseconds, `-1` can be used to wait indefinitely</span>
+<span class="attribute">#[<span class="ident">inline</span>]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">wait</span>(<span class="ident">waiters</span>: <span class="kw-2">&amp;</span>[<span class="ident">Waiter</span>], <span class="ident">timeout</span>: <span class="ident">i64</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
     <span class="ident">wait_impl</span>(<span class="ident">waiters</span>, <span class="ident">timeout</span>, <span class="ident">waiters_wait_fn</span>)
 }
 
+<span class="doccomment">/// Waits for several handles for a specified timeout, returning the index of the handle which signals first</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// # Arguments</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// * `handles` - Handles to wait for</span>
+<span class="doccomment">/// * `timeout` - Wait timeout in nanoseconds, `-1` can be used to wait indefinitely</span>
+<span class="attribute">#[<span class="ident">inline</span>]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">wait_handles</span>(<span class="ident">handles</span>: <span class="kw-2">&amp;</span>[<span class="ident">svc::Handle</span>], <span class="ident">timeout</span>: <span class="ident">i64</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
     <span class="ident">wait_impl</span>(<span class="ident">handles</span>, <span class="ident">timeout</span>, <span class="ident">handles_wait_fn</span>)
 }</code></pre></div>

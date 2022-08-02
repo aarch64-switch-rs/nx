@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["SplCsrngGenerator",""]],"trait":[["RandomGenerator",""]]};
+window.SIDEBAR_ITEMS = {"struct":[["SplCsrngGenerator","Represents a pseudo-RNG using [`spl`]’s [`RandomInterface`][`spl::RandomInterface`] interface"]],"trait":[["RandomGenerator","Represents a psudo-RNG"]]};

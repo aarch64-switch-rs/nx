@@ -1,3 +1,33 @@
+//! Initial code/entrypoint support and utils
+//! 
+//! # Custom entrypoint
+//! 
+//! If you wish to define your custom entrypoint, you can do so by redefining the `__nx_rrt0_entry` weak fn.
+//! 
+//! Example (check [here](https://switchbrew.org/wiki/Homebrew_ABI#Entrypoint_Arguments) for more entrypoint details):
+//! ```
+//! #[no_mangle]
+//! unsafe extern "C" fn __nx_rrt0_entry(x0: usize, x1: usize) {
+//!     // ...
+//! }
+//! ```
+//! 
+//! # Custom version setup
+//! 
+//! On the default entrypoint routine, the internal system version (see [`get_version`][`version::get_version`] and [`set_version`][`version::set_version`]) gets set the following way:
+//! * If the process was launched through HBL, use the "HOS version" value we got from it
+//! * Otherwise (and if using the `services` feature), use settings services ([`SystemSettingsServer`][`crate::service::set::SystemSettingsServer`]) to get it
+//! 
+//! If you wish to define your custom version setup (for instance, in contexts in which you wish to avoid executing the aforementioned setup), you can do so by redefining the `initialize_version` weak fn.
+//! 
+//! Example:
+//! ```
+//! #[no_mangle]
+//! fn initialize_version(hbl_hos_version_opt: Option<hbl::Version>) {
+//!     // ...
+//! }
+//! ```
+
 use crate::dynamic::elf;
 use crate::result::*;
 use crate::svc;
@@ -10,10 +40,19 @@ use crate::hbl;
 use crate::thread;
 use crate::vmem;
 use crate::version;
+
+#[cfg(feature = "services")]
 use crate::ipc::sf;
+
+#[cfg(feature = "services")]
 use crate::service;
+
+#[cfg(feature = "services")]
 use crate::service::set;
+
+#[cfg(feature = "services")]
 use crate::service::set::ISystemSettingsServer;
+
 use core::ptr;
 use core::mem;
 use core::arch::asm;
@@ -25,8 +64,10 @@ extern "Rust" {
     fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize;
 }
 
+/// Represents the fn pointer used for exiting
 pub type ExitFn = extern "C" fn(ResultCode) -> !;
 
+/// Represents the executable type of the current process
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 pub enum ExecutableType {
     #[default]
@@ -43,21 +84,36 @@ pub(crate) fn set_executable_type(exec_type: ExecutableType) {
     }
 }
 
+/// Gets the current process's executable type
+/// 
+/// Note that this can be used to determine if this process was launched through HBL or not (if so, we would be a homebrew NRO and this would return [`ExecutableType::Nro`])
 pub fn get_executable_type() -> ExecutableType {
     unsafe {
         G_EXECUTABLE_TYPE
     }
 }
 
+/// Represents the process module format used by processes
+/// 
+/// This layout has to be present at the start of the process's `.rodata` section, containing its module name
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct ModulePath {
+    /// Unused value
     pub zero: u32,
+    /// The length of the module name
     pub path_len: u32,
+    /// The module name string
     pub path: util::CString<0x200>
 }
 
 impl ModulePath {
+    /// Creates a [`ModulePath`] with the given module name
+    /// 
+    /// # Arguments
+    /// 
+    /// * `name`: The module name
+    #[inline]
     pub const fn new(name: &str) -> Self {
         Self {
             zero: 0,
@@ -74,6 +130,9 @@ impl ModulePath {
 #[export_name = "__nx_rrt0_module_name"]
 static G_MODULE_NAME: ModulePath = ModulePath::new("aarch64-switch-rs (unknown module)");
 
+/// Gets this process's module name
+/// 
+/// The module name is `aarch64-switch-rs (unknown module)` by default, but it can be set to a custom one with [`rrt0_define_module_name`] or [`rrt0_define_default_module_name`] macros
 pub fn get_module_name() -> ModulePath {
     G_MODULE_NAME
 }
@@ -81,6 +140,9 @@ pub fn get_module_name() -> ModulePath {
 static mut G_EXIT_FN: sync::Locked<Option<ExitFn>> = sync::Locked::new(false, None);
 static mut G_MAIN_THREAD: thread::Thread = thread::Thread::empty();
 
+/// Exits the current process
+/// 
+/// This will call the HBL-specific exit fn if running as a homebrew NRO, or [`exit_process`][`svc::exit_process`] otherwise
 pub fn exit(rc: ResultCode) -> ! {
     unsafe {
         match G_EXIT_FN.get() {
@@ -94,17 +156,20 @@ pub fn exit(rc: ResultCode) -> ! {
 
 #[no_mangle]
 #[linkage = "weak"]
-fn initialize_version(hbl_hos_version: hbl::Version) {
-    if hbl_hos_version.is_valid() {
+fn initialize_version(hbl_hos_version_opt: Option<hbl::Version>) {
+    if let Some(hbl_hos_version) = hbl_hos_version_opt {
         version::set_version(hbl_hos_version.to_version());
     }
     else {
-        let set_sys = service::new_service_object::<set::SystemSettingsServer>().unwrap();
-        let fw_version: set::FirmwareVersion = Default::default();
-        set_sys.get().get_firmware_version(sf::Buffer::from_var(&fw_version)).unwrap();
+        #[cfg(feature = "services")]
+        {
+            let set_sys = service::new_service_object::<set::SystemSettingsServer>().unwrap();
+            let fw_version: set::FirmwareVersion = Default::default();
+            set_sys.get().get_firmware_version(sf::Buffer::from_var(&fw_version)).unwrap();
 
-        let version = version::Version::new(fw_version.major, fw_version.minor, fw_version.micro);
-        version::set_version(version);
+            let version = version::Version::new(fw_version.major, fw_version.minor, fw_version.micro);
+            version::set_version(version);
+        }
     }
 }
 
@@ -120,7 +185,7 @@ unsafe fn normal_entry(maybe_abi_cfg_entries_ptr: *const hbl::AbiConfigEntry, ma
 
     let mut heap = util::PointerAndSize::new(ptr::null_mut(), 0);
     let mut main_thread_handle = maybe_main_thread_handle as svc::Handle;
-    let mut hos_version = hbl::Version::empty();
+    let mut hos_version_opt: Option<hbl::Version> = None;
 
     // If we are a NRO, parse the config entries hbloader sent us
     if exec_type == ExecutableType::Nro {
@@ -189,8 +254,8 @@ unsafe fn normal_entry(maybe_abi_cfg_entries_ptr: *const hbl::AbiConfigEntry, ma
                 },
                 hbl::AbiConfigEntryKey::HosVersion => {
                     let hos_version_v = (*abi_entry).value[0] as u32;
-                    let is_ams_magic = (*abi_entry).value[1];
-                    hos_version = hbl::Version::new(hos_version_v, is_ams_magic);
+                    let os_impl_magic = (*abi_entry).value[1];
+                    hos_version_opt = Some(hbl::Version::new(hos_version_v, os_impl_magic));
                 },
                 _ => {
                     // TODO: invalid config entries?
@@ -220,7 +285,7 @@ unsafe fn normal_entry(maybe_abi_cfg_entries_ptr: *const hbl::AbiConfigEntry, ma
     alloc::initialize(heap);
 
     // Initialize version support
-    initialize_version(hos_version);
+    initialize_version(hos_version_opt);
 
     // TODO: extend this (init more stuff, etc.)?
 

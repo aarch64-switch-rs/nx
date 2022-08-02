@@ -1,3 +1,5 @@
+//! Surface (gfx wrapper) implementation
+
 use super::*;
 use crate::gpu::binder;
 use crate::gpu::ioctl;
@@ -8,12 +10,17 @@ use crate::service::vi;
 use crate::service::dispdrv;
 use crate::mem;
 use crate::mem::alloc;
+use crate::wait;
 use core::mem as cmem;
 
 const MAX_BUFFERS: usize = 8;
 
+/// Represents a `fn` with a certain layer disposing code
+/// 
+/// Note that different layers (managed layers, stray layers, etc.) are destroyed in different ways
 pub type LayerDestroyFn = fn(vi::LayerId, mem::Shared<dyn vi::IApplicationDisplayService>) -> Result<()>;
 
+/// Represents a wrapper around layer manipulation
 pub struct Surface {
     binder: binder::Binder,
     nvdrv_srv: mem::Shared<dyn nv::INvDrvServices>,
@@ -39,6 +46,15 @@ pub struct Surface {
 }
 
 impl Surface {
+    /// Creates a new  [`Surface`]
+    /// 
+    /// This is not meant to really be used manually, see [`Context`][`super::Context`]
+    /// 
+    /// # Arguments
+    /// 
+    /// * `binder_handle`: The binder handle to use
+    /// * `nvdrv_srv`: The [`INvDrvServices`][`nv::INvDrvServices`] object to use
+    /// * ``
     pub fn new(binder_handle: i32, nvdrv_srv: mem::Shared<dyn nv::INvDrvServices>, application_display_service: mem::Shared<dyn vi::IApplicationDisplayService>, nvhost_fd: u32, nvmap_fd: u32, nvhostctrl_fd: u32, hos_binder_driver: mem::Shared<dyn dispdrv::IHOSBinderDriver>, buffer_count: u32, display_id: vi::DisplayId, layer_id: vi::LayerId, width: u32, height: u32, color_fmt: ColorFormat, pixel_fmt: PixelFormat, layout: Layout, layer_destroy_fn: LayerDestroyFn) -> Result<Self> {
         let mut binder = binder::Binder::new(binder_handle, hos_binder_driver)?;
         binder.increase_refcounts()?;
@@ -94,7 +110,7 @@ impl Surface {
         ioctl_alloc.address = self.buffer_data.ptr as usize;
         self.do_ioctl(&mut ioctl_alloc)?;
 
-        self.graphic_buf.header.magic = GRAPHIC_BUFFER_HEADER_MAGIC;
+        self.graphic_buf.header.magic = GraphicBufferHeader::MAGIC;
         self.graphic_buf.header.width = self.width;
         self.graphic_buf.header.height = self.height;
         self.graphic_buf.header.stride = stride;
@@ -103,7 +119,7 @@ impl Surface {
         self.graphic_buf.header.pid = pid;
         self.graphic_buf.header.buffer_size = ((cmem::size_of::<GraphicBuffer>() - cmem::size_of::<GraphicBufferHeader>()) / cmem::size_of::<u32>()) as u32;
         self.graphic_buf.map_id = ioctl_getid.id;
-        self.graphic_buf.magic = GRAPHIC_BUFFER_MAGIC;
+        self.graphic_buf.magic = GraphicBuffer::MAGIC;
         self.graphic_buf.pid = pid;
         self.graphic_buf.gfx_alloc_usage = usage;
         self.graphic_buf.pixel_format = self.pixel_fmt;
@@ -147,6 +163,11 @@ impl Surface {
         svc::close_handle(self.vsync_event_handle)
     }
 
+    /// Dequeues a buffer, returning the buffer address, its size, its slot, whether it has fences, and those mentioned fences
+    /// 
+    /// # Arguments
+    /// 
+    /// * `is_async`: Whether to dequeue asynchronously
     pub fn dequeue_buffer(&mut self, is_async: bool) -> Result<(*mut u8, usize, i32, bool, MultiFence)> {
         let slot: i32;
         let has_fences: bool;
@@ -186,6 +207,12 @@ impl Surface {
         Ok((buf, self.single_buffer_size, slot, has_fences, fences))
     }
 
+    /// Queues a buffer
+    /// 
+    /// # Arguments
+    /// 
+    /// * `slot`: The buffer slot
+    /// * `fences`: The buffer fences
     pub fn queue_buffer(&mut self, slot: i32, fences: MultiFence) -> Result<()> {
         let mut qbi: QueueBufferInput = Default::default();
         qbi.swap_interval = 1;
@@ -197,6 +224,12 @@ impl Surface {
         Ok(())
     }
 
+    /// Waits for the given fences
+    /// 
+    /// # Arguments
+    /// 
+    /// * `fences`: The fences
+    /// * `timeout`: The wait timeout
     pub fn wait_fences(&mut self, fences: MultiFence, timeout: i32) -> Result<()> {
         for i in 0..fences.fence_count {
             let mut ioctl_syncptwait: ioctl::NvHostCtrlSyncptWait = Default::default();
@@ -211,33 +244,55 @@ impl Surface {
         Ok(())
     }
 
+    /// Sets whether the surface (its layer) is visible
+    /// 
+    /// # Arguments
+    /// 
+    /// * `visible`: Whether its visible
     pub fn set_visible(&mut self, visible: bool) -> Result<()> {
         let system_display_service = self.application_display_service.get().get_system_display_service()?;
         system_display_service.get().set_layer_visibility(visible, self.layer_id)
     }
 
+    /// Waits for the buffer event
+    /// 
+    /// # Arguments
+    /// 
+    /// * `timeout`: The wait timeout
     pub fn wait_buffer_event(&mut self, timeout: i64) -> Result<()> {
-        svc::wait_synchronization(&self.buffer_event_handle, 1, timeout)?;
+        wait::wait_handles(&[self.buffer_event_handle], timeout)?;
         svc::reset_signal(self.buffer_event_handle)
     }
 
+    /// Waits for the vsync event
+    /// 
+    /// # Arguments
+    /// 
+    /// * `timeout`: The wait timeout
     pub fn wait_vsync_event(&mut self, timeout: i64) -> Result<()> {
-        svc::wait_synchronization(&self.vsync_event_handle, 1, timeout)?;
+        wait::wait_handles(&[self.vsync_event_handle], timeout)?;
         svc::reset_signal(self.vsync_event_handle)
     }
 
+    /// Gets the surface width
+    #[inline]
     pub fn get_width(&self) -> u32 {
         self.width
     }
 
+    /// Gets the surface height
+    #[inline]
     pub fn get_height(&self) -> u32 {
         self.height
     }
 
+    /// Gets the surface [`ColorFormat`]
+    #[inline]
     pub fn get_color_format(&self) -> ColorFormat {
         self.color_fmt
     }
 
+    /// Computes and gets the surface stride
     pub fn compute_stride(&self) -> u32 {
         let bpp = calculate_bpp(self.color_fmt);
         align_width(bpp, self.width) * bpp
@@ -245,6 +300,7 @@ impl Surface {
 }
 
 impl Drop for Surface {
+    /// Destroys the surface, closing everything it internally opened
     fn drop(&mut self) {
         let _ = self.finalize();
     }
