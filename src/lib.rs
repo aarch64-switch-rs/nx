@@ -21,7 +21,6 @@
 #![feature(unsize)]
 #![feature(const_mut_refs)]
 #![feature(fn_traits)]
-#![feature(untagged_unions)]
 #![feature(negative_impls)]
 #![feature(const_ptr_write)]
 #![feature(stdsimd)]
