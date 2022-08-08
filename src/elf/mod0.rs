@@ -4,7 +4,7 @@ use crate::result::*;
 
 /// Represents the `MOD0` start layout
 /// 
-/// This are the contents prececing the actual header
+/// These are the contents prececing the actual header
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct ModuleStart {
