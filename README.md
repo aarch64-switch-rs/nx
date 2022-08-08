@@ -3,33 +3,9 @@
 
 > Userland library for Nintendo Switch homebrew (and other potential purposes), written in pure Rust and some assembly bits
 
-
-
 > ### API docs are hosted [here](https://aarch64-switch-rs.github.io/nx/), and examples can be found [here](https://github.com/aarch64-switch-rs/examples)
 
 > ### Setup guide to start developing Rust homebrew can be found [here](https://github.com/aarch64-switch-rs/setup-guide)
-
-## Features
-
-This library covers a lot of different modules, wrappers, etc. so some of them (essentially those which can be opt-in) are separated as optional features:
-
-- `services`: Enables custom client-IPC service implementations, AKA the `nx::service` module
-
-- `crypto`: Enables hw-accelerated cryptography support, AKA the `nx::crypto` module
-
-- `smc`: Enables secure-monitor support, AKA the `nx::smc` module
-
-- `gpu`: Enables graphics support, AKA the `nx::gpu` module (requires `services`)
-
-- `fs`: Enables support for this library's FS implementation, aka the `nx::fs` module (requires `services`)
-
-- `input`: Enables input support, AKA the `nx::input` module (requires `services`)
-
-- `la`: Enables library applet support, AKA the `nx::la` module (requires `services`)
-
-- `rand`: Enabled pseudo-RNG support, AKA the `nx::rand` module (requires `services`)
-
-Note that most of these features/modules are just simplified and easy-to-use wrappers around IPC/raw system features, so not using them doesn't fully block those features (for instance, you could use services using IPC commands more directly without the `services` feature).
 
 ## TODO list
 
