@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":[["INTERFACE_TOKEN","Represents the interface token used for parcel transactions"]],"enum":[["ErrorCode","Represents binder error code values"]],"fn":[["convert_nv_error_code","Converts [`ErrorCode`]s to result values"]],"mod":[["rc","Binder-specific result definitions"]],"struct":[["Binder","Represents a binder object, wrapping transaction functionality"]]};
+window.SIDEBAR_ITEMS = {"constant":["INTERFACE_TOKEN"],"enum":["ErrorCode"],"fn":["convert_nv_error_code"],"mod":["rc"],"struct":["Binder"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["calculate_mac","Wrapper for directly calculating the MAC of given data"]],"struct":[["Context","Represent the context used for SHA-256 HMAC operations"]]};
+window.SIDEBAR_ITEMS = {"fn":["calculate_mac"],"struct":["Context"]};

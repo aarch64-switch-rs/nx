@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"trait":[["IRandomInterface",""]]};
+window.SIDEBAR_ITEMS = {"trait":["IRandomInterface"]};

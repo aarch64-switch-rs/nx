@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["get_version","Gets the global library value for the system [`Version`]"],["set_version","Sets the global [`Version`], used in the library as the system [`Version`]"]],"struct":[["Version","Represents a version with major, minor and micro components"],["VersionInterval","Represents an interval between versions, being optionally limited on both sides"]]};
+window.SIDEBAR_ITEMS = {"fn":["get_version","set_version"],"struct":["Version","VersionInterval"]};

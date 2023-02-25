@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"trait":[["IFileSystemProxy",""]]};
+window.SIDEBAR_ITEMS = {"trait":["IFileSystemProxy"]};

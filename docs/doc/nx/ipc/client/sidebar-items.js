@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"trait":[["IClientObject",""],["RequestCommandParameter",""],["ResponseCommandParameter",""]]};
+window.SIDEBAR_ITEMS = {"trait":["IClientObject","RequestCommandParameter","ResponseCommandParameter"]};

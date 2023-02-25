@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["rc",""]],"struct":[["MitmProcessInfo",""]]};
+window.SIDEBAR_ITEMS = {"mod":["rc"],"struct":["MitmProcessInfo"]};

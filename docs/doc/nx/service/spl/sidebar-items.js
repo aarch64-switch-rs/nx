@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["RandomInterface",""]]};
+window.SIDEBAR_ITEMS = {"struct":["RandomInterface"]};

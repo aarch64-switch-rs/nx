@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["FileSystemProxy",""]]};
+window.SIDEBAR_ITEMS = {"struct":["FileSystemProxy"]};

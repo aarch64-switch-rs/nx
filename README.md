@@ -73,11 +73,11 @@
 
 - Finish documenting still-undocumented modules (`ipc`, `svc` and `service`)
 
-- 32-bit support (see the corresponding branch)
-
 - Console support
 
-- Think about `std` support?
+- `std` support
+
+- (low priority) 32-bit support (see the corresponding branch)
 
 ## Credits
 

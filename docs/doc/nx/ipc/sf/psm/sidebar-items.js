@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"trait":[["IPsmServer",""]]};
+window.SIDEBAR_ITEMS = {"trait":["IPsmServer"]};

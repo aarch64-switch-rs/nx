@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["LogService",""],["Logger",""]]};
+window.SIDEBAR_ITEMS = {"struct":["LogService","Logger"]};

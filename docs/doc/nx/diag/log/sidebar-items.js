@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["log_with","Wrapper for logging a single log"]],"mod":[["fs","`FsAccessLog` logger implementation"],["lm","`LogManager` logger implementation"],["svc","SVC-output logger implementation"]],"struct":[["LogMetadata","Represents the metadata used on a logging context"]],"trait":[["Logger","Represents a logging object"]],"type":[["LogSeverity","Represents the logging severity"]]};
+window.SIDEBAR_ITEMS = {"fn":["log_with"],"mod":["fs","lm","svc"],"struct":["LogMetadata"],"trait":["Logger"],"type":["LogSeverity"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["HOSBinderDriver",""]]};
+window.SIDEBAR_ITEMS = {"struct":["HOSBinderDriver"]};

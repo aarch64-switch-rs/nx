@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["detail",""]],"struct":[["LogPacket",""]]};
+window.SIDEBAR_ITEMS = {"mod":["detail"],"struct":["LogPacket"]};

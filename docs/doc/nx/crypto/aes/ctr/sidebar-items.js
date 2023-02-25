@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["a128","Hardware-accelerated 128-bit AES-CTR support"]]};
+window.SIDEBAR_ITEMS = {"mod":["a128"]};

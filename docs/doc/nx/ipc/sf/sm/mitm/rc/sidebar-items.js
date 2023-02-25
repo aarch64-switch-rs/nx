@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":[["RESULT_SUBMODULE",""]],"struct":[["ResultShouldForwardToSession",""]]};
+window.SIDEBAR_ITEMS = {"constant":["RESULT_SUBMODULE"],"struct":["ResultShouldForwardToSession"]};

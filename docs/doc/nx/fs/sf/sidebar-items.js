@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["Directory","Represents a wrapper IPC [`IDirectory`] object around a [`Directory`][`super::Directory`] object"],["File","Represents a wrapper IPC [`IFile`] object around a [`File`][`super::File`] object"],["FileSystem","Represents a wrapper IPC [`IFileSystem`] object around a [`FileSystem`][`super::FileSystem`] object"]]};
+window.SIDEBAR_ITEMS = {"struct":["Directory","File","FileSystem"]};

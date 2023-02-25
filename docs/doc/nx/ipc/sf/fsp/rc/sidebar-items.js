@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":[["RESULT_MODULE",""]],"struct":[["ResultPathAlreadyExists",""],["ResultPathNotFound",""]]};
+window.SIDEBAR_ITEMS = {"constant":["RESULT_MODULE"],"struct":["ResultPathAlreadyExists","ResultPathNotFound"]};

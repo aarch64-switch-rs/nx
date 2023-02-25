@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":[["RESULT_SUBMODULE",""]],"struct":[["ResultFdsNotSupported",""],["ResultNotEnoughReadSpace",""],["ResultNotEnoughWriteSpace",""],["ResultReadSizeMismatch",""]]};
+window.SIDEBAR_ITEMS = {"constant":["RESULT_SUBMODULE"],"struct":["ResultFdsNotSupported","ResultNotEnoughReadSpace","ResultNotEnoughWriteSpace","ResultReadSizeMismatch"]};

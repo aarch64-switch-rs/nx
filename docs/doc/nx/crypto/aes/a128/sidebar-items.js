@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":[["KEY_SIZE","Represents the key size in bytes"],["KEY_SIZE_32","Represents the key size in 4-byte units"],["ROUND_COUNT","Represents the round count in decryption/encryption processing"]],"struct":[["Context","Represents the context used for 128-bit AES operations"]]};
+window.SIDEBAR_ITEMS = {"constant":["KEY_SIZE","KEY_SIZE_32","ROUND_COUNT"],"struct":["Context"]};

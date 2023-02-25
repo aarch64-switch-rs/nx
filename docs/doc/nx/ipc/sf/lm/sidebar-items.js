@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["LogDestination",""]],"trait":[["ILogService",""],["ILogger",""]]};
+window.SIDEBAR_ITEMS = {"struct":["LogDestination"],"trait":["ILogService","ILogger"]};

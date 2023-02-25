@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":[["RESULT_MODULE",""]],"struct":[["ResultSessionClosed",""],["ResultUnsupportedOperation",""]]};
+window.SIDEBAR_ITEMS = {"constant":["RESULT_MODULE"],"struct":["ResultSessionClosed","ResultUnsupportedOperation"]};

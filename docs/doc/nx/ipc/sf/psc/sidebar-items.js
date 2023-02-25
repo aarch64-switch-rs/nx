@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["ModuleId",""],["State",""]],"trait":[["IPmModule",""],["IPmService",""]]};
+window.SIDEBAR_ITEMS = {"enum":["ModuleId","State"],"trait":["IPmModule","IPmService"]};

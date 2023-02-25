@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["rc","Input-related result definitions"]],"struct":[["Context","Represents a simple type for dealing with input handling"],["Player","Represents a console controller type"]]};
+window.SIDEBAR_ITEMS = {"mod":["rc"],"struct":["Context","Player"]};

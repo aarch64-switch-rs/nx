@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["Locked","Represents a value whose access is controlled by an inner [`Mutex`]"],["Mutex","Represents a locking/unlocking type"],["ScopedLock","Represents a type which will lock a given [`Mutex`] on creation and unlock it on destruction, effectively guarding it"]]};
+window.SIDEBAR_ITEMS = {"struct":["Locked","Mutex","ScopedLock"]};

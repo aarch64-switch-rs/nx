@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["ClassCode",""],["DescriptorType",""]],"mod":[["hs",""]],"struct":[["ConfigDescriptor",""],["DeviceDescriptor",""],["EndPointDescriptor",""],["InterfaceDescriptor",""],["SsEndPointCompanionDescriptor",""]]};
+window.SIDEBAR_ITEMS = {"enum":["ClassCode","DescriptorType"],"mod":["hs"],"struct":["ConfigDescriptor","DeviceDescriptor","EndPointDescriptor","InterfaceDescriptor","SsEndPointCompanionDescriptor"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":[["RESULT_SUBMODULE",""]],"struct":[["ResultDeviceNotFound",""],["ResultInvalidPath",""],["ResultNotInSameFileSystem",""]]};
+window.SIDEBAR_ITEMS = {"constant":["RESULT_SUBMODULE"],"struct":["ResultDeviceNotFound","ResultInvalidPath","ResultNotInSameFileSystem"]};

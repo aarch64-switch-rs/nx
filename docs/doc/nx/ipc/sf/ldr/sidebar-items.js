@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"trait":[["IShellInterface",""]]};
+window.SIDEBAR_ITEMS = {"trait":["IShellInterface"]};

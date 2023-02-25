@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["CommandType","Represents special TIPC command types"]],"mod":[["client",""],["server",""]]};
+window.SIDEBAR_ITEMS = {"enum":["CommandType"],"mod":["client","server"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["abort","Attempts to abort at the specified [`AbortLevel`]"]],"struct":[["AbortLevel","Represents a system to abort, plus optional flags they have"]]};
+window.SIDEBAR_ITEMS = {"fn":["abort"],"struct":["AbortLevel"]};

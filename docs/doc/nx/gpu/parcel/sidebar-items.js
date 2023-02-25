@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["rc","Parcel-specific result definitions"]],"struct":[["Parcel","Represents a wrapper for simple parcel reading/writing"],["ParcelData",""],["ParcelHeader","Represents a parcel header layout"],["ParcelPayload","Represents a parcel payload layout"]]};
+window.SIDEBAR_ITEMS = {"mod":["rc"],"struct":["Parcel","ParcelData","ParcelHeader","ParcelPayload"]};
