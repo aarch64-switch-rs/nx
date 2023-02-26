@@ -1,4 +1,4 @@
-.section .text.mod0, "ax", %progbits
+.section .text, "ax", %progbits
 .align 2
 
 .global __module_header

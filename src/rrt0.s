@@ -1,4 +1,4 @@
-.section .text.rrt0, "ax", %progbits
+.section .text.jmp, "ax", %progbits
 .align 2
 
 .global _start
