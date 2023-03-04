@@ -10,7 +10,6 @@ use crate::service::fsp::IDirectory;
 use crate::service::fsp::srv::IFileSystemProxy;
 use crate::sync;
 use crate::ipc::sf as ipc_sf;
-use crate::svc;
 use alloc::vec::Vec;
 use alloc::string::String;
 use core::mem as cmem;
