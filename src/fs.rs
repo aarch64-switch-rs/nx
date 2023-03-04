@@ -10,6 +10,7 @@ use crate::service::fsp::IDirectory;
 use crate::service::fsp::srv::IFileSystemProxy;
 use crate::sync;
 use crate::ipc::sf as ipc_sf;
+use crate::svc;
 use alloc::vec::Vec;
 use alloc::string::String;
 use core::mem as cmem;
@@ -483,11 +484,13 @@ impl FileAccessor {
     }
 
     /// Reads a value
-    pub fn read_val<T: Copy>(&mut self) -> Result<T> {
+    pub fn read_val<T>(&mut self) -> Result<T> {
         let mut t = unsafe { cmem::zeroed::<T>() };
         self.read(&mut t, 1)?;
         Ok(t)
     }
+
+    // TODO (writes): some sort of "flush" flag to not always flush after writing?
 
     /// Writes data from the given buffer
     /// 
@@ -517,8 +520,8 @@ impl FileAccessor {
     /// # Arguments
     /// 
     /// * `t`: The value to write
-    pub fn write_val<T: Copy>(&mut self, t: T) -> Result<()> {
-        self.write(&t, cmem::size_of::<T>())
+    pub fn write_val<T>(&mut self, t: &T) -> Result<()> {
+        self.write(t as *const T, 1)
     }
 }
 
