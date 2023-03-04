@@ -1108,6 +1108,8 @@
 <a href="#1108" id="1108">1108</a>
 <a href="#1109" id="1109">1109</a>
 <a href="#1110" id="1110">1110</a>
+<a href="#1111" id="1111">1111</a>
+<a href="#1112" id="1112">1112</a>
 </pre><pre class="rust"><code><span class="doccomment">//! FileSystem support
 
 </span><span class="kw">use </span><span class="kw">crate</span>::result::<span class="kw-2">*</span>;
@@ -1593,13 +1595,15 @@
     }
 
     <span class="doccomment">/// Reads a value
-    </span><span class="kw">pub fn </span>read_val&lt;T: Copy&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;T&gt; {
+    </span><span class="kw">pub fn </span>read_val&lt;T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;T&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>t = <span class="kw">unsafe </span>{ cmem::zeroed::&lt;T&gt;() };
         <span class="self">self</span>.read(<span class="kw-2">&amp;mut </span>t, <span class="number">1</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(t)
     }
 
-    <span class="doccomment">/// Writes data from the given buffer
+    <span class="comment">// TODO (writes): some sort of &quot;flush&quot; flag to not always flush after writing?
+
+    </span><span class="doccomment">/// Writes data from the given buffer
     /// 
     /// 
     /// # Arguments
@@ -1627,8 +1631,8 @@
     /// # Arguments
     /// 
     /// * `t`: The value to write
-    </span><span class="kw">pub fn </span>write_val&lt;T: Copy&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, t: T) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="self">self</span>.write(<span class="kw-2">&amp;</span>t, cmem::size_of::&lt;T&gt;())
+    </span><span class="kw">pub fn </span>write_val&lt;T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, t: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="self">self</span>.write(t <span class="kw">as </span><span class="kw-2">*const </span>T, <span class="number">1</span>)
     }
 }
 
