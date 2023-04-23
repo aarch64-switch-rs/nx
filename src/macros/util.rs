@@ -69,8 +69,8 @@ macro_rules! define_bit_enum {
                 }
             )*
         }
-        
-        impl const core::ops::BitOr for $name {
+
+        impl core::ops::BitOr for $name {
             type Output = Self;
         
             #[inline]
@@ -79,7 +79,7 @@ macro_rules! define_bit_enum {
             }
         }
 
-        impl const core::ops::BitAnd for $name {
+        impl core::ops::BitAnd for $name {
             type Output = Self;
         
             #[inline]
@@ -102,7 +102,7 @@ macro_rules! define_bit_enum {
             }
         }
 
-        impl const core::ops::Not for $name {
+        impl core::ops::Not for $name {
             type Output = Self;
         
             #[inline]

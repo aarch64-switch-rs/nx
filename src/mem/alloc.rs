@@ -1,6 +1,5 @@
 //! Allocator implementation and definitions
 
-use crate::diag::abort;
 use crate::result::*;
 use crate::util::PointerAndSize;
 use crate::sync;
@@ -99,11 +98,13 @@ pub fn initialize(heap: PointerAndSize) {
     }
 }
 
+/*
 pub(crate) fn set_enabled(enabled: bool) {
     unsafe {
         G_ALLOCATOR_ENABLED = enabled;
     }
 }
+*/
 
 /// Gets whether heap allocations are enabled
 /// 
@@ -231,14 +232,4 @@ impl<T> Buffer<T> {
         release(self.ptr as *mut u8, self.layout.align(), self.layout.size());
         *self = Self::empty();
     }
-}
-
-#[alloc_error_handler]
-fn alloc_error_handler(_layout: core::alloc::Layout) -> ! {
-    // Disable memory allocation, this will avoid abort levels which would need to allocate memory
-    set_enabled(false);
-
-    // Using SvcBreak by default since this is the safest level that can be used by any context, regardless of available mem/etc.
-    // TODO: default aborting system to invoke here?
-    abort::abort(abort::AbortLevel::SvcBreak(), rc::ResultOutOfMemory::make())
 }
