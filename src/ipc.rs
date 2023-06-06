@@ -3,6 +3,7 @@ use crate::svc;
 use crate::thread;
 use core::ptr;
 use core::mem;
+use core::marker::ConstParamTy;
 use arrayvec::ArrayVec;
 
 pub mod rc;
@@ -75,7 +76,7 @@ impl ObjectInfo {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, ConstParamTy)]
 #[repr(u8)]
 pub enum HandleMode {
     Copy,
@@ -326,6 +327,7 @@ impl CommandSpecialHeader {
 pub const DATA_PADDING: u32 = 16;
 
 define_bit_enum! {
+    #[derive(ConstParamTy)]
     BufferAttribute (u8) {
         In = bit!(0),
         Out = bit!(1),
