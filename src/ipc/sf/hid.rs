@@ -343,7 +343,7 @@ define_bit_enum! {
         Palma = bit!(28),
         Verification = bit!(29),
         HandheldLeftB = bit!(30),
-        LagonCLeft = bit!(21),
+        LagonCLeft = bit!(31),
         LagonCUp = bit!(32),
         LagonCRight = bit!(33),
         LagonCDown = bit!(34)
