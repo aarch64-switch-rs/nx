@@ -45,7 +45,7 @@ define_bit_enum! {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct TouchState {
     pub delta_time: u64,
