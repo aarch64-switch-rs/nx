@@ -85,7 +85,7 @@ pub struct RegisterInfo {
     pub mii_charinfo: mii::CharInfo,
     pub first_write_date: Date,
     pub name: util::CString<41>,
-    pub unk: u8,
+    pub font_region: u8,
     pub reserved: [u8; 0x7A]
 }
 const_assert!(core::mem::size_of::<RegisterInfo>() == 0x100);
@@ -142,7 +142,7 @@ pub struct AdminInfo {
     pub access_id: AccessId,
     pub crc32_change_counter: u16,
     pub flags: AdminInfoFlags,
-    pub unk_0x2: u8, // Always 0x2
+    pub tag_type: u8,
     pub console_family: ConsoleFamily,
     pub pad: [u8; 0x7],
     pub reserved: [u8; 0x28]
@@ -164,15 +164,15 @@ const_assert!(core::mem::size_of::<RegisterInfoPrivate>() == 0x100);
 #[repr(C)]
 pub struct NfpData {
     // TODO: finish REing this type...
-    pub unk_0xA5: u8,
+    pub magic: u8,
     pub maybe_pad: u8,
-    pub unk_v1: u16,
-    pub unk_v2: u32,
+    pub write_counter: u8,
+    pub maybe_pad_2: u8,
+    pub settings_crc: u32,
     pub maybe_reserved: [u8; 56],
     pub last_write_date: Date,
-    pub unk_v3: u16,
-    pub unk_v4: u8,
-    pub maybe_pad_2: u8,
+    pub application_write_counter: u16,
+    pub version: u16,
     pub app_area_size: u32,
     pub maybe_pad_3: [u8; 4],
     pub maybe_reserved_2: [u8; 0x30],
@@ -182,7 +182,7 @@ pub struct NfpData {
     pub name: util::CString16<11>,
     pub unk_v6: u8,
     pub unk_v7: u8,
-    pub unk_v8: u32,
+    pub register_info_crc: u32,
     pub unk_v9: u64,
     pub unk_v10: u64,
     pub unk_v11: u32,

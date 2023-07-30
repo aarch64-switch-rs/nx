@@ -1622,9 +1622,9 @@ impl CoreData {
         charinfo.eye_y = self.get_eye_y();
         charinfo.eyebrow_type = self.get_eyebrow_type();
         charinfo.eyebrow_color = self.get_eyebrow_color();
-        charinfo.eyebrow_scale = self.get_eye_scale();
-        charinfo.eyebrow_aspect = self.get_eye_aspect();
-        charinfo.eyebrow_rotate = self.get_eye_rotate();
+        charinfo.eyebrow_scale = self.get_eyebrow_scale();
+        charinfo.eyebrow_aspect = self.get_eyebrow_aspect();
+        charinfo.eyebrow_rotate = self.get_eyebrow_rotate();
         charinfo.eyebrow_x = self.get_eyebrow_x();
         charinfo.eyebrow_y = self.get_eyebrow_y();
         charinfo.nose_type = self.get_nose_type();
