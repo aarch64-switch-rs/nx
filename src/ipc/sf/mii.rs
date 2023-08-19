@@ -34,7 +34,7 @@ pub enum Gender {
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
-pub enum Race {
+pub enum FaceColor {
     Black,
     White,
     Asian,
@@ -1746,7 +1746,7 @@ ipc_sf_define_interface_trait! {
         is_full [1, version::VersionInterval::all()]: () => (full: bool);
         get_count [2, version::VersionInterval::all()]: (flag: SourceFlag) => (count: u32);
         get_1 [4, version::VersionInterval::all()]: (flag: SourceFlag, out_char_infos: sf::OutMapAliasBuffer<CharInfo>) => (count: u32);
-        build_random [6, version::VersionInterval::all()]: (age: sf::EnumAsPrimitiveType<Age, u32>, gender: sf::EnumAsPrimitiveType<Gender, u32>, race: sf::EnumAsPrimitiveType<Race, u32>) => (char_info: CharInfo);
+        build_random [6, version::VersionInterval::all()]: (age: sf::EnumAsPrimitiveType<Age, u32>, gender: sf::EnumAsPrimitiveType<Gender, u32>, race: sf::EnumAsPrimitiveType<FaceColor, u32>) => (char_info: CharInfo);
     }
 }
 
