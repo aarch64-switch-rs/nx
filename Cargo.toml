@@ -14,6 +14,7 @@ arrayvec = { version = "0.7.4", default-features = false, features = [] }
 static_assertions = "1.1.0"
 
 [features]
+default = ["services", "crypto", "smc", "gpu", "fs", "input", "la", "rand"]
 services = []
 crypto = []
 smc = []
