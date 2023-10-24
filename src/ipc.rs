@@ -412,7 +412,7 @@ pub fn get_msg_buffer() -> *mut u8 {
 }
 
 #[inline(always)]
-pub fn read_array_from_buffer<T: Copy>(buffer: *mut u8, count: u32, array: &mut ArrayVec<[T; MAX_COUNT]>) -> *mut u8 {
+pub fn read_array_from_buffer<T: Copy>(buffer: *mut u8, count: u32, array: &mut ArrayVec<T, MAX_COUNT>) -> *mut u8 {
     unsafe {
         let tmp_buffer = buffer as *mut T;
         array.clear();
@@ -422,7 +422,7 @@ pub fn read_array_from_buffer<T: Copy>(buffer: *mut u8, count: u32, array: &mut 
 }
 
 #[inline(always)]
-pub fn write_array_to_buffer<T: Copy>(buffer: *mut u8, count: u32, array: &ArrayVec<[T; MAX_COUNT]>) -> *mut u8 {
+pub fn write_array_to_buffer<T: Copy>(buffer: *mut u8, count: u32, array: &ArrayVec<T, MAX_COUNT>) -> *mut u8 {
     unsafe {
         let tmp_buffer = buffer as *mut T;
         core::ptr::copy(array.as_ptr(), tmp_buffer, count as usize);
@@ -444,10 +444,10 @@ pub struct CommandContent {
     pub data_offset: *mut u8,
     pub data_words_offset: *mut u8,
     pub objects_offset: *mut u8,
-    copy_handles: ArrayVec<[svc::Handle; MAX_COUNT]>,
-    move_handles: ArrayVec<[svc::Handle; MAX_COUNT]>,
-    objects: ArrayVec<[cmif::DomainObjectId; MAX_COUNT]>,
-    out_pointer_sizes: ArrayVec<[u16; MAX_COUNT]>,
+    copy_handles: ArrayVec<svc::Handle, MAX_COUNT>,
+    move_handles: ArrayVec<svc::Handle, MAX_COUNT>,
+    objects: ArrayVec<cmif::DomainObjectId, MAX_COUNT>,
+    out_pointer_sizes: ArrayVec<u16, MAX_COUNT>,
 }
 
 impl CommandContent {
@@ -561,11 +561,11 @@ pub struct CommandContext {
     pub object_info: ObjectInfo,
     pub in_params: CommandContent,
     pub out_params: CommandContent,
-    send_statics: ArrayVec<[SendStaticDescriptor; MAX_COUNT]>,
-    receive_statics: ArrayVec<[ReceiveStaticDescriptor; MAX_COUNT]>,
-    send_buffers: ArrayVec<[BufferDescriptor; MAX_COUNT]>,
-    receive_buffers: ArrayVec<[BufferDescriptor; MAX_COUNT]>,
-    exchange_buffers: ArrayVec<[BufferDescriptor; MAX_COUNT]>,
+    send_statics: ArrayVec<SendStaticDescriptor, MAX_COUNT>,
+    receive_statics: ArrayVec<ReceiveStaticDescriptor, MAX_COUNT>,
+    send_buffers: ArrayVec<BufferDescriptor, MAX_COUNT>,
+    receive_buffers: ArrayVec<BufferDescriptor, MAX_COUNT>,
+    exchange_buffers: ArrayVec<BufferDescriptor, MAX_COUNT>,
     pointer_buffer: *mut u8,
     in_pointer_buffer_offset: usize,
     out_pointer_buffer_offset: usize,

@@ -344,6 +344,7 @@ unsafe extern "C" fn __nx_rrt0_entry(arg0: usize, arg1: usize) {
 
         let mut cur_bss_addr = bss_start_addr;
         while cur_bss_addr < bss_end_addr {
+            #[allow(invalid_reference_casting)]
             ptr::write_volatile(cur_bss_addr, 0);
             cur_bss_addr = cur_bss_addr.add(1);
         }

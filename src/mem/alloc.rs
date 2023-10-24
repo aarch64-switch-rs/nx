@@ -93,7 +93,7 @@ static mut G_ALLOCATOR_ENABLED: bool = false;
 /// * `heap`: The heap address and size
 pub fn initialize(heap: PointerAndSize) {
     unsafe {
-        G_ALLOCATOR_HOLDER.get().init(heap.address as usize, heap.size);
+        G_ALLOCATOR_HOLDER.get().init(heap.address, heap.size);
         G_ALLOCATOR_ENABLED = true;
     }
 }
