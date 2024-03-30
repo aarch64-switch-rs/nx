@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/archtest/.cargo/registry/src/index.crates.io-6f17d22bba15001f/arrayvec-0.5.2/src/array.rs`."><title>array.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-cb6f1f67f1bcd037.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="arrayvec" data-themes="" data-resource-suffix="" data-rustdoc-version="1.73.0-nightly (d06ca0ffa 2023-08-18)" data-channel="nightly" data-search-js="search-6dfdfced5eff6596.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-1596385f77d47ef2.css" data-theme-dark-css="dark-0a43001d3fc2282c.css" data-theme-ayu-css="ayu-fd19013d6ce078bf.css" ><script src="../../static.files/storage-db41da1a38ea3cb8.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-1596385f77d47ef2.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-0a43001d3fc2282c.css"><link rel="stylesheet" href="../../static.files/noscript-cffde32267a19fd6.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../arrayvec/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/xor/.cargo/registry/src/index.crates.io-6f17d22bba15001f/arrayvec-0.5.2/src/array.rs`."><title>array.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="arrayvec" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0-nightly (c9f8f3438 2024-03-27)" data-channel="nightly" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../arrayvec/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -153,7 +155,7 @@
 <span class="doccomment">/// Trait for fixed size arrays.
 ///
 /// This trait is implemented for some specific array sizes, see
-/// the implementor list below. At the current state of Rust we can&#39;t
+/// the implementor list below. At the current state of Rust we can't
 /// make this fully general for every array size.
 ///
 /// The following crate features add more array sizes (and they are not
@@ -178,7 +180,7 @@
     <span class="doccomment">/// The smallest type that can index and tell the length of the array.
     </span><span class="attr">#[doc(hidden)]
     </span><span class="kw">type </span>Index: Index;
-    <span class="doccomment">/// The array&#39;s element capacity
+    <span class="doccomment">/// The array's element capacity
     </span><span class="kw">const </span>CAPACITY: usize;
     <span class="kw">fn </span>as_slice(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="self">Self</span>::Item];
     <span class="kw">fn </span>as_mut_slice(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>[<span class="self">Self</span>::Item];
@@ -238,7 +240,7 @@
     </span><span class="kw">fn </span>from(ix: usize) -&gt;  <span class="self">Self </span>{ ix }
 }
 
-<span class="macro">macro_rules! </span>fix_array_impl {
+<span class="macro">macro_rules!</span> fix_array_impl {
     (<span class="macro-nonterminal">$index_type</span>:ty, <span class="macro-nonterminal">$len</span>:expr ) =&gt; (
         <span class="kw">unsafe impl</span>&lt;T&gt; Array <span class="kw">for </span>[T; <span class="macro-nonterminal">$len</span>] {
             <span class="kw">type </span>Item = T;
@@ -252,7 +254,7 @@
     )
 }
 
-<span class="macro">macro_rules! </span>fix_array_impl_recursive {
+<span class="macro">macro_rules!</span> fix_array_impl_recursive {
     (<span class="macro-nonterminal">$index_type</span>:ty, ) =&gt; ();
     (<span class="macro-nonterminal">$index_type</span>:ty, $(<span class="macro-nonterminal">$len</span>:expr,)<span class="kw-2">*</span>) =&gt; (
         $(<span class="macro">fix_array_impl!</span>(<span class="macro-nonterminal">$index_type</span>, <span class="macro-nonterminal">$len</span>);)*
@@ -266,10 +268,10 @@
                           <span class="number">15</span>, <span class="number">16</span>, <span class="number">17</span>, <span class="number">18</span>, <span class="number">19</span>, <span class="number">20</span>, <span class="number">21</span>, <span class="number">22</span>, <span class="number">23</span>, <span class="number">24</span>, <span class="number">25</span>, <span class="number">26</span>, <span class="number">27</span>,
                           <span class="number">28</span>, <span class="number">29</span>, <span class="number">30</span>, <span class="number">31</span>, );
 
-<span class="attr">#[cfg(not(feature=<span class="string">&quot;array-sizes-33-128&quot;</span>))]
+<span class="attr">#[cfg(not(feature=<span class="string">"array-sizes-33-128"</span>))]
 </span><span class="macro">fix_array_impl_recursive!</span>(u8, <span class="number">32</span>, <span class="number">40</span>, <span class="number">48</span>, <span class="number">50</span>, <span class="number">56</span>, <span class="number">64</span>, <span class="number">72</span>, <span class="number">96</span>, <span class="number">100</span>, <span class="number">128</span>, );
 
-<span class="attr">#[cfg(feature=<span class="string">&quot;array-sizes-33-128&quot;</span>)]
+<span class="attr">#[cfg(feature=<span class="string">"array-sizes-33-128"</span>)]
 </span><span class="macro">fix_array_impl_recursive!</span>(u8, 
 <span class="number">32</span>, <span class="number">33</span>, <span class="number">34</span>, <span class="number">35</span>, <span class="number">36</span>, <span class="number">37</span>, <span class="number">38</span>, <span class="number">39</span>, <span class="number">40</span>, <span class="number">41</span>, <span class="number">42</span>, <span class="number">43</span>, <span class="number">44</span>, <span class="number">45</span>, <span class="number">46</span>, <span class="number">47</span>, <span class="number">48</span>, <span class="number">49</span>, <span class="number">50</span>, <span class="number">51</span>,
 <span class="number">52</span>, <span class="number">53</span>, <span class="number">54</span>, <span class="number">55</span>, <span class="number">56</span>, <span class="number">57</span>, <span class="number">58</span>, <span class="number">59</span>, <span class="number">60</span>, <span class="number">61</span>, <span class="number">62</span>, <span class="number">63</span>, <span class="number">64</span>, <span class="number">65</span>, <span class="number">66</span>, <span class="number">67</span>, <span class="number">68</span>, <span class="number">69</span>, <span class="number">70</span>, <span class="number">71</span>,
@@ -279,10 +281,10 @@
 <span class="number">125</span>, <span class="number">126</span>, <span class="number">127</span>, <span class="number">128</span>,
 );
 
-<span class="attr">#[cfg(not(feature=<span class="string">&quot;array-sizes-129-255&quot;</span>))]
+<span class="attr">#[cfg(not(feature=<span class="string">"array-sizes-129-255"</span>))]
 </span><span class="macro">fix_array_impl_recursive!</span>(u8, <span class="number">160</span>, <span class="number">192</span>, <span class="number">200</span>, <span class="number">224</span>,);
 
-<span class="attr">#[cfg(feature=<span class="string">&quot;array-sizes-129-255&quot;</span>)]
+<span class="attr">#[cfg(feature=<span class="string">"array-sizes-129-255"</span>)]
 </span><span class="macro">fix_array_impl_recursive!</span>(u8,
 <span class="number">129</span>, <span class="number">130</span>, <span class="number">131</span>, <span class="number">132</span>, <span class="number">133</span>, <span class="number">134</span>, <span class="number">135</span>, <span class="number">136</span>, <span class="number">137</span>, <span class="number">138</span>, <span class="number">139</span>, <span class="number">140</span>,
 <span class="number">141</span>, <span class="number">142</span>, <span class="number">143</span>, <span class="number">144</span>, <span class="number">145</span>, <span class="number">146</span>, <span class="number">147</span>, <span class="number">148</span>, <span class="number">149</span>, <span class="number">150</span>, <span class="number">151</span>, <span class="number">152</span>, <span class="number">153</span>, <span class="number">154</span>, <span class="number">155</span>, <span class="number">156</span>,
@@ -296,8 +298,8 @@
 );
 
 <span class="macro">fix_array_impl_recursive!</span>(u16, <span class="number">256</span>, <span class="number">384</span>, <span class="number">512</span>, <span class="number">768</span>, <span class="number">1024</span>, <span class="number">2048</span>, <span class="number">4096</span>, <span class="number">8192</span>, <span class="number">16384</span>, <span class="number">32768</span>,);
-<span class="comment">// This array size doesn&#39;t exist on 16-bit
-</span><span class="attr">#[cfg(any(target_pointer_width=<span class="string">&quot;32&quot;</span>, target_pointer_width=<span class="string">&quot;64&quot;</span>))]
+<span class="comment">// This array size doesn't exist on 16-bit
+</span><span class="attr">#[cfg(any(target_pointer_width=<span class="string">"32"</span>, target_pointer_width=<span class="string">"64"</span>))]
 </span><span class="macro">fix_array_impl_recursive!</span>(u32, <span class="number">1 </span>&lt;&lt; <span class="number">16</span>,);
 
 </code></pre></div></section></main></body></html>

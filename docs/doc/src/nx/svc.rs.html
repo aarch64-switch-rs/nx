@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/svc.rs`."><title>svc.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-cb6f1f67f1bcd037.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.73.0-nightly (d06ca0ffa 2023-08-18)" data-channel="nightly" data-search-js="search-6dfdfced5eff6596.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-1596385f77d47ef2.css" data-theme-dark-css="dark-0a43001d3fc2282c.css" data-theme-ayu-css="ayu-fd19013d6ce078bf.css" ><script src="../../static.files/storage-db41da1a38ea3cb8.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-1596385f77d47ef2.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-0a43001d3fc2282c.css"><link rel="stylesheet" href="../../static.files/noscript-cffde32267a19fd6.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../nx/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/svc.rs`."><title>svc.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0-nightly (c9f8f3438 2024-03-27)" data-channel="nightly" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../nx/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -833,7 +835,7 @@
     CodeOut = <span class="number">0x15
 </span>}
 
-<span class="macro">define_bit_enum! </span>{
+<span class="macro">define_bit_enum!</span> {
     MemoryPermission (u32) {
         <span class="prelude-val">None </span>= <span class="number">0</span>,
         Read = <span class="macro">bit!</span>(<span class="number">0</span>),
@@ -843,7 +845,7 @@
     }
 }
 
-<span class="macro">define_bit_enum! </span>{
+<span class="macro">define_bit_enum!</span> {
     MemoryAttribute (u32) {
         <span class="prelude-val">None </span>= <span class="number">0</span>,
         Borrowed = <span class="macro">bit!</span>(<span class="number">0</span>),
@@ -987,7 +989,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>set_heap_size(size: Size) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">*mut </span>u8&gt; {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_set_heap_size(out_address: <span class="kw-2">*mut *mut </span>u8, size: Size) -&gt; ResultCode;
     }
 
@@ -1001,7 +1003,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>set_memory_attribute(address: Address, size: Size, mask: u32, value: MemoryAttribute) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_set_memory_attribute(address: Address, size: Size, mask: u32, value: MemoryAttribute) -&gt; ResultCode;
     }
 
@@ -1013,7 +1015,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>query_memory(address: Address) -&gt; <span class="prelude-ty">Result</span>&lt;(MemoryInfo, PageInfo)&gt; {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_query_memory(out_info: <span class="kw-2">*mut </span>MemoryInfo, out_page_info: <span class="kw-2">*mut </span>PageInfo, address: Address) -&gt; ResultCode;
     }
 
@@ -1028,7 +1030,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>exit_process() -&gt; ! {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_exit_process() -&gt; !;
     }
 
@@ -1039,7 +1041,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>create_thread(entry: ThreadEntrypointFn, entry_arg: Address, stack_top: Address, priority: i32, processor_id: i32) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&gt; {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_create_thread(handle: <span class="kw-2">*mut </span>Handle, entry: ThreadEntrypointFn, entry_arg: Address, stack_top: Address, priority: i32, processor_id: i32) -&gt; ResultCode;
     }
 
@@ -1053,7 +1055,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>start_thread(handle: Handle) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_start_thread(handle: Handle) -&gt; ResultCode;
     }
 
@@ -1065,7 +1067,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>exit_thread() -&gt; ! {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_exit_thread() -&gt; !;
     }
 
@@ -1076,7 +1078,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>sleep_thread(timeout: i64) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_sleep_thread(timeout: i64) -&gt; ResultCode;
     }
 
@@ -1088,7 +1090,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>get_thread_priority(handle: Handle) -&gt; <span class="prelude-ty">Result</span>&lt;i32&gt; {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_get_thread_priority(out_priority: <span class="kw-2">*mut </span>i32, handle: Handle) -&gt; ResultCode;
     }
 
@@ -1102,7 +1104,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>signal_event(handle: Handle) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_signal_event(handle: Handle) -&gt; ResultCode;
     }
 
@@ -1114,7 +1116,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>map_shared_memory(handle: Handle, address: Address, size: Size, permission: MemoryPermission) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_map_shared_memory(handle: Handle, address: Address, size: Size, permission: MemoryPermission) -&gt; ResultCode;
     }
 
@@ -1126,7 +1128,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>unmap_shared_memory(handle: Handle, address: Address, size: Size) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_unmap_shared_memory(handle: Handle, address: Address, size: Size) -&gt; ResultCode;
     }
 
@@ -1138,7 +1140,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>create_transfer_memory(address: Address, size: Size, permissions: MemoryPermission) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&gt; {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_create_transfer_memory(out_handle: <span class="kw-2">*mut </span>Handle, address: Address, size: Size, permissions: MemoryPermission) -&gt; ResultCode;
     }
 
@@ -1152,7 +1154,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>close_handle(handle: Handle) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_close_handle(handle: Handle) -&gt; ResultCode;
     }
 
@@ -1164,7 +1166,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>reset_signal(handle: Handle) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_reset_signal(handle: Handle) -&gt; ResultCode;
     }
 
@@ -1176,7 +1178,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>wait_synchronization(handles: <span class="kw-2">*const </span>Handle, handle_count: u32, timeout: i64) -&gt; <span class="prelude-ty">Result</span>&lt;i32&gt; {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_wait_synchronization(out_index: <span class="kw-2">*mut </span>i32, handles: <span class="kw-2">*const </span>Handle, handle_count: u32, timeout: i64) -&gt; ResultCode;
     }
 
@@ -1190,7 +1192,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>arbitrate_lock(thread_handle: Handle, tag_location: Address, tag: u32) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_arbitrate_lock(thread_handle: Handle, tag_location: Address, tag: u32) -&gt; ResultCode;
     }
 
@@ -1202,7 +1204,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>arbitrate_unlock(tag_location: Address) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_arbitrate_unlock(tag_location: Address) -&gt; ResultCode;
     }
 
@@ -1214,7 +1216,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>get_system_tick() -&gt; u64 {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_get_system_tick() -&gt; u64;
     }
 
@@ -1225,7 +1227,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>connect_to_named_port(name: Address) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&gt; {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_connect_to_named_port(out_handle: <span class="kw-2">*mut </span>Handle, name: Address) -&gt; ResultCode;
     }
 
@@ -1239,7 +1241,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>send_sync_request(handle: Handle) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_send_sync_request(handle: Handle) -&gt; ResultCode;
     }
     
@@ -1251,7 +1253,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>get_process_id(process_handle: Handle) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_get_process_id(out_process_id: <span class="kw-2">*mut </span>u64, process_handle: Handle) -&gt; ResultCode;
     }
     
@@ -1265,7 +1267,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>get_thread_id(handle: Handle) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_get_thread_id(out_thread_id: <span class="kw-2">*mut </span>u64, handle: Handle) -&gt; ResultCode;
     }
     
@@ -1281,7 +1283,7 @@
 
 </span><span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>break_(reason: BreakReason, arg: Address, size: Size) -&gt; ! {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_break(reason: BreakReason, arg: Address, size: Size) -&gt; !;
     }
 
@@ -1292,7 +1294,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>output_debug_string(msg: Address, len: Size) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_output_debug_string(msg: Address, len: Size) -&gt; ResultCode;
     }
 
@@ -1304,7 +1306,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>return_from_exception(res: ResultCode) {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_return_from_exception(res: ResultCode);
     }
 
@@ -1315,7 +1317,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>get_info(id: InfoId, handle: Handle, sub_id: u64) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_get_info(out_info: <span class="kw-2">*mut </span>u64, id: InfoId, handle: Handle, sub_id: u64) -&gt; ResultCode;
     }
     
@@ -1329,7 +1331,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>create_session(is_light: bool, unk_name: u64) -&gt; <span class="prelude-ty">Result</span>&lt;(Handle, Handle)&gt; {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_create_session(out_server_handle: <span class="kw-2">*mut </span>Handle, out_client_handle: <span class="kw-2">*mut </span>Handle, is_light: bool, unk_name: u64) -&gt; ResultCode;
     }
 
@@ -1344,7 +1346,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>accept_session(handle: Handle) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&gt; {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_accept_session(out_session_handle: <span class="kw-2">*mut </span>Handle, handle: Handle) -&gt; ResultCode;
     }
 
@@ -1358,7 +1360,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>reply_and_receive(handles: <span class="kw-2">*const </span>Handle, handle_count: u32, reply_target: Handle, timeout: i64) -&gt; <span class="prelude-ty">Result</span>&lt;i32&gt; {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_reply_and_receive(out_index: <span class="kw-2">*mut </span>i32, handles: <span class="kw-2">*const </span>Handle, handle_count: u32, reply_target: Handle, timeout: i64) -&gt; ResultCode;
     }
 
@@ -1372,7 +1374,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>create_event() -&gt; <span class="prelude-ty">Result</span>&lt;(Handle, Handle)&gt; {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_create_event(out_server_handle: <span class="kw-2">*mut </span>Handle, out_client_handle: <span class="kw-2">*mut </span>Handle) -&gt; ResultCode;
     }
 
@@ -1387,7 +1389,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>debug_active_process(process_id: u64) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&gt; {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_debug_active_process(out_handle: <span class="kw-2">*mut </span>Handle, process_id: u64) -&gt; ResultCode;
     }
 
@@ -1401,7 +1403,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>break_debug_process(debug_handle: Handle) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_break_debug_process(debug_handle: Handle) -&gt; ResultCode;
     }
 
@@ -1413,7 +1415,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>get_debug_event(debug_handle: Handle) -&gt; <span class="prelude-ty">Result</span>&lt;DebugEvent&gt; {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_get_debug_event(out_debug_event: <span class="kw-2">*mut </span>DebugEvent, debug_handle: Handle) -&gt; ResultCode;
     }
 
@@ -1427,7 +1429,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>continue_debug_event(debug_handle: Handle, flags: u32, thread_ids: <span class="kw-2">&amp;</span>[u64]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_legacy_continue_debug_event(debug_handle: Handle, flags: u32, thread_id: u64) -&gt; ResultCode;
         <span class="kw">fn </span>__nx_svc_continue_debug_event(debug_handle: Handle, flags: u32, thread_ids: <span class="kw-2">*const </span>u64, thread_id_count: u32) -&gt; ResultCode;
     }
@@ -1446,7 +1448,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>get_process_list(process_list: <span class="kw-2">&amp;mut </span>[u64]) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_get_process_list(out_count: <span class="kw-2">*mut </span>u32, out_process_ids: <span class="kw-2">*mut </span>u64, process_id_count: u32) -&gt; ResultCode;
     }
 
@@ -1460,7 +1462,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>get_thread_list(debug_handle: Handle, thread_id_list: <span class="kw-2">&amp;mut </span>[u64]) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_get_thread_list(out_count: <span class="kw-2">*mut </span>u32, out_thread_ids: <span class="kw-2">*mut </span>u64, thread_id_count: u32, debug_handle: Handle) -&gt; ResultCode;
     }
 
@@ -1475,7 +1477,7 @@
 <span class="attr">#[inline(always)]
 #[allow(improper_ctypes)]
 </span><span class="kw">pub fn </span>get_debug_thread_context(debug_handle: Handle, thread_id: u64, register_group: arm::RegisterGroup) -&gt; <span class="prelude-ty">Result</span>&lt;arm::ThreadContext&gt;  {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_get_debug_thread_context(thread_context: <span class="kw-2">*mut </span>arm::ThreadContext, debug_handle: Handle, thread_id: u64, register_group: arm::RegisterGroup) -&gt; ResultCode;
     }
 
@@ -1490,7 +1492,7 @@
 <span class="attr">#[inline(always)]
 #[allow(improper_ctypes)]
 </span><span class="kw">pub fn </span>set_debug_thread_context(debug_handle: Handle, thread_context: arm::ThreadContext, thread_id: u64, register_group: arm::RegisterGroup) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;  {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_set_debug_thread_context(debug_handle: Handle, thread_id: u64, thread_context: <span class="kw-2">*const </span>arm::ThreadContext, register_group: arm::RegisterGroup) -&gt; ResultCode;
     }
 
@@ -1502,7 +1504,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>query_debug_process_memory(debug_handle: Handle, address: Address) -&gt; <span class="prelude-ty">Result</span>&lt;(MemoryInfo, PageInfo)&gt; {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_query_debug_process_memory(out_info: <span class="kw-2">*mut </span>MemoryInfo, out_page_info: <span class="kw-2">*mut </span>PageInfo, debug_handle: Handle, address: Address) -&gt; ResultCode;
     }
 
@@ -1517,7 +1519,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>read_debug_process_memory(debug_handle: Handle, read_address: usize, read_size: usize, buffer: <span class="kw-2">*mut </span>u8) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_read_debug_process_memory(buffer: <span class="kw-2">*mut </span>u8, debug_handle: Handle, address: usize, size: usize) -&gt; ResultCode;
     }
 
@@ -1529,7 +1531,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>write_debug_process_memory(debug_handle: Handle, write_address: usize, write_size: usize, buffer: Address) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_write_debug_process_memory(debug_handle: Handle, buffer: Address, address: usize, size: usize) -&gt; ResultCode;
     }
 
@@ -1541,7 +1543,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>manage_named_port(name: Address, max_sessions: i32) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&gt; {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_manage_named_port(out_handle: <span class="kw-2">*mut </span>Handle, name: Address, max_sessions: i32) -&gt; ResultCode;
     }
 
@@ -1555,7 +1557,7 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>call_secure_monitor(input: [u64; <span class="number">8</span>]) -&gt; [u64; <span class="number">8</span>] {
-    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">fn </span>__nx_svc_call_secure_monitor(args: <span class="kw-2">*mut </span>u64);
     }
 

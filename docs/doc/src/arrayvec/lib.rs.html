@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/archtest/.cargo/registry/src/index.crates.io-6f17d22bba15001f/arrayvec-0.5.2/src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-cb6f1f67f1bcd037.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="arrayvec" data-themes="" data-resource-suffix="" data-rustdoc-version="1.73.0-nightly (d06ca0ffa 2023-08-18)" data-channel="nightly" data-search-js="search-6dfdfced5eff6596.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-1596385f77d47ef2.css" data-theme-dark-css="dark-0a43001d3fc2282c.css" data-theme-ayu-css="ayu-fd19013d6ce078bf.css" ><script src="../../static.files/storage-db41da1a38ea3cb8.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-1596385f77d47ef2.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-0a43001d3fc2282c.css"><link rel="stylesheet" href="../../static.files/noscript-cffde32267a19fd6.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../arrayvec/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/xor/.cargo/registry/src/index.crates.io-6f17d22bba15001f/arrayvec-0.5.2/src/lib.rs`."><title>lib.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="arrayvec" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0-nightly (c9f8f3438 2024-03-27)" data-channel="nightly" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../arrayvec/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1237,14 +1239,14 @@
 //!
 //! This version of arrayvec requires Rust 1.36 or later.
 //!
-</span><span class="attr">#![doc(html_root_url=<span class="string">&quot;https://docs.rs/arrayvec/0.4/&quot;</span>)]
-#![cfg_attr(not(feature=<span class="string">&quot;std&quot;</span>), no_std)]
-#![cfg_attr(feature=<span class="string">&quot;unstable-const-fn&quot;</span>, feature(const_fn))]
+</span><span class="attr">#![doc(html_root_url=<span class="string">"https://docs.rs/arrayvec/0.4/"</span>)]
+#![cfg_attr(not(feature=<span class="string">"std"</span>), no_std)]
+#![cfg_attr(feature=<span class="string">"unstable-const-fn"</span>, feature(const_fn))]
 
-#[cfg(feature=<span class="string">&quot;serde&quot;</span>)]
+#[cfg(feature=<span class="string">"serde"</span>)]
 </span><span class="kw">extern crate </span>serde;
 
-<span class="attr">#[cfg(not(feature=<span class="string">&quot;std&quot;</span>))]
+<span class="attr">#[cfg(not(feature=<span class="string">"std"</span>))]
 </span><span class="kw">extern crate </span>core <span class="kw">as </span>std;
 
 <span class="kw">use </span>std::cmp;
@@ -1259,14 +1261,14 @@
 <span class="kw">use </span>std::hash::{Hash, Hasher};
 <span class="kw">use </span>std::fmt;
 
-<span class="attr">#[cfg(feature=<span class="string">&quot;std&quot;</span>)]
+<span class="attr">#[cfg(feature=<span class="string">"std"</span>)]
 </span><span class="kw">use </span>std::io;
 
 
 <span class="kw">mod </span>maybe_uninit;
 <span class="kw">use </span><span class="kw">crate</span>::maybe_uninit::MaybeUninit;
 
-<span class="attr">#[cfg(feature=<span class="string">&quot;serde&quot;</span>)]
+<span class="attr">#[cfg(feature=<span class="string">"serde"</span>)]
 </span><span class="kw">use </span>serde::{Serialize, Deserialize, Serializer, Deserializer};
 
 <span class="kw">mod </span>array;
@@ -1301,13 +1303,13 @@
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="self">self</span>.clear();
 
-        <span class="comment">// MaybeUninit inhibits array&#39;s drop
+        <span class="comment">// MaybeUninit inhibits array's drop
     </span>}
 }
 
-<span class="macro">macro_rules! </span>panic_oob {
+<span class="macro">macro_rules!</span> panic_oob {
     (<span class="macro-nonterminal">$method_name</span>:expr, <span class="macro-nonterminal">$index</span>:expr, <span class="macro-nonterminal">$len</span>:expr) =&gt; {
-        <span class="macro">panic!</span>(<span class="macro">concat!</span>(<span class="string">&quot;ArrayVec::&quot;</span>, <span class="macro-nonterminal">$method_name</span>, <span class="string">&quot;: index {} is out of bounds in vector of length {}&quot;</span>),
+        <span class="macro">panic!</span>(<span class="macro">concat!</span>(<span class="string">"ArrayVec::"</span>, <span class="macro-nonterminal">$method_name</span>, <span class="string">": index {} is out of bounds in vector of length {}"</span>),
                <span class="macro-nonterminal">$index</span>, <span class="macro-nonterminal">$len</span>)
     }
 }
@@ -1326,14 +1328,14 @@
     /// assert_eq!(&amp;array[..], &amp;[1, 2]);
     /// assert_eq!(array.capacity(), 16);
     /// ```
-    </span><span class="attr">#[cfg(not(feature=<span class="string">&quot;unstable-const-fn&quot;</span>))]
+    </span><span class="attr">#[cfg(not(feature=<span class="string">"unstable-const-fn"</span>))]
     </span><span class="kw">pub fn </span>new() -&gt; ArrayVec&lt;A&gt; {
         <span class="kw">unsafe </span>{
             ArrayVec { xs: MaybeUninit::uninitialized(), len: Index::ZERO }
         }
     }
 
-    <span class="attr">#[cfg(feature=<span class="string">&quot;unstable-const-fn&quot;</span>)]
+    <span class="attr">#[cfg(feature=<span class="string">"unstable-const-fn"</span>)]
     </span><span class="kw">pub const fn </span>new() -&gt; ArrayVec&lt;A&gt; {
         <span class="kw">unsafe </span>{
             ArrayVec { xs: MaybeUninit::uninitialized(), len: Index::ZERO }
@@ -1500,9 +1502,9 @@
     ///
     /// let mut array = ArrayVec::&lt;[_; 2]&gt;::new();
     ///
-    /// array.insert(0, &quot;x&quot;);
-    /// array.insert(0, &quot;y&quot;);
-    /// assert_eq!(&amp;array[..], &amp;[&quot;y&quot;, &quot;x&quot;]);
+    /// array.insert(0, "x");
+    /// array.insert(0, "y");
+    /// assert_eq!(&amp;array[..], &amp;["y", "x"]);
     ///
     /// ```
     </span><span class="kw">pub fn </span>insert(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize, element: A::Item) {
@@ -1523,15 +1525,15 @@
     ///
     /// let mut array = ArrayVec::&lt;[_; 2]&gt;::new();
     ///
-    /// assert!(array.try_insert(0, &quot;x&quot;).is_ok());
-    /// assert!(array.try_insert(0, &quot;y&quot;).is_ok());
-    /// assert!(array.try_insert(0, &quot;z&quot;).is_err());
-    /// assert_eq!(&amp;array[..], &amp;[&quot;y&quot;, &quot;x&quot;]);
+    /// assert!(array.try_insert(0, "x").is_ok());
+    /// assert!(array.try_insert(0, "y").is_ok());
+    /// assert!(array.try_insert(0, "z").is_err());
+    /// assert_eq!(&amp;array[..], &amp;["y", "x"]);
     ///
     /// ```
     </span><span class="kw">pub fn </span>try_insert(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize, element: A::Item) -&gt; <span class="prelude-ty">Result</span>&lt;(), CapacityError&lt;A::Item&gt;&gt; {
         <span class="kw">if </span>index &gt; <span class="self">self</span>.len() {
-            <span class="macro">panic_oob!</span>(<span class="string">&quot;try_insert&quot;</span>, index, <span class="self">self</span>.len())
+            <span class="macro">panic_oob!</span>(<span class="string">"try_insert"</span>, index, <span class="self">self</span>.len())
         }
         <span class="kw">if </span><span class="self">self</span>.len() == <span class="self">self</span>.capacity() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(CapacityError::new(element));
@@ -1602,7 +1604,7 @@
     </span><span class="kw">pub fn </span>swap_remove(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize) -&gt; A::Item {
         <span class="self">self</span>.swap_pop(index)
             .unwrap_or_else(|| {
-                <span class="macro">panic_oob!</span>(<span class="string">&quot;swap_remove&quot;</span>, index, <span class="self">self</span>.len())
+                <span class="macro">panic_oob!</span>(<span class="string">"swap_remove"</span>, index, <span class="self">self</span>.len())
             })
     }
 
@@ -1650,7 +1652,7 @@
     </span><span class="kw">pub fn </span>remove(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize) -&gt; A::Item {
         <span class="self">self</span>.pop_at(index)
             .unwrap_or_else(|| {
-                <span class="macro">panic_oob!</span>(<span class="string">&quot;remove&quot;</span>, index, <span class="self">self</span>.len())
+                <span class="macro">panic_oob!</span>(<span class="string">"remove"</span>, index, <span class="self">self</span>.len())
             })
     }
 
@@ -1815,7 +1817,7 @@
         //
         // When the Drain is first created, it shortens the length of
         // the source vector to make sure no uninitialized or moved-from elements
-        // are accessible at all if the Drain&#39;s destructor never gets to run.
+        // are accessible at all if the Drain's destructor never gets to run.
         //
         // Drain will ptr::read out the values to remove.
         // When finished, remaining tail of the vec is copied back to cover
@@ -1873,7 +1875,7 @@
     }
 
     <span class="doccomment">/// Dispose of `self` (same as drop)
-    </span><span class="attr">#[deprecated=<span class="string">&quot;Use std::mem::drop instead, if at all needed.&quot;</span>]
+    </span><span class="attr">#[deprecated=<span class="string">"Use std::mem::drop instead, if at all needed."</span>]
     </span><span class="kw">pub fn </span>dispose(<span class="kw-2">mut </span><span class="self">self</span>) {
         <span class="self">self</span>.clear();
         mem::forget(<span class="self">self</span>);
@@ -1889,12 +1891,12 @@
         <span class="self">self
     </span>}
 
-    <span class="doccomment">/// Return a raw pointer to the vector&#39;s buffer.
+    <span class="doccomment">/// Return a raw pointer to the vector's buffer.
     </span><span class="kw">pub fn </span>as_ptr(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">*const </span>A::Item {
         <span class="self">self</span>.xs.ptr()
     }
 
-    <span class="doccomment">/// Return a raw mutable pointer to the vector&#39;s buffer.
+    <span class="doccomment">/// Return a raw mutable pointer to the vector's buffer.
     </span><span class="kw">pub fn </span>as_mut_ptr(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">*mut </span>A::Item {
         <span class="self">self</span>.xs.ptr_mut()
     }
@@ -1976,9 +1978,9 @@
 ///     // ...
 /// }
 /// ```
-</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: Array&gt; IntoIterator <span class="kw">for </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>ArrayVec&lt;A&gt; {
-    <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>A::Item;
-    <span class="kw">type </span>IntoIter = slice::Iter&lt;<span class="lifetime">&#39;a</span>, A::Item&gt;;
+</span><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, A: Array&gt; IntoIterator <span class="kw">for </span><span class="kw-2">&amp;</span><span class="lifetime">'a </span>ArrayVec&lt;A&gt; {
+    <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span>A::Item;
+    <span class="kw">type </span>IntoIter = slice::Iter&lt;<span class="lifetime">'a</span>, A::Item&gt;;
     <span class="kw">fn </span>into_iter(<span class="self">self</span>) -&gt; <span class="self">Self</span>::IntoIter { <span class="self">self</span>.iter() }
 }
 
@@ -1993,9 +1995,9 @@
 ///     // ...
 /// }
 /// ```
-</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: Array&gt; IntoIterator <span class="kw">for </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>ArrayVec&lt;A&gt; {
-    <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>A::Item;
-    <span class="kw">type </span>IntoIter = slice::IterMut&lt;<span class="lifetime">&#39;a</span>, A::Item&gt;;
+</span><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, A: Array&gt; IntoIterator <span class="kw">for </span><span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>ArrayVec&lt;A&gt; {
+    <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>A::Item;
+    <span class="kw">type </span>IntoIter = slice::IterMut&lt;<span class="lifetime">'a</span>, A::Item&gt;;
     <span class="kw">fn </span>into_iter(<span class="self">self</span>) -&gt; <span class="self">Self</span>::IntoIter { <span class="self">self</span>.iter_mut() }
 }
 
@@ -2102,24 +2104,24 @@
 }
 
 <span class="doccomment">/// A draining iterator for `ArrayVec`.
-</span><span class="kw">pub struct </span>Drain&lt;<span class="lifetime">&#39;a</span>, A&gt; 
+</span><span class="kw">pub struct </span>Drain&lt;<span class="lifetime">'a</span>, A&gt; 
     <span class="kw">where </span>A: Array,
-          A::Item: <span class="lifetime">&#39;a</span>,
+          A::Item: <span class="lifetime">'a</span>,
 {
     <span class="doccomment">/// Index of tail to preserve
     </span>tail_start: usize,
     <span class="doccomment">/// Length of tail
     </span>tail_len: usize,
     <span class="doccomment">/// Current remaining range to remove
-    </span>iter: slice::Iter&lt;<span class="lifetime">&#39;a</span>, A::Item&gt;,
+    </span>iter: slice::Iter&lt;<span class="lifetime">'a</span>, A::Item&gt;,
     vec: <span class="kw-2">*mut </span>ArrayVec&lt;A&gt;,
 }
 
-<span class="kw">unsafe impl</span>&lt;<span class="lifetime">&#39;a</span>, A: Array + Sync&gt; Sync <span class="kw">for </span>Drain&lt;<span class="lifetime">&#39;a</span>, A&gt; {}
-<span class="kw">unsafe impl</span>&lt;<span class="lifetime">&#39;a</span>, A: Array + Send&gt; Send <span class="kw">for </span>Drain&lt;<span class="lifetime">&#39;a</span>, A&gt; {}
+<span class="kw">unsafe impl</span>&lt;<span class="lifetime">'a</span>, A: Array + Sync&gt; Sync <span class="kw">for </span>Drain&lt;<span class="lifetime">'a</span>, A&gt; {}
+<span class="kw">unsafe impl</span>&lt;<span class="lifetime">'a</span>, A: Array + Send&gt; Send <span class="kw">for </span>Drain&lt;<span class="lifetime">'a</span>, A&gt; {}
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: Array&gt; Iterator <span class="kw">for </span>Drain&lt;<span class="lifetime">&#39;a</span>, A&gt;
-    <span class="kw">where </span>A::Item: <span class="lifetime">&#39;a</span>,
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, A: Array&gt; Iterator <span class="kw">for </span>Drain&lt;<span class="lifetime">'a</span>, A&gt;
+    <span class="kw">where </span>A::Item: <span class="lifetime">'a</span>,
 {
     <span class="kw">type </span>Item = A::Item;
 
@@ -2136,8 +2138,8 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: Array&gt; DoubleEndedIterator <span class="kw">for </span>Drain&lt;<span class="lifetime">&#39;a</span>, A&gt;
-    <span class="kw">where </span>A::Item: <span class="lifetime">&#39;a</span>,
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, A: Array&gt; DoubleEndedIterator <span class="kw">for </span>Drain&lt;<span class="lifetime">'a</span>, A&gt;
+    <span class="kw">where </span>A::Item: <span class="lifetime">'a</span>,
 {
     <span class="kw">fn </span>next_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
         <span class="self">self</span>.iter.next_back().map(|elt|
@@ -2148,10 +2150,10 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: Array&gt; ExactSizeIterator <span class="kw">for </span>Drain&lt;<span class="lifetime">&#39;a</span>, A&gt; <span class="kw">where </span>A::Item: <span class="lifetime">&#39;a </span>{}
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, A: Array&gt; ExactSizeIterator <span class="kw">for </span>Drain&lt;<span class="lifetime">'a</span>, A&gt; <span class="kw">where </span>A::Item: <span class="lifetime">'a </span>{}
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: Array&gt; Drop <span class="kw">for </span>Drain&lt;<span class="lifetime">&#39;a</span>, A&gt; 
-    <span class="kw">where </span>A::Item: <span class="lifetime">&#39;a
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, A: Array&gt; Drop <span class="kw">for </span>Drain&lt;<span class="lifetime">'a</span>, A&gt; 
+    <span class="kw">where </span>A::Item: <span class="lifetime">'a
 </span>{
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="comment">// len is currently 0 so panicking while dropping will not cause a double drop.
@@ -2206,7 +2208,7 @@
             <span class="comment">// Keep the length in a separate variable, write it back on scope
             // exit. To help the compiler with alias analysis and stuff.
             // We update the length to handle panic in the iteration of the
-            // user&#39;s iterator, without dropping any elements on the floor.
+            // user's iterator, without dropping any elements on the floor.
             </span><span class="kw">let </span><span class="kw-2">mut </span>guard = ScopeExitGuard {
                 value: <span class="kw-2">&amp;mut </span><span class="self">self</span>.len,
                 data: len,
@@ -2364,10 +2366,10 @@
     }
 }
 
-<span class="attr">#[cfg(feature=<span class="string">&quot;std&quot;</span>)]
+<span class="attr">#[cfg(feature=<span class="string">"std"</span>)]
 </span><span class="doccomment">/// `Write` appends written data to the end of the vector.
 ///
-/// Requires `features=&quot;std&quot;`.
+/// Requires `features="std"`.
 </span><span class="kw">impl</span>&lt;A: Array&lt;Item=u8&gt;&gt; io::Write <span class="kw">for </span>ArrayVec&lt;A&gt; {
     <span class="kw">fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, data: <span class="kw-2">&amp;</span>[u8]) -&gt; io::Result&lt;usize&gt; {
         <span class="kw">let </span>len = cmp::min(<span class="self">self</span>.remaining_capacity(), data.len());
@@ -2378,8 +2380,8 @@
     <span class="kw">fn </span>flush(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; io::Result&lt;()&gt; { <span class="prelude-val">Ok</span>(()) }
 }
 
-<span class="attr">#[cfg(feature=<span class="string">&quot;serde&quot;</span>)]
-</span><span class="doccomment">/// Requires crate feature `&quot;serde&quot;`
+<span class="attr">#[cfg(feature=<span class="string">"serde"</span>)]
+</span><span class="doccomment">/// Requires crate feature `"serde"`
 </span><span class="kw">impl</span>&lt;T: Serialize, A: Array&lt;Item=T&gt;&gt; Serialize <span class="kw">for </span>ArrayVec&lt;A&gt; {
     <span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
         <span class="kw">where </span>S: Serializer
@@ -2388,26 +2390,26 @@
     }
 }
 
-<span class="attr">#[cfg(feature=<span class="string">&quot;serde&quot;</span>)]
-</span><span class="doccomment">/// Requires crate feature `&quot;serde&quot;`
-</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>, T: Deserialize&lt;<span class="lifetime">&#39;de</span>&gt;, A: Array&lt;Item=T&gt;&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>ArrayVec&lt;A&gt; {
+<span class="attr">#[cfg(feature=<span class="string">"serde"</span>)]
+</span><span class="doccomment">/// Requires crate feature `"serde"`
+</span><span class="kw">impl</span>&lt;<span class="lifetime">'de</span>, T: Deserialize&lt;<span class="lifetime">'de</span>&gt;, A: Array&lt;Item=T&gt;&gt; Deserialize&lt;<span class="lifetime">'de</span>&gt; <span class="kw">for </span>ArrayVec&lt;A&gt; {
     <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
-        <span class="kw">where </span>D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;
+        <span class="kw">where </span>D: Deserializer&lt;<span class="lifetime">'de</span>&gt;
     {
         <span class="kw">use </span>serde::de::{Visitor, SeqAccess, Error};
         <span class="kw">use </span>std::marker::PhantomData;
 
-        <span class="kw">struct </span>ArrayVecVisitor&lt;<span class="lifetime">&#39;de</span>, T: Deserialize&lt;<span class="lifetime">&#39;de</span>&gt;, A: Array&lt;Item=T&gt;&gt;(PhantomData&lt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;de </span>(), T, A)&gt;);
+        <span class="kw">struct </span>ArrayVecVisitor&lt;<span class="lifetime">'de</span>, T: Deserialize&lt;<span class="lifetime">'de</span>&gt;, A: Array&lt;Item=T&gt;&gt;(PhantomData&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'de </span>(), T, A)&gt;);
 
-        <span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>, T: Deserialize&lt;<span class="lifetime">&#39;de</span>&gt;, A: Array&lt;Item=T&gt;&gt; Visitor&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>ArrayVecVisitor&lt;<span class="lifetime">&#39;de</span>, T, A&gt; {
+        <span class="kw">impl</span>&lt;<span class="lifetime">'de</span>, T: Deserialize&lt;<span class="lifetime">'de</span>&gt;, A: Array&lt;Item=T&gt;&gt; Visitor&lt;<span class="lifetime">'de</span>&gt; <span class="kw">for </span>ArrayVecVisitor&lt;<span class="lifetime">'de</span>, T, A&gt; {
             <span class="kw">type </span>Value = ArrayVec&lt;A&gt;;
 
             <span class="kw">fn </span>expecting(<span class="kw-2">&amp;</span><span class="self">self</span>, formatter: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
-                <span class="macro">write!</span>(formatter, <span class="string">&quot;an array with no more than {} items&quot;</span>, A::CAPACITY)
+                <span class="macro">write!</span>(formatter, <span class="string">"an array with no more than {} items"</span>, A::CAPACITY)
             }
 
             <span class="kw">fn </span>visit_seq&lt;SA&gt;(<span class="self">self</span>, <span class="kw-2">mut </span>seq: SA) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, SA::Error&gt;
-                <span class="kw">where </span>SA: SeqAccess&lt;<span class="lifetime">&#39;de</span>&gt;,
+                <span class="kw">where </span>SA: SeqAccess&lt;<span class="lifetime">'de</span>&gt;,
             {
                 <span class="kw">let </span><span class="kw-2">mut </span>values = ArrayVec::&lt;A&gt;::new();
 

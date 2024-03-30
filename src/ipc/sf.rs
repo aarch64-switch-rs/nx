@@ -1,8 +1,5 @@
 use super::*;
-use crate::svc;
 use crate::version;
-use core::mem;
-use core::ptr;
 use alloc::vec::Vec;
 use alloc::string::String;
 

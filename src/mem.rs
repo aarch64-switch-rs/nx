@@ -141,7 +141,7 @@ impl<T: ?Sized> Clone for Shared<T> {
 impl<T: ?Sized> PartialEq for Shared<T> {
     /// Gets whether both [`Shared`] instances point to the same variable
     fn eq(&self, other: &Self) -> bool {
-        self.object == other.object
+        ptr::addr_eq(self.object, other.object)
     }
 }
 

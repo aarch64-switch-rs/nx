@@ -1,5 +1,4 @@
 use crate::result::*;
-use crate::svc;
 use crate::wait;
 use crate::ipc::sf::IObject;
 use crate::ipc::sf::hipc::IHipcManager;

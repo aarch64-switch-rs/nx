@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/ipc/server.rs`."><title>server.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-cb6f1f67f1bcd037.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.73.0-nightly (d06ca0ffa 2023-08-18)" data-channel="nightly" data-search-js="search-6dfdfced5eff6596.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-1596385f77d47ef2.css" data-theme-dark-css="dark-0a43001d3fc2282c.css" data-theme-ayu-css="ayu-fd19013d6ce078bf.css" ><script src="../../../static.files/storage-db41da1a38ea3cb8.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-1596385f77d47ef2.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-0a43001d3fc2282c.css"><link rel="stylesheet" href="../../../static.files/noscript-cffde32267a19fd6.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../nx/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/ipc/server.rs`."><title>server.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0-nightly (c9f8f3438 2024-03-27)" data-channel="nightly" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../nx/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -815,9 +817,7 @@
 <a href="#815" id="815">815</a>
 <a href="#816" id="816">816</a>
 <a href="#817" id="817">817</a>
-<a href="#818" id="818">818</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::result::<span class="kw-2">*</span>;
-<span class="kw">use </span><span class="kw">crate</span>::svc;
 <span class="kw">use </span><span class="kw">crate</span>::wait;
 <span class="kw">use </span><span class="kw">crate</span>::ipc::sf::IObject;
 <span class="kw">use </span><span class="kw">crate</span>::ipc::sf::hipc::IHipcManager;
@@ -826,15 +826,15 @@
 <span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>alloc::vec::Vec;
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;services&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"services"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::service;
 
-<span class="attr">#[cfg(not(feature = <span class="string">&quot;services&quot;</span>))]
+<span class="attr">#[cfg(not(feature = <span class="string">"services"</span>))]
 </span><span class="kw">use </span><span class="kw">crate</span>::ipc::sf::sm;
-<span class="attr">#[cfg(feature = <span class="string">&quot;services&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"services"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::service::sm;
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;services&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"services"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::service::sm::IUserInterface;
 
 <span class="kw">pub mod </span>rc;
@@ -843,15 +843,15 @@
 
 </span><span class="kw">const </span>MAX_COUNT: usize = wait::MAX_OBJECT_COUNT <span class="kw">as </span>usize;
 
-<span class="kw">pub struct </span>ServerContext&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub </span>ctx: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>CommandContext,
+<span class="kw">pub struct </span>ServerContext&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub </span>ctx: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>CommandContext,
     <span class="kw">pub </span>raw_data_walker: DataWalker,
     <span class="kw">pub </span>domain_table: <span class="prelude-ty">Option</span>&lt;mem::Shared&lt;DomainTable&gt;&gt;,
-    <span class="kw">pub </span>new_sessions: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>Vec&lt;ServerHolder&gt;
+    <span class="kw">pub </span>new_sessions: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>Vec&lt;ServerHolder&gt;
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; ServerContext&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub const fn </span>new(ctx: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>CommandContext, raw_data_walker: DataWalker, domain_table: <span class="prelude-ty">Option</span>&lt;mem::Shared&lt;DomainTable&gt;&gt;, new_sessions: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>Vec&lt;ServerHolder&gt;) -&gt; <span class="self">Self </span>{
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; ServerContext&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub const fn </span>new(ctx: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>CommandContext, raw_data_walker: DataWalker, domain_table: <span class="prelude-ty">Option</span>&lt;mem::Shared&lt;DomainTable&gt;&gt;, new_sessions: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>Vec&lt;ServerHolder&gt;) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{ ctx, raw_data_walker, domain_table, new_sessions }
     }
 }
@@ -892,7 +892,7 @@
 
         <span class="kw">if </span>A.contains(BufferAttribute::Out()) &amp;&amp; A.contains(BufferAttribute::Pointer()) {
             <span class="comment">// For Out(Fixed)Pointer buffers, we need to send them back as InPointer
-            // Note: since buffers can&#39;t be out params in this command param system, we need to send them back this way
+            // Note: since buffers can't be out params in this command param system, we need to send them back this way
             </span><span class="kw">let </span>in_ptr_buf = sf::InPointerBuffer::&lt;u8&gt;::from_other(<span class="kw-2">&amp;</span>buf);
             ctx.ctx.add_buffer(<span class="kw-2">&amp;</span>in_ptr_buf)<span class="question-mark">?</span>;
         }
@@ -976,13 +976,13 @@
 
 <span class="kw">pub type </span>NewServerFn = <span class="kw">fn</span>() -&gt; mem::Shared&lt;<span class="kw">dyn </span>ISessionObject&gt;;
 
-<span class="kw">fn </span>create_server_object_impl&lt;S: IServerObject + <span class="lifetime">&#39;static</span>&gt;() -&gt; mem::Shared&lt;<span class="kw">dyn </span>ISessionObject&gt; {
+<span class="kw">fn </span>create_server_object_impl&lt;S: IServerObject + <span class="lifetime">'static</span>&gt;() -&gt; mem::Shared&lt;<span class="kw">dyn </span>ISessionObject&gt; {
     mem::Shared::new(S::new())
 }
 
 <span class="kw">pub type </span>NewMitmServerFn = <span class="kw">fn</span>(sm::mitm::MitmProcessInfo) -&gt; mem::Shared&lt;<span class="kw">dyn </span>ISessionObject&gt;;
 
-<span class="kw">fn </span>create_mitm_server_object_impl&lt;S: IMitmServerObject + <span class="lifetime">&#39;static</span>&gt;(info: sm::mitm::MitmProcessInfo) -&gt; mem::Shared&lt;<span class="kw">dyn </span>ISessionObject&gt; {
+<span class="kw">fn </span>create_mitm_server_object_impl&lt;S: IMitmServerObject + <span class="lifetime">'static</span>&gt;(info: sm::mitm::MitmProcessInfo) -&gt; mem::Shared&lt;<span class="kw">dyn </span>ISessionObject&gt; {
     mem::Shared::new(S::new(info))
 }
 
@@ -1061,11 +1061,11 @@
         <span class="self">Self </span>{ server: <span class="prelude-val">Some</span>(object), info: ObjectInfo::from_domain_object_id(handle, domain_object_id), new_server_fn: <span class="prelude-val">None</span>, new_mitm_server_fn: <span class="prelude-val">None</span>, handle_type: WaitHandleType::Session, mitm_forward_info: ObjectInfo::new(), is_mitm_service: <span class="bool-val">false</span>, service_name: sm::ServiceName::empty(), domain_table: <span class="prelude-val">None </span>} 
     }
     
-    <span class="kw">pub fn </span>new_server&lt;S: IServerObject + <span class="lifetime">&#39;static</span>&gt;(handle: svc::Handle, service_name: sm::ServiceName) -&gt; <span class="self">Self </span>{
+    <span class="kw">pub fn </span>new_server&lt;S: IServerObject + <span class="lifetime">'static</span>&gt;(handle: svc::Handle, service_name: sm::ServiceName) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{ server: <span class="prelude-val">None</span>, info: ObjectInfo::from_handle(handle), new_server_fn: <span class="prelude-val">Some</span>(create_server_object_impl::&lt;S&gt;), new_mitm_server_fn: <span class="prelude-val">None</span>, handle_type: WaitHandleType::Server, mitm_forward_info: ObjectInfo::new(), is_mitm_service: <span class="bool-val">false</span>, service_name, domain_table: <span class="prelude-val">None </span>} 
     }
 
-    <span class="kw">pub fn </span>new_mitm_server&lt;S: IMitmServerObject + <span class="lifetime">&#39;static</span>&gt;(handle: svc::Handle, service_name: sm::ServiceName) -&gt; <span class="self">Self </span>{
+    <span class="kw">pub fn </span>new_mitm_server&lt;S: IMitmServerObject + <span class="lifetime">'static</span>&gt;(handle: svc::Handle, service_name: sm::ServiceName) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{ server: <span class="prelude-val">None</span>, info: ObjectInfo::from_handle(handle), new_server_fn: <span class="prelude-val">None</span>, new_mitm_server_fn: <span class="prelude-val">Some</span>(create_mitm_server_object_impl::&lt;S&gt;), handle_type: WaitHandleType::Server, mitm_forward_info: ObjectInfo::new(), is_mitm_service: <span class="bool-val">true</span>, service_name, domain_table: <span class="prelude-val">None </span>} 
     }
 
@@ -1102,10 +1102,10 @@
     }
 
     <span class="kw">pub fn </span>convert_to_domain(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;cmif::DomainObjectId&gt; {
-        <span class="comment">// Check that we&#39;re not already a domain
+        <span class="comment">// Check that we're not already a domain
         </span><span class="macro">result_return_if!</span>(<span class="self">self</span>.info.is_domain(), rc::ResultAlreadyDomain);
 
-        <span class="comment">// Since we&#39;re a base domain object now, create a domain table
+        <span class="comment">// Since we're a base domain object now, create a domain table
         </span><span class="kw">let </span>dom_table = mem::Shared::new(DomainTable::new());
         <span class="self">self</span>.domain_table = <span class="prelude-val">Some</span>(dom_table.clone());
 
@@ -1124,7 +1124,7 @@
 
     <span class="kw">pub fn </span>close(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">if </span>!<span class="self">self</span>.service_name.is_empty() {
-            <span class="attr">#[cfg(feature = <span class="string">&quot;services&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"services"</span>)]
             </span>{
                 <span class="kw">let </span>sm = service::new_named_port_object::&lt;sm::UserInterface&gt;()<span class="question-mark">?</span>;
                 <span class="kw">match </span><span class="self">self</span>.is_mitm_service {
@@ -1135,7 +1135,7 @@
             }
         }
 
-        <span class="comment">// Don&#39;t close our session like a normal one (like the forward session below) as we allocated the object IDs ourselves, the only thing we do have to close is the handle
+        <span class="comment">// Don't close our session like a normal one (like the forward session below) as we allocated the object IDs ourselves, the only thing we do have to close is the handle
         </span><span class="kw">if </span><span class="self">self</span>.info.owns_handle {
             svc::close_handle(<span class="self">self</span>.info.handle)<span class="question-mark">?</span>;
         }
@@ -1150,16 +1150,16 @@
     }
 }
 
-<span class="kw">pub struct </span>HipcManager&lt;<span class="lifetime">&#39;a</span>&gt; {
-    server_holder: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>ServerHolder,
+<span class="kw">pub struct </span>HipcManager&lt;<span class="lifetime">'a</span>&gt; {
+    server_holder: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>ServerHolder,
     pointer_buf_size: usize,
     <span class="kw">pub </span>cloned_object_server_handle: svc::Handle,
     <span class="kw">pub </span>cloned_object_forward_handle: svc::Handle,
     dummy_session: sf::Session
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; HipcManager&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub fn </span>new(server_holder: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>ServerHolder, pointer_buf_size: usize) -&gt; <span class="self">Self </span>{
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; HipcManager&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub fn </span>new(server_holder: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>ServerHolder, pointer_buf_size: usize) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             server_holder,
             pointer_buf_size,
@@ -1178,7 +1178,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; sf::IObject <span class="kw">for </span>HipcManager&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; sf::IObject <span class="kw">for </span>HipcManager&lt;<span class="lifetime">'a</span>&gt; {
     <span class="macro">ipc_sf_object_impl_default_command_metadata!</span>();
 
     <span class="kw">fn </span>get_session(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>sf::Session {
@@ -1186,7 +1186,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; IHipcManager <span class="kw">for </span>HipcManager&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; IHipcManager <span class="kw">for </span>HipcManager&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">fn </span>convert_current_object_to_domain(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;cmif::DomainObjectId&gt; {
         <span class="self">self</span>.server_holder.convert_to_domain()
     }
@@ -1220,7 +1220,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; ISessionObject <span class="kw">for </span>HipcManager&lt;<span class="lifetime">&#39;a</span>&gt; {}
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; ISessionObject <span class="kw">for </span>HipcManager&lt;<span class="lifetime">'a</span>&gt; {}
 
 <span class="kw">pub struct </span>MitmQueryService&lt;S: IMitmService&gt; {
     phantom: core::marker::PhantomData&lt;S&gt;,
@@ -1253,7 +1253,7 @@
 <span class="kw">impl</span>&lt;S: IMitmService&gt; ISessionObject <span class="kw">for </span>MitmQueryService&lt;S&gt; {}
 
 <span class="kw">pub trait </span>INamedPort: IServerObject {
-    <span class="kw">fn </span>get_port_name() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str;
+    <span class="kw">fn </span>get_port_name() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str;
     <span class="kw">fn </span>get_max_sesssions() -&gt; i32;
 }
 
@@ -1360,7 +1360,7 @@
 
         <span class="kw">match </span>domain_command_type {
             cmif::DomainCommandType::Invalid =&gt; {
-                <span class="comment">// Invalid command type might mean that the session isn&#39;t a domain :P
+                <span class="comment">// Invalid command type might mean that the session isn't a domain :P
                 </span><span class="kw">match </span>is_domain {
                     <span class="bool-val">false </span>=&gt; do_handle_request()<span class="question-mark">?</span>,
                     <span class="bool-val">true </span>=&gt; <span class="kw">return </span>rc::ResultInvalidDomainCommandType::make_err()
@@ -1497,7 +1497,7 @@
                         <span class="kw">let </span>new_handle = svc::accept_session(handle)<span class="question-mark">?</span>;
 
                         <span class="kw">if </span>server_holder.is_mitm_service {
-                            <span class="attr">#[cfg(feature = <span class="string">&quot;services&quot;</span>)]
+                            <span class="attr">#[cfg(feature = <span class="string">"services"</span>)]
                             </span>{
                                 <span class="kw">let </span>sm = service::new_named_port_object::&lt;sm::UserInterface&gt;()<span class="question-mark">?</span>;
                                 <span class="kw">let </span>(info, session_handle) = sm.get().atmosphere_acknowledge_mitm_session(server_holder.service_name)<span class="question-mark">?</span>;
@@ -1560,20 +1560,20 @@
         }
     }
     
-    <span class="kw">pub fn </span>register_server&lt;S: IServerObject + <span class="lifetime">&#39;static</span>&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, handle: svc::Handle, service_name: sm::ServiceName) {
+    <span class="kw">pub fn </span>register_server&lt;S: IServerObject + <span class="lifetime">'static</span>&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, handle: svc::Handle, service_name: sm::ServiceName) {
         <span class="self">self</span>.server_holders.push(ServerHolder::new_server::&lt;S&gt;(handle, service_name));
     }
 
-    <span class="kw">pub fn </span>register_mitm_server&lt;S: IMitmServerObject + <span class="lifetime">&#39;static</span>&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, handle: svc::Handle, service_name: sm::ServiceName) {
+    <span class="kw">pub fn </span>register_mitm_server&lt;S: IMitmServerObject + <span class="lifetime">'static</span>&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, handle: svc::Handle, service_name: sm::ServiceName) {
         <span class="self">self</span>.server_holders.push(ServerHolder::new_mitm_server::&lt;S&gt;(handle, service_name));
     }
     
-    <span class="kw">pub fn </span>register_session&lt;S: ISessionObject + <span class="lifetime">&#39;static</span>&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, handle: svc::Handle, session_obj: mem::Shared&lt;S&gt;) {
+    <span class="kw">pub fn </span>register_session&lt;S: ISessionObject + <span class="lifetime">'static</span>&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, handle: svc::Handle, session_obj: mem::Shared&lt;S&gt;) {
         <span class="self">self</span>.server_holders.push(ServerHolder::new_session(handle, session_obj));
     }
     
-    <span class="attr">#[cfg(feature = <span class="string">&quot;services&quot;</span>)]
-    </span><span class="kw">pub fn </span>register_service_server&lt;S: IService + <span class="lifetime">&#39;static</span>&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="attr">#[cfg(feature = <span class="string">"services"</span>)]
+    </span><span class="kw">pub fn </span>register_service_server&lt;S: IService + <span class="lifetime">'static</span>&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>service_name = S::get_name();
         
         <span class="kw">let </span>sm = service::new_named_port_object::&lt;sm::UserInterface&gt;()<span class="question-mark">?</span>;
@@ -1583,8 +1583,8 @@
         <span class="prelude-val">Ok</span>(())
     }
     
-    <span class="attr">#[cfg(feature = <span class="string">&quot;services&quot;</span>)]
-    </span><span class="kw">pub fn </span>register_mitm_service_server&lt;S: IMitmService + <span class="lifetime">&#39;static</span>&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="attr">#[cfg(feature = <span class="string">"services"</span>)]
+    </span><span class="kw">pub fn </span>register_mitm_service_server&lt;S: IMitmService + <span class="lifetime">'static</span>&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>service_name = S::get_name();
 
         <span class="kw">let </span>sm = service::new_named_port_object::&lt;sm::UserInterface&gt;()<span class="question-mark">?</span>;
@@ -1600,7 +1600,7 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub fn </span>register_named_port_server&lt;S: INamedPort + <span class="lifetime">&#39;static</span>&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">pub fn </span>register_named_port_server&lt;S: INamedPort + <span class="lifetime">'static</span>&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>port_handle = svc::manage_named_port(S::get_port_name().as_ptr(), S::get_max_sesssions())<span class="question-mark">?</span>;
 
         <span class="self">self</span>.register_server::&lt;S&gt;(port_handle, sm::ServiceName::empty());

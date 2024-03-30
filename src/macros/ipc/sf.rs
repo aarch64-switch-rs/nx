@@ -34,6 +34,7 @@ macro_rules! ipc_sf_define_interface_trait {
         
                     #[allow(unused_assignments)]
                     #[allow(unused_parens)]
+                    #[allow(unused_mut)]
                     fn [<sf_server_impl_ $name>](&mut self, protocol: $crate::ipc::CommandProtocol, mut ctx: &mut $crate::ipc::server::ServerContext) -> $crate::result::Result<()> {
                         ctx.raw_data_walker = $crate::ipc::DataWalker::new(ctx.ctx.in_params.data_offset);
                         $( let $in_param_name = <$in_param_type as $crate::ipc::server::RequestCommandParameter<_>>::after_request_read(&mut ctx)?; )*

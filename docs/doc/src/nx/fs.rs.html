@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/fs.rs`."><title>fs.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-cb6f1f67f1bcd037.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.73.0-nightly (d06ca0ffa 2023-08-18)" data-channel="nightly" data-search-js="search-6dfdfced5eff6596.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-1596385f77d47ef2.css" data-theme-dark-css="dark-0a43001d3fc2282c.css" data-theme-ayu-css="ayu-fd19013d6ce078bf.css" ><script src="../../static.files/storage-db41da1a38ea3cb8.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-1596385f77d47ef2.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-0a43001d3fc2282c.css"><link rel="stylesheet" href="../../static.files/noscript-cffde32267a19fd6.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../nx/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/fs.rs`."><title>fs.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0-nightly (c9f8f3438 2024-03-27)" data-channel="nightly" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../nx/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1155,7 +1157,7 @@
     /// * `option`: [`FileReadOption`] value
     </span><span class="kw">fn </span>read(<span class="kw-2">&amp;mut </span><span class="self">self</span>, offset: usize, out_buf: <span class="kw-2">*mut </span>u8, out_buf_size: usize, option: FileReadOption) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt;;
 
-    <span class="doccomment">/// Writes data to a file (this one doesn&#39;t return the actual written size, thanks N)
+    <span class="doccomment">/// Writes data to a file (this one doesn't return the actual written size, thanks N)
     /// 
     /// # Arguments
     /// 
@@ -1214,7 +1216,7 @@
     /// * `out_entries`: The out [`DirectoryEntry`] array to fill
     </span><span class="kw">fn </span>read(<span class="kw-2">&amp;mut </span><span class="self">self</span>, out_entries: <span class="kw-2">&amp;mut </span>[DirectoryEntry]) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt;;
 
-    <span class="doccomment">/// Gets the [`Directory`]&#39;s entry count
+    <span class="doccomment">/// Gets the [`Directory`]'s entry count
     </span><span class="kw">fn </span>get_entry_count(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt;;
 }
 
@@ -1273,7 +1275,7 @@
     /// * `new_path`: The new path to use
     </span><span class="kw">fn </span>rename_directory(<span class="kw-2">&amp;mut </span><span class="self">self</span>, old_path: String, new_path: String) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
 
-    <span class="doccomment">/// Gets a path&#39;s [`DirectoryEntryType`]
+    <span class="doccomment">/// Gets a path's [`DirectoryEntryType`]
     /// 
     /// # Arguments
     /// 
@@ -1601,7 +1603,7 @@
         <span class="prelude-val">Ok</span>(t)
     }
 
-    <span class="comment">// TODO (writes): some sort of &quot;flush&quot; flag to not always flush after writing?
+    <span class="comment">// TODO (writes): some sort of "flush" flag to not always flush after writing?
 
     </span><span class="doccomment">/// Writes data from the given buffer
     /// 
@@ -1702,14 +1704,14 @@
 <span class="kw">fn </span>unpack_path_impl(path: String) -&gt; UnpackedPath {
     <span class="kw">let </span><span class="kw-2">mut </span>unpacked_path: UnpackedPath = UnpackedPath::new();
 
-    <span class="kw">for </span>sub_path <span class="kw">in </span>path.split(<span class="string">&#39;/&#39;</span>) {
+    <span class="kw">for </span>sub_path <span class="kw">in </span>path.split(<span class="string">'/'</span>) {
         <span class="kw">let </span><span class="kw-2">mut </span>cur_segment = PathSegment::new();
-        <span class="kw">if </span>sub_path.ends_with(<span class="string">&#39;:&#39;</span>) {
+        <span class="kw">if </span>sub_path.ends_with(<span class="string">':'</span>) {
             cur_segment.segment_type = PathSegmentType::Root;
             cur_segment.name = String::from(sub_path);
             unpacked_path.push(cur_segment);
         }
-        <span class="kw">else if </span>sub_path == <span class="string">&quot;..&quot; </span>{
+        <span class="kw">else if </span>sub_path == <span class="string">".." </span>{
             unpacked_path.pop();
         }
         <span class="kw">else </span>{
@@ -1731,22 +1733,22 @@
 <span class="kw">fn </span>pack_path(unpacked_path: UnpackedPath, add_root: bool) -&gt; String {
     <span class="kw">let </span><span class="kw-2">mut </span>path = String::new();
     <span class="kw">if </span>!add_root {
-        path.push(<span class="string">&#39;/&#39;</span>);
+        path.push(<span class="string">'/'</span>);
     }
     
     <span class="kw">for </span>path_segment <span class="kw">in </span>unpacked_path {
         <span class="kw">match </span>path_segment.segment_type {
             PathSegmentType::Root =&gt; {
                 <span class="kw">if </span>add_root {
-                    path = <span class="macro">format!</span>(<span class="string">&quot;{}{}/&quot;</span>, path, path_segment.name);
+                    path = <span class="macro">format!</span>(<span class="string">"{}{}/"</span>, path, path_segment.name);
                 }
             },
-            PathSegmentType::Normal =&gt; path = <span class="macro">format!</span>(<span class="string">&quot;{}{}/&quot;</span>, path, path_segment.name),
+            PathSegmentType::Normal =&gt; path = <span class="macro">format!</span>(<span class="string">"{}{}/"</span>, path, path_segment.name),
             <span class="kw">_ </span>=&gt; {}
         }
     }
     
-    <span class="comment">// Minimum path must be &quot;/&quot;
+    <span class="comment">// Minimum path must be "/"
     </span><span class="kw">if </span>path.len() &gt; <span class="number">1 </span>{
         path.pop();
     }
@@ -1779,7 +1781,7 @@
 
 <span class="kw">static </span><span class="kw-2">mut </span>G_FSPSRV_SESSION: sync::Locked&lt;<span class="prelude-ty">Option</span>&lt;mem::Shared&lt;<span class="kw">dyn </span>IFileSystemProxy&gt;&gt;&gt; = sync::Locked::new(<span class="bool-val">false</span>, <span class="prelude-val">None</span>);
 
-<span class="macro">define_bit_enum! </span>{
+<span class="macro">define_bit_enum!</span> {
     <span class="doccomment">/// Represents options for opening files
     </span>FileOpenOption (u32) {
         <span class="prelude-val">None </span>= <span class="number">0</span>,
@@ -1826,7 +1828,7 @@
 
 <span class="doccomment">/// Gets the global [`IFileSystemProxy`] shared object used for `fsp-srv` support
 </span><span class="attr">#[inline]
-</span><span class="kw">pub fn </span>get_fspsrv_session() -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>mem::Shared&lt;<span class="kw">dyn </span>IFileSystemProxy&gt;&gt; {
+</span><span class="kw">pub fn </span>get_fspsrv_session() -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>mem::Shared&lt;<span class="kw">dyn </span>IFileSystemProxy&gt;&gt; {
     <span class="kw">unsafe </span>{
         G_FSPSRV_SESSION.get().as_ref().ok_or(<span class="kw">super</span>::rc::ResultNotInitialized::make())
     }
@@ -1841,7 +1843,7 @@
 /// * `name`: The mount name
 /// * `fs`: The [`FileSystem`] shared object
 </span><span class="kw">pub fn </span>mount(name: <span class="kw-2">&amp;</span>str, fs: mem::Shared&lt;<span class="kw">dyn </span>FileSystem&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    <span class="kw">let </span>root_name = PathSegment::from(<span class="macro">format!</span>(<span class="string">&quot;{}:&quot;</span>, name), PathSegmentType::Root);
+    <span class="kw">let </span>root_name = PathSegment::from(<span class="macro">format!</span>(<span class="string">"{}:"</span>, name), PathSegmentType::Root);
     <span class="kw">unsafe </span>{
         G_DEVICES.get().push(FileSystemDevice::from(root_name, fs));
     }
@@ -1862,9 +1864,9 @@
     mount(name, proxy_fs)
 }
 
-<span class="doccomment">/// Mounts the system&#39;s SD card using `fsp-srv` support
+<span class="doccomment">/// Mounts the system's SD card using `fsp-srv` support
 /// 
-/// This will fail with [`ResultNotInitialized`][`super::rc::ResultNotInitialized`] if `fsp-srv` support isn&#39;t initialized
+/// This will fail with [`ResultNotInitialized`][`super::rc::ResultNotInitialized`] if `fsp-srv` support isn't initialized
 /// 
 /// # Arguments
 /// 
@@ -1897,7 +1899,7 @@
 
 <span class="doccomment">/// Returns the [`FileSystem`] corresponding to a given path
 /// 
-/// If there is a filesystem mounted as `demo`, calling this with `&quot;demo:/anything&quot;` will return an instance to that mounted filesystem
+/// If there is a filesystem mounted as `demo`, calling this with `"demo:/anything"` will return an instance to that mounted filesystem
 /// 
 /// # Arguments
 /// 
@@ -1911,7 +1913,7 @@
 
 <span class="doccomment">/// Returns the [`FileSystem`] and the processed path corresponding to a given path
 /// 
-/// If there is a filesystem mounted as `demo`, calling this with `&quot;demo:/anything&quot;` will return an instance to that mounted filesystem and `&quot;anything&quot;` as the processed path
+/// If there is a filesystem mounted as `demo`, calling this with `"demo:/anything"` will return an instance to that mounted filesystem and `"anything"` as the processed path
 /// 
 /// # Arguments
 /// 
@@ -1930,7 +1932,7 @@
 /// 
 /// * `path`: The path to use
 /// * `size`: The initial file size, default/IPC behaviour is to fill the file with zeros
-/// * `attribute`: The file attribute, default/IPC behaviour uses this to allow creating &quot;concatenation files&quot; (allowing 32GB+ files in FAT32 filesystems)
+/// * `attribute`: The file attribute, default/IPC behaviour uses this to allow creating "concatenation files" (allowing 32GB+ files in FAT32 filesystems)
 </span><span class="kw">pub fn </span>create_file(path: String, size: usize, attribute: FileAttribute) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
     <span class="kw">let </span>(fs, processed_path) = format_path(path)<span class="question-mark">?</span>;
 
@@ -1961,7 +1963,7 @@
 
 <span class="doccomment">/// Deletes a directory
 /// 
-/// Note that (in default/IPC behaviour) this won&#39;t succeed unless the directory is empty (see [`delete_directory_recursively`])
+/// Note that (in default/IPC behaviour) this won't succeed unless the directory is empty (see [`delete_directory_recursively`])
 /// 
 /// # Arguments
 /// 
@@ -1994,7 +1996,7 @@
     fs.get().clean_directory_recursively(processed_path)
 }
 
-<span class="doccomment">/// Gets a path&#39;s [`DirectoryEntryType`]
+<span class="doccomment">/// Gets a path's [`DirectoryEntryType`]
 /// 
 /// This can be use to easily check if a file/directory exists, or whether they actually are a file or a directory
 /// 
@@ -2077,7 +2079,7 @@
 /// 
 /// Essentially is a wrapper for checking the entry type and calling [`rename_file`] or [`rename_directory`] according to that
 /// 
-/// Note that, to minimize overhead, this should only be used if the entry type isn&#39;t known beforehand
+/// Note that, to minimize overhead, this should only be used if the entry type isn't known beforehand
 /// 
 /// # Arguments
 /// 
@@ -2109,7 +2111,7 @@
         <span class="prelude-val">Ok</span>(file) =&gt; file,
         <span class="prelude-val">Err</span>(rc) =&gt; {
             <span class="kw">if </span>fsp::rc::ResultPathNotFound::matches(rc) &amp;&amp; option.contains(FileOpenOption::Create()) {
-                <span class="comment">// Create the file if it doesn&#39;t exist and we were told to do so
+                <span class="comment">// Create the file if it doesn't exist and we were told to do so
                 </span>fs.get().create_file(processed_path.clone(), FileAttribute::None(), <span class="number">0</span>)<span class="question-mark">?</span>;
                 fs.get().open_file(processed_path, mode)<span class="question-mark">?
             </span>}
@@ -2203,9 +2205,9 @@
     fs.get().query_entry(processed_path, query_id, in_buf, in_buf_size, out_buf, out_buf_size)
 }
 
-<span class="doccomment">/// Sets the &quot;concatenation file&quot; attribute on a file
+<span class="doccomment">/// Sets the "concatenation file" attribute on a file
 /// 
-/// This essentially is a special case of [`query_entry`] to set an existing file as a &quot;concatenation file&quot;
+/// This essentially is a special case of [`query_entry`] to set an existing file as a "concatenation file"
 /// 
 /// # Arguments
 /// 

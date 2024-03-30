@@ -1,5 +1,4 @@
 use super::*;
-use crate::ipc::sf;
 use crate::mem;
 
 pub trait RequestCommandParameter {

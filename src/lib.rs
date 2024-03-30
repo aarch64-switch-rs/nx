@@ -44,7 +44,7 @@
 #![feature(fn_traits)]
 #![feature(negative_impls)]
 #![feature(const_ptr_write)]
-#![feature(stdsimd)]
+#![feature(const_intrinsic_copy)]
 #![macro_use]
 
 use core::arch::global_asm;

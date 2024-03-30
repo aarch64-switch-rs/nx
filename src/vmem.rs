@@ -1,5 +1,6 @@
 //! Virtual memory support
 
+use core::ptr;
 use crate::result::*;
 use crate::sync;
 use crate::svc;
@@ -50,7 +51,7 @@ static mut G_LOCK: sync::Mutex = sync::Mutex::new(false);
 /// Note that [`initialize()`] must have been called before for the region to be valid (although it's automatically called on [`rrt0`][`crate::rrt0`])
 pub fn get_address_space() -> VirtualRegion {
     unsafe {
-        let _ = sync::ScopedLock::new(&mut G_LOCK);
+        let _ = sync::ScopedLock::new(&mut *ptr::addr_of_mut!(G_LOCK));
         G_ADDRESS_SPACE
     }
 }
@@ -60,7 +61,7 @@ pub fn get_address_space() -> VirtualRegion {
 /// Note that [`initialize()`] must have been called before for the region to be valid (although it's automatically called on [`rrt0`][`crate::rrt0`])
 pub fn get_stack_region() -> VirtualRegion {
     unsafe {
-        let _ = sync::ScopedLock::new(&mut G_LOCK);
+        let _ = sync::ScopedLock::new(&mut *ptr::addr_of_mut!(G_LOCK));
         G_STACK_REGION
     }
 }
@@ -70,7 +71,7 @@ pub fn get_stack_region() -> VirtualRegion {
 /// Note that [`initialize()`] must have been called before for the region to be valid (although it's automatically called on [`rrt0`][`crate::rrt0`])
 pub fn get_heap_region() -> VirtualRegion {
     unsafe {
-        let _ = sync::ScopedLock::new(&mut G_LOCK);
+        let _ = sync::ScopedLock::new(&mut *ptr::addr_of_mut!(G_LOCK));
         G_HEAP_REGION
     }
 }
@@ -80,17 +81,20 @@ pub fn get_heap_region() -> VirtualRegion {
 /// Note that [`initialize()`] must have been called before for the region to be valid (although it's automatically called on [`rrt0`][`crate::rrt0`])
 pub fn get_legacy_alias_region() -> VirtualRegion {
     unsafe {
-        let _ = sync::ScopedLock::new(&mut G_LOCK);
+        let _ = sync::ScopedLock::new(&mut *ptr::addr_of_mut!(G_LOCK));
         G_LEGACY_ALIAS_REGION
     }
 }
 
-fn read_region_info(region: &mut VirtualRegion, address_info_id: svc::InfoId, size_info_id: svc::InfoId) -> Result<()> {
+fn read_region_info(region: *mut VirtualRegion, address_info_id: svc::InfoId, size_info_id: svc::InfoId) -> Result<()> {
     let address = svc::get_info(address_info_id, svc::CURRENT_PROCESS_PSEUDO_HANDLE, 0)? as usize;
     let size = svc::get_info(size_info_id, svc::CURRENT_PROCESS_PSEUDO_HANDLE, 0)? as usize;
 
-    region.start = address;
-    region.end = address + size;
+    unsafe {
+        // Safety: pointer will never be null here
+        (*region).start = address;
+        (*region).end = address + size;
+    }
     Ok(())
 }
 
@@ -101,11 +105,11 @@ fn read_region_info(region: &mut VirtualRegion, address_info_id: svc::InfoId, si
 /// This is automatically called on [`rrt0`][`crate::rrt0`]
 pub fn initialize() -> Result<()> {
     unsafe {
-        let _ = sync::ScopedLock::new(&mut G_LOCK);
-        read_region_info(&mut G_ADDRESS_SPACE, svc::InfoId::AslrRegionAddress, svc::InfoId::AslrRegionSize)?;
-        read_region_info(&mut G_STACK_REGION, svc::InfoId::StackRegionAddress, svc::InfoId::StackRegionSize)?;
-        read_region_info(&mut G_HEAP_REGION, svc::InfoId::HeapRegionAddress, svc::InfoId::HeapRegionSize)?;
-        read_region_info(&mut G_LEGACY_ALIAS_REGION, svc::InfoId::AliasRegionAddress, svc::InfoId::AliasRegionSize)?;
+        let _ = sync::ScopedLock::new(&mut *ptr::addr_of_mut!(G_LOCK));
+        read_region_info(ptr::addr_of_mut!(G_ADDRESS_SPACE), svc::InfoId::AslrRegionAddress, svc::InfoId::AslrRegionSize)?;
+        read_region_info(ptr::addr_of_mut!(G_STACK_REGION), svc::InfoId::StackRegionAddress, svc::InfoId::StackRegionSize)?;
+        read_region_info(ptr::addr_of_mut!(G_HEAP_REGION), svc::InfoId::HeapRegionAddress, svc::InfoId::HeapRegionSize)?;
+        read_region_info(ptr::addr_of_mut!(G_LEGACY_ALIAS_REGION), svc::InfoId::AliasRegionAddress, svc::InfoId::AliasRegionSize)?;
     }
     Ok(())
 }
@@ -119,7 +123,7 @@ pub fn initialize() -> Result<()> {
 /// * `size`: The size of the virtual memory to allocate
 pub fn allocate(size: usize) -> Result<*mut u8> {
     unsafe {
-        let _ = sync::ScopedLock::new(&mut G_LOCK);
+        let _ = sync::ScopedLock::new(&mut *ptr::addr_of_mut!(G_LOCK));
 
         let mut address = G_CURRENT_ADDRESS;
 

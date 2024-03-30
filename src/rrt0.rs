@@ -263,8 +263,9 @@ unsafe fn normal_entry(maybe_abi_cfg_entries_ptr: *const hbl::AbiConfigEntry, ma
 
     // Initialize the main thread object and initialize its TLS section
     // TODO: query memory for main thread stack address/size?
+    
     G_MAIN_THREAD = thread::Thread::new_remote(main_thread_handle, "MainThread", ptr::null_mut(), 0).unwrap();
-    thread::set_current_thread(&mut G_MAIN_THREAD);
+    thread::set_current_thread(ptr::addr_of_mut!(G_MAIN_THREAD));
 
     // Initialize virtual memory
     vmem::initialize().unwrap();
@@ -335,16 +336,15 @@ unsafe extern "C" fn __nx_rrt0_entry(arg0: usize, arg1: usize) {
         elf::relocate_with_dyn(aslr_base_address, start_dyn as *const elf::Dyn).unwrap();
 
         extern "C" {
-            static __bss_start: u8;
-            static __bss_end: u8;
+            static mut __bss_start: u8;
+            static mut __bss_end: u8;
         }
 
-        let bss_start_addr = &__bss_start as *const _ as *mut u64;
-        let bss_end_addr = &__bss_end as *const _ as *mut u64;
+        let bss_start_addr = ptr::addr_of_mut!(__bss_start) as *const _ as *mut u64;
+        let bss_end_addr = ptr::addr_of_mut!(__bss_end) as *const _ as *mut u64;
 
         let mut cur_bss_addr = bss_start_addr;
         while cur_bss_addr < bss_end_addr {
-            #[allow(invalid_reference_casting)]
             ptr::write_volatile(cur_bss_addr, 0);
             cur_bss_addr = cur_bss_addr.add(1);
         }
