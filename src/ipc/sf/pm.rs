@@ -1,9 +1,11 @@
 use crate::result::*;
 use crate::version;
 
+use super::ncm;
+
 ipc_sf_define_interface_trait! {
     trait IInformationInterface {
-        get_program_id [0, version::VersionInterval::all()]: (process_id: u64) => (program_id: u64);
+        get_program_id [0, version::VersionInterval::all()]: (process_id: u64) => (program_id: ncm::ProgramId);
     }
 }
 

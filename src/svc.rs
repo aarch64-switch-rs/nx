@@ -1,3 +1,4 @@
+use crate::ipc::sf::ncm;
 use crate::result::*;
 use crate::arm;
 use crate::util;
@@ -114,7 +115,7 @@ pub enum InfoId {
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct AttachProcessDebugEventInfo {
-    pub program_id: u64,
+    pub program_id: ncm::ProgramId,
     pub process_id: u64,
     pub name: util::CString<12>,
     pub flags: u32,

@@ -7,6 +7,8 @@ use crate::ipc::sf::mii;
 use crate::ipc::sf::hid;
 use crate::version;
 
+use super::ncm;
+
 pub mod rc;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -138,7 +140,7 @@ pub enum ConsoleFamily { // Note: unofficial name
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]
 pub struct AdminInfo {
-    pub program_id: u64,
+    pub program_id: ncm::ProgramId,
     pub access_id: AccessId,
     pub crc32_change_counter: u16,
     pub flags: AdminInfoFlags,
