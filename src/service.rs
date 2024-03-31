@@ -97,3 +97,5 @@ pub mod ldr;
 pub mod nfp;
 
 pub mod ncm;
+
+pub mod lr;

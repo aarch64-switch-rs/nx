@@ -359,3 +359,5 @@ pub mod usb;
 pub mod ldr;
 
 pub mod ncm;
+
+pub mod lr;
