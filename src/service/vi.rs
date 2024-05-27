@@ -18,6 +18,10 @@ impl IManagerDisplayService for ManagerDisplayService {
     fn destroy_managed_layer(&mut self, id: LayerId) -> Result<()> {
         ipc_client_send_request_command!([self.session.object_info; 2011] (id) => ())
     }
+
+    fn add_to_layer_stack(&mut self,stack:LayerStackId,layer:LayerId) -> crate::result::Result<()> {
+        ipc_client_send_request_command!([self.session.object_info; 6000] (stack, layer) => ())
+    }
 }
 
 ipc_client_define_object_default!(SystemDisplayService);

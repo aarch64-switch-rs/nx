@@ -254,6 +254,18 @@ impl Surface {
         system_display_service.get().set_layer_visibility(visible, self.layer_id)
     }
 
+    /// Adds a layer visibility stack
+    /// 
+    /// The Management display server maintains a stack of visible layers. This allows us to order our layer relative to other elements (e.g. visible or invisible to screenshots/recordings)
+    /// 
+    /// # Atguments
+    /// 
+    /// * `stack_type_id`: the type of layer to add to the visibility stack
+    pub fn push_layer_stack(&mut self, stack_type_id: vi::LayerStackId) -> Result<()> {
+        let manager_display_service = self.application_display_service.get().get_manager_display_service()?;
+        manager_display_service.get().add_to_layer_stack(stack_type_id,self.layer_id)
+    }
+
     /// Waits for the buffer event
     /// 
     /// # Arguments

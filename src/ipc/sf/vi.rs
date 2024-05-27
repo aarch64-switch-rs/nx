@@ -1,3 +1,5 @@
+use core::default;
+
 use crate::result::*;
 use crate::ipc::sf;
 use crate::mem;
@@ -26,10 +28,25 @@ pub enum DisplayServiceMode {
     Privileged = 1
 }
 
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[repr(u32)]
+pub enum LayerStackId {
+    #[default]
+    Default,
+    Lcd,
+    Screenshot,
+    Recording,
+    LastFrame,
+    Arbitrary,
+    ApplicationForDebug,
+    Null
+}
+
 ipc_sf_define_interface_trait! {
     trait IManagerDisplayService {
         create_managed_layer [2010, version::VersionInterval::all()]: (flags: LayerFlags, display_id: DisplayId, aruid: applet::AppletResourceUserId) => (id: LayerId);
         destroy_managed_layer [2011, version::VersionInterval::all()]: (id: LayerId) => ();
+        add_to_layer_stack [6000, version::VersionInterval::all()]: (stack: LayerStackId, layer: LayerId) => ();
     }
 }
 
