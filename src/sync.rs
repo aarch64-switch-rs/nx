@@ -217,7 +217,7 @@ impl<'a> Drop for ScopedLock<'a> {
 }
 
 /// Represents a value whose access is controlled by an inner [`Mutex`]
-pub struct Locked<T> {
+pub struct Locked<T: ?Sized> {
     lock_cell: UnsafeCell<Mutex>,
     object_cell: UnsafeCell<T>,
 }
@@ -271,3 +271,6 @@ impl<T: Copy> Locked<T> {
         obj_copy
     }
 }
+
+unsafe impl<T: ?Sized + Send> Sync for Locked<T> {}
+unsafe impl<T: ?Sized + Send> Send for Locked<T> {}

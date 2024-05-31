@@ -1,5 +1,3 @@
-use core::default;
-
 use crate::result::*;
 use crate::ipc::sf;
 use crate::mem;

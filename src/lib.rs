@@ -31,6 +31,8 @@
 //! Library examples are located at this other [repository](https://github.com/aarch64-switch-rs/examples)
 
 #![no_std]
+#![feature(allocator_api)]
+#![feature(slice_ptr_get)]
 #![allow(incomplete_features)]
 #![allow(non_snake_case)]
 #![feature(adt_const_params)]

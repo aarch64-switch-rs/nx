@@ -1,10 +1,13 @@
 //! Threading support and wrappers
 
+use crate::mem::alloc::Buffer;
 use crate::result::*;
 use crate::svc;
 use crate::mem::alloc;
 use crate::wait;
 use crate::util;
+use core::alloc::Allocator;
+use core::alloc::Layout;
 use core::ptr;
 use core::arch::asm;
 
@@ -182,10 +185,26 @@ impl Thread {
     /// * `name`: The desired thread name
     /// * `stack_size`: The desired stack size
     pub fn new<T: Copy, F: 'static + Fn(&T)>(entry: F, args: &T, name: &str, stack_size: usize) -> Result<Self> {
-        let stack = alloc::allocate(alloc::PAGE_ALIGNMENT, stack_size)?;
+        let stack: Buffer<u8> = Buffer::new(alloc::PAGE_ALIGNMENT, stack_size)?;
 
         let thread_entry = ThreadEntry::new(thread_entry_impl::<T, F>, entry, args);
-        Self::new_impl(svc::INVALID_HANDLE, ThreadState::NotInitialized, name, stack, stack_size, true, Some(thread_entry))
+        Self::new_impl(svc::INVALID_HANDLE, ThreadState::NotInitialized, name, stack.into_raw().cast(), stack_size, true, Some(thread_entry))
+    }
+    /// Creates a new [`Thread`] with an entrypoint + args, name and stack
+    /// 
+    /// Same as calling [`Thread::new_with_stack`] but with the stack being automatically allocated from heap
+    /// 
+    /// Note that it needs to be initialized ([`Thread::initialize()`]) before being started ([`Thread::start()`])
+    /// 
+    /// # Arguments
+    /// 
+    /// * `entry`: The entrypoint function, taking args
+    /// * `args`: The entrypoint arguments
+    /// * `name`: The desired thread name
+    /// * `stack`: The pre-allocated stack memory for the thread. SAFETY: Must live as long as the thread is running
+    pub fn new_with_buffer<T: Copy, F: 'static + Fn(&T)>(entry: F, args: &T, name: &str, stack: &mut [u8]) -> Result<Self> {
+        let thread_entry = ThreadEntry::new(thread_entry_impl::<T, F>, entry, args);
+        Self::new_impl(svc::INVALID_HANDLE, ThreadState::NotInitialized, name, stack.as_mut_ptr(), stack.len(), false, Some(thread_entry))
     }
 
     /// Initializes a [`Thread`]
@@ -287,7 +306,8 @@ impl Drop for Thread {
         }
 
         if self.owns_stack {
-            alloc::release(self.stack, alloc::PAGE_ALIGNMENT, self.stack_size);
+            // should only occur when using the global allocator, since the thread doesn't know what allocator was used
+            unsafe {::alloc::alloc::Global.deallocate( ptr::NonNull::new_unchecked(self.stack), Layout::from_size_align_unchecked(self.stack_size, alloc::PAGE_ALIGNMENT)) };
         }
 
         // If a thread is not created (like the main thread) the entry field will have nothing, and we definitely should not close threads we did not create...

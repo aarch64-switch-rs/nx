@@ -36,8 +36,7 @@ impl ReferenceCount {
         if !ptr.is_null() {
             unsafe {
                 if self.holder.is_null() {
-                    self.holder = alloc::new::<u64>().unwrap();
-                    *self.holder = 1;
+                    self.holder = Box::into_raw(Box::new(1));
                 }
                 else {
                     *self.holder += 1;
@@ -53,7 +52,7 @@ impl ReferenceCount {
                 if *self.holder == 0 {
                     // We created the variable as a Box, so we destroy it the same way
                     mem::drop(Box::from_raw(ptr));
-                    alloc::delete(self.holder);
+                    mem::drop(Box::from_raw(self.holder));
                     self.holder = ptr::null_mut();
                 }
             }
