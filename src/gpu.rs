@@ -1083,12 +1083,13 @@ impl Context {
 
 impl Drop for Context {
     /// Destroys the [`Context`], closing everything it opened when it was created
+    #[allow(unused_must_use)]
     fn drop(&mut self) {
-        let _ = self.nvdrv_service.get().close(self.nvhost_fd);
-        let _ = self.nvdrv_service.get().close(self.nvmap_fd);
-        let _ = self.nvdrv_service.get().close(self.nvhostctrl_fd);
+        self.nvdrv_service.get().close(self.nvhost_fd);
+        self.nvdrv_service.get().close(self.nvmap_fd);
+        self.nvdrv_service.get().close(self.nvhostctrl_fd);
 
-        drop(&mut core::mem::replace(&mut self.transfer_mem, Buffer::empty()));
-        let _ = svc::close_handle(self.transfer_mem_handle);
+        drop(core::mem::replace(&mut self.transfer_mem, Buffer::empty()));
+        svc::close_handle(self.transfer_mem_handle);
     }
 }

@@ -147,22 +147,6 @@ impl Surface {
         Ok(())
     }
 
-    fn finalize(&mut self) -> Result<()> {
-        self.binder.disconnect(ConnectionApi::Cpu, DisconnectMode::AllLocal)?;
-        self.binder.decrease_refcounts()?;
-
-        let buf_size = self.buffer_count as usize * self.single_buffer_size;
-        svc::set_memory_attribute(self.buffer_data.ptr, buf_size, 0, svc::MemoryAttribute::None())?;
-        
-        self.buffer_data.release();
-        (self.layer_destroy_fn)(self.layer_id, self.application_display_service.clone())?;
-
-        self.application_display_service.get().close_display(self.display_id)?;
-
-        svc::close_handle(self.buffer_event_handle)?;
-        svc::close_handle(self.vsync_event_handle)
-    }
-
     /// Dequeues a buffer, returning the buffer address, its size, its slot, whether it has fences, and those mentioned fences
     /// 
     /// # Arguments
@@ -313,7 +297,20 @@ impl Surface {
 
 impl Drop for Surface {
     /// Destroys the surface, closing everything it internally opened
+    #[allow(unused_must_use)] // we can't return from Drop, so just ignore result codes
     fn drop(&mut self) {
-        let _ = self.finalize();
+        self.binder.disconnect(ConnectionApi::Cpu, DisconnectMode::AllLocal);
+        self.binder.decrease_refcounts();
+
+        let buf_size = self.buffer_count as usize * self.single_buffer_size;
+        svc::set_memory_attribute(self.buffer_data.ptr, buf_size, 0, svc::MemoryAttribute::None());
+        
+        drop(core::mem::replace(&mut self.buffer_data, Buffer::empty()));
+        (self.layer_destroy_fn)(self.layer_id, self.application_display_service.clone());
+
+        self.application_display_service.get().close_display(self.display_id);
+
+        svc::close_handle(self.buffer_event_handle);
+        svc::close_handle(self.vsync_event_handle);
     }
 }
