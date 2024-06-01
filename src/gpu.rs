@@ -1,5 +1,6 @@
 //! Graphics and GPU support and utils
 
+use crate::mem::alloc::Buffer;
 use crate::result::*;
 use crate::service;
 use crate::mem;
@@ -1087,7 +1088,7 @@ impl Drop for Context {
         let _ = self.nvdrv_service.get().close(self.nvmap_fd);
         let _ = self.nvdrv_service.get().close(self.nvhostctrl_fd);
 
-        self.transfer_mem.release();
+        drop(&mut core::mem::replace(&mut self.transfer_mem, Buffer::empty()));
         let _ = svc::close_handle(self.transfer_mem_handle);
     }
 }

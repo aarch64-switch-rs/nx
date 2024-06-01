@@ -258,7 +258,7 @@ impl<T> Buffer<T> {
     /// Releases the [`Buffer`]
     /// 
     /// The [`Buffer`] becomes invalid after this
-    pub fn release(&mut self) {
+    fn release(&mut self) {
         unsafe {self.allocator.deallocate(NonNull::new_unchecked(self.ptr.cast()), self.layout);}
         *self = Self::empty();
     }
