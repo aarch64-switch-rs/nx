@@ -7,7 +7,7 @@ edition = "2021"
 [dependencies]
 paste = "1.0"
 logpacket = { git = "https://github.com/aarch64-switch-rs/logpacket" }
-linked_list_allocator = { version = "0.10.5", default-features = false, features = [ "const_mut_refs", "alloc_ref" ] }
+linked_list_allocator = { version = "0.10.5", default-features = false, features = [ "const_mut_refs", "alloc_ref", "use_spin" ] }
 arrayvec = { version = "0.7.4", default-features = false, features = [] }
 static_assertions = "1.1.0"
 

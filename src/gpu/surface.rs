@@ -305,7 +305,9 @@ impl Drop for Surface {
         let buf_size = self.buffer_count as usize * self.single_buffer_size;
         svc::set_memory_attribute(self.buffer_data.ptr, buf_size, 0, svc::MemoryAttribute::None());
         
-        drop(core::mem::replace(&mut self.buffer_data, Buffer::empty()));
+        // we know we can call release here because we're in the Drop impl
+        unsafe {self.buffer_data.release()};
+
         (self.layer_destroy_fn)(self.layer_id, self.application_display_service.clone());
 
         self.application_display_service.get().close_display(self.display_id);

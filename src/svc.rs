@@ -1,6 +1,7 @@
 use crate::ipc::sf::ncm;
 use crate::result::*;
 use crate::arm;
+use crate::thread;
 use crate::util;
 use crate::version;
 use core::ptr;
@@ -229,6 +230,18 @@ pub fn set_memory_attribute(address: Address, size: Size, mask: u32, value: Memo
 }
 
 #[inline(always)]
+pub fn set_memory_permission(address: Address, size: Size, value: MemoryPermission) -> Result<()> {
+    extern "C" {
+        fn __nx_svc_set_memory_permission(address: Address, size: Size, value: MemoryPermission) -> ResultCode;
+    }
+
+    unsafe {
+        let rc = __nx_svc_set_memory_permission(address, size, value);
+        pack(rc, ())
+    }
+}
+
+#[inline(always)]
 pub fn query_memory(address: Address) -> Result<(MemoryInfo, PageInfo)> {
     extern "C" {
         fn __nx_svc_query_memory(out_info: *mut MemoryInfo, out_page_info: *mut PageInfo, address: Address) -> ResultCode;
@@ -365,6 +378,19 @@ pub fn create_transfer_memory(address: Address, size: Size, permissions: MemoryP
         let rc = __nx_svc_create_transfer_memory(&mut handle, address, size, permissions);
         pack(rc, handle)
     }
+}
+
+#[inline(always)]
+pub fn transfer_memory_wait_for_permission(address: Address, permissions: MemoryPermission) -> Result<()> {
+
+    loop {
+        let (memory, _) = query_memory(address)?;
+        if memory.permission.contains(permissions) {
+            break;
+        }
+        crate::thread::sleep(100000);
+    }
+    Ok(())
 }
 
 #[inline(always)]

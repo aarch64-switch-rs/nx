@@ -1,7 +1,5 @@
 //! Allocation-specific result definitions
 
-use core::alloc::LayoutError;
-
 use crate::rc;
 
 pub const RESULT_SUBMODULE: u32 = 1000;

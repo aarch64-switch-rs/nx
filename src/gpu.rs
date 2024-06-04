@@ -16,6 +16,8 @@ use crate::service::vi::IManagerRootService;
 use crate::service::vi::IApplicationDisplayService;
 use crate::service::dispdrv;
 use crate::service::applet;
+use crate::svc::MemoryAttribute;
+use crate::svc::MemoryPermission;
 
 pub mod rc;
 
@@ -1088,8 +1090,18 @@ impl Drop for Context {
         self.nvdrv_service.get().close(self.nvhost_fd);
         self.nvdrv_service.get().close(self.nvmap_fd);
         self.nvdrv_service.get().close(self.nvhostctrl_fd);
+        
 
-        drop(core::mem::replace(&mut self.transfer_mem, Buffer::empty()));
-        svc::close_handle(self.transfer_mem_handle);
+        self.nvdrv_service.get().close(self.transfer_mem_handle);
+        self.nvdrv_service.get().get_session().close();
+        svc::transfer_memory_wait_for_permission(self.transfer_mem.ptr,  MemoryPermission::Write());
+
+        
+        svc::close_handle(self.transfer_mem_handle).unwrap();
+        //svc::set_memory_attribute(self.transfer_mem.ptr, self.transfer_mem.layout.size(), 0, MemoryAttribute::None());
+        //svc::set_memory_permission(self.transfer_mem.ptr, self.transfer_mem.layout.size(), MemoryPermission::Read() | MemoryPermission::Write()).unwrap();
+        // SAFETY: transfer_mem is immediately dropped after, so it can't be reused.
+        unsafe {self.transfer_mem.release()};
+
     }
 }
