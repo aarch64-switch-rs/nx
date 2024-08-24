@@ -321,11 +321,12 @@ unsafe extern "C" fn __nx_rrt0_entry(arg0: usize, arg1: usize) {
         exception_entry(exc_type, stack_top);
     }
     else {
-        // TODO: why does this return the address to __nx_rrt0_entry instead of actually _start?
-        // Since it's a valid .text address anyway, use QueryMemory SVC to find the actual start
+        // We actually want `_start` which is at the start of the .text region, but we don't know if
+        // it will be close enough to support lookup via `adr`.
+        // Since this function is in `.text` anyway, use QueryMemory SVC to find the actual start
         let self_base_address: *const u8;
         asm!(
-            "adr {}, _start",
+            "adr {}, __nx_rrt0_entry",
             out(reg) self_base_address
         );
 
