@@ -84,7 +84,7 @@ pub enum AllocFlags {
 pub struct NvMapAlloc {
     /// The input handle
     pub handle: u32,
-    /// The input heao mask
+    /// The input heap mask
     pub heap_mask: u32,
     /// The input [`AllocFlags`]
     pub flags: AllocFlags,
@@ -123,6 +123,35 @@ pub struct NvMapGetId {
 impl Ioctl for NvMapGetId {
     fn get_id() -> nv::IoctlId {
         nv::IoctlId::NvMapGetId
+    }
+
+    fn get_fd() -> IoctlFd {
+        IoctlFd::NvMap
+    }
+}
+
+/// Represents the `Free` command for [`NvMap`][`IoctlFd::NvMap`] fd
+/// 
+/// See <https://switchbrew.org/wiki/NV_services#NVMAP_IOC_FREE>
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[repr(C)]
+pub struct NvMapFree {
+    /// The input handle
+    pub handle: u32,
+    /// padding to guarantee 8-byte offset for address
+    pub _pad: u32,
+    /// address of the buffer
+    pub address: usize,
+    /// size of the buffer
+    pub size: u32,
+    /// flags for the opened handle (1 if requested as uncached)
+    pub flags: u32
+
+}
+
+impl Ioctl for NvMapFree {
+    fn get_id() -> nv::IoctlId {
+        nv::IoctlId::NvMapFree
     }
 
     fn get_fd() -> IoctlFd {

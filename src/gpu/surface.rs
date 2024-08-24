@@ -90,6 +90,8 @@ impl Surface {
         let usage = GraphicsAllocatorUsage::HardwareComposer() | GraphicsAllocatorUsage::HardwareRender() | GraphicsAllocatorUsage::HardwareTexture();
         let buf_size = self.buffer_count as usize * self.single_buffer_size;
 
+        self.buffer_data = alloc::Buffer::new(alloc::PAGE_ALIGNMENT, buf_size)?;
+
         let mut ioctl_create: ioctl::NvMapCreate = Default::default();
         ioctl_create.size = buf_size as u32;
         self.do_ioctl(&mut ioctl_create)?;
@@ -97,9 +99,6 @@ impl Surface {
         let mut ioctl_getid: ioctl::NvMapGetId = Default::default();
         ioctl_getid.handle = ioctl_create.handle;
         self.do_ioctl(&mut ioctl_getid)?;
-
-        self.buffer_data = alloc::Buffer::new(alloc::PAGE_ALIGNMENT, buf_size)?;
-        svc::set_memory_attribute(self.buffer_data.ptr, buf_size, 8, svc::MemoryAttribute::Uncached())?;
 
         let mut ioctl_alloc: ioctl::NvMapAlloc = Default::default();
         ioctl_alloc.handle = ioctl_create.handle;
@@ -109,6 +108,9 @@ impl Surface {
         ioctl_alloc.kind = Kind::Pitch;
         ioctl_alloc.address = self.buffer_data.ptr as usize;
         self.do_ioctl(&mut ioctl_alloc)?;
+
+        mem::flush_data_cache(self.buffer_data.ptr, buf_size);
+        svc::set_memory_attribute(self.buffer_data.ptr, buf_size, 8, svc::MemoryAttribute::Uncached())?;
 
         self.graphic_buf.header.magic = GraphicBufferHeader::MAGIC;
         self.graphic_buf.header.width = self.width;
@@ -302,11 +304,11 @@ impl Drop for Surface {
         self.binder.disconnect(ConnectionApi::Cpu, DisconnectMode::AllLocal);
         self.binder.decrease_refcounts();
 
-        let buf_size = self.buffer_count as usize * self.single_buffer_size;
-        svc::set_memory_attribute(self.buffer_data.ptr, buf_size, 0, svc::MemoryAttribute::None());
-        
-        // we know we can call release here because we're in the Drop impl
-        unsafe {self.buffer_data.release()};
+        let mut ioctl_free: ioctl::NvMapFree = Default::default();
+        ioctl_free.handle = self.graphic_buf.planes[0].map_handle;
+        let _ = self.do_ioctl(&mut ioctl_free);
+
+        svc::set_memory_attribute(self.buffer_data.ptr, self.buffer_data.layout.size(), 8, svc::MemoryAttribute::None());
 
         (self.layer_destroy_fn)(self.layer_id, self.application_display_service.clone());
 
