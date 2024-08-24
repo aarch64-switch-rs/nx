@@ -29,7 +29,6 @@ impl From<AllocError> for ResultCode {
 
 // TODO: be able to change the global allocator?
 
-
 /// Represents a heap allocator for this library
 pub unsafe trait AllocatorEx: Allocator {
     /// Allocates a new heap value
@@ -59,67 +58,6 @@ unsafe impl AllocatorEx for Global {}
 extern crate linked_list_allocator;
 use linked_list_allocator::Heap as LinkedListAllocator;
 
-unsafe impl<A: Allocator> GlobalAlloc for sync::Locked<A> {
-    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        self.get().allocate(layout).unwrap().as_ptr().as_mut_ptr()
-    }
-
-    unsafe fn dealloc(&self, addr: *mut u8, layout: Layout) {
-        self.get()
-            .deallocate(ptr::NonNull::new_unchecked(addr), layout);
-    }
-}
-
-struct LateInitAllocator {
-    initialized: bool,
-    inner: LinkedListAllocator,
-}
-
-impl LateInitAllocator {
-    const fn new() -> Self {
-        Self {
-            initialized: false,
-            inner: LinkedListAllocator::empty(),
-        }
-    }
-
-    unsafe fn init(&mut self, bottom: *mut u8, size: usize) {
-        assert!(!self.initialized, "Heap already initialized");
-        self.inner.init(bottom, size);
-        self.initialized = true;
-    }
-}
-
-unsafe impl Allocator for sync::Locked<LateInitAllocator> {
-    fn allocate(&self, layout: Layout) -> CoreResult<NonNull<[u8]>, AllocError> {
-        let handle = self.get();
-        // if compiled in debug mode, the allocator will panic when allocating without initialising the allocator
-        debug_assert!(handle.initialized, "Allocator not initialized");
-        // if compiled in release mode, the allocator will return an OOM error as there is no memory available for the allocator
-        if !handle.initialized {
-            return Err(AllocError);
-        }
-        match handle.inner.allocate_first_fit(layout) {
-            Ok(non_null_addr) => Ok(NonNull::slice_from_raw_parts(non_null_addr, layout.size())),
-            Err(_) => Err(AllocError),
-        }
-    }
-
-    unsafe fn deallocate(&self, ptr: NonNull<u8>, layout: Layout) {
-        self.get().inner.deallocate(ptr, layout);
-    }
-}
-
-unsafe impl GlobalAlloc for sync::Locked<LateInitAllocator> {
-    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        self.allocate(layout).unwrap().as_ptr().as_mut_ptr()
-    }
-
-    unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
-        self.deallocate(NonNull::new_unchecked(ptr), layout)
-    }
-}
-
 #[global_allocator]
 static GLOBAL_ALLOCATOR: linked_list_allocator::LockedHeap =
     linked_list_allocator::LockedHeap::empty();
@@ -145,7 +83,8 @@ pub fn initialize(heap: PointerAndSize) -> bool {
 ///
 /// The library may internally disable them in exceptional cases: for instance, to avoid exception handlers to allocate heap memory if the exception cause is actually an OOM situation
 pub fn is_enabled() -> bool {
-    false //GLOBAL_ALLOCATOR.get().initialized
+    let alloc_guard = GLOBAL_ALLOCATOR.lock();
+    alloc_guard.size() != 0
 }
 
 /// Represents a wrapped and manually managed heap value
