@@ -162,7 +162,7 @@ impl Thread {
     /// * `entry`: The entrypoint function, taking args
     /// * `args`: The entrypoint arguments
     /// * `name`: The desired thread name
-    /// * `stack`: The stack address
+    /// * `stack`: The stack address. SAFETY: Must live as long as the thread is running
     /// * `stack_size`: The stack size
     pub fn new_with_stack<T: Copy, F: 'static + Fn(&T)>(entry: F, args: &T, name: &str, stack: *mut u8, stack_size: usize) -> Result<Self> {
         result_return_unless!(!stack.is_null(), rc::ResultInvalidStack);
@@ -192,7 +192,7 @@ impl Thread {
     }
     /// Creates a new [`Thread`] with an entrypoint + args, name and stack
     /// 
-    /// Same as calling [`Thread::new_with_stack`] but with the stack being automatically allocated from heap
+    /// Same as calling [`Thread::new_with_stack`] but with the stack a pre-allocated slice
     /// 
     /// Note that it needs to be initialized ([`Thread::initialize()`]) before being started ([`Thread::start()`])
     /// 
@@ -201,7 +201,7 @@ impl Thread {
     /// * `entry`: The entrypoint function, taking args
     /// * `args`: The entrypoint arguments
     /// * `name`: The desired thread name
-    /// * `stack`: The pre-allocated stack memory for the thread. SAFETY: Must live as long as the thread is running
+    /// * `stack`: The pre-allocated stack memory for the thread
     pub fn new_with_buffer<T: Copy, F: 'static + Fn(&T)>(entry: F, args: &T, name: &str, stack: &mut [u8]) -> Result<Self> {
         let thread_entry = ThreadEntry::new(thread_entry_impl::<T, F>, entry, args);
         Self::new_impl(svc::INVALID_HANDLE, ThreadState::NotInitialized, name, stack.as_mut_ptr(), stack.len(), false, Some(thread_entry))
