@@ -7,6 +7,8 @@ use core::ptr;
 use core::mem;
 use core::marker;
 
+use crate::result::{Result, ResultBase};
+use crate::svc;
 use crate::util;
 
 pub mod alloc;
@@ -185,4 +187,29 @@ pub const fn align_up(value: usize, align: usize) -> usize {
 pub const fn align_down(value: usize, align: usize) -> usize {
     let inv_mask = align - 1;
     value & !inv_mask
+}
+
+/// Blocks thread until the memory region specified has the permission passed
+/// 
+/// # Arguments
+/// 
+/// * `address`: The address to query for memory permissions
+/// * `permissions`: The memory permission to wait on
+/// 
+/// Note that if multiple permissions are specified (e.g. `MemoryPermission::Read | MemoryPermission::Write`), the function will return if *any* specified permission is present.
+#[inline(always)]
+pub fn wait_for_permission(address: svc::Address, permission: svc::MemoryPermission, timeout: Option<usize>) -> Result<()> {
+    let mut iteration: usize = 0;
+    loop {
+        let (memory, _) = svc::query_memory(address)?;
+        if memory.permission.contains(permission) {
+            return Ok(());
+        }
+        if let Some(timeout) = timeout && timeout <= (100_000 * iteration) {
+            // The timeout has been set and has already expired
+            return Err(svc::rc::ResultTimedOut::make());
+        }
+        iteration += 1;
+        let _ = crate::thread::sleep(100_000);
+    }
 }

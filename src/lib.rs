@@ -47,6 +47,7 @@
 #![feature(negative_impls)]
 #![feature(const_ptr_write)]
 #![feature(const_intrinsic_copy)]
+#![feature(let_chains)]
 #![macro_use]
 
 use core::arch::global_asm;

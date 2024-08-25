@@ -1,18 +1,15 @@
 //! Allocator implementation and definitions
 
 use crate::result::*;
-use crate::sync;
 use crate::util::PointerAndSize;
 use core::mem;
 use core::ptr;
 use core::ptr::NonNull;
-use core::result::Result as CoreResult;
 
 extern crate alloc;
 use alloc::alloc::Allocator;
 
 use alloc::alloc::Global;
-use alloc::alloc::GlobalAlloc;
 pub use alloc::alloc::Layout;
 
 pub const PAGE_ALIGNMENT: usize = 0x1000;
@@ -55,13 +52,9 @@ pub unsafe trait AllocatorEx: Allocator {
 
 unsafe impl AllocatorEx for Global {}
 
-extern crate linked_list_allocator;
-use linked_list_allocator::Heap as LinkedListAllocator;
-
 #[global_allocator]
 static GLOBAL_ALLOCATOR: linked_list_allocator::LockedHeap =
     linked_list_allocator::LockedHeap::empty();
-//static GLOBAL_ALLOCATOR: sync::Locked<LateInitAllocator> = sync::Locked::new(false, LateInitAllocator::new());
 
 /// Initializes the global allocator with the given address and size.
 /// Returns a bool to indicate if the memory was consumed by the allocator
