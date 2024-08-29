@@ -1,10 +1,12 @@
 use crate::result::*;
+use crate::sync::Locked;
 use crate::wait;
 use crate::ipc::sf::IObject;
 use crate::ipc::sf::hipc::IHipcManager;
 use crate::ipc::sf::hipc::IMitmQueryService;
 use crate::mem;
 use super::*;
+use alloc::sync::Arc;
 use alloc::vec::Vec;
 
 #[cfg(feature = "services")]
@@ -115,6 +117,13 @@ impl RequestCommandParameter<sf::ProcessId> for sf::ProcessId {
 
 impl !ResponseCommandParameter for sf::ProcessId {}
 
+impl<S: sf::IObject> RequestCommandParameter<S> for Arc<Locked<S>> {
+    default fn after_request_read(_ctx: &mut ServerContext) -> Result<S> {
+        // TODO: implement this (added this placeholder impl for interfaces to actually be valid)
+        sf::hipc::rc::ResultUnsupportedOperation::make_err()
+    }
+}
+
 impl<S: sf::IObject + ?Sized> RequestCommandParameter<mem::Shared<S>> for mem::Shared<S> {
     fn after_request_read(_ctx: &mut ServerContext) -> Result<Self> {
         // TODO: implement this (added this placeholder impl for interfaces to actually be valid)
@@ -174,6 +183,7 @@ pub enum WaitHandleType {
     Session
 }
 
+#[derive(Default)]
 pub struct DomainTable {
     pub table: Vec<cmif::DomainObjectId>,
     pub domains: Vec<ServerHolder>,
@@ -417,6 +427,12 @@ impl<S: IMitmService> MitmQueryService<S> {
     }
 }
 
+impl<S: IMitmService> Default for MitmQueryService<S> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<S: IMitmService> sf::IObject for MitmQueryService<S> {
     ipc_sf_object_impl_default_command_metadata!();
 
@@ -625,17 +641,14 @@ impl<const P: usize> ServerManager<P> {
                             cmif::client::write_command_on_msg_buffer(&mut tmp_ctx, cmif::CommandType::Invalid, 0);
                         }
 
-                        match svc::reply_and_receive(&handle, 1, 0, -1) {
-                            Err(rc) => {
-                                if svc::rc::ResultSessionClosed::matches(rc) {
-                                    should_close_session = true;
-                                    break;
-                                }
-                                else {
-                                    return Err(rc);
-                                }
-                            },
-                            _ => {}
+                        if let Err(rc) = unsafe {svc::reply_and_receive(&handle, 1, 0, -1)} {
+                            if svc::rc::ResultSessionClosed::matches(rc) {
+                                should_close_session = true;
+                                break;
+                            }
+                            else {
+                                return Err(rc);
+                            }
                         };
 
                         unsafe { core::ptr::copy(get_msg_buffer(), ipc_buf_backup.as_mut_ptr(), ipc_buf_backup.len()) };
@@ -697,7 +710,7 @@ impl<const P: usize> ServerManager<P> {
         }
 
         let reply_impl = || -> Result<()> {
-            match svc::reply_and_receive(&handle, 0, handle, 0) {
+            match unsafe {svc::reply_and_receive(&handle, 0, handle, 0)} {
                 Err(rc) => {
                     if svc::rc::ResultTimedOut::matches(rc) || svc::rc::ResultSessionClosed::matches(rc) {
                         Ok(())
@@ -782,7 +795,7 @@ impl<const P: usize> ServerManager<P> {
     }
 
     pub fn register_named_port_server<S: INamedPort + 'static>(&mut self) -> Result<()> {
-        let port_handle = svc::manage_named_port(S::get_port_name().as_ptr(), S::get_max_sesssions())?;
+        let port_handle = unsafe {svc::manage_named_port(S::get_port_name().as_ptr(), S::get_max_sesssions())?};
 
         self.register_server::<S>(port_handle, sm::ServiceName::empty());
         Ok(())
@@ -800,15 +813,12 @@ impl<const P: usize> ServerManager<P> {
 
     pub fn loop_process(&mut self) -> Result<()> {
         loop {
-            match self.process() {
-                Err(rc) => {
-                    // TODO: handle results properly here
-                    if svc::rc::ResultCancelled::matches(rc) {
-                        break;
-                    }
-                    return Err(rc);
-                },
-                _ => {}
+            if let Err(rc) = self.process() {
+                // TODO: handle results properly here
+                if svc::rc::ResultCancelled::matches(rc) {
+                    break;
+                }
+                return Err(rc);
             }
         }
 

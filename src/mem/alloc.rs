@@ -27,12 +27,15 @@ impl From<AllocError> for ResultCode {
 // TODO: be able to change the global allocator?
 
 /// Represents a heap allocator for this library
+/// # SAFETY: As with the regular Allocator trait, the `delete` function can only be called on pointers produced by the same implementation's `new`
 pub unsafe trait AllocatorEx: Allocator {
     /// Allocates a new heap value
-    fn new<T>(&mut self) -> Result<*mut T> {
+    #[allow(clippy::new_ret_no_self)]
+    #[allow(clippy::wrong_self_convention)]
+    fn new<T>(&self) -> Result<NonNull<T>> {
         let layout = Layout::new::<T>();
         match self.allocate(layout) {
-            Ok(allocation) => Ok(allocation.as_ptr().cast()),
+            Ok(allocation) => Ok(allocation.cast()),
             Err(_) => rc::ResultOutOfMemory::make_err()
         }
     }
@@ -44,7 +47,7 @@ pub unsafe trait AllocatorEx: Allocator {
     /// # Arguments
     ///
     /// * `t`: Heap value address
-    fn delete<T>(&mut self, t: *mut T) {
+    fn delete<T>(&self, t: *mut T) {
         let layout = Layout::new::<T>();
         unsafe { self.deallocate(NonNull::new_unchecked(t.cast()), layout) };
     }
@@ -68,7 +71,7 @@ pub fn initialize(heap: PointerAndSize) -> bool {
             .lock()
             .init(heap.address, heap.size)
     };
-    return false;
+    false
 }
 
 
@@ -128,19 +131,17 @@ impl<T> Buffer<T> {
     }
 
     pub fn into_raw(self) -> *mut [T] {
-        unsafe {
-            core::slice::from_raw_parts_mut(self.ptr, self.layout.size() / mem::size_of::<T>())
-                as *mut [T]
-        }
+        core::ptr::slice_from_raw_parts_mut(self.ptr, self.layout.size() / mem::size_of::<T>())
     }
 
     /// Releases the [`Buffer`]
     ///
     /// The [`Buffer`] becomes invalid after this
-    pub unsafe fn release(&mut self) {
+    pub fn release(&mut self) {
         if self.is_valid() {
-            self.allocator
-                .deallocate(NonNull::new_unchecked(self.ptr.cast()), self.layout);
+            unsafe {
+                self.allocator.deallocate(NonNull::new_unchecked(self.ptr.cast()), self.layout);
+            }
             self.ptr = core::ptr::null_mut();
         }
         

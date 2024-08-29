@@ -109,8 +109,10 @@ impl Surface {
         ioctl_alloc.address = self.buffer_data.ptr as usize;
         self.do_ioctl(&mut ioctl_alloc)?;
 
-        mem::flush_data_cache(self.buffer_data.ptr, buf_size);
-        svc::set_memory_attribute(self.buffer_data.ptr, buf_size, 8, svc::MemoryAttribute::Uncached())?;
+        unsafe {
+            mem::flush_data_cache(self.buffer_data.ptr, buf_size);
+            svc::set_memory_attribute(self.buffer_data.ptr, buf_size, 8, svc::MemoryAttribute::Uncached())?;
+        }
 
         self.graphic_buf.header.magic = GraphicBufferHeader::MAGIC;
         self.graphic_buf.header.width = self.width;
@@ -308,7 +310,7 @@ impl Drop for Surface {
         ioctl_free.handle = self.graphic_buf.planes[0].map_handle;
         let _ = self.do_ioctl(&mut ioctl_free);
 
-        svc::set_memory_attribute(self.buffer_data.ptr, self.buffer_data.layout.size(), 8, svc::MemoryAttribute::None());
+        unsafe {svc::set_memory_attribute(self.buffer_data.ptr, self.buffer_data.layout.size(), 8, svc::MemoryAttribute::None())};
 
         (self.layer_destroy_fn)(self.layer_id, self.application_display_service.clone());
 

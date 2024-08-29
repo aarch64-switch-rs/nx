@@ -154,7 +154,9 @@ impl<T: ?Sized> Eq for Shared<T> {}
 /// 
 /// * `address`: Memory region address
 /// * `size`: Memory region size
+/// # SAFETY: Null pointers are OK as we are just doing cache invalidation, not accessing the pointer.
 #[inline(always)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub fn flush_data_cache(address: *mut u8, size: usize) {
     extern "C" {
         fn __nx_mem_flush_data_cache(address: *mut u8, size: usize);

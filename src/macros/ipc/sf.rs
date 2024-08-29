@@ -30,6 +30,7 @@ macro_rules! ipc_sf_define_interface_trait {
             pub trait $intf: $crate::ipc::sf::IObject {
                 $(
                     #[allow(unused_parens)]
+                    #[allow(clippy::too_many_arguments)]
                     fn $name(&mut self, $( $in_param_name: $in_param_type ),* ) -> $crate::result::Result<( $( $out_param_type ),* )>;
         
                     #[allow(unused_assignments)]
@@ -61,6 +62,7 @@ macro_rules! ipc_sf_define_interface_trait {
                     }
                 )*
 
+                #[allow(clippy::missing_transmute_annotations)]
                 fn get_sf_command_metadata_table(&self) -> $crate::ipc::sf::CommandMetadataTable {
                     vec! [
                         $(
@@ -115,6 +117,7 @@ macro_rules! ipc_sf_define_control_interface_trait {
                     }
                 )*
 
+                #[allow(clippy::missing_transmute_annotations)]
                 fn get_sf_command_metadata_table(&self) -> $crate::ipc::sf::CommandMetadataTable {
                     vec! [
                         $(

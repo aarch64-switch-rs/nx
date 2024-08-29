@@ -30,7 +30,7 @@ impl<T: Copy> ResponseCommandParameter<T> for T {
 
 impl<const A: BufferAttribute, T> RequestCommandParameter for sf::Buffer<A, T> {
     fn before_request_write(buffer: &Self, _walker: &mut DataWalker, ctx: &mut CommandContext) -> Result<()> {
-        ctx.add_buffer(&buffer)
+        ctx.add_buffer(buffer)
     }
 
     fn before_send_sync_request(_buffer: &Self, _walker: &mut DataWalker, _ctx: &mut CommandContext) -> Result<()> {

@@ -1653,30 +1653,22 @@ impl CoreData {
     }
 }
 
-pub fn compute_crc16(data_buf: *const u8, data_size: usize, base_crc: u16, reverse_endianess: bool) -> u16 {
-    let mut temp_crc = base_crc as u32;
-    
-    unsafe {
-        for i in 0..data_size {
-            for _ in 0..8 {
-                let apply_shift = (temp_crc & 0x8000) != 0;
-                temp_crc <<= 1;
-
-                if apply_shift {
-                    temp_crc ^= 0x1021;
-                    temp_crc &= 0xFFFF;
-                }
+pub fn compute_crc16(buffer: &[u8], base_crc: u16, reverse_endianess: bool) -> u16{
+    let crc = buffer.iter().copied().map(u16::from).fold(base_crc, |mut crc, val| {
+        for _ in 0..8 {
+            let apply_shift = (crc & 0x8000) !=0;
+            crc <<= 1;
+            
+            if apply_shift {
+                crc ^= 0x1021;
             }
-
-            temp_crc ^= *data_buf.offset(i as isize) as u32;
         }
-    }
+        crc ^ val
+    });
 
-    let crc = temp_crc as u16;
     if reverse_endianess {
         crc.swap_bytes()
-    }
-    else {
+    } else {
         crc
     }
 }
@@ -1698,6 +1690,12 @@ pub struct StoreData {
 }
 const_assert!(core::mem::size_of::<StoreData>() == 0x44);
 
+macro_rules! struct_to_slice {
+    ($val:expr) => {
+        unsafe {core::slice::from_raw_parts($val as *const _ as *const u8, core::mem::size_of_val($val))}
+    };
+}
+
 impl StoreData {
     #[cfg(feature = "services")]
     pub fn from_charinfo(char_info: CharInfo) -> Result<Self> {
@@ -1708,22 +1706,22 @@ impl StoreData {
             device_crc: 0
         };
 
-        store_data.data_crc = compute_crc16(&store_data as *const _ as *const u8, core::mem::size_of::<StoreData>() - core::mem::size_of::<u16>(), 0, true);
+        store_data.data_crc = compute_crc16(&struct_to_slice!(&store_data)[..core::mem::offset_of!(StoreData, device_crc)], 0, true);
 
         let device_id = get_device_id()?;
-        let base_device_crc = compute_crc16(&device_id as *const _ as *const u8, core::mem::size_of::<CreateId>(), 0, false);
-        store_data.device_crc = compute_crc16(&store_data as *const _ as *const u8, core::mem::size_of::<StoreData>(), base_device_crc, true);
+        let base_device_crc = compute_crc16(struct_to_slice!(&device_id), 0, false);
+        store_data.device_crc = compute_crc16(struct_to_slice!(&store_data), base_device_crc, true);
 
         Ok(store_data)
     }
 
     #[cfg(feature = "services")]
     pub fn is_valid(&self) -> bool {
-        let new_data_crc = compute_crc16(&self as *const _ as *const u8, core::mem::size_of::<StoreData>() - core::mem::size_of::<u16>(), 0, false);
+        let new_data_crc = compute_crc16(&struct_to_slice!(self)[..core::mem::offset_of!(StoreData, device_crc)], 0, false);
         
         if let Ok(device_id) = get_device_id() {
-            let base_new_device_crc = compute_crc16(&device_id as *const _ as *const u8, core::mem::size_of::<CreateId>(), 0, false);
-            let new_device_crc = compute_crc16(self as *const _ as *const u8, core::mem::size_of::<StoreData>(), base_new_device_crc, false);
+            let base_new_device_crc = compute_crc16(struct_to_slice!(&device_id), 0, false);
+            let new_device_crc = compute_crc16(struct_to_slice!(self), base_new_device_crc, false);
 
             (new_data_crc == 0) && (new_device_crc == 0)
         }

@@ -100,7 +100,7 @@ pub struct Rela {
 /// 
 /// * `base_address`: The base address to relocate
 /// * `start_dyn`: The [`Dyn`] reference
-pub fn relocate_with_dyn(base_address: *const u8, start_dyn: *const Dyn) -> Result<()> {
+pub unsafe fn relocate_with_dyn(base_address: *const u8, start_dyn: *const Dyn) -> Result<()> {
     unsafe {
         let mut rel_offset_v: Option<usize> = None;
         let mut rel_entry_size_v: Option<usize> = None;
@@ -127,33 +127,27 @@ pub fn relocate_with_dyn(base_address: *const u8, start_dyn: *const Dyn) -> Resu
 
         if let (Some(rel_offset), Some(rel_count)) = (rel_offset_v, rel_count_v) {
             let rel_entry_size = rel_entry_size_v.unwrap_or(core::mem::size_of::<Rel>());
-            let rel_base = base_address.offset(rel_offset as isize);
+            let rel_base = base_address.add(rel_offset);
 
             for i in 0..rel_count {
-                let rel = rel_base.offset((i * rel_entry_size) as isize) as *const Rel;
-                match (*rel).info.symbol.relocation_type {
-                    RelocationType::AArch64Relative => {
-                        let relocation_offset = base_address.offset((*rel).offset as isize) as *mut *const u8;
-                        *relocation_offset = base_address;
-                    },
-                    _ => {}
+                let rel = rel_base.add(i * rel_entry_size) as *const Rel;
+                if (*rel).info.symbol.relocation_type  == RelocationType::AArch64Relative {
+                    let relocation_offset = base_address.add((*rel).offset) as *mut *const u8;
+                    *relocation_offset = base_address;
                 }
             }
         }
         
         if let (Some(rela_offset), Some(rela_count)) = (rela_offset_v, rela_count_v) {
             let rela_entry_size = rela_entry_size_v.unwrap_or(core::mem::size_of::<Rela>());
-            let rela_base = base_address.offset(rela_offset as isize);
+            let rela_base = base_address.add(rela_offset);
 
             for i in 0..rela_count {
-                let rela = rela_base.offset((i * rela_entry_size) as isize) as *const Rela;
-                match (*rela).info.symbol.relocation_type {
-                    RelocationType::AArch64Relative => {
-                        let relocation_offset = base_address.offset((*rela).offset as isize) as *mut *const u8;
+                let rela = rela_base.add(i * rela_entry_size) as *const Rela;
+                if (*rela).info.symbol.relocation_type == RelocationType::AArch64Relative {
+                        let relocation_offset = base_address.add((*rela).offset) as *mut *const u8;
                         *relocation_offset = base_address.offset((*rela).addend as isize);
-                    },
-                    _ => {}
-                }
+                    }
             }
         }
     }

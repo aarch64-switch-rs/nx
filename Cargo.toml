@@ -20,3 +20,6 @@ fs = ["services"]
 input = ["services"]
 la = ["services"]
 rand = ["services"]
+
+#[lints.rust]
+#unsafe_op_in_unsafe_fn = "deny"

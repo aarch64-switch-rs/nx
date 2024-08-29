@@ -652,11 +652,12 @@ impl FileSystemDevice {
         Self { root_name, fs }
     }
 }
-static mut G_DEVICES: sync::Locked<Vec<FileSystemDevice>> = sync::Locked::new(false, Vec::new());
+static mut G_DEVICES: sync::Locked<Vec<FileSystemDevice>> = sync::Locked::new(Vec::new());
 
 fn find_device_by_name(name: &PathSegment) -> Result<mem::Shared<dyn FileSystem>> {
     unsafe {
-        for device in G_DEVICES.get() {
+        let device_guard = G_DEVICES.lock();
+        for device in device_guard.iter() {
             if device.root_name.name == name.name {
                 return Ok(device.fs.clone());
             }
@@ -665,7 +666,7 @@ fn find_device_by_name(name: &PathSegment) -> Result<mem::Shared<dyn FileSystem>
     }
 }
 
-static mut G_FSPSRV_SESSION: sync::Locked<Option<mem::Shared<dyn IFileSystemProxy>>> = sync::Locked::new(false, None);
+static mut G_FSPSRV_SESSION: sync::Locked<Option<mem::Shared<dyn IFileSystemProxy>>> = sync::Locked::new(None);
 
 define_bit_enum! {
     /// Represents options for opening files
@@ -685,7 +686,7 @@ define_bit_enum! {
 /// * `session`: The shared object
 pub fn initialize_fspsrv_session_with(session: mem::Shared<dyn IFileSystemProxy>) {
     unsafe {
-        G_FSPSRV_SESSION.set(Some(session));
+        *G_FSPSRV_SESSION.lock() = Some(session);
     }
 }
 
@@ -700,7 +701,7 @@ pub fn initialize_fspsrv_session() -> Result<()> {
 #[inline]
 pub fn is_fspsrv_session_initialized() -> bool {
     unsafe {
-        G_FSPSRV_SESSION.get().is_some()
+        G_FSPSRV_SESSION.lock().is_some()
     }
 }
 
@@ -708,15 +709,15 @@ pub fn is_fspsrv_session_initialized() -> bool {
 #[inline]
 pub fn finalize_fspsrv_session() {
     unsafe {
-        G_FSPSRV_SESSION.set(None);
+        *G_FSPSRV_SESSION.lock() = None;
     }
 }
 
 /// Gets the global [`IFileSystemProxy`] shared object used for `fsp-srv` support
 #[inline]
-pub fn get_fspsrv_session() -> Result<&'static mem::Shared<dyn IFileSystemProxy>> {
+pub fn get_fspsrv_session() -> Result<mem::Shared<dyn IFileSystemProxy>> {
     unsafe {
-        G_FSPSRV_SESSION.get().as_ref().ok_or(super::rc::ResultNotInitialized::make())
+        G_FSPSRV_SESSION.lock().clone().ok_or(super::rc::ResultNotInitialized::make())
     }
 }
 
@@ -731,7 +732,7 @@ pub fn get_fspsrv_session() -> Result<&'static mem::Shared<dyn IFileSystemProxy>
 pub fn mount(name: &str, fs: mem::Shared<dyn FileSystem>) -> Result<()> {
     let root_name = PathSegment::from(format!("{}:", name), PathSegmentType::Root);
     unsafe {
-        G_DEVICES.get().push(FileSystemDevice::from(root_name, fs));
+        G_DEVICES.lock().push(FileSystemDevice::from(root_name, fs));
     }
 
     Ok(())
@@ -772,14 +773,14 @@ pub fn mount_sd_card(name: &str) -> Result<()> {
 pub fn unmount(name: &str) {
     let root_name = String::from(name);
     unsafe {
-        G_DEVICES.get().retain(|dev| dev.root_name.name != root_name);
+        G_DEVICES.lock().retain(|dev| dev.root_name.name != root_name);
     }
 }
 
 /// Unmounts all filesystems
 pub fn unmount_all() {
     unsafe {
-        G_DEVICES.get().clear();
+        G_DEVICES.lock().clear();
     }
 }
 

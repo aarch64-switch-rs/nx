@@ -37,28 +37,16 @@ impl Version {
 
 impl Ord for Version {
     fn cmp(&self, other: &Self) -> cmp::Ordering {
-        if self.major < other.major {
-            cmp::Ordering::Less
-        }
-        else if self.major == other.major {
-            if self.minor < other.minor {
-                cmp::Ordering::Less
-            }
-            else if self.minor == other.minor {
-                if self.micro < other.micro {
-                    cmp::Ordering::Less
-                }
-                else {
-                    cmp::Ordering::Equal
-                }
-            }
-            else {
-                cmp::Ordering::Greater
-            }
-        }
-        else {
-            cmp::Ordering::Greater
-        }
+        match self.major.cmp(&other.major) {
+            cmp::Ordering::Equal => {},
+            other => return other
+        };
+        match self.minor.cmp(&other.minor) {
+            cmp::Ordering::Equal => {},
+            other => return other
+        };
+
+        self.micro.cmp(&other.micro)
     }
 }
 
@@ -155,7 +143,7 @@ impl VersionInterval {
     }
 }
 
-static mut G_VERSION: sync::Locked<Version> = sync::Locked::new(false, Version::empty());
+static mut G_VERSION: sync::Locked<Version> = sync::Locked::new(Version::empty());
 
 /// Sets the global [`Version`], used in the library as the system [`Version`]
 /// 

@@ -71,14 +71,13 @@ fn do_abort(level: AbortLevel, rc: ResultCode) {
         }
     }
     else if level == AbortLevel::Panic() {
-        let res: Result<()> = Err(rc);
-        res.unwrap();
+        panic!("{rc:?}");
     }
     else if level == AbortLevel::ProcessExit() {
         rrt0::exit(rc);
     }
     else if level == AbortLevel::SvcBreak() {
-        svc::break_(svc::BreakReason::Panic, &rc as *const _ as *const u8, mem::size_of_val(&rc));
+        let _ = unsafe {svc::r#break(svc::BreakReason::Panic, &rc as *const _ as *const u8, mem::size_of_val(&rc))};
     }
     
     // Note: this won't be reached if the abort succeeds

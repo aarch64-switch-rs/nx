@@ -38,7 +38,7 @@ impl sf::IObject for Directory {
 }
 
 impl IDirectory for Directory {
-    fn read(&mut self, out_entries: sf::OutMapAliasBuffer<fsp::DirectoryEntry>) -> Result<u64> {
+    fn read(&mut self, mut out_entries: sf::OutMapAliasBuffer<fsp::DirectoryEntry>) -> Result<u64> {
         self.dir_obj.get().read(out_entries.get_mut_slice())
     }
 

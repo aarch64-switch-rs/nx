@@ -239,6 +239,7 @@ impl CommandHeader {
         count
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub const fn new(command_type: u32, send_static_count: u32, send_buffer_count: u32, receive_buffer_count: u32, exchange_buffer_count: u32, data_word_count: u32, receive_static_count: u32, has_special_header: bool) -> Self {
         let mut bits_1: u32 = 0;
         write_bits!(0, 15, bits_1, command_type);
@@ -256,10 +257,7 @@ impl CommandHeader {
     }
 
     pub const fn get_command_type(&self) -> u32 {
-        let raw_type = read_bits!(0, 15, self.bits_1);
-        unsafe {
-            mem::transmute(raw_type)
-        }
+        read_bits!(0, 15, self.bits_1)
     }
 
     pub const fn get_send_static_count(&self) -> u32 {
@@ -829,16 +827,13 @@ impl CommandContext {
     }
 
     pub fn pop_object(&mut self) -> Result<ObjectInfo> {
-        let object_info: ObjectInfo;
         if self.object_info.is_domain() {
             let domain_object_id = self.out_params.pop_domain_object()?;
-            object_info = ObjectInfo::from_domain_object_id(self.object_info.handle, domain_object_id);
-        }
-        else {
+            Ok(ObjectInfo::from_domain_object_id(self.object_info.handle, domain_object_id))
+        } else {
             let handle: sf::MoveHandle = self.out_params.pop_handle()?;
-            object_info = ObjectInfo::from_handle(handle.handle);
+            Ok(ObjectInfo::from_handle(handle.handle))
         }
-        Ok(object_info)
     }
 }
 

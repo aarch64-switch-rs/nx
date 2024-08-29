@@ -91,7 +91,7 @@ impl<const A: BufferAttribute, T> Buffer<A, T> {
         }
     }
 
-    pub fn get_mut_var(&self) -> &mut T {
+    pub fn get_mut_var(&mut self) -> &mut T {
         unsafe {
             &mut *self.buf
         }
@@ -109,7 +109,7 @@ impl<const A: BufferAttribute, T> Buffer<A, T> {
         }
     }
 
-    pub fn get_mut_slice(&self) -> &mut [T] {
+    pub fn get_mut_slice(&mut self) -> &mut [T] {
         unsafe {
             core::slice::from_raw_parts_mut(self.buf, self.count)
         }
@@ -134,8 +134,8 @@ impl<const A: BufferAttribute> Buffer<A, u8> {
     pub fn set_string(&mut self, string: String) {
         unsafe {
             // First memset to zero so that it will be a valid nul-terminated string
-            core::ptr::write_bytes(self.buf as *mut u8, 0, self.count);
-            core::ptr::copy(string.as_ptr(), self.buf as *mut u8, core::cmp::min(self.count - 1, string.len()));
+            core::ptr::write_bytes(self.buf, 0, self.count);
+            core::ptr::copy(string.as_ptr(), self.buf, core::cmp::min(self.count - 1, string.len()));
         }
     }
 }
@@ -165,7 +165,7 @@ impl<const M: HandleMode> Handle<M> {
 pub type CopyHandle = Handle<{HandleMode::Copy}>;
 pub type MoveHandle = Handle<{HandleMode::Move}>;
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct ProcessId {
     pub process_id: u64
 }
@@ -176,7 +176,9 @@ impl ProcessId {
     }
 
     pub const fn new() -> ProcessId {
-        Self::from(0)
+        Self {
+            process_id: 0
+        }
     }
 }
 
@@ -219,6 +221,7 @@ impl<E: Copy + Clone, T: Copy + Clone> EnumAsPrimitiveType<E, T> {
     }
 }
 
+#[derive(Default)]
 pub struct Session {
     pub object_info: ObjectInfo
 }

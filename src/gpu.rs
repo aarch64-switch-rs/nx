@@ -966,7 +966,7 @@ impl Context {
     /// * `transfer_mem_size`: The transfer memory size to use
     pub fn from(vi_srv: mem::Shared<dyn sf::IObject>, application_display_srv: mem::Shared<dyn IApplicationDisplayService>, nvdrv_srv: mem::Shared<dyn INvDrvServices>, transfer_mem_size: usize) -> Result<Self> {
         let transfer_mem = alloc::Buffer::new(alloc::PAGE_ALIGNMENT, transfer_mem_size)?;
-        let transfer_mem_handle = svc::create_transfer_memory(transfer_mem.ptr, transfer_mem_size, svc::MemoryPermission::None())?;
+        let transfer_mem_handle = unsafe {svc::create_transfer_memory(transfer_mem.ptr, transfer_mem_size, svc::MemoryPermission::None())?};
         nvdrv_srv.get().initialize(transfer_mem_size as u32, sf::Handle::from(svc::CURRENT_PROCESS_PSEUDO_HANDLE), sf::Handle::from(transfer_mem_handle))?;
 
         let (nvhost_fd, nvhost_err) = nvdrv_srv.get().open(sf::Buffer::from_array(NVHOST_AS_GPU_PATH.as_bytes()))?;

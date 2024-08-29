@@ -245,7 +245,7 @@ impl Context {
         
         let shmem_handle = applet_res.get().get_shared_memory_handle()?;
         let shmem_address = vmem::allocate(shmem::SHMEM_SIZE)?;
-        svc::map_shared_memory(shmem_handle.handle, shmem_address, shmem::SHMEM_SIZE, svc::MemoryPermission::Read())?;
+        unsafe {svc::map_shared_memory(shmem_handle.handle, shmem_address, shmem::SHMEM_SIZE, svc::MemoryPermission::Read())?};
 
         hid_srv.get().activate_npad(sf::ProcessId::new())?;
         hid_srv.get().set_supported_npad_style_set(sf::ProcessId::new(), supported_style_tags)?;
@@ -317,7 +317,7 @@ impl Drop for Context {
     /// Destroys the [`Context`], unmapping the shared-memory and closing it, and also closing its [`IHidServer`] session
     fn drop(&mut self) {
         let _ = self.hid_service.get().deactivate_npad(sf::ProcessId::new());
-        let _ = svc::unmap_shared_memory(self.shmem_handle, self.shmem_ptr as *mut u8, shmem::SHMEM_SIZE);
+        let _ = unsafe {svc::unmap_shared_memory(self.shmem_handle, self.shmem_ptr, shmem::SHMEM_SIZE)};
         let _ = svc::close_handle(self.shmem_handle);
     }
 }

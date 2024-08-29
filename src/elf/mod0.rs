@@ -45,15 +45,13 @@ impl Header {
 /// 
 /// * `base_address`: The base address
 #[inline]
-pub fn find_start_dyn_address(base_address: *const u8) -> Result<*const u8> {
-    unsafe {
-        let module_start = base_address as *const ModuleStart;
-        let mod_offset = (*module_start).magic_offset as isize;
-        let module = base_address.offset(mod_offset) as *const Header;
-        result_return_unless!((*module).magic == Header::MAGIC, super::rc::ResultInvalidModuleMagic);
+pub unsafe fn find_start_dyn_address(base_address: *const u8) -> Result<*const u8> {
+    let module_start = base_address as *const ModuleStart;
+    let mod_offset = (*module_start).magic_offset as isize;
+    let module = base_address.offset(mod_offset) as *const Header;
+    result_return_unless!((*module).magic == Header::MAGIC, super::rc::ResultInvalidModuleMagic);
 
-        let dyn_offset = mod_offset + (*module).dynamic as isize;
-        let start_dyn = base_address.offset(dyn_offset);
-        Ok(start_dyn)
-    }
+    let dyn_offset = mod_offset + (*module).dynamic as isize;
+    let start_dyn = base_address.offset(dyn_offset);
+    Ok(start_dyn)
 }

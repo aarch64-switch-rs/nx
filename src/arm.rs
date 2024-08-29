@@ -154,14 +154,15 @@ pub struct ThreadContext {
     pub tpidr: u64
 }
 
-/// Flushes memory cache
+/// Flushes memory cache at a certain memory location
 /// 
 /// # Argument
 /// 
 /// * `address`: Memory address
 /// * `size`: Memory size
+///   SAFETY: `address` must be valid pointer.
 #[inline(always)]
-pub fn cache_flush(address: *mut u8, size: usize) {
+pub unsafe fn cache_flush(address: *mut u8, size: usize) {
     extern "C" {
         fn __nx_arm_cache_flush(address: *mut u8, size: usize);
     }

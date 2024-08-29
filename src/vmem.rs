@@ -7,7 +7,7 @@ use crate::svc;
 use crate::mem::alloc;
 
 /// Represents a virtual region of memory
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default)]
 pub struct VirtualRegion {
     /// The start address of the region
     pub start: usize,
@@ -18,7 +18,7 @@ pub struct VirtualRegion {
 impl VirtualRegion {
     /// Creates an empty [`VirtualRegion`] with invalid address values
     #[inline]
-    pub const fn new() -> Self {
+    pub const fn null() -> Self {
         Self { start: 0, end: 0 }
     }
 
@@ -39,12 +39,12 @@ pub enum VirtualRegionType {
     LegacyAlias
 }
 
-static mut G_STACK_REGION: VirtualRegion = VirtualRegion::new();
-static mut G_HEAP_REGION: VirtualRegion = VirtualRegion::new();
-static mut G_LEGACY_ALIAS_REGION: VirtualRegion = VirtualRegion::new();
-static mut G_ADDRESS_SPACE: VirtualRegion = VirtualRegion::new();
+static mut G_STACK_REGION: VirtualRegion = VirtualRegion::null();
+static mut G_HEAP_REGION: VirtualRegion = VirtualRegion::null();
+static mut G_LEGACY_ALIAS_REGION: VirtualRegion = VirtualRegion::null();
+static mut G_ADDRESS_SPACE: VirtualRegion = VirtualRegion::null();
 static mut G_CURRENT_ADDRESS: usize = 0;
-static mut G_LOCK: sync::Mutex = sync::Mutex::new(false);
+static mut G_LOCK: sync::Mutex = sync::Mutex::new();
 
 /// Gets the current process's address space [`VirtualRegion`]
 /// 
@@ -136,7 +136,7 @@ pub fn allocate(size: usize) -> Result<*mut u8> {
 
             let current_address = address + size;
             let (memory_info, _) = svc::query_memory(address as *mut u8)?;
-            let info_address = memory_info.base_address as usize + memory_info.size as usize;
+            let info_address = memory_info.base_address + memory_info.size;
             if memory_info.state != svc::MemoryState::Free {
                 address = info_address;
                 continue;

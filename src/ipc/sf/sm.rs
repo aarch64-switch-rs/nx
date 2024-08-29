@@ -22,32 +22,10 @@ impl ServiceName {
     pub const fn new(name: &str) -> Self {
         let mut raw_name: [u8; 8] =  [0; 8];
 
-        // TODO: make this prettier, like a proper for-loop?
         let name_bytes = name.as_bytes();
-        if name_bytes.len() >= 1 {
-            raw_name[0] = name_bytes[0];
-        }
-        if name_bytes.len() >= 2 {
-            raw_name[1] = name_bytes[1];
-        }
-        if name_bytes.len() >= 3 {
-            raw_name[2] = name_bytes[2];
-        }
-        if name_bytes.len() >= 4 {
-            raw_name[3] = name_bytes[3];
-        }
-        if name_bytes.len() >= 5 {
-            raw_name[4] = name_bytes[4];
-        }
-        if name_bytes.len() >= 6 {
-            raw_name[5] = name_bytes[5];
-        }
-        if name_bytes.len() >= 7 {
-            raw_name[6] = name_bytes[6];
-        }
-        if name_bytes.len() >= 8 {
-            raw_name[7] = name_bytes[7];
-        }
+        let copy_len = util::const_usize_min(7, name_bytes.len());
+
+        unsafe {core::ptr::copy_nonoverlapping(name_bytes.as_ptr(), raw_name.as_mut_ptr(), copy_len)}
 
         Self { name: util::CString::from_raw(raw_name) }
     }

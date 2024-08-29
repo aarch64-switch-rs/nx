@@ -41,7 +41,7 @@ pub trait IService: client::IClientObject {
 /// 
 /// For more information about this, check [`INamedPort`]
 pub fn new_named_port_object<T: INamedPort + 'static>() -> Result<mem::Shared<T>> {
-    let handle = svc::connect_to_named_port(T::get_name().as_ptr())?;
+    let handle = unsafe {svc::connect_to_named_port(T::get_name().as_ptr())}?;
     let mut object = T::new(sf::Session::from_handle(handle));
     object.post_initialize()?;
     Ok(mem::Shared::new(object))

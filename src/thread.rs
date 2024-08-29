@@ -53,7 +53,7 @@ impl ThreadEntry {
     }
 }
 
-extern fn thread_entry_impl<T: Copy, F: 'static + Fn(&T)>(thread_ref_v: *mut u8) -> ! {
+unsafe extern fn thread_entry_impl<T: Copy, F: 'static + Fn(&T)>(thread_ref_v: *mut u8) -> ! {
     let thread_ref = thread_ref_v as *mut Thread;
     set_current_thread(thread_ref);
 
@@ -94,7 +94,7 @@ pub struct Thread {
     pub reserved_4: [u8; 0x20]
 }
 
-impl Thread {
+impl Thread { 
     /// Creates an empty, thus invalid [`Thread`]
     pub const fn empty() -> Self {
         Self {
@@ -149,7 +149,11 @@ impl Thread {
     /// * `stack`: The remote stack address
     /// * `stack_size`: The remote stack size
     #[inline]
+    #[allow(clippy::not_unsafe_ptr_arg_deref)]
     pub fn new_remote(handle: svc::Handle, name: &str, stack: *mut u8, stack_size: usize) -> Result<Self> {
+        //result_return_unless!(!stack.is_null(), rc::ResultInvalidStack);
+        //result_return_unless!(!stack.is_aligned_to(alloc::PAGE_ALIGNMENT), rc::ResultInvalidStack);
+
         Self::new_impl(handle, ThreadState::Started, name, stack, stack_size, false, None)
     }
     
@@ -164,9 +168,10 @@ impl Thread {
     /// * `name`: The desired thread name
     /// * `stack`: The stack address. SAFETY: Must live as long as the thread is running
     /// * `stack_size`: The stack size
+    #[allow(clippy::not_unsafe_ptr_arg_deref)]
     pub fn new_with_stack<T: Copy, F: 'static + Fn(&T)>(entry: F, args: &T, name: &str, stack: *mut u8, stack_size: usize) -> Result<Self> {
         result_return_unless!(!stack.is_null(), rc::ResultInvalidStack);
-        // TODO: also check alignment
+        result_return_unless!(!stack.is_aligned_to(alloc::PAGE_ALIGNMENT), rc::ResultInvalidStack);
 
         let thread_entry = ThreadEntry::new(thread_entry_impl::<T, F>, entry, args);
         Self::new_impl(svc::INVALID_HANDLE, ThreadState::NotInitialized, name, stack, stack_size, false, Some(thread_entry))
@@ -225,7 +230,7 @@ impl Thread {
             priority_value = get_current_thread().get_priority()?;
         }
 
-        self.handle = svc::create_thread(self.entry.as_ref().unwrap().entry_impl, self as *mut _ as *mut u8, (self.stack as usize + self.stack_size) as *const u8, priority_value, processor_id)?;
+        self.handle = unsafe {svc::create_thread(self.entry.as_ref().unwrap().entry_impl, self as *mut _ as *mut u8, (self.stack as usize + self.stack_size) as *const u8, priority_value, processor_id)?};
         
         self.state = ThreadState::Initialized;
         Ok(())
@@ -364,14 +369,12 @@ pub fn get_thread_local_region() -> *mut ThreadLocalRegion {
 /// # Arguments
 /// 
 /// * `thread_ref`: The [`Thread`] address to set
-pub fn set_current_thread(thread_ref: *mut Thread) {
-    unsafe {
+pub unsafe fn set_current_thread(thread_ref: *mut Thread) {
         (*thread_ref).self_ref = thread_ref;
         (*thread_ref).name_addr = &mut (*thread_ref).name as *mut _ as *mut u8;
 
         let tlr = get_thread_local_region();
         (*tlr).thread_ref = thread_ref;
-    }
 }
 
 /// Get's the current [`Thread`] reference
@@ -381,6 +384,7 @@ pub fn set_current_thread(thread_ref: *mut Thread) {
 pub fn get_current_thread() -> &'static mut Thread {
     unsafe {
         let tlr = get_thread_local_region();
+        debug_assert!(!tlr.is_null());
         &mut *(*tlr).thread_ref
     }
 }

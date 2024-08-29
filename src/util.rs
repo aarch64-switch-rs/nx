@@ -59,7 +59,7 @@ impl PointerAndSize {
     }
 }
 
-const fn const_usize_min(a: usize, b: usize) -> usize {
+pub(crate) const fn const_usize_min(a: usize, b: usize) -> usize {
     // TODO: const min traits
     if a > b { b } else { a }
 }
@@ -190,6 +190,12 @@ impl<const S: usize> CString<S> {
         S
     }
 
+    /// Returns whether this [`CString`] is empty
+    #[inline(always)]
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     /// Sets a `&str` as the contents of this [`CString`]
     /// 
     /// This will copy at max `S - 1` bytes/chars in order to ensure that the string is NUL-terminated
@@ -274,19 +280,6 @@ impl<const S: usize> CString16<S> {
         Self { c_str: raw_bytes }
     }
 
-    /// Creates a [`CString16`] from a given `&str`
-    /// 
-    /// This creates an empty [`CString16`] and calls [`CString16::set_str`] on it
-    /// 
-    /// # Arguments
-    /// 
-    /// * `string`: The `&str` to use
-    pub fn from_str(string: &str) -> Result<Self> {
-        let mut cstr = Self::new();
-        cstr.set_str(string)?;
-        Ok(cstr)
-    }
-
     /// Creates a [`CString16`] from a given `String`
     /// 
     /// This creates an empty [`CString16`] and calls [`CString16::set_string`] on it
@@ -349,6 +342,12 @@ impl<const S: usize> CString16<S> {
         S
     }
 
+    /// Returns if this [`CString16`] is empty
+    #[inline(always)]
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     /// Sets a `&str` as the contents of this [`CString16`]
     /// 
     /// This will copy at max `S - 1` bytes/chars in order to ensure that the string is NUL-terminated
@@ -390,20 +389,25 @@ impl<const S: usize> CString16<S> {
     }
 }
 
+impl<const S: usize> core::str::FromStr for CString16<S> {
+    type Err = ResultCode;
+    fn from_str(s: &str) -> core::result::Result<Self, Self::Err> {
+        let mut cstr = Self::new();
+        cstr.set_str(s)?;
+        Ok(cstr)
+    }
+}
+
 /// Same as C's `strlen()`
 /// 
 /// # Arguments
 /// 
 /// * `str_ptr`: The `const char*`-like ptr to use
-pub fn str_ptr_len(str_ptr: *const u8) -> usize {
-    unsafe {
-        let mut iter_ptr = str_ptr as *mut u8;
-        while (*iter_ptr) != 0 {
-            iter_ptr = iter_ptr.add(1);
-        }
-
-        iter_ptr.offset_from(str_ptr) as usize
-    }
+/// # SAFETY: There must be a null byte present in the string, or at some point after the pointer and within valid memory. This function will read infinitely until a null is read or crash occurs.
+pub unsafe fn str_ptr_len(str_ptr: *const u8) -> usize {
+    (0usize..)
+    .find(|&offset| (*str_ptr.add(offset)) == 0)
+    .expect("There will be a null byte (or crash) eventually")
 }
 
 /// Copies one `&str` into another, and returns the destination `&str`
@@ -412,7 +416,7 @@ pub fn str_ptr_len(str_ptr: *const u8) -> usize {
 /// 
 /// * `dst_str`: The destination `&str`
 /// * `src_str`: The source `&str`
-pub fn str_copy<'a>(dst_str: &'a str, src_str: &'a str) -> &'a str {
+pub fn str_copy<'d>(dst_str: &'d str, src_str: &str) -> &'d str {
     let dst_str_len = dst_str.len().min(src_str.len());
 
     unsafe {

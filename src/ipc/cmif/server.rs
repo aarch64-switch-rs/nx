@@ -173,7 +173,7 @@ pub fn read_control_command_from_msg_buffer(ctx: &mut CommandContext) -> Result<
 
         ctx.in_params.data_offset = data_offset;
         ctx.in_params.data_size -= DATA_PADDING + cmem::size_of::<DataHeader>() as u32;
-        Ok(cmem::transmute(control_rq_id))
+        Ok(cmem::transmute::<u32, ControlRequestId>(control_rq_id))
     }
 }
 

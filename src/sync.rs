@@ -14,7 +14,7 @@ fn get_current_thread_handle() -> u32 {
 }
 
 #[inline(always)]
-fn load_exclusive(ptr: *mut u32) -> u32 {
+unsafe fn load_exclusive(ptr: *mut u32) -> u32 {
     let value: u32;
     unsafe {
         asm!(
@@ -27,7 +27,7 @@ fn load_exclusive(ptr: *mut u32) -> u32 {
 }
 
 #[inline(always)]
-fn store_exclusive(ptr: *mut u32, value: u32) -> i32 {
+unsafe fn store_exclusive(ptr: *mut u32, value: u32) -> i32 {
     let res: i32;
     unsafe {
         asm!(
@@ -47,7 +47,7 @@ fn clear_exclusive() {
     }
 }
 
-fn lock_impl(handle_ref: *mut u32) {
+unsafe fn lock_impl(handle_ref: *mut u32) {
     let thr_handle = get_current_thread_handle();
     
     let mut value = load_exclusive(handle_ref);
@@ -64,10 +64,9 @@ fn lock_impl(handle_ref: *mut u32) {
             continue;
         }
 
-        match svc::arbitrate_lock(value & !HANDLE_WAIT_MASK, handle_ref as *mut u8, thr_handle) {
-            Err(rc) => abort::abort(abort::AbortLevel::SvcBreak(), rc),
-            _ => {}
-        };
+        if let Err(rc) = svc::arbitrate_lock(value & !HANDLE_WAIT_MASK, handle_ref as *mut u8, thr_handle) {
+            abort::abort(abort::AbortLevel::SvcBreak(), rc);
+        }
 
         value = load_exclusive(handle_ref);
         if (value & !HANDLE_WAIT_MASK) == thr_handle {
@@ -77,7 +76,7 @@ fn lock_impl(handle_ref: *mut u32) {
     }
 }
 
-fn unlock_impl(handle_ref: *mut u32) {
+unsafe fn unlock_impl(handle_ref: *mut u32) {
     let thr_handle = get_current_thread_handle();
     
     let mut value = load_exclusive(handle_ref);
@@ -100,7 +99,7 @@ fn unlock_impl(handle_ref: *mut u32) {
     }
 }
 
-fn try_lock_impl(handle_ref: *mut u32) -> bool {
+unsafe fn try_lock_impl(handle_ref: *mut u32) -> bool {
     let thr_handle = get_current_thread_handle();
 
     loop {
@@ -121,74 +120,39 @@ fn try_lock_impl(handle_ref: *mut u32) -> bool {
 
 /// Represents a locking/unlocking type
 pub struct Mutex {
-    value: u32,
-    is_recursive: bool,
-    counter: u32,
-    thread_handle: u32,
+    tag: u32,
+    _thread_handle: u32,
 }
 
 impl Mutex {
     /// Creates a new [`Mutex`]
-    /// 
-    /// # Arguments
-    /// 
-    /// * `is_recursive`: Whether the [`Mutex`] is recursive (in that case, multiple (un)locking attempts in the same thread are allowed)
     #[inline]
-    pub const fn new(is_recursive: bool) -> Self {
-        Self { value: 0, is_recursive, counter: 0, thread_handle: 0 }
+    pub const fn new() -> Self {
+        Self { tag: 0, _thread_handle: 0 }
     }
 
     /// Locks the [`Mutex`]
     pub fn lock(&mut self) {
-        let mut do_lock = true;
-        if self.is_recursive {
-            do_lock = false;
-            let thr_handle = get_current_thread_handle();
-            if self.thread_handle != thr_handle {
-                do_lock = true;
-                self.thread_handle = thr_handle;
-            }
-            self.counter += 1;
-        }
-
-        if do_lock {
-            lock_impl(&mut self.value);
-        }
+        // SAFETY: We know this is OK as we are passing a valid &mut u32
+        unsafe {lock_impl(&mut self.tag)};
     }
+
+    /// Checks whether the [`Mutex`] is locked by the current thread.
+    pub fn is_locked_by_current_thread(&self) -> bool {
+        // If the lock is held by the current thread, then this thread write it with an exlusive lock
+        // therefore it should never require an exclusive read to observe our own handle.
+        self.tag & !HANDLE_WAIT_MASK == get_current_thread_handle()
+    } 
 
     /// Unlocks the [`Mutex`]
     pub fn unlock(&mut self) {
-        let mut do_unlock = true;
-        if self.is_recursive {
-            do_unlock = false;
-            self.counter -= 1;
-            if self.counter == 0 {
-                self.thread_handle = 0;
-                do_unlock = true;
-            }
-        }
-
-        if do_unlock {
-            unlock_impl(&mut self.value);
-        }
+        // SAFETY: We know this is OK as we are passing a valid &mut u32
+        unsafe {unlock_impl(&mut self.tag)};
     }
 
     /// Attempts to lock the [`Mutex`], returning whether it was successful
     pub fn try_lock(&mut self) -> bool {
-        if self.is_recursive {
-            let thr_handle = get_current_thread_handle();
-            if self.thread_handle != thr_handle {
-                if !try_lock_impl(&mut self.value) {
-                    return false;
-                }
-                self.thread_handle = thr_handle;
-            }
-            self.counter += 1;
-            true
-        }
-        else {
-            try_lock_impl(&mut self.value)
-        }
+        unsafe {try_lock_impl(&mut self.tag)}
     }
 }
 
@@ -218,11 +182,14 @@ impl<'a> Drop for ScopedLock<'a> {
 
 /// Represents a value whose access is controlled by an inner [`Mutex`]
 pub struct Locked<T: ?Sized> {
-    lock_cell: UnsafeCell<Mutex>,
-    object_cell: UnsafeCell<T>,
+    pub (self) lock_cell: UnsafeCell<Mutex>,
+    pub(self) object_cell: UnsafeCell<T>,
 }
 
 impl<T> Locked<T> {
+    pub fn is_locked(&self) -> bool {
+        unsafe { (*self.lock_cell.get()).tag != 0}
+    }
     /// Creates a new [`Locked`] with a value
     /// 
     /// # Arguments
@@ -230,47 +197,93 @@ impl<T> Locked<T> {
     /// * `is_recursive`: Whether the inner [`Mutex`] is recursive
     /// * `t`: The value to store
     #[inline]
-    pub const fn new(is_recursive: bool, t: T) -> Self {
-        Self { lock_cell: UnsafeCell::new(Mutex::new(is_recursive)), object_cell: UnsafeCell::new(t) }
+    pub const fn new(t: T) -> Self {
+        Self { lock_cell: UnsafeCell::new(Mutex::new()), object_cell: UnsafeCell::new(t) }
     }
 
-    /// Gets a reference to the inner [`Mutex`]
+    /*/// Gets a reference to the inner [`Mutex`]
     #[inline]
-    pub const fn get_lock(&self) -> &mut Mutex {
+    const fn get_lock(&self) -> &mut Mutex {
         unsafe {
             &mut *self.lock_cell.get()
         }
-    }
+    }*/
 
+    /*
     /// Gets a reference of the value, doing a lock-unlock operation in the process
     pub fn get(&self) -> &mut T {
-        self.get_lock().lock();
-        let obj_ref = unsafe {
-            &mut *self.object_cell.get()
-        };
-        self.get_lock().unlock();
-        obj_ref
+        unsafe {
+            (&mut *self.lock_cell.get()).lock();
+            let obj_ref = &mut *self.object_cell.get();
+            (&mut *self.lock_cell.get()).unlock();
+            obj_ref
+        }
     }
+    */
 
     /// Sets a value, doing a lock-unlock operation in the process
     pub fn set(&mut self, t: T) {
-        self.get_lock().lock();
-        self.object_cell = UnsafeCell::new(t);
-        self.get_lock().unlock();
+        unsafe {
+            (&mut *self.lock_cell.get()).lock();
+            self.object_cell = UnsafeCell::new(t);
+            (&mut *self.lock_cell.get()).unlock();
+        }
+    }
+
+    /// Locks the Mutex and returns a guarded reference to the inner value
+    pub fn lock(&self) -> LockGuard<'_, T>{
+        unsafe {&mut *self.lock_cell.get()}.lock();
+        LockGuard { lock: self }
     }
 }
+
 
 impl<T: Copy> Locked<T> {
     /// Gets a copy of the value, doing a lock-unlock operation in the process
     pub fn get_val(&self) -> T {
-        self.get_lock().lock();
-        let obj_copy = unsafe {
-            *self.object_cell.get()
-        };
-        self.get_lock().unlock();
-        obj_copy
+        unsafe {
+            (&mut *self.lock_cell.get()).lock();
+            let obj_copy = *self.object_cell.get();
+            (&mut *self.lock_cell.get()).unlock();
+            obj_copy
+        }
+    }
+}
+unsafe impl<T: ?Sized + Send> Sync for Locked<T> {}
+unsafe impl<T: ?Sized + Send> Send for Locked<T> {}
+
+pub struct LockGuard<'borrow, T:?Sized> {
+    pub(self) lock: &'borrow Locked<T>
+}
+
+unsafe impl<'a, T: ?Sized + Sync> Sync for LockGuard<'a, T> {}
+
+impl<'borrow, T: ?Sized> LockGuard<'borrow, T> {
+    pub fn new(lock: &'borrow Locked<T>) -> Self {
+        unsafe {&mut *lock.lock_cell.get()}.lock();
+        Self {
+            lock
+        }
     }
 }
 
-unsafe impl<T: ?Sized + Send> Sync for Locked<T> {}
-unsafe impl<T: ?Sized + Send> Send for Locked<T> {}
+impl<'borrow, T> core::ops::Deref for LockGuard<'borrow, T> {
+    type Target = T;
+
+    fn deref(&self) -> &T {
+        unsafe { &*self.lock.object_cell.get() }
+    }
+}
+
+impl<'borrow, T> core::ops::DerefMut for LockGuard<'borrow, T> {
+
+    fn deref_mut(&mut self) -> &mut T {
+        unsafe { &mut *self.lock.object_cell.get() }
+    }
+}
+
+impl<T: ?Sized> Drop for LockGuard<'_, T> {
+    fn drop(&mut self) {
+        unsafe {&mut *self.lock.lock_cell.get()}.unlock();
+    }
+}

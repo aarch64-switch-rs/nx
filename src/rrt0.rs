@@ -136,15 +136,15 @@ pub fn get_module_name() -> ModulePath {
     G_MODULE_NAME
 }
 
-static mut G_EXIT_FN: sync::Locked<Option<ExitFn>> = sync::Locked::new(false, None);
-static mut G_MAIN_THREAD: thread::Thread = thread::Thread::empty();
+static mut G_EXIT_FN: sync::Locked<Option<ExitFn>> = sync::Locked::new(None);
+static mut G_MAIN_THREAD: sync::Locked<Option<thread::Thread>> = sync::Locked::new(None);
 
 /// Exits the current process
 /// 
 /// This will call the HBL-specific exit fn if running as a homebrew NRO, or [`exit_process`][`svc::exit_process`] otherwise
 pub fn exit(rc: ResultCode) -> ! {
     unsafe {
-        match G_EXIT_FN.get() {
+        match *G_EXIT_FN.lock() {
             Some(exit_fn) => exit_fn(rc),
             None => svc::exit_process()
         }
@@ -172,6 +172,7 @@ fn initialize_version(hbl_hos_version_opt: Option<hbl::Version>) {
     }
 }
 
+#[allow(unsafe_op_in_unsafe_fn)]
 unsafe fn normal_entry(maybe_abi_cfg_entries_ptr: *const hbl::AbiConfigEntry, maybe_main_thread_handle: usize, lr_exit_fn: ExitFn) {
     let exec_type = match !maybe_abi_cfg_entries_ptr.is_null() && (maybe_main_thread_handle == usize::MAX) {
         true => ExecutableType::Nro,
@@ -264,18 +265,21 @@ unsafe fn normal_entry(maybe_abi_cfg_entries_ptr: *const hbl::AbiConfigEntry, ma
     // Initialize the main thread object and initialize its TLS section
     // TODO: query memory for main thread stack address/size?
     
-    G_MAIN_THREAD = thread::Thread::new_remote(main_thread_handle, "MainThread", ptr::null_mut(), 0).unwrap();
-    thread::set_current_thread(ptr::addr_of_mut!(G_MAIN_THREAD));
+    let mut main_thread_handle = thread::Thread::new_remote(main_thread_handle, "MainThread", ptr::null_mut(), 0).unwrap();
+    thread::set_current_thread(&mut main_thread_handle);
+    *G_MAIN_THREAD.lock() = Some(main_thread_handle);
 
     // Initialize virtual memory
     vmem::initialize().unwrap();
 
     // Set exit function (will be null for non-hbl NROs)
-    match exec_type {
-        ExecutableType::Nro => G_EXIT_FN.set(Some(lr_exit_fn)),
-        ExecutableType::Nso => G_EXIT_FN.set(None),
-        _ => {}
-    };
+    // TODO: convert this to a mutexed object again
+    unsafe {
+        match exec_type {
+            ExecutableType::Nro => {*G_EXIT_FN.lock() = Some(lr_exit_fn)},
+            _ => {}
+        };
+    }
     
     // Initialize heap and memory allocation
     heap = initialize_heap(heap);
@@ -300,6 +304,7 @@ unsafe fn exception_entry(_exc_type: svc::ExceptionType, _stack_top: *mut u8) {
 
 #[no_mangle]
 #[linkage = "weak"]
+#[allow(unsafe_op_in_unsafe_fn)]
 unsafe extern "C" fn __nx_rrt0_entry(arg0: usize, arg1: usize) {
     let lr_exit_fn: ExitFn;
     asm!(

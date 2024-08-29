@@ -111,7 +111,7 @@ impl Drop for LibraryAppletHolder {
     }
 }
 
-static mut G_CREATOR: sync::Locked<Option<mem::Shared<dyn ILibraryAppletCreator>>> = sync::Locked::new(false, None);
+static mut G_CREATOR: sync::Locked<Option<mem::Shared<dyn ILibraryAppletCreator>>> = sync::Locked::new(None);
 
 /// Initializes library applet support with the provided [`ILibraryAppletCreator`] shared object
 /// 
@@ -121,7 +121,7 @@ static mut G_CREATOR: sync::Locked<Option<mem::Shared<dyn ILibraryAppletCreator>
 #[inline]
 pub fn initialize(creator: mem::Shared<dyn ILibraryAppletCreator>) {
     unsafe {
-        G_CREATOR.set(Some(creator));
+        *G_CREATOR.lock() = Some(creator);
     }
 }
 
@@ -129,7 +129,7 @@ pub fn initialize(creator: mem::Shared<dyn ILibraryAppletCreator>) {
 #[inline]
 pub fn is_initialized() -> bool {
     unsafe {
-        G_CREATOR.get().is_some()
+        G_CREATOR.lock().is_some()
     }
 }
 
@@ -137,7 +137,7 @@ pub fn is_initialized() -> bool {
 #[inline]
 pub fn finalize() {
     unsafe {
-        G_CREATOR.set(None);
+        *G_CREATOR.lock() = None;
     }
 }
 
@@ -145,9 +145,9 @@ pub fn finalize() {
 /// 
 /// This will fail with [`ResultNotInitialized`][`super::rc::ResultNotInitialized`] if library applet support isn't initialized
 #[inline]
-pub fn get_creator() -> Result<&'static mem::Shared<dyn ILibraryAppletCreator>> {
+pub fn get_creator() -> Result<mem::Shared<dyn ILibraryAppletCreator>> {
     unsafe {
-        G_CREATOR.get().as_ref().ok_or(super::rc::ResultNotInitialized::make())
+        G_CREATOR.lock().clone().ok_or(super::rc::ResultNotInitialized::make())
     }
 }
 

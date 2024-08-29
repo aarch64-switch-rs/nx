@@ -192,7 +192,7 @@ pub enum ExceptionType {
 pub type PageInfo = u32;
 pub type Address = *const u8;
 pub type Size = usize;
-pub type ThreadEntrypointFn = extern fn(*mut u8) -> !;
+pub type ThreadEntrypointFn = unsafe extern fn(*mut u8) -> !;
 pub type Handle = u32;
 
 pub const INVALID_HANDLE: Handle = 0;
@@ -217,19 +217,19 @@ pub fn set_heap_size(size: Size) -> Result<*mut u8> {
 }
 
 #[inline(always)]
-pub fn set_memory_attribute(address: Address, size: Size, mask: u32, value: MemoryAttribute) -> Result<()> {
+pub unsafe fn set_memory_attribute(address: Address, size: Size, mask: u32, value: MemoryAttribute) -> Result<()> {
     extern "C" {
         fn __nx_svc_set_memory_attribute(address: Address, size: Size, mask: u32, value: MemoryAttribute) -> ResultCode;
     }
 
     unsafe {
-        let rc = __nx_svc_set_memory_attribute(address, size, mask, value);
-        pack(rc, ())
+    let rc = __nx_svc_set_memory_attribute(address, size, mask, value);
+    pack(rc, ())
     }
 }
 
 #[inline(always)]
-pub fn set_memory_permission(address: Address, size: Size, value: MemoryPermission) -> Result<()> {
+pub unsafe  fn set_memory_permission(address: Address, size: Size, value: MemoryPermission) -> Result<()> {
     extern "C" {
         fn __nx_svc_set_memory_permission(address: Address, size: Size, value: MemoryPermission) -> ResultCode;
     }
@@ -241,6 +241,8 @@ pub fn set_memory_permission(address: Address, size: Size, value: MemoryPermissi
 }
 
 #[inline(always)]
+// SAFETY: null pointers are OK here, as we are just querying memory properties
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub fn query_memory(address: Address) -> Result<(MemoryInfo, PageInfo)> {
     extern "C" {
         fn __nx_svc_query_memory(out_info: *mut MemoryInfo, out_page_info: *mut PageInfo, address: Address) -> ResultCode;
@@ -267,7 +269,7 @@ pub fn exit_process() -> ! {
 }
 
 #[inline(always)]
-pub fn create_thread(entry: ThreadEntrypointFn, entry_arg: Address, stack_top: Address, priority: i32, processor_id: i32) -> Result<Handle> {
+pub unsafe fn create_thread(entry: ThreadEntrypointFn, entry_arg: Address, stack_top: Address, priority: i32, processor_id: i32) -> Result<Handle> {
     extern "C" {
         fn __nx_svc_create_thread(handle: *mut Handle, entry: ThreadEntrypointFn, entry_arg: Address, stack_top: Address, priority: i32, processor_id: i32) -> ResultCode;
     }
@@ -342,7 +344,7 @@ pub fn signal_event(handle: Handle) -> Result<()> {
 }
 
 #[inline(always)]
-pub fn map_shared_memory(handle: Handle, address: Address, size: Size, permission: MemoryPermission) -> Result<()> {
+pub unsafe fn map_shared_memory(handle: Handle, address: Address, size: Size, permission: MemoryPermission) -> Result<()> {
     extern "C" {
         fn __nx_svc_map_shared_memory(handle: Handle, address: Address, size: Size, permission: MemoryPermission) -> ResultCode;
     }
@@ -354,11 +356,10 @@ pub fn map_shared_memory(handle: Handle, address: Address, size: Size, permissio
 }
 
 #[inline(always)]
-pub fn unmap_shared_memory(handle: Handle, address: Address, size: Size) -> Result<()> {
+pub unsafe fn unmap_shared_memory(handle: Handle, address: Address, size: Size) -> Result<()> {
     extern "C" {
         fn __nx_svc_unmap_shared_memory(handle: Handle, address: Address, size: Size) -> ResultCode;
     }
-
     unsafe {
         let rc = __nx_svc_unmap_shared_memory(handle, address, size);
         pack(rc, ())
@@ -366,11 +367,10 @@ pub fn unmap_shared_memory(handle: Handle, address: Address, size: Size) -> Resu
 }
 
 #[inline(always)]
-pub fn create_transfer_memory(address: Address, size: Size, permissions: MemoryPermission) -> Result<Handle> {
+pub unsafe fn create_transfer_memory(address: Address, size: Size, permissions: MemoryPermission) -> Result<Handle> {
     extern "C" {
         fn __nx_svc_create_transfer_memory(out_handle: *mut Handle, address: Address, size: Size, permissions: MemoryPermission) -> ResultCode;
     }
-
     unsafe {
         let mut handle: Handle = 0;
 
@@ -404,7 +404,7 @@ pub fn reset_signal(handle: Handle) -> Result<()> {
 }
 
 #[inline(always)]
-pub fn wait_synchronization(handles: *const Handle, handle_count: u32, timeout: i64) -> Result<i32> {
+pub unsafe fn wait_synchronization(handles: *const Handle, handle_count: u32, timeout: i64) -> Result<i32> {
     extern "C" {
         fn __nx_svc_wait_synchronization(out_index: *mut i32, handles: *const Handle, handle_count: u32, timeout: i64) -> ResultCode;
     }
@@ -418,7 +418,7 @@ pub fn wait_synchronization(handles: *const Handle, handle_count: u32, timeout: 
 }
 
 #[inline(always)]
-pub fn arbitrate_lock(thread_handle: Handle, tag_location: Address, tag: u32) -> Result<()> {
+pub unsafe fn arbitrate_lock(thread_handle: Handle, tag_location: Address, tag: u32) -> Result<()> {
     extern "C" {
         fn __nx_svc_arbitrate_lock(thread_handle: Handle, tag_location: Address, tag: u32) -> ResultCode;
     }
@@ -430,7 +430,7 @@ pub fn arbitrate_lock(thread_handle: Handle, tag_location: Address, tag: u32) ->
 }
 
 #[inline(always)]
-pub fn arbitrate_unlock(tag_location: Address) -> Result<()> {
+pub unsafe fn arbitrate_unlock(tag_location: Address) -> Result<()> {
     extern "C" {
         fn __nx_svc_arbitrate_unlock(tag_location: Address) -> ResultCode;
     }
@@ -453,13 +453,11 @@ pub fn get_system_tick() -> u64 {
 }
 
 #[inline(always)]
-pub fn connect_to_named_port(name: Address) -> Result<Handle> {
+pub unsafe fn connect_to_named_port(name: Address) -> Result<Handle> {
     extern "C" {
         fn __nx_svc_connect_to_named_port(out_handle: *mut Handle, name: Address) -> ResultCode;
     }
-
-    unsafe {
-        let mut handle: Handle = 0;
+    unsafe {let mut handle: Handle = 0;
 
         let rc = __nx_svc_connect_to_named_port(&mut handle, name);
         pack(rc, handle)
@@ -506,28 +504,27 @@ pub fn get_thread_id(handle: Handle) -> Result<u64> {
     }
 }
 
-// TODO: original name is just break/Break but the keyword is reserved, think of a better way to name this?
-
 #[inline(always)]
-pub fn break_(reason: BreakReason, arg: Address, size: Size) -> ! {
+pub unsafe fn r#break(reason: BreakReason, arg: Address, size: Size) -> Result<()> {
     extern "C" {
-        fn __nx_svc_break(reason: BreakReason, arg: Address, size: Size) -> !;
+        fn __nx_svc_break(reason: BreakReason, arg: Address, size: Size) -> ResultCode;
     }
 
     unsafe {
-        __nx_svc_break(reason, arg, size)
+        let rc = __nx_svc_break(reason, arg, size);
+        pack(rc, ())
     }
 }
 
 #[inline(always)]
-pub fn output_debug_string(msg: Address, len: Size) -> Result<()> {
+pub unsafe fn output_debug_string(msg: Address, len: Size) -> Result<()> {
     extern "C" {
         fn __nx_svc_output_debug_string(msg: Address, len: Size) -> ResultCode;
     }
 
     unsafe {
-        let rc = __nx_svc_output_debug_string(msg, len);
-        pack(rc, ())
+    let rc = __nx_svc_output_debug_string(msg, len);
+    pack(rc, ())
     }
 }
 
@@ -586,7 +583,7 @@ pub fn accept_session(handle: Handle) -> Result<Handle> {
 }
 
 #[inline(always)]
-pub fn reply_and_receive(handles: *const Handle, handle_count: u32, reply_target: Handle, timeout: i64) -> Result<i32> {
+pub unsafe fn reply_and_receive(handles: *const Handle, handle_count: u32, reply_target: Handle, timeout: i64) -> Result<i32> {
     extern "C" {
         fn __nx_svc_reply_and_receive(out_index: *mut i32, handles: *const Handle, handle_count: u32, reply_target: Handle, timeout: i64) -> ResultCode;
     }
@@ -729,7 +726,9 @@ pub fn set_debug_thread_context(debug_handle: Handle, thread_context: arm::Threa
     }
 }
 
+/// SAFETY: null pointers are OK here, as we are just querying the memory's information
 #[inline(always)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub fn query_debug_process_memory(debug_handle: Handle, address: Address) -> Result<(MemoryInfo, PageInfo)> {
     extern "C" {
         fn __nx_svc_query_debug_process_memory(out_info: *mut MemoryInfo, out_page_info: *mut PageInfo, debug_handle: Handle, address: Address) -> ResultCode;
@@ -745,7 +744,7 @@ pub fn query_debug_process_memory(debug_handle: Handle, address: Address) -> Res
 }
 
 #[inline(always)]
-pub fn read_debug_process_memory(debug_handle: Handle, read_address: usize, read_size: usize, buffer: *mut u8) -> Result<()> {
+pub unsafe fn read_debug_process_memory(debug_handle: Handle, read_address: usize, read_size: usize, buffer: *mut u8) -> Result<()> {
     extern "C" {
         fn __nx_svc_read_debug_process_memory(buffer: *mut u8, debug_handle: Handle, address: usize, size: usize) -> ResultCode;
     }
@@ -757,7 +756,7 @@ pub fn read_debug_process_memory(debug_handle: Handle, read_address: usize, read
 }
 
 #[inline(always)]
-pub fn write_debug_process_memory(debug_handle: Handle, write_address: usize, write_size: usize, buffer: Address) -> Result<()> {
+pub unsafe fn write_debug_process_memory(debug_handle: Handle, write_address: usize, write_size: usize, buffer: *const u8) -> Result<()> {
     extern "C" {
         fn __nx_svc_write_debug_process_memory(debug_handle: Handle, buffer: Address, address: usize, size: usize) -> ResultCode;
     }
@@ -769,7 +768,7 @@ pub fn write_debug_process_memory(debug_handle: Handle, write_address: usize, wr
 }
 
 #[inline(always)]
-pub fn manage_named_port(name: Address, max_sessions: i32) -> Result<Handle> {
+pub unsafe fn manage_named_port(name: Address, max_sessions: i32) -> Result<Handle> {
     extern "C" {
         fn __nx_svc_manage_named_port(out_handle: *mut Handle, name: Address, max_sessions: i32) -> ResultCode;
     }
@@ -783,15 +782,13 @@ pub fn manage_named_port(name: Address, max_sessions: i32) -> Result<Handle> {
 }
 
 #[inline(always)]
-pub fn call_secure_monitor(input: [u64; 8]) -> [u64; 8] {
+pub fn call_secure_monitor(mut inout: [u64; 8]) -> [u64; 8] {
     extern "C" {
         fn __nx_svc_call_secure_monitor(args: *mut u64);
     }
 
     unsafe {
-        let mut args: [u64; 8] = input;
-
-        __nx_svc_call_secure_monitor(args.as_mut_ptr());
-        args
+        __nx_svc_call_secure_monitor(inout.as_mut_ptr());
     }
+    inout
 }
