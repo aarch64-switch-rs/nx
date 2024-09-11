@@ -143,7 +143,7 @@ impl VersionInterval {
     }
 }
 
-static mut G_VERSION: sync::Locked<Version> = sync::Locked::new(Version::empty());
+static mut G_VERSION: sync::Mutex<Version> = sync::Mutex::new(Version::empty());
 
 /// Sets the global [`Version`], used in the library as the system [`Version`]
 /// 

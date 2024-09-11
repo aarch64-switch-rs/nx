@@ -3,6 +3,7 @@
 use crate::result::*;
 use crate::util::PointerAndSize;
 use core::mem;
+use core::mem::ManuallyDrop;
 use core::ptr;
 use core::ptr::NonNull;
 
@@ -130,8 +131,9 @@ impl<T> Buffer<T> {
         })
     }
 
-    pub fn into_raw(self) -> *mut [T] {
-        core::ptr::slice_from_raw_parts_mut(self.ptr, self.layout.size() / mem::size_of::<T>())
+    pub fn into_raw(value: Self) -> *mut [T] {
+        let no_drop = ManuallyDrop::new(value);
+        core::ptr::slice_from_raw_parts_mut(no_drop.ptr, no_drop.layout.size() / mem::size_of::<T>())
     }
 
     /// Releases the [`Buffer`]

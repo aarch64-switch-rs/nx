@@ -145,7 +145,7 @@ impl<const S: usize> CString<S> {
         unsafe {
             ptr::write_bytes(ptr, 0, ptr_len);
             if !string.is_empty() {
-                ptr::copy(string.as_ptr(), ptr, const_usize_min(string.len(), ptr_len - 1));
+                ptr::copy(string.as_ptr(), ptr, const_usize_min(string.as_bytes().len(), ptr_len - 1));
             }
         }
     }
@@ -459,8 +459,8 @@ pub unsafe fn raw_transmute<T: Copy, U: Copy>(t: T) -> U {
 /// * `info`: `PanicInfo` object got from the actual panic handler
 /// * `desired_level`: Desired [`AbortLevel`][`abort::AbortLevel`] to abort with
 pub fn simple_panic_handler<L: Logger>(info: &panic::PanicInfo, desired_level: abort::AbortLevel) -> ! {
-    let thread_name = match thread::get_current_thread().name.get_str() {
-        Ok(name) => name,
+    let thread_name = match unsafe {thread::get_current_thread()}.map(|t| t.name.get_str()) {
+        Some(Ok(name)) => name,
         _ => "<unknown>",
     };
     diag_log!(L { log::LogSeverity::Fatal, true } => "Panic! at thread '{}' -> {}\n", thread_name, info);

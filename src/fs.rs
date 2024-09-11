@@ -570,7 +570,7 @@ enum PathSegmentType {
     Normal
 }
 
-struct PathSegment {
+pub(crate) struct PathSegment {
     name: String,
     segment_type: PathSegmentType
 }
@@ -642,7 +642,7 @@ fn pack_path(unpacked_path: UnpackedPath, add_root: bool) -> String {
     path
 }
 
-struct FileSystemDevice {
+pub(crate) struct FileSystemDevice {
     root_name: PathSegment,
     fs: mem::Shared<dyn FileSystem>
 }
@@ -652,7 +652,7 @@ impl FileSystemDevice {
         Self { root_name, fs }
     }
 }
-static mut G_DEVICES: sync::Locked<Vec<FileSystemDevice>> = sync::Locked::new(Vec::new());
+pub (crate) static mut G_DEVICES: sync::Mutex<Vec<FileSystemDevice>> = sync::Mutex::new(Vec::new());
 
 fn find_device_by_name(name: &PathSegment) -> Result<mem::Shared<dyn FileSystem>> {
     unsafe {
@@ -666,7 +666,7 @@ fn find_device_by_name(name: &PathSegment) -> Result<mem::Shared<dyn FileSystem>
     }
 }
 
-static mut G_FSPSRV_SESSION: sync::Locked<Option<mem::Shared<dyn IFileSystemProxy>>> = sync::Locked::new(None);
+static mut G_FSPSRV_SESSION: sync::Mutex<Option<mem::Shared<dyn IFileSystemProxy>>> = sync::Mutex::new(None);
 
 define_bit_enum! {
     /// Represents options for opening files
@@ -693,8 +693,19 @@ pub fn initialize_fspsrv_session_with(session: mem::Shared<dyn IFileSystemProxy>
 /// Initializes `fsp-srv` support instantiating a [`FileSystemProxy`][`fsp::srv::FileSystemProxy`] shared object
 #[inline]
 pub fn initialize_fspsrv_session() -> Result<()> {
-    initialize_fspsrv_session_with(service::new_service_object::<fsp::srv::FileSystemProxy>()?);
+    unsafe {
+        let mut guard = G_FSPSRV_SESSION.lock();
+        if guard.is_none() {
+            *guard = Some(service::new_service_object::<fsp::srv::FileSystemProxy>()?)
+        }
+    }
     Ok(())
+}
+
+pub fn fspsrv_is_locked() -> bool {
+    unsafe {
+        G_FSPSRV_SESSION.is_locked()
+    }
 }
 
 /// Gets whether `fsp-srv` support was initialized
@@ -717,7 +728,9 @@ pub fn finalize_fspsrv_session() {
 #[inline]
 pub fn get_fspsrv_session() -> Result<mem::Shared<dyn IFileSystemProxy>> {
     unsafe {
-        G_FSPSRV_SESSION.lock().clone().ok_or(super::rc::ResultNotInitialized::make())
+        let guard = G_FSPSRV_SESSION.lock();
+        let option = guard.clone();
+        option.ok_or(super::rc::ResultNotInitialized::make())
     }
 }
 
@@ -943,7 +956,7 @@ pub fn convert_file_open_mode_to_option(mode: FileOpenMode) -> FileOpenOption {
 pub fn rename_file(old_path: String, new_path: String) -> Result<()> {
     let (old_fs, processed_old_path) = format_path(old_path)?;
     let (new_fs, processed_new_path) = format_path(new_path)?;
-    result_return_unless!(old_fs == new_fs, rc::ResultNotInSameFileSystem);
+    result_return_unless!(mem::Shared::<(dyn FileSystem + 'static)>::ptr_eq(&old_fs, &new_fs), rc::ResultNotInSameFileSystem);
 
     old_fs.get().rename_file(processed_old_path, processed_new_path)
 }
@@ -957,7 +970,7 @@ pub fn rename_file(old_path: String, new_path: String) -> Result<()> {
 pub fn rename_directory(old_path: String, new_path: String) -> Result<()> {
     let (old_fs, processed_old_path) = format_path(old_path)?;
     let (new_fs, processed_new_path) = format_path(new_path)?;
-    result_return_unless!(old_fs == new_fs, rc::ResultNotInSameFileSystem);
+    result_return_unless!(mem::Shared::<(dyn FileSystem + 'static)>::ptr_eq(&old_fs, &new_fs), rc::ResultNotInSameFileSystem);
 
     old_fs.get().rename_directory(processed_old_path, processed_new_path)
 }
@@ -975,7 +988,7 @@ pub fn rename_directory(old_path: String, new_path: String) -> Result<()> {
 pub fn rename(old_path: String, new_path: String) -> Result<()> {
     let (old_fs, processed_old_path) = format_path(old_path)?;
     let (new_fs, processed_new_path) = format_path(new_path)?;
-    result_return_unless!(old_fs == new_fs, rc::ResultNotInSameFileSystem);
+    result_return_unless!(mem::Shared::<(dyn FileSystem + 'static)>::ptr_eq(&old_fs, &new_fs), rc::ResultNotInSameFileSystem);
 
     let entry_type = old_fs.get().get_entry_type(processed_old_path.clone())?;
     match entry_type {

@@ -2,7 +2,7 @@
 
 use core::ptr;
 use crate::result::*;
-use crate::sync;
+use crate::sync::{self, sys::mutex::Mutex as RawMutex};
 use crate::svc;
 use crate::mem::alloc;
 
@@ -44,7 +44,7 @@ static mut G_HEAP_REGION: VirtualRegion = VirtualRegion::null();
 static mut G_LEGACY_ALIAS_REGION: VirtualRegion = VirtualRegion::null();
 static mut G_ADDRESS_SPACE: VirtualRegion = VirtualRegion::null();
 static mut G_CURRENT_ADDRESS: usize = 0;
-static mut G_LOCK: sync::Mutex = sync::Mutex::new();
+static mut G_LOCK: RawMutex = RawMutex::new();
 
 /// Gets the current process's address space [`VirtualRegion`]
 /// 

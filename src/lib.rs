@@ -49,6 +49,12 @@
 #![feature(const_intrinsic_copy)]
 #![feature(let_chains)]
 #![feature(pointer_is_aligned_to)]
+#![feature(trusted_len)]
+#![feature(ptr_internals)]
+#![feature(layout_for_ptr)]
+#![feature(set_ptr_value)]
+#![feature(alloc_layout_extra)]
+#![feature(try_blocks)]
 #![macro_use]
 
 use core::arch::global_asm;

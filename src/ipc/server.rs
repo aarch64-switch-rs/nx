@@ -1,5 +1,5 @@
 use crate::result::*;
-use crate::sync::Locked;
+use crate::sync::Mutex;
 use crate::wait;
 use crate::ipc::sf::IObject;
 use crate::ipc::sf::hipc::IHipcManager;
@@ -117,7 +117,7 @@ impl RequestCommandParameter<sf::ProcessId> for sf::ProcessId {
 
 impl !ResponseCommandParameter for sf::ProcessId {}
 
-impl<S: sf::IObject> RequestCommandParameter<S> for Arc<Locked<S>> {
+impl<S: sf::IObject> RequestCommandParameter<S> for Arc<Mutex<S>> {
     default fn after_request_read(_ctx: &mut ServerContext) -> Result<S> {
         // TODO: implement this (added this placeholder impl for interfaces to actually be valid)
         sf::hipc::rc::ResultUnsupportedOperation::make_err()

@@ -38,8 +38,8 @@ impl Logger for LmLogger {
                 log_packet.set_process_id(process_id);
             }
 
-            let cur_thread = thread::get_current_thread();
-            if let Ok(thread_id) = cur_thread.get_id() {
+            let cur_thread = unsafe {thread::get_current_thread().unwrap()};
+            if let Ok(thread_id) = cur_thread.id() {
                 log_packet.set_thread_id(thread_id);
             }
 
@@ -47,7 +47,7 @@ impl Logger for LmLogger {
             log_packet.set_function_name(String::from(metadata.fn_name));
             log_packet.set_line_number(metadata.line_number);
     
-            let mod_name = match rrt0::get_module_name().path.get_string() {
+            let mod_name = match rrt0::get_module_name().get_name().get_string() {
                 Ok(name) => name,
                 Err(_) => String::from("aarch64-switch-rs (invalid module name)")
             };

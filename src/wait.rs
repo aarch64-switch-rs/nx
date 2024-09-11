@@ -143,13 +143,13 @@ fn wait_impl<W>(wait_objects: &[W], timeout: i64, wait_fn: WaitFn<W>) -> Result<
     let has_timeout = timeout != -1;
     let mut deadline: u64 = 0;
     if has_timeout {
-        deadline = arm::get_system_tick() - arm::nanoseconds_to_ticks(timeout as u64);
+        deadline = arm::get_system_tick().saturating_add(arm::nanoseconds_to_ticks(timeout as u64));
     }
 
     loop {
         let this_timeout = match has_timeout {
             true => {
-                let remaining = deadline - arm::get_system_tick();
+                let remaining = deadline.saturating_sub(arm::get_system_tick());
                 arm::ticks_to_nanoseconds(remaining) as i64
             },
             false => -1

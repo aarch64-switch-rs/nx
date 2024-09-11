@@ -189,7 +189,7 @@ pub fn get_applet_type() -> AppletType {
     }
 }
 
-static mut G_LOADER_INFO: &str = "";
+static mut G_LOADER_INFO: &'static str = "";
 
 pub(crate) fn set_loader_info(loader_info: &'static str) {
     unsafe {
@@ -206,8 +206,8 @@ pub fn get_loader_info() -> &'static str {
     }
 }
 
-static mut G_NEXT_LOAD_PATH: &str = "";
-static mut G_NEXT_LOAD_ARGV: &str = "";
+static mut G_NEXT_LOAD_PATH: &'static str = "";
+static mut G_NEXT_LOAD_ARGV: &'static str = "";
 
 pub(crate) fn set_next_load_entry_ptr(next_load_path: &'static str, next_load_argv: &'static str) {
     unsafe {

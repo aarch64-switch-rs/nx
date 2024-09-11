@@ -10,6 +10,22 @@ pub mod rc;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
+pub enum ArbitrationType {
+    WaitIfLessThan = 0,
+    DecrementAndWaitIfLessThan = 1,
+    WaitIfEqual = 2
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[repr(u32)]
+pub enum SignalType {
+    Signal = 0,
+    SignalAndIncrementIfEqual = 1,
+    SignalAndModifyBasedOnWaitingThreadCountIfEqual = 2
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[repr(u32)]
 pub enum BreakReason {
     Panic = 0,
     Assert = 1,
@@ -332,6 +348,30 @@ pub fn get_thread_priority(handle: Handle) -> Result<i32> {
 }
 
 #[inline(always)]
+pub fn set_thread_priority(handle: Handle, priority: i32) -> Result<()> {
+    extern "C" {
+        fn __nx_svc_set_thread_priority(handle: Handle, priority: i32) -> ResultCode;
+    }
+
+    unsafe {
+        let rc = __nx_svc_set_thread_priority(handle, priority);
+        pack(rc, ())
+    }
+}
+
+
+#[inline(always)]
+pub fn get_current_processor_number() -> u32 {
+    extern "C" {
+        fn __nx_svc_get_current_processor_number() -> u32;
+    }
+
+    unsafe {
+        __nx_svc_get_current_processor_number()
+    }
+}
+
+#[inline(always)]
 pub fn signal_event(handle: Handle) -> Result<()> {
     extern "C" {
         fn __nx_svc_signal_event(handle: Handle) -> ResultCode;
@@ -442,6 +482,30 @@ pub unsafe fn arbitrate_unlock(tag_location: Address) -> Result<()> {
 }
 
 #[inline(always)]
+pub unsafe fn wait_process_wide_key_atomic(wait_location: Address,tag_location: Address, desired_tag: u32, timeout: i64) -> Result<()> {
+    extern "C" {
+        fn __nx_svc_wait_process_wide_key_atomic(wait_location: Address, tag_location: Address, desired_tag: u32, timeout: i64) -> ResultCode;
+    }
+
+    unsafe {
+        let rc = __nx_svc_wait_process_wide_key_atomic(wait_location, tag_location, desired_tag, timeout);
+        pack(rc, ())
+    }
+}
+
+#[inline(always)]
+pub unsafe fn signal_process_wide_key(tag_location: Address, desired_tag: i32) -> Result<()> {
+    extern "C" {
+        fn __nx_svc_signal_process_wide_key(tag_location: Address, desired_tag: i32, ) -> ResultCode;
+    }
+
+    unsafe {
+        let rc = __nx_svc_signal_process_wide_key(tag_location, desired_tag);
+        pack(rc, ())
+    }
+}
+
+#[inline(always)]
 pub fn get_system_tick() -> u64 {
     extern "C" {
         fn __nx_svc_get_system_tick() -> u64;
@@ -529,9 +593,9 @@ pub unsafe fn output_debug_string(msg: Address, len: Size) -> Result<()> {
 }
 
 #[inline(always)]
-pub fn return_from_exception(res: ResultCode) {
+pub fn return_from_exception(res: ResultCode) -> ! {
     extern "C" {
-        fn __nx_svc_return_from_exception(res: ResultCode);
+        fn __nx_svc_return_from_exception(res: ResultCode) -> !;
     }
 
     unsafe {
@@ -550,6 +614,30 @@ pub fn get_info(id: InfoId, handle: Handle, sub_id: u64) -> Result<u64> {
 
         let rc = __nx_svc_get_info(&mut info, id, handle, sub_id);
         pack(rc, info)
+    }
+}
+
+#[inline(always)]
+pub unsafe fn wait_for_address(address: Address, arbitration_type: ArbitrationType, value: u32, timeout: i64) -> Result<()> {
+    extern "C" {
+        fn __nx_svc_wait_for_address(address: Address, arbitration_type: u32, value: u32, timeout: i64) -> ResultCode;
+    }
+    
+    unsafe {
+        let rc = __nx_svc_wait_for_address(address, arbitration_type as u32, value, timeout);
+        pack(rc, ())
+    }
+}
+
+#[inline(always)]
+pub unsafe fn signal_to_address(address: Address, signal: SignalType, value: u32, thread_signal_count: i32) -> Result<()> {
+    extern "C" {
+        fn __nx_svc_signal_to_address(address: Address, signal: u32, value: u32, signal_count: i32) -> ResultCode;
+    }
+    
+    unsafe {
+        let rc = __nx_svc_signal_to_address(address, signal as u32, value, thread_signal_count);
+        pack(rc, ())
     }
 }
 

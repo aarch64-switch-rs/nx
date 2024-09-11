@@ -111,7 +111,7 @@ impl Drop for LibraryAppletHolder {
     }
 }
 
-static mut G_CREATOR: sync::Locked<Option<mem::Shared<dyn ILibraryAppletCreator>>> = sync::Locked::new(None);
+static mut G_CREATOR: sync::Mutex<Option<mem::Shared<dyn ILibraryAppletCreator>>> = sync::Mutex::new(None);
 
 /// Initializes library applet support with the provided [`ILibraryAppletCreator`] shared object
 /// 

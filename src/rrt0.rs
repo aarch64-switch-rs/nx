@@ -99,11 +99,11 @@ pub fn get_executable_type() -> ExecutableType {
 #[repr(C)]
 pub struct ModulePath {
     /// Unused value
-    pub zero: u32,
+    _zero: u32,
     /// The length of the module name
-    pub path_len: u32,
+    path_len: u32,
     /// The module name string
-    pub path: util::CString<0x200>
+    path: util::CString<0x200>
 }
 
 impl ModulePath {
@@ -115,10 +115,19 @@ impl ModulePath {
     #[inline]
     pub const fn new(name: &str) -> Self {
         Self {
-            zero: 0,
-            path_len: name.len() as u32,
+            _zero: 0,
+            path_len: name.as_bytes().len() as u32,
             path: util::CString::from_str(name)
         }
+    }
+
+    pub fn set_name(&mut self, new_name: &str) {
+        self.path = util::CString::from_str(new_name);
+        self.path_len = new_name.as_bytes().len() as u32
+    }
+
+    pub fn get_name(&self) -> util::CString<0x200> {
+        self.path
     }
 }
 
@@ -136,18 +145,18 @@ pub fn get_module_name() -> ModulePath {
     G_MODULE_NAME
 }
 
-static mut G_EXIT_FN: sync::Locked<Option<ExitFn>> = sync::Locked::new(None);
-static mut G_MAIN_THREAD: sync::Locked<Option<thread::Thread>> = sync::Locked::new(None);
+static G_EXIT_FN: sync::Mutex<Option<ExitFn>> = sync::Mutex::new(None);
+static mut G_MAIN_THREAD: sync::Mutex<Option<thread::Thread>> = sync::Mutex::new(None);
 
 /// Exits the current process
 /// 
 /// This will call the HBL-specific exit fn if running as a homebrew NRO, or [`exit_process`][`svc::exit_process`] otherwise
 pub fn exit(rc: ResultCode) -> ! {
-    unsafe {
-        match *G_EXIT_FN.lock() {
-            Some(exit_fn) => exit_fn(rc),
-            None => svc::exit_process()
-        }
+    match *G_EXIT_FN.lock() {
+        Some(exit_fn) => {
+            (exit_fn)(rc);
+        },
+        None => svc::exit_process()
     }
 }
 
@@ -258,27 +267,27 @@ unsafe fn normal_entry(maybe_abi_cfg_entries_ptr: *const hbl::AbiConfigEntry, ma
                     // TODO: invalid config entries?
                 }
             }
-            abi_entry = abi_entry.offset(1);
+            abi_entry = abi_entry.add(1);
         }
     }
 
     // Initialize the main thread object and initialize its TLS section
     // TODO: query memory for main thread stack address/size?
     
-    let mut main_thread_handle = thread::Thread::new_remote(main_thread_handle, "MainThread", ptr::null_mut(), 0).unwrap();
-    thread::set_current_thread(&mut main_thread_handle);
-    *G_MAIN_THREAD.lock() = Some(main_thread_handle);
+    let main_thread_handle: thread::Thread = thread::Thread::new_remote(main_thread_handle, "MainThread", ptr::null_mut(), 0).unwrap();
+    {
+        G_MAIN_THREAD.set(Some(main_thread_handle));
+    }
 
     // Initialize virtual memory
     vmem::initialize().unwrap();
 
     // Set exit function (will be null for non-hbl NROs)
-    // TODO: convert this to a mutexed object again
-    unsafe {
-        match exec_type {
-            ExecutableType::Nro => {*G_EXIT_FN.lock() = Some(lr_exit_fn)},
-            _ => {}
-        };
+    match exec_type {
+        ExecutableType::Nro => {
+            *G_EXIT_FN.lock() = Some(lr_exit_fn);
+        },
+        _ => {}
     }
     
     // Initialize heap and memory allocation
@@ -293,11 +302,22 @@ unsafe fn normal_entry(maybe_abi_cfg_entries_ptr: *const hbl::AbiConfigEntry, ma
     // Unwrap main(), which will trigger a panic if it didn't succeed
     main().unwrap();
 
+    // unmount fs devices
+    #[cfg(feature = "fs")]
+    {
+        // clears any globally held fs dev handles
+        crate::fs::unmount_all();
+        // clears the global fsp_srv session.
+        crate::fs::finalize_fspsrv_session();
+    }
+    
+    
+
     // Successful exit by default
     exit(ResultSuccess::make());
 }
 
-unsafe fn exception_entry(_exc_type: svc::ExceptionType, _stack_top: *mut u8) {
+unsafe fn exception_entry(_exc_type: svc::ExceptionType, _stack_top: *mut u8) -> ! {
     // TODO: user exception handler?
     svc::return_from_exception(svc::rc::ResultNotHandled::make());
 }
@@ -325,39 +345,43 @@ unsafe extern "C" fn __nx_rrt0_entry(arg0: usize, arg1: usize) {
         let stack_top = arg1 as *mut u8;
         exception_entry(exc_type, stack_top);
     }
-    else {
-        // We actually want `_start` which is at the start of the .text region, but we don't know if
-        // it will be close enough to support lookup via `adr`.
-        // Since this function is in `.text` anyway, use QueryMemory SVC to find the actual start
-        let self_base_address: *const u8;
-        asm!(
-            "adr {}, __nx_rrt0_entry",
-            out(reg) self_base_address
-        );
+    
+    
+    // We actually want `_start` which is at the start of the .text region, but we don't know if
+    // it will be close enough to support lookup via `adr`.
+    // Since this function is in `.text` anyway, use QueryMemory SVC to find the actual start
+    let self_base_address: *const u8;
+    asm!(
+        "adr {}, __nx_rrt0_entry",
+        out(reg) self_base_address
+    );
 
-        let (info, _) = svc::query_memory(self_base_address).unwrap();
-        let aslr_base_address = info.base_address as *const u8;
+    let (info, _) = svc::query_memory(self_base_address).unwrap();
+    let aslr_base_address = info.base_address as *const u8;
 
-        let start_dyn = elf::mod0::find_start_dyn_address(aslr_base_address).unwrap();
-        elf::relocate_with_dyn(aslr_base_address, start_dyn as *const elf::Dyn).unwrap();
+    // assume that the MOD0 structure is at the start of .text
+    let start_dyn = elf::mod0::find_start_dyn_address(aslr_base_address).unwrap();
+    elf::relocate_with_dyn(aslr_base_address, start_dyn as *const elf::Dyn).unwrap();
 
-        extern "C" {
-            static mut __bss_start: u8;
-            static mut __bss_end: u8;
-        }
-
-        let bss_start_addr = ptr::addr_of_mut!(__bss_start) as *const _ as *mut u64;
-        let bss_end_addr = ptr::addr_of_mut!(__bss_end) as *const _ as *mut u64;
-
-        let mut cur_bss_addr = bss_start_addr;
-        while cur_bss_addr < bss_end_addr {
-            ptr::write_volatile(cur_bss_addr, 0);
-            cur_bss_addr = cur_bss_addr.add(1);
-        }
-
-        // Handle NSO/KIP/NRO normal entry
-        let maybe_abi_cfg_entries_ptr = arg0 as *const hbl::AbiConfigEntry;
-        let maybe_main_thread_handle = arg1;
-        normal_entry(maybe_abi_cfg_entries_ptr, maybe_main_thread_handle, lr_exit_fn);
+    extern "C" {
+        static mut __bss_start: u8;
+        static mut __bss_end: u8;
     }
+
+    let bss_start_addr = ptr::addr_of_mut!(__bss_start) as *const _ as *mut u64;
+    let bss_end_addr = ptr::addr_of_mut!(__bss_end) as *const _ as *mut u64;
+
+    let mut cur_bss_addr = bss_start_addr;
+    while cur_bss_addr < bss_end_addr {
+        ptr::write_volatile(cur_bss_addr, 0);
+        cur_bss_addr = cur_bss_addr.add(1);
+    }
+    // make sure that the writes are complete before there are any accesses
+    core::sync::atomic::compiler_fence(core::sync::atomic::Ordering::SeqCst);
+
+    // Handle NSO/KIP/NRO normal entry
+    let maybe_abi_cfg_entries_ptr = arg0 as *const hbl::AbiConfigEntry;
+    let maybe_main_thread_handle = arg1;
+    normal_entry(maybe_abi_cfg_entries_ptr, maybe_main_thread_handle, lr_exit_fn);
+    
 }
