@@ -637,8 +637,8 @@ impl<T, A: Allocator> Shared<T, A> {
             },
             alloc,
         );
-        let (ptr, alloc) = Box::into_unique(x);
-        unsafe { Self::from_inner_in(ptr.into(), alloc) }
+        let (ptr, alloc) = Box::into_raw_with_allocator(x);
+        unsafe { Self::from_inner_in(NonNull::new_unchecked(ptr), alloc) }
     }
 
     /// Constructs a new `Arc` with uninitialized contents in the provided allocator.
@@ -739,8 +739,8 @@ impl<T, A: Allocator> Shared<T, A> {
             },
             alloc,
         )?;
-        let (ptr, alloc) = Box::into_unique(x);
-        Ok(unsafe { Self::from_inner_in(ptr.into(), alloc) })
+        let (ptr, alloc) = Box::into_raw_with_allocator(x);
+        Ok(unsafe { Self::from_inner_in(NonNull::new_unchecked(ptr), alloc) })
     }
 
     /// Constructs a new `Arc` with uninitialized contents, in the provided allocator, returning an
