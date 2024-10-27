@@ -2,24 +2,21 @@
 
 use super::*;
 use crate::rrt0;
-use crate::mem;
 use crate::ipc::sf;
 use crate::service;
-use crate::service::lm;
-use crate::service::lm::ILogService;
-use crate::service::lm::ILogger;
+use crate::service::lm::{self, ILogService, ILogger};
 use crate::svc;
 
 /// Represents a logger through [`LogService`][`lm::LogService`] services
 pub struct LmLogger {
-    logger: Option<mem::Shared<dyn ILogger>>
+    logger: Option<lm::Logger>
 }
 
 impl Logger for LmLogger {
     fn new() -> Self {
         let logger = match service::new_service_object::<lm::LogService>() {
-            Ok(log_srv) => {
-                match log_srv.get().open_logger(sf::ProcessId::new()) {
+            Ok(mut log_srv) => {
+                match log_srv.open_logger(sf::ProcessId::new()) {
                     Ok(logger_obj) => Some(logger_obj),
                     Err(_) => None
                 }
@@ -31,14 +28,14 @@ impl Logger for LmLogger {
     }
 
     fn log(&mut self, metadata: &LogMetadata) {
-        if let Some(logger_obj) = &self.logger {
+        if let Some(logger_obj) = self.logger.as_mut() {
             let mut log_packet = logpacket::LogPacket::new();
 
             if let Ok(process_id) = svc::get_process_id(svc::CURRENT_PROCESS_PSEUDO_HANDLE) {
                 log_packet.set_process_id(process_id);
             }
 
-            let cur_thread = unsafe {thread::get_current_thread().unwrap()};
+            let cur_thread = unsafe {thread::current().as_ref().unwrap()};
             if let Ok(thread_id) = cur_thread.id() {
                 log_packet.set_thread_id(thread_id);
             }
@@ -62,7 +59,7 @@ impl Logger for LmLogger {
             log_packet.set_thread_name(String::from(thread_name));
 
             for packet in log_packet.encode_packet() {
-                let _ = logger_obj.get().log(sf::Buffer::from_array(&packet));
+                let _ = logger_obj.log(sf::Buffer::from_array(&packet));
             }
         }
     }

@@ -1,9 +1,7 @@
 use crate::result::*;
 use crate::ipc::sf;
-use crate::mem;
 use crate::util;
 use crate::ipc::sf::applet;
-use crate::ipc::sf::dispdrv;
 use crate::version;
 
 pub type DisplayName = util::CString<0x40>;
@@ -40,53 +38,61 @@ pub enum LayerStackId {
     Null
 }
 
+//api_mark_request_command_parameters_types_as_copy!(DisplayServiceMode, LayerStackId);
+
+ipc_sf_define_default_interface_client!(ManagerDisplayService);
 ipc_sf_define_interface_trait! {
-    trait IManagerDisplayService {
-        create_managed_layer [2010, version::VersionInterval::all()]: (flags: LayerFlags, display_id: DisplayId, aruid: applet::AppletResourceUserId) => (id: LayerId);
+	trait ManagerDisplayService {
+        create_managed_layer [2010, version::VersionInterval::all(), mut]: (flags: LayerFlags, display_id: DisplayId, aruid: applet::AppletResourceUserId) => (id: LayerId);
         destroy_managed_layer [2011, version::VersionInterval::all()]: (id: LayerId) => ();
         add_to_layer_stack [6000, version::VersionInterval::all()]: (stack: LayerStackId, layer: LayerId) => ();
     }
 }
 
+ipc_sf_define_default_interface_client!(SystemDisplayService);
 ipc_sf_define_interface_trait! {
-    trait ISystemDisplayService {
+	trait SystemDisplayService {
         get_z_order_count_min [1200, version::VersionInterval::all()]: (display_id: DisplayId) => (z: i64);
         get_z_order_count_max [1202, version::VersionInterval::all()]: (display_id: DisplayId) => (z: i64);
-        set_layer_position [2201, version::VersionInterval::all()]: (x: f32, y: f32, id: LayerId) => ();
-        set_layer_size [2203, version::VersionInterval::all()]: (id: LayerId, width: u64, height: u64) => ();
-        set_layer_z [2205, version::VersionInterval::all()]: (id: LayerId, z: i64) => ();
-        set_layer_visibility [2207, version::VersionInterval::all()]: (visible: bool, id: LayerId) => ();
+        set_layer_position [2201, version::VersionInterval::all(), mut]: (x: f32, y: f32, id: LayerId) => ();
+        set_layer_size [2203, version::VersionInterval::all(), mut]: (id: LayerId, width: u64, height: u64) => ();
+        set_layer_z [2205, version::VersionInterval::all(), mut]: (id: LayerId, z: i64) => ();
+        set_layer_visibility [2207, version::VersionInterval::all(), mut]: (visible: bool, id: LayerId) => ();
     }
 }
 
+ipc_sf_define_default_interface_client!(ApplicationDisplayService);
 ipc_sf_define_interface_trait! {
-    trait IApplicationDisplayService {
-        get_relay_service [100, version::VersionInterval::all()]: () => (relay_service: mem::Shared<dyn dispdrv::IHOSBinderDriver>);
-        get_system_display_service [101, version::VersionInterval::all()]: () => (system_display_service: mem::Shared<dyn ISystemDisplayService>);
-        get_manager_display_service [102, version::VersionInterval::all()]: () => (manager_display_service: mem::Shared<dyn IManagerDisplayService>);
-        open_display [1010, version::VersionInterval::all()]: (name: DisplayName) => (id: DisplayId);
-        close_display [1020, version::VersionInterval::all()]: (id: DisplayId) => ();
-        open_layer [2020, version::VersionInterval::all()]: (name: DisplayName, id: LayerId, aruid: sf::ProcessId, out_native_window: sf::OutMapAliasBuffer<u8>) => (native_window_size: usize);
-        create_stray_layer [2030, version::VersionInterval::all()]: (flags: LayerFlags, display_id: DisplayId, out_native_window: sf::OutMapAliasBuffer<u8>) => (id: LayerId, native_window_size: usize);
-        destroy_stray_layer [2031, version::VersionInterval::all()]: (id: LayerId) => ();
+	trait ApplicationDisplayService {
+        get_relay_service [100, version::VersionInterval::all()]: () => (relay_service: crate::service::dispdrv::HOSBinderDriver);
+        get_system_display_service [101, version::VersionInterval::all()]: () => (system_display_service: SystemDisplayService);
+        get_manager_display_service [102, version::VersionInterval::all()]: () => (manager_display_service: ManagerDisplayService);
+        open_display [1010, version::VersionInterval::all(), mut]: (name: DisplayName) => (id: DisplayId);
+        close_display [1020, version::VersionInterval::all(), mut]: (id: DisplayId) => ();
+        open_layer [2020, version::VersionInterval::all(), mut]: (name: DisplayName, id: LayerId, aruid: sf::ProcessId, out_native_window: sf::OutMapAliasBuffer<u8>) => (native_window_size: usize);
+        create_stray_layer [2030, version::VersionInterval::all(), mut]: (flags: LayerFlags, display_id: DisplayId, out_native_window: sf::OutMapAliasBuffer<u8>) => (id: LayerId, native_window_size: usize);
+        destroy_stray_layer [2031, version::VersionInterval::all(), mut]: (id: LayerId) => ();
         get_display_vsync_event [5202, version::VersionInterval::all()]: (id: DisplayId) => (event_handle: sf::CopyHandle);
     }
 }
 
+ipc_sf_define_default_interface_client!(ApplicationRootService);
 ipc_sf_define_interface_trait! {
-    trait IApplicationRootService {
-        get_display_service [0, version::VersionInterval::all()]: (mode: DisplayServiceMode) => (display_service: mem::Shared<dyn IApplicationDisplayService>);
+	trait ApplicationRootService {
+        get_display_service [0, version::VersionInterval::all()]: (mode: DisplayServiceMode) => (display_service: ApplicationDisplayService);
     }
 }
 
+ipc_sf_define_default_interface_client!(SystemRootService);
 ipc_sf_define_interface_trait! {
-    trait ISystemRootService {
-        get_display_service [1, version::VersionInterval::all()]: (mode: DisplayServiceMode) => (display_service: mem::Shared<dyn IApplicationDisplayService>);
+	trait SystemRootService {
+        get_display_service [1, version::VersionInterval::all()]: (mode: DisplayServiceMode) => (display_service: ApplicationDisplayService);
     }
 }
 
+ipc_sf_define_default_interface_client!(ManagerRootService);
 ipc_sf_define_interface_trait! {
-    trait IManagerRootService {
-        get_display_service [2, version::VersionInterval::all()]: (mode: DisplayServiceMode) => (display_service: mem::Shared<dyn IApplicationDisplayService>);
+	trait ManagerRootService {
+        get_display_service [2, version::VersionInterval::all()]: (mode: DisplayServiceMode) => (display_service: ApplicationDisplayService);
     }
 }

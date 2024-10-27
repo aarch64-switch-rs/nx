@@ -1,16 +1,17 @@
 //! Library applet support and utils
 
 use crate::arm;
-use crate::result::*;
-use crate::sync;
-use crate::mem;
 use crate::ipc::sf;
+use crate::mem;
+use crate::result::*;
 use crate::service::applet;
-use crate::service::applet::ILibraryAppletCreator;
 use crate::service::applet::ILibraryAppletAccessor;
-use crate::service::applet::IStorage;
-use crate::wait;
+use crate::service::applet::ILibraryAppletCreator;
+use crate::service::applet::{IStorage, IStorageAccessor, Storage};
+use crate::sync::Mutex;
 use crate::svc;
+use crate::wait;
+use applet::LibraryAppletCreator;
 use core::mem as cmem;
 
 /// Represents the common arguments layout sent as starting input by/to all library applets
@@ -18,7 +19,7 @@ use core::mem as cmem;
 #[repr(C)]
 pub struct CommonArguments {
     /// Represents the [`CommonArguments`] version
-    /// 
+    ///
     /// Usually value `1` is used
     pub version: u32,
     /// [`CommonArguments`] size (essentially the [`size_of`][`cmem::size_of`] this struct)
@@ -32,25 +33,25 @@ pub struct CommonArguments {
     /// Padding bytes
     pub pad: [u8; 7],
     /// Represents the system tick of when the library applet gets launched
-    pub system_tick: u64
+    pub system_tick: u64,
 }
 
 /// Represents a wrapper type for using library applets
 pub struct LibraryAppletHolder {
     accessor: mem::Shared<dyn ILibraryAppletAccessor>,
-    state_changed_event_handle: svc::Handle
+    state_changed_event_handle: svc::Handle,
 }
 
 impl LibraryAppletHolder {
     /// Creates a [`LibraryAppletHolder`] from an existing [`ILibraryAppletAccessor`] shared object
-    /// 
+    ///
     /// This shouldn't be manually created unless the accessor object was obtained manually (see [`create_library_applet`])
     pub fn new(accessor: mem::Shared<dyn ILibraryAppletAccessor>) -> Result<Self> {
-        let state_changed_event_h = accessor.get().get_applet_state_changed_event()?;
+        let state_changed_event_h = accessor.lock().get_applet_state_changed_event()?;
 
         Ok(Self {
             accessor,
-            state_changed_event_handle: state_changed_event_h.handle
+            state_changed_event_handle: state_changed_event_h.handle,
         })
     }
 
@@ -62,12 +63,12 @@ impl LibraryAppletHolder {
 
     /// Pushes an input [`IStorage`] shared object to the library applet
     #[inline]
-    pub fn push_in_data_storage(&mut self, storage: mem::Shared<dyn IStorage>) -> Result<()> {
-        self.accessor.get().push_in_data(storage)
+    pub fn push_in_data_storage(&mut self, storage: Storage) -> Result<()> {
+        self.accessor.lock().push_in_data(storage)
     }
-    
+
     /// Pushes input data to the library applet
-    /// 
+    ///
     /// This is a wrapper which creates an [`IStorage`] object with the given value and pushes it
     pub fn push_in_data<T: Copy>(&mut self, t: T) -> Result<()> {
         let t_st = create_write_storage(t)?;
@@ -77,11 +78,11 @@ impl LibraryAppletHolder {
     /// Starts the library applet
     #[inline]
     pub fn start(&mut self) -> Result<()> {
-        self.accessor.get().start()
+        self.accessor.lock().start()
     }
 
     /// Waits until the library applet's state-changed event signals
-    /// 
+    ///
     /// This effectively waits until the library applet exits
     #[inline]
     pub fn join(&mut self) -> Result<()> {
@@ -91,16 +92,16 @@ impl LibraryAppletHolder {
 
     /// Pops an output [`IStorage`] shared object from the library applet
     #[inline]
-    pub fn pop_out_data_storage(&mut self) -> Result<mem::Shared<dyn IStorage>> {
-        self.accessor.get().pop_out_data()
+    pub fn pop_out_data_storage(&mut self) -> Result<Storage> {
+        self.accessor.lock().pop_out_data()
     }
 
     /// Pops output data from the library applet
-    /// 
+    ///
     /// This is a wrapper which pops an [`IStorage`] object and reads its data (reads [`size_of`][`cmem::size_of`] `O` bytes and returns that data)
     pub fn pop_out_data<O: Copy>(&mut self) -> Result<O> {
-        let o_st = self.pop_out_data_storage()?;
-        read_storage(o_st)
+        let mut o_st = self.pop_out_data_storage()?;
+        read_storage(&mut o_st)
     }
 }
 
@@ -111,113 +112,113 @@ impl Drop for LibraryAppletHolder {
     }
 }
 
-static mut G_CREATOR: sync::Mutex<Option<mem::Shared<dyn ILibraryAppletCreator>>> = sync::Mutex::new(None);
+static G_CREATOR: Mutex<Option<mem::Shared<LibraryAppletCreator>>> = Mutex::new(None);
 
 /// Initializes library applet support with the provided [`ILibraryAppletCreator`] shared object
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `creator`: The shared object to use globally
 #[inline]
-pub fn initialize(creator: mem::Shared<dyn ILibraryAppletCreator>) {
-    unsafe {
-        *G_CREATOR.lock() = Some(creator);
-    }
+pub fn initialize(creator: mem::Shared<LibraryAppletCreator>) {
+    *G_CREATOR.lock() = Some(creator);
 }
 
 /// Gets whether library applet support was initialized
 #[inline]
 pub fn is_initialized() -> bool {
-    unsafe {
-        G_CREATOR.lock().is_some()
-    }
+    G_CREATOR.lock().is_some()
 }
 
-/// Finalizes library applet support, dropping the inner [`ILibraryAppletCreator`] shared object instance
+/// Finalizes library applet support, dropping the inner [`ILibraryAppletCreator`] shared object instance. Gets run in the rrt0 runtime after the main function runs.
 #[inline]
-pub fn finalize() {
-    unsafe {
-        *G_CREATOR.lock() = None;
-    }
+pub(crate) fn finalize() {
+    *G_CREATOR.lock() = None;
 }
 
 /// Gets access to the global [`ILibraryAppletCreator`] shared object instance
-/// 
+///
 /// This will fail with [`ResultNotInitialized`][`super::rc::ResultNotInitialized`] if library applet support isn't initialized
 #[inline]
-pub fn get_creator() -> Result<mem::Shared<dyn ILibraryAppletCreator>> {
-    unsafe {
-        G_CREATOR.lock().clone().ok_or(super::rc::ResultNotInitialized::make())
-    }
+pub fn get_creator() -> Result<mem::Shared<LibraryAppletCreator>> {
+    G_CREATOR
+        .lock()
+        .as_ref()
+        .map(Clone::clone)
+        .ok_or(super::rc::ResultNotInitialized::make())
 }
 
 /// Wrapper for reading data from a [`IStorage`] shared object
-/// 
+///
 /// This will try to read [`size_of`][`cmem::size_of`] `T` bytes from the storage and return them as the expected value
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `storage`: The storage to read from
-pub fn read_storage<T: Copy>(storage: mem::Shared<dyn IStorage>) -> Result<T> {
+pub fn read_storage<T: Copy>(storage: &mut Storage) -> Result<T> {
     let mut t = unsafe { cmem::zeroed::<T>() };
 
-    let storage_accessor = storage.get().open()?;
-    storage_accessor.get().read(0, sf::Buffer::from_other_mut_var(&mut t))?;
+    let storage_accessor = storage.open()?;
+    storage_accessor.read(0, sf::Buffer::from_other_mut_var(&mut t))?;
 
     Ok(t)
 }
 
 /// Wrapper for writing data to a [`IStorage`] shared object
-/// 
+///
 /// This will try to write [`size_of`][`cmem::size_of`] `T` bytes to the storage from the given value
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `storage`: The storage to write to
 /// * `t`: The value to write
-pub fn write_storage<T: Copy>(storage: mem::Shared<dyn IStorage>, t: T) -> Result<()> {
+pub fn write_storage<T: Copy>(storage: &mut Storage, t: T) -> Result<()> {
     result_return_unless!(is_initialized(), super::rc::ResultNotInitialized);
 
-    let storage_accessor = storage.get().open()?;
-    storage_accessor.get().write(0, sf::Buffer::from_other_var(&t))?;
+    let storage_accessor = storage.open()?;
+    storage_accessor.write(0, sf::Buffer::from_other_var(&t))?;
 
     Ok(())
 }
 
 /// Wrapper for creating a [`IStorage`] shared object from the given value
-/// 
+///
 /// This will fail with [`ResultNotInitialized`][`super::rc::ResultNotInitialized`] if library applet support isn't initialized
-/// 
+///
 /// This will create a [`IStorage`] object using the global [`ILibraryAppletCreator`] object and write the given value to it
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `t`: The value to write
-pub fn create_write_storage<T: Copy>(t: T) -> Result<mem::Shared<dyn IStorage>> {
+pub fn create_write_storage<T: Copy>(t: T) -> Result<Storage> {
     result_return_unless!(is_initialized(), super::rc::ResultNotInitialized);
 
-    let storage = get_creator()?.get().create_storage(cmem::size_of::<T>())?;
-    write_storage(storage.clone(), t)?;
+    let mut storage = get_creator()?.lock().create_storage(cmem::size_of::<T>())?;
+    write_storage(&mut storage, t)?;
 
     Ok(storage)
 }
 
 /// Creates a [`LibraryAppletHolder`] from the given library applet params
-/// 
+///
 /// This automatically sets the [`CommonArguments`] `system_tick` value to the current system tick and pushes it as input using [`push_in_data`][`LibraryAppletHolder::push_in_data`]
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `id`: The [`AppletId`][`applet::AppletId`] of the library applet to create
 /// * `mode`: The [`LibraryAppletMode`][`applet::LibraryAppletMode`] to create the library applet with
 /// * `common_args`: The library applet-specific [`CommonArguments`] to send as input
-pub fn create_library_applet(id: applet::AppletId, mode: applet::LibraryAppletMode, mut common_args: CommonArguments) -> Result<LibraryAppletHolder> {
+pub fn create_library_applet(
+    id: applet::AppletId,
+    mode: applet::LibraryAppletMode,
+    mut common_args: CommonArguments,
+) -> Result<LibraryAppletHolder> {
     result_return_unless!(is_initialized(), super::rc::ResultNotInitialized);
 
-    let accessor = get_creator()?.get().create_library_applet(id, mode)?;
+    let accessor = get_creator()?.lock().create_library_applet(id, mode)?;
 
-    let mut holder = LibraryAppletHolder::new(accessor)?;
-    
+    let mut holder = LibraryAppletHolder::new(mem::Shared::new(accessor))?;
+
     common_args.system_tick = arm::get_system_tick();
     holder.push_in_data(common_args)?;
 
@@ -225,18 +226,23 @@ pub fn create_library_applet(id: applet::AppletId, mode: applet::LibraryAppletMo
 }
 
 /// Wrapper to create, launch and wait for a library applet, expecting simple input and output data
-/// 
+///
 /// The mode used (since all simple library applets expect it) is [`LibraryAppletMode::AllForeground`][`applet::LibraryAppletMode::AllForeground`]
-/// 
+///
 /// Note that this won't be useful, for instance, with library applets taking interactive in/out data, like [`AppletId::LibraryAppletSwkbd`][`applet::AppletId::LibraryAppletSwkbd`]
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `id`: The [`AppletId`][`applet::AppletId`] of the library applet to create
 /// * `common_args`: The library applet-specific [`CommonArguments`] to send as input
 /// * `input`: The only input data to send after the [`CommonArguments`]
-pub fn launch_wait_library_applet<I: Copy, O: Copy>(id: applet::AppletId, common_args: CommonArguments, input: I) -> Result<O> {
-    let mut holder = create_library_applet(id, applet::LibraryAppletMode::AllForeground, common_args)?;
+pub fn launch_wait_library_applet<I: Copy, O: Copy>(
+    id: applet::AppletId,
+    common_args: CommonArguments,
+    input: I,
+) -> Result<O> {
+    let mut holder =
+        create_library_applet(id, applet::LibraryAppletMode::AllForeground, common_args)?;
     holder.push_in_data(input)?;
     holder.start()?;
     holder.join()?;

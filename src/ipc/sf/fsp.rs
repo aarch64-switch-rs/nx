@@ -1,6 +1,5 @@
 use crate::result::*;
 use crate::ipc::sf;
-use crate::mem;
 use crate::util;
 use crate::version;
 
@@ -108,8 +107,10 @@ pub enum OperationId {
     ReadLazyLoadFileForciblyForDebug = 10001
 }
 
+//api_mark_request_command_parameters_types_as_copy!(OperationId, QueryId, FileQueryRangeInfo, DirectoryEntry, DirectoryEntryType, FileTimeStampRaw);
+ipc_sf_define_default_interface_client!(File);
 ipc_sf_define_interface_trait! {
-    trait IFile {
+	trait File {
         read [0, version::VersionInterval::all()]: (option: FileReadOption, offset: usize, size: usize, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) => (read_size: usize);
         write [1, version::VersionInterval::all()]: (option: FileWriteOption, offset: usize, size: usize, buf: sf::InNonSecureMapAliasBuffer<u8>) => ();
         flush [2, version::VersionInterval::all()]: () => ();
@@ -120,15 +121,17 @@ ipc_sf_define_interface_trait! {
     }
 }
 
+ipc_sf_define_default_interface_client!(Directory);
 ipc_sf_define_interface_trait! {
-    trait IDirectory {
+	trait Directory {
         read [0, version::VersionInterval::all()]: (out_entries: sf::OutMapAliasBuffer<DirectoryEntry>) => (read_count: u64);
         get_entry_count [1, version::VersionInterval::all()]: () => (count: u64);
     }
 }
 
+ipc_sf_define_default_interface_client!(FileSystem);
 ipc_sf_define_interface_trait! {
-    trait IFileSystem {
+	trait FileSystem {
         create_file [0, version::VersionInterval::all()]: (attribute: FileAttribute, size: usize, path_buf: sf::InFixedPointerBuffer<Path>) => ();
         delete_file [1, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer<Path>) => ();
         create_directory [2, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer<Path>) => ();
@@ -137,8 +140,8 @@ ipc_sf_define_interface_trait! {
         rename_file [5, version::VersionInterval::all()]: (old_path_buf: sf::InFixedPointerBuffer<Path>, new_path_buf: sf::InFixedPointerBuffer<Path>) => ();
         rename_directory [6, version::VersionInterval::all()]: (old_path_buf: sf::InFixedPointerBuffer<Path>, new_path_buf: sf::InFixedPointerBuffer<Path>) => ();
         get_entry_type [7, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer<Path>) => (entry_type: DirectoryEntryType);
-        open_file [8, version::VersionInterval::all()]: (mode: FileOpenMode, path_buf: sf::InFixedPointerBuffer<Path>) => (file: mem::Shared<dyn IFile>);
-        open_directory [9, version::VersionInterval::all()]: (mode: DirectoryOpenMode, path_buf: sf::InFixedPointerBuffer<Path>) => (dir: mem::Shared<dyn IDirectory>);
+        open_file [8, version::VersionInterval::all()]: (mode: FileOpenMode, path_buf: sf::InFixedPointerBuffer<Path>) => (file: File);
+        open_directory [9, version::VersionInterval::all()]: (mode: DirectoryOpenMode, path_buf: sf::InFixedPointerBuffer<Path>) => (dir: Directory);
         commit [10, version::VersionInterval::all()]: () => ();
         get_free_space_size [11, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer<Path>) => (size: usize);
         get_total_space_size [12, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer<Path>) => (size: usize);
@@ -148,10 +151,11 @@ ipc_sf_define_interface_trait! {
     }
 }
 
+ipc_sf_define_default_interface_client!(FileSystemProxy);
 ipc_sf_define_interface_trait! {
-    trait IFileSystemProxy {
+	trait FileSystemProxy {
         set_current_process [1, version::VersionInterval::all()]: (process_id: sf::ProcessId) => ();
-        open_sd_card_filesystem [18, version::VersionInterval::all()]: () => (sd_filesystem: mem::Shared<dyn IFileSystem>);
+        open_sd_card_filesystem [18, version::VersionInterval::all()]: () => (sd_filesystem: FileSystem);
         output_access_log_to_sd_card [1006, version::VersionInterval::all()]: (log_buf: sf::InMapAliasBuffer<u8>) => ();
     }
 }

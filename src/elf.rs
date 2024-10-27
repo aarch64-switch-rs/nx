@@ -1,5 +1,9 @@
 //! ELF (aarch64) support and utils
 
+use core::{ptr::null_mut, sync::atomic::{AtomicPtr, AtomicUsize}};
+
+use unwinding::custom_eh_frame_finder::{FrameInfo, FrameInfoKind};
+
 use crate::result::*;
 
 pub mod rc;
@@ -100,7 +104,7 @@ pub struct Rela {
 /// 
 /// * `base_address`: The base address to relocate
 /// * `start_dyn`: The [`Dyn`] reference
-pub unsafe fn relocate_with_dyn(base_address: *const u8, start_dyn: *const Dyn) -> Result<()> {
+pub unsafe fn relocate_with_dyn(base_address: *mut u8, start_dyn: *const Dyn) -> Result<()> {
     unsafe {
         let mut rel_offset_v: Option<usize> = None;
         let mut rel_entry_size_v: Option<usize> = None;
@@ -152,6 +156,40 @@ pub unsafe fn relocate_with_dyn(base_address: *const u8, start_dyn: *const Dyn) 
         }
     }
     Ok(())
+}
+
+/// A stuct containing a pointer sized int, representing a pointer to the start of the eh_frame_hdr elf section.
+/// This is obviously not a great option to use with Rust's upcoming strict/exposed providence APIs, but works fine here as
+/// the Switch has a single address space and the memory will have a static lifetime that is longer than the currently running code.
+#[derive(Debug)]
+pub struct EhFrameHdrPtr(AtomicPtr<u8>);
+
+impl EhFrameHdrPtr {
+    pub const fn new() -> Self {
+        Self(AtomicPtr::new(null_mut()))
+    }
+    
+    pub fn set(&self, val: *mut u8) {
+        self.0.store(val, core::sync::atomic::Ordering::SeqCst);
+    } 
+}
+
+unsafe impl Sync for EhFrameHdrPtr {}
+
+unsafe impl unwinding::custom_eh_frame_finder::EhFrameFinder for EhFrameHdrPtr{
+    fn find(&self, _pc: usize) -> Option<unwinding::custom_eh_frame_finder::FrameInfo> {
+        match self.0.load(core::sync::atomic::Ordering::SeqCst) {
+            ptr if !ptr.is_null() => {
+                Some(
+                    FrameInfo {
+                        text_base: None,
+                        kind: FrameInfoKind::EhFrameHdr(ptr as usize)
+                    }
+                )
+            },
+            _ => None
+        }
+    }
 }
 
 pub mod mod0;

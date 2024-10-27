@@ -55,6 +55,8 @@
 #![feature(set_ptr_value)]
 #![feature(alloc_layout_extra)]
 #![feature(try_blocks)]
+#![feature(get_mut_unchecked)]
+#![feature(unsafe_pin_internals)]
 #![macro_use]
 
 use core::arch::global_asm;

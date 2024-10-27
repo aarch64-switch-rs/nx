@@ -42,8 +42,11 @@ pub enum IoctlId {
 
 pub type Fd = u32;
 
+//api_mark_request_command_parameters_types_as_copy!(IoctlId, ErrorCode);
+
+ipc_sf_define_default_interface_client!(NvDrvServices);
 ipc_sf_define_interface_trait! {
-    trait INvDrvServices {
+	trait NvDrvServices {
         open [0, version::VersionInterval::all()]: (path: sf::InMapAliasBuffer<u8>) => (fd: Fd, error_code: ErrorCode);
         ioctl [1, version::VersionInterval::all()]: (fd: Fd, id: IoctlId, in_buf: sf::InAutoSelectBuffer<u8>, out_buf: sf::OutAutoSelectBuffer<u8>) => (error_code: ErrorCode);
         close [2, version::VersionInterval::all()]: (fd: Fd) => (error_code: ErrorCode);

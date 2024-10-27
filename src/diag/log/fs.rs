@@ -2,15 +2,13 @@
 
 use super::*;
 use crate::result::*;
-use crate::mem;
 use crate::ipc::sf;
 use crate::service;
-use crate::service::fsp::srv;
-use crate::service::fsp::srv::IFileSystemProxy;
+use crate::service::fsp::srv::{self, IFileSystemProxy};
 
 /// Represents a logger though `FsAccessLog`s (see [`output_access_log_to_sd_card`][`srv::FileSystemProxy::output_access_log_to_sd_card`])
 pub struct FsAccessLogLogger {
-    service: Result<mem::Shared<srv::FileSystemProxy>>
+    service: Result<srv::FileSystemProxy>
 }
 
 impl Logger for FsAccessLogLogger {
@@ -22,7 +20,7 @@ impl Logger for FsAccessLogLogger {
         let msg = format_plain_string_log_impl(metadata, "FsAccessLog");
         match self.service {
             Ok(ref mut fspsrv) => {
-                let _ = fspsrv.get().output_access_log_to_sd_card(sf::Buffer::from_array(msg.as_bytes()));
+                let _ = fspsrv.output_access_log_to_sd_card(sf::Buffer::from_array(msg.as_bytes()));
             },
             _ => {}
         }

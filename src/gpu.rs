@@ -1,9 +1,13 @@
 //! Graphics and GPU support and utils
 
+use crate::mem::Shared;
 use crate::result::*;
 use crate::service;
 use crate::mem;
 use crate::mem::alloc;
+use crate::service::vi::ApplicationDisplayService;
+use crate::service::vi::IManagerDisplayService;
+use crate::service::vi::ISystemDisplayService;
 use crate::svc;
 use crate::ipc::sf;
 use crate::service::nv;
@@ -894,15 +898,21 @@ pub fn convert_nv_error_code(err: nv::ErrorCode) -> Result<()> {
 /// Represents a graphics context
 #[allow(dead_code)]
 pub struct Context {
-    vi_service: mem::Shared<dyn sf::IObject>,
+    vi_service: mem::Shared<ViServiceDispatcher>,
     nvdrv_service: mem::Shared<dyn INvDrvServices>,
-    application_display_service: mem::Shared<dyn IApplicationDisplayService>,
-    hos_binder_driver: mem::Shared<dyn dispdrv::IHOSBinderDriver>,
+    application_display_service: mem::Shared<vi::ApplicationDisplayService>,
+    hos_binder_driver: mem::Shared<dispdrv::HOSBinderDriver>,
     transfer_mem: alloc::Buffer<u8>,
     transfer_mem_handle: svc::Handle,
     nvhost_fd: u32,
     nvmap_fd: u32,
     nvhostctrl_fd: u32,
+}
+
+pub enum ViServiceDispatcher {
+    Application(vi::ApplicationRootService),
+    Manager(vi::ManagerRootService),
+    System(vi::SystemRootService),
 }
 
 impl Context {
@@ -920,38 +930,38 @@ impl Context {
         // Storing it as a IObject shared-ptr since different vi services have different base interfaces...
         let (vi_srv, application_display_srv) = match vi_kind {
             ViServiceKind::Manager => {
-                let vi_srv = service::new_service_object::<vi::ManagerRootService>()?;
-                let app_disp_srv: mem::Shared<dyn IApplicationDisplayService> = vi_srv.get().get_display_service(vi::DisplayServiceMode::Privileged)?;
+                let mut vi_srv = service::new_service_object::<vi::ManagerRootService>()?;
+                let app_disp_srv: mem::Shared<ApplicationDisplayService> = mem::Shared::new(vi_srv.get_display_service(vi::DisplayServiceMode::Privileged)?);
 
-                (vi_srv as mem::Shared<dyn sf::IObject>, app_disp_srv)
+                (ViServiceDispatcher::Manager(vi_srv), app_disp_srv)
             },
             ViServiceKind::System => {
-                let vi_srv = service::new_service_object::<vi::SystemRootService>()?;
-                let app_disp_srv: mem::Shared<dyn IApplicationDisplayService> = vi_srv.get().get_display_service(vi::DisplayServiceMode::Privileged)?;
+                let mut vi_srv = service::new_service_object::<vi::SystemRootService>()?;
+                let app_disp_srv: mem::Shared<ApplicationDisplayService> = mem::Shared::new(vi_srv.get_display_service(vi::DisplayServiceMode::Privileged)?);
 
-                (vi_srv as mem::Shared<dyn sf::IObject>, app_disp_srv)
+                (ViServiceDispatcher::System(vi_srv), app_disp_srv)
             },
             ViServiceKind::Application => {
-                let vi_srv = service::new_service_object::<vi::ApplicationRootService>()?;
-                let app_disp_srv: mem::Shared<dyn IApplicationDisplayService> = vi_srv.get().get_display_service(vi::DisplayServiceMode::User)?;
+                let mut vi_srv = service::new_service_object::<vi::ApplicationRootService>()?;
+                let app_disp_srv: mem::Shared<ApplicationDisplayService> = mem::Shared::new(vi_srv.get_display_service(vi::DisplayServiceMode::User)?);
 
-                (vi_srv as mem::Shared<dyn sf::IObject>, app_disp_srv)
+                (ViServiceDispatcher::Application(vi_srv), app_disp_srv)
             }
         };
 
-        let nvdrv_srv = match nv_kind {
+        let nvdrv_srv: Shared<dyn INvDrvServices> = match nv_kind {
             NvDrvServiceKind::Application => {
-                service::new_service_object::<nv::ApplicationNvDrvService>()? as mem::Shared<dyn INvDrvServices>
+                mem::Shared::new(service::new_service_object::<nv::ApplicationNvDrvService>()?)
             },
             NvDrvServiceKind::Applet => {
-                service::new_service_object::<nv::AppletNvDrvService>()? as mem::Shared<dyn INvDrvServices>
+                mem::Shared::new(service::new_service_object::<nv::AppletNvDrvService>()?)
             },
             NvDrvServiceKind::System => {
-                service::new_service_object::<nv::SystemNvDrvService>()? as mem::Shared<dyn INvDrvServices>
+                mem::Shared::new(service::new_service_object::<nv::SystemNvDrvService>()?)
             }
         };
 
-        Self::from(vi_srv, application_display_srv, nvdrv_srv, transfer_mem_size)
+        Self::from(Shared::new(vi_srv), application_display_srv, nvdrv_srv, transfer_mem_size)
     }
 
     /// Creates a new [`Context`] with already existing service objects
@@ -964,20 +974,20 @@ impl Context {
     /// * `application_display_srv`: The VI [`IApplicationDisplayService`] interface object
     /// * `nvdrv_srv`: The NV [`INvDrvServices`] service object
     /// * `transfer_mem_size`: The transfer memory size to use
-    pub fn from(vi_srv: mem::Shared<dyn sf::IObject>, application_display_srv: mem::Shared<dyn IApplicationDisplayService>, nvdrv_srv: mem::Shared<dyn INvDrvServices>, transfer_mem_size: usize) -> Result<Self> {
+    pub fn from(vi_srv: mem::Shared<ViServiceDispatcher>, application_display_srv: mem::Shared<ApplicationDisplayService>, nvdrv_srv: mem::Shared<dyn INvDrvServices>, transfer_mem_size: usize) -> Result<Self> {
         let transfer_mem = alloc::Buffer::new(alloc::PAGE_ALIGNMENT, transfer_mem_size)?;
         let transfer_mem_handle = unsafe {svc::create_transfer_memory(transfer_mem.ptr, transfer_mem_size, svc::MemoryPermission::None())?};
-        nvdrv_srv.get().initialize(transfer_mem_size as u32, sf::Handle::from(svc::CURRENT_PROCESS_PSEUDO_HANDLE), sf::Handle::from(transfer_mem_handle))?;
+        nvdrv_srv.lock().initialize(transfer_mem_size as u32, sf::Handle::from(svc::CURRENT_PROCESS_PSEUDO_HANDLE), sf::Handle::from(transfer_mem_handle))?;
 
-        let (nvhost_fd, nvhost_err) = nvdrv_srv.get().open(sf::Buffer::from_array(NVHOST_AS_GPU_PATH.as_bytes()))?;
+        let (nvhost_fd, nvhost_err) = nvdrv_srv.lock().open(sf::Buffer::from_array(NVHOST_AS_GPU_PATH.as_bytes()))?;
         convert_nv_error_code(nvhost_err)?;
-        let (nvmap_fd, nvmap_err) = nvdrv_srv.get().open(sf::Buffer::from_array(NVMAP_PATH.as_bytes()))?;
+        let (nvmap_fd, nvmap_err) = nvdrv_srv.lock().open(sf::Buffer::from_array(NVMAP_PATH.as_bytes()))?;
         convert_nv_error_code(nvmap_err)?;
-        let (nvhostctrl_fd, nvhostctrl_err) = nvdrv_srv.get().open(sf::Buffer::from_array(NVHOST_CTRL_PATH.as_bytes()))?;
+        let (nvhostctrl_fd, nvhostctrl_err) = nvdrv_srv.lock().open(sf::Buffer::from_array(NVHOST_CTRL_PATH.as_bytes()))?;
         convert_nv_error_code(nvhostctrl_err)?;
         
-        let hos_binder_drv = application_display_srv.get().get_relay_service()?;
-        Ok(Self { vi_service: vi_srv, nvdrv_service: nvdrv_srv, application_display_service: application_display_srv, hos_binder_driver: hos_binder_drv, transfer_mem, transfer_mem_handle, nvhost_fd, nvmap_fd, nvhostctrl_fd })
+        let hos_binder_drv = application_display_srv.lock().get_relay_service()?;
+        Ok(Self { vi_service: vi_srv, nvdrv_service: nvdrv_srv, application_display_service: application_display_srv, hos_binder_driver: Shared::new(hos_binder_drv), transfer_mem, transfer_mem_handle, nvhost_fd, nvmap_fd, nvhostctrl_fd })
     }
 
     /// Gets the underlying NV [`INvDrvServices`] service object
@@ -986,7 +996,7 @@ impl Context {
     }
 
     /// Gets the underlying [`IApplicationDisplayService`] object
-    pub fn get_application_display_service(&self) -> mem::Shared<dyn IApplicationDisplayService> {
+    pub fn get_application_display_service(&self) -> mem::Shared<ApplicationDisplayService> {
         self.application_display_service.clone()
     }
 
@@ -995,13 +1005,12 @@ impl Context {
         self.hos_binder_driver.clone()
     }
 
-    fn stray_layer_destroy(layer_id: vi::LayerId, application_display_service: mem::Shared<dyn IApplicationDisplayService>) -> Result<()> {
-        application_display_service.get().destroy_stray_layer(layer_id)
+    fn stray_layer_destroy(layer_id: vi::LayerId, application_display_service: &mut ApplicationDisplayService) -> Result<()> {
+        application_display_service.destroy_stray_layer(layer_id)
     }
 
-    fn managed_layer_destroy(layer_id: vi::LayerId, application_display_service: mem::Shared<dyn IApplicationDisplayService>) -> Result<()> {
-        let manager_display_service = application_display_service.get().get_manager_display_service()?;
-        manager_display_service.get().destroy_managed_layer(layer_id)
+    fn managed_layer_destroy(layer_id: vi::LayerId, application_display_service: &mut ApplicationDisplayService) -> Result<()> {
+        application_display_service.get_manager_display_service()?.destroy_managed_layer(layer_id)
     }
 
     fn create_surface_impl(&mut self, buffer_count: u32, display_id: vi::DisplayId, layer_id: vi::LayerId, width: u32, height: u32, color_fmt: ColorFormat, pixel_fmt: PixelFormat, layout: Layout, layer_destroy_fn: surface::LayerDestroyFn, native_window: parcel::ParcelPayload) -> Result<surface::Surface> {
@@ -1022,28 +1031,28 @@ impl Context {
     /// * `pixel_fmt`: The pixel format to use
     /// * `layout`: The layout type to use
     pub fn create_stray_layer_surface(&mut self, display_name: &str, buffer_count: u32, color_fmt: ColorFormat, pixel_fmt: PixelFormat, layout: Layout) -> Result<surface::Surface> {
-        let display_id = self.application_display_service.get().open_display(vi::DisplayName::from_str(display_name))?;
+        let display_id = self.application_display_service.lock().open_display(vi::DisplayName::from_str(display_name))?;
         let native_window = parcel::ParcelPayload::new();
-        let (layer_id, _) = self.application_display_service.get().create_stray_layer(vi::LayerFlags::Default(), display_id, sf::Buffer::from_other_var(&native_window))?;
+        let (layer_id, _) = self.application_display_service.lock().create_stray_layer(vi::LayerFlags::Default(), display_id, sf::Buffer::from_other_var(&native_window))?;
 
         self.create_surface_impl(buffer_count, display_id, layer_id, SCREEN_WIDTH, SCREEN_HEIGHT, color_fmt, pixel_fmt, layout, Self::stray_layer_destroy, native_window)
     }
 
-    fn set_layer_z_impl(display_id: vi::DisplayId, layer_id: vi::LayerId, z: LayerZ, system_display_service: mem::Shared<dyn vi::ISystemDisplayService>) -> Result<()> {
+    fn set_layer_z_impl(display_id: vi::DisplayId, layer_id: vi::LayerId, z: LayerZ, system_display_service: &mut vi::SystemDisplayService) -> Result<()> {
         let z_value = match z {
-            LayerZ::Max => system_display_service.get().get_z_order_count_max(display_id)?,
-            LayerZ::Min => system_display_service.get().get_z_order_count_min(display_id)?,
+            LayerZ::Max => system_display_service.get_z_order_count_max(display_id)?,
+            LayerZ::Min => system_display_service.get_z_order_count_min(display_id)?,
             LayerZ::Value(z_val) => z_val
         };
-        system_display_service.get().set_layer_z(layer_id, z_value)
+        system_display_service.set_layer_z(layer_id, z_value)
     }
 
-    fn set_layer_size_impl(layer_id: vi::LayerId, width: u32, height: u32, system_display_service: mem::Shared<dyn vi::ISystemDisplayService>) -> Result<()> {
-        system_display_service.get().set_layer_size(layer_id, (width as f32 * SIZE_FACTOR) as u64, (height as f32 * SIZE_FACTOR) as u64)
+    fn set_layer_size_impl(layer_id: vi::LayerId, width: u32, height: u32, system_display_service: &mut vi::SystemDisplayService) -> Result<()> {
+        system_display_service.set_layer_size(layer_id, (width as f32 * SIZE_FACTOR) as u64, (height as f32 * SIZE_FACTOR) as u64)
     }
 
-    fn set_layer_position_impl(layer_id: vi::LayerId, x: f32, y: f32, system_display_service: mem::Shared<dyn vi::ISystemDisplayService>) -> Result<()> {
-        system_display_service.get().set_layer_position(x * SIZE_FACTOR, y * SIZE_FACTOR, layer_id)
+    fn set_layer_position_impl(layer_id: vi::LayerId, x: f32, y: f32, system_display_service: &mut vi::SystemDisplayService) -> Result<()> {
+        system_display_service.set_layer_position(x * SIZE_FACTOR, y * SIZE_FACTOR, layer_id)
     }
 
     /// Creates a [`Surface`][`surface::Surface`] based on a managed layer
@@ -1066,16 +1075,16 @@ impl Context {
     /// * `layout`: The layout type to use
     pub fn create_managed_layer_surface(&mut self, display_name: &str, aruid: applet::AppletResourceUserId, layer_flags: vi::LayerFlags, x: f32, y: f32, width: u32, height: u32, z: LayerZ, buffer_count: u32, color_fmt: ColorFormat, pixel_fmt: PixelFormat, layout: Layout) -> Result<surface::Surface> {
         let display_name_v = vi::DisplayName::from_str(display_name);
-        let display_id = self.application_display_service.get().open_display(display_name_v)?;
-        let system_display_service = self.application_display_service.get().get_system_display_service()?;
-        let manager_display_service = self.application_display_service.get().get_manager_display_service()?;
+        let display_id = self.application_display_service.lock().open_display(display_name_v)?;
+        let mut system_display_service = self.application_display_service.lock().get_system_display_service()?;
+        let mut manager_display_service = self.application_display_service.lock().get_manager_display_service()?;
         let native_window = parcel::ParcelPayload::new();
 
-        let layer_id = manager_display_service.get().create_managed_layer(layer_flags, display_id, aruid)?;
-        self.application_display_service.get().open_layer(display_name_v, layer_id, sf::ProcessId::from(aruid), sf::Buffer::from_other_var(&native_window))?;
-        Self::set_layer_position_impl(layer_id, x, y, system_display_service.clone())?;
-        Self::set_layer_size_impl(layer_id, width, height, system_display_service.clone())?;
-        Self::set_layer_z_impl(display_id, layer_id, z, system_display_service)?;
+        let layer_id = manager_display_service.create_managed_layer(layer_flags, display_id, aruid)?;
+        self.application_display_service.lock().open_layer(display_name_v, layer_id, sf::ProcessId::from(aruid), sf::Buffer::from_other_var(&native_window))?;
+        Self::set_layer_position_impl(layer_id, x, y, &mut system_display_service)?;
+        Self::set_layer_size_impl(layer_id, width, height, &mut system_display_service)?;
+        Self::set_layer_z_impl(display_id, layer_id, z, &mut system_display_service)?;
 
         self.create_surface_impl(buffer_count, display_id, layer_id, width, height, color_fmt, pixel_fmt, layout, Self::managed_layer_destroy, native_window)
     }
@@ -1085,12 +1094,12 @@ impl Drop for Context {
     /// Destroys the [`Context`], closing everything it opened when it was created
     #[allow(unused_must_use)]
     fn drop(&mut self) {
-        self.nvdrv_service.get().close(self.nvhost_fd);
-        self.nvdrv_service.get().close(self.nvmap_fd);
-        self.nvdrv_service.get().close(self.nvhostctrl_fd);
+        self.nvdrv_service.lock().close(self.nvhost_fd);
+        self.nvdrv_service.lock().close(self.nvmap_fd);
+        self.nvdrv_service.lock().close(self.nvhostctrl_fd);
         
-        self.nvdrv_service.get().close(self.transfer_mem_handle);
-        self.nvdrv_service.get().get_session().close();
+        self.nvdrv_service.lock().close(self.transfer_mem_handle);
+        self.nvdrv_service.lock().get_session_mut().close();
         svc::close_handle(self.transfer_mem_handle).unwrap();
         mem::wait_for_permission(self.transfer_mem.ptr,  MemoryPermission::Write(), None);
     }

@@ -68,6 +68,7 @@ pub struct EndPointDescriptor {
     interval: u8
 }
 const_assert!(core::mem::size_of::<EndPointDescriptor>() == 0x7);
+//api_mark_request_command_parameters_types_as_copy!(EndPointDescriptor);
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]

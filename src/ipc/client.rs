@@ -10,6 +10,7 @@ pub trait ResponseCommandParameter<O> {
     fn after_response_read(walker: &mut DataWalker, ctx: &mut CommandContext) -> Result<O>;
 }
 
+
 impl<T: Copy> RequestCommandParameter for T {
     default fn before_request_write(_raw: &Self, walker: &mut DataWalker, _ctx: &mut CommandContext) -> Result<()> {
         walker.advance::<Self>();
@@ -21,6 +22,7 @@ impl<T: Copy> RequestCommandParameter for T {
         Ok(())
     }
 }
+
 
 impl<T: Copy> ResponseCommandParameter<T> for T {
     default fn after_response_read(walker: &mut DataWalker, _ctx: &mut CommandContext) -> Result<Self> {
@@ -37,6 +39,7 @@ impl<const A: BufferAttribute, T> RequestCommandParameter for sf::Buffer<A, T> {
         Ok(())
     }
 }
+     
 
 impl<const A: BufferAttribute, T> !ResponseCommandParameter<sf::Buffer<A, T>> for sf::Buffer<A, T> {}
 
@@ -49,12 +52,15 @@ impl<const M: HandleMode> RequestCommandParameter for sf::Handle<M> {
         Ok(())
     }
 }
+ 
+
 
 impl<const M: HandleMode> ResponseCommandParameter<sf::Handle<M>> for sf::Handle<M> {
     fn after_response_read(_walker: &mut DataWalker, ctx: &mut CommandContext) -> Result<Self> {
         ctx.out_params.pop_handle()
     }
 }
+
 
 impl RequestCommandParameter for sf::ProcessId {
     fn before_request_write(_process_id: &Self, walker: &mut DataWalker, ctx: &mut CommandContext) -> Result<()> {
@@ -77,9 +83,10 @@ impl RequestCommandParameter for sf::ProcessId {
 
 impl !ResponseCommandParameter<sf::ProcessId> for sf::ProcessId {}
 
+
 impl<S: sf::IObject + ?Sized> RequestCommandParameter for mem::Shared<S> {
     fn before_request_write(session: &Self, _walker: &mut DataWalker, ctx: &mut CommandContext) -> Result<()> {
-        ctx.in_params.add_object(session.get().get_session().object_info)
+        ctx.in_params.add_object(session.lock().get_session().object_info)
     }
 
     fn before_send_sync_request(_session: &Self, _walker: &mut DataWalker, _ctx: &mut CommandContext) -> Result<()> {
@@ -97,16 +104,16 @@ impl<S: IClientObject + 'static + Sized> ResponseCommandParameter<mem::Shared<S>
 pub trait IClientObject: sf::IObject {
     fn new(session: sf::Session) -> Self where Self: Sized;
 
-    fn get_info(&mut self) -> ObjectInfo {
+    fn get_info(&self) -> ObjectInfo {
         self.get_session().object_info
     }
 
     fn set_info(&mut self, info: ObjectInfo) {
-        self.get_session().set_info(info);
+        self.get_session_mut().set_info(info);
     }
 
     fn convert_to_domain(&mut self) -> Result<()> {
-        self.get_session().convert_to_domain()
+        self.get_session_mut().convert_to_domain()
     }
 
     fn query_own_pointer_buffer_size(&mut self) -> Result<u16> {
@@ -114,7 +121,7 @@ pub trait IClientObject: sf::IObject {
     }
 
     fn close_session(&mut self) {
-        self.get_session().close()
+        self.get_session_mut().close()
     }
 
     fn is_valid(&mut self) -> bool {

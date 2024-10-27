@@ -1,6 +1,5 @@
 use crate::result::*;
 use crate::ipc::sf;
-use crate::mem;
 use crate::util;
 use crate::version;
 
@@ -9,9 +8,6 @@ use crate::service;
 
 #[cfg(feature = "services")]
 use crate::service::set;
-
-#[cfg(feature = "services")]
-use crate::service::set::ISystemSettingsServer;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
@@ -1676,8 +1672,9 @@ pub fn compute_crc16(buffer: &[u8], base_crc: u16, reverse_endianess: bool) -> u
 #[cfg(feature = "services")]
 #[inline]
 pub fn get_device_id() -> Result<CreateId> {
-    let set_sys: mem::Shared<set::SystemSettingsServer> = service::new_service_object()?;
-    set_sys.get().get_mii_author_id()
+    use super::set::ISystemSettingsServer;
+
+    service::new_service_object::<set::SystemSettingsServer>()?.get_mii_author_id()
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -1738,8 +1735,11 @@ impl StoreData {
     }
 }
 
+//api_mark_request_command_parameters_types_as_copy!(SpecialKeyCode, CharInfo);
+
+ipc_sf_define_default_interface_client!(DatabaseService);
 ipc_sf_define_interface_trait! {
-    trait IDatabaseService {
+	trait DatabaseService {
         is_updated [0, version::VersionInterval::all()]: (flag: SourceFlag) => (updated: bool);
         is_full [1, version::VersionInterval::all()]: () => (full: bool);
         get_count [2, version::VersionInterval::all()]: (flag: SourceFlag) => (count: u32);
@@ -1748,8 +1748,9 @@ ipc_sf_define_interface_trait! {
     }
 }
 
+ipc_sf_define_default_interface_client!(StaticService);
 ipc_sf_define_interface_trait! {
-    trait IStaticService {
-        get_database_service [0, version::VersionInterval::all()]: (key_code: SpecialKeyCode) => (database_service: mem::Shared<dyn IDatabaseService>);
+	trait StaticService {
+        get_database_service [0, version::VersionInterval::all()]: (key_code: SpecialKeyCode) => (database_service: DatabaseService);
     }
 }

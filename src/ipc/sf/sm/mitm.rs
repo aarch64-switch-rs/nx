@@ -8,5 +8,6 @@ pub struct MitmProcessInfo {
     pub npad_buttons: hid::NpadButton,
     pub override_flags: u64
 }
+//api_mark_request_command_parameters_types_as_copy!(MitmProcessInfo);
 
 pub mod rc;

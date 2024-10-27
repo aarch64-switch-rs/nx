@@ -1,7 +1,6 @@
 use crate::result::*;
 use crate::version;
 use crate::ipc::sf;
-use crate::mem;
 use crate::util::CString;
 use core::fmt::{Display, Debug, Formatter, Result as FmtResult};
 
@@ -145,8 +144,11 @@ pub struct ContentMetaInfo {
     pub pad: [u8; 2]
 }
 
+//api_mark_request_command_parameters_types_as_copy!(ProgramId, ApplicationId, ContentMetaKey, ContentType, ContentMetaType, ContentId, ContentInstallType, StorageId);
+
+ipc_sf_define_default_interface_client!(ContentMetaDatabase);
 ipc_sf_define_interface_trait! {
-    trait IContentMetaDatabase {
+	trait ContentMetaDatabase {
         set [0, version::VersionInterval::all()]: (meta_key: ContentMetaKey, in_rec_buf: sf::InMapAliasBuffer<u8>) => ();
         get [1, version::VersionInterval::all()]: (meta_key: ContentMetaKey, out_rec_buf: sf::OutMapAliasBuffer<u8>) => (size: usize);
         remove [2, version::VersionInterval::all()]: (meta_key: ContentMetaKey) => ();
@@ -173,8 +175,9 @@ ipc_sf_define_interface_trait! {
     }
 }
 
+ipc_sf_define_default_interface_client!(ContentManager);
 ipc_sf_define_interface_trait! {
-    trait IContentManager {
-        open_content_meta_database [0, version::VersionInterval::all()]: (storage_id: StorageId) => (meta_db: mem::Shared<dyn IContentMetaDatabase>);
+	trait ContentManager {
+        open_content_meta_database [0, version::VersionInterval::all()]: (storage_id: StorageId) => (meta_db: ContentMetaDatabase);
     }
 }

@@ -15,6 +15,8 @@ pub struct Version {
     pub micro: u8
 }
 
+unsafe impl Sync for Version {}
+
 impl Version {
     /// Creates an empty [`Version`] (with value `0.0.0`)
     #[inline]
@@ -143,7 +145,7 @@ impl VersionInterval {
     }
 }
 
-static mut G_VERSION: sync::Mutex<Version> = sync::Mutex::new(Version::empty());
+static G_VERSION: sync::Mutex<Version> = sync::Mutex::new(Version::empty());
 
 /// Sets the global [`Version`], used in the library as the system [`Version`]
 /// 
@@ -153,16 +155,12 @@ static mut G_VERSION: sync::Mutex<Version> = sync::Mutex::new(Version::empty());
 /// 
 /// * `ver`: The system [`Version`] to set globally for the library
 pub fn set_version(ver: Version) {
-    unsafe {
         G_VERSION.set(ver);
-    }
 }
 
 /// Gets the global library value for the system [`Version`]
 /// 
 /// This value is set on [`rrt0`][`crate::rrt0`] to the actual system version
 pub fn get_version() -> Version {
-    unsafe {
-        G_VERSION.get_val()
-    }
+    G_VERSION.get_val()
 }

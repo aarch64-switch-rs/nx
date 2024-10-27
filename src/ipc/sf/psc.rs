@@ -1,6 +1,5 @@
 use crate::result::*;
 use crate::ipc::sf;
-use crate::mem;
 use crate::version;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -22,8 +21,11 @@ pub enum State {
     Invalid = 6
 }
 
+//api_mark_request_command_parameters_types_as_copy!(ModuleId, State);
+
+ipc_sf_define_default_interface_client!(PmModule);
 ipc_sf_define_interface_trait! {
-    trait IPmModule {
+	trait PmModule {
         initialize [0, version::VersionInterval::all()]: (id: ModuleId, dependencies: sf::InMapAliasBuffer<ModuleId>) => (event_handle: sf::CopyHandle);
         get_request [1, version::VersionInterval::all()]: () => (state: State, flags: u32);
         acknowledge [2, version::VersionInterval::all()]: () => ();
@@ -32,8 +34,9 @@ ipc_sf_define_interface_trait! {
     }
 }
 
+ipc_sf_define_default_interface_client!(PmService);
 ipc_sf_define_interface_trait! {
-    trait IPmService {
-        get_pm_module [0, version::VersionInterval::all()]: () => (pm_module: mem::Shared<dyn IPmModule>);
+	trait PmService {
+        get_pm_module [0, version::VersionInterval::all()]: () => (pm_module: PmModule);
     }
 }

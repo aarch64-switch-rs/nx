@@ -1,13 +1,13 @@
 //! Base service/named port support and wrappers
 
+use sm::IUserInterface;
+
 use crate::ipc::client;
 use crate::ipc::sf;
-use crate::mem;
 use crate::svc;
 use crate::result::*;
 
 pub mod sm;
-use crate::service::sm::IUserInterface;
 
 /// Represents a named port interface
 /// 
@@ -40,26 +40,26 @@ pub trait IService: client::IClientObject {
 /// Wrapper for connecting to a named port and instantiating the wrapper interface over the specified named port
 /// 
 /// For more information about this, check [`INamedPort`]
-pub fn new_named_port_object<T: INamedPort + 'static>() -> Result<mem::Shared<T>> {
+pub fn new_named_port_object<T: INamedPort + 'static>() -> Result<T> {
     let handle = unsafe {svc::connect_to_named_port(T::get_name().as_ptr())}?;
     let mut object = T::new(sf::Session::from_handle(handle));
     object.post_initialize()?;
-    Ok(mem::Shared::new(object))
+    Ok(object)
 }
 
 /// Wrapper for accessing a service and instantiating the wrapper interface over the specified service
 /// 
 /// For more information about this, check [`IService`]
-pub fn new_service_object<T: IService + 'static>() -> Result<mem::Shared<T>> {
-    let sm = new_named_port_object::<sm::UserInterface>()?;
-    let session_handle = sm.get().get_service_handle(T::get_name())?;
-    sm.get().detach_client(sf::ProcessId::new())?;
+pub fn new_service_object<T: IService>() -> Result<T> {
+    let mut sm = new_named_port_object::<sm::UserInterface>()?;
+    let session_handle = sm.get_service_handle(T::get_name())?;
+    sm.detach_client(sf::ProcessId::new())?;
     let mut object = T::new(sf::Session::from_handle(session_handle.handle));
     if T::as_domain() {
         object.convert_to_domain()?;
     }
     object.post_initialize()?;
-    Ok(mem::Shared::new(object))
+    Ok(object)
 }
 
 pub mod psm;

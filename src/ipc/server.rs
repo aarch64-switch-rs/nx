@@ -3,11 +3,12 @@ use crate::sync::Mutex;
 use crate::wait;
 use crate::ipc::sf::IObject;
 use crate::ipc::sf::hipc::IHipcManager;
-use crate::ipc::sf::hipc::IMitmQueryService;
+use crate::ipc::sf::hipc::IMitmQueryServiceServer;
 use crate::mem;
 use super::*;
 use alloc::sync::Arc;
 use alloc::vec::Vec;
+use sf::sm::IUserInterface;
 
 #[cfg(feature = "services")]
 use crate::service;
@@ -18,7 +19,7 @@ use crate::ipc::sf::sm;
 use crate::service::sm;
 
 #[cfg(feature = "services")]
-use crate::service::sm::IUserInterface;
+use crate::service::sm::IUserInterfaceServer;
 
 pub mod rc;
 
@@ -131,14 +132,17 @@ impl<S: sf::IObject + ?Sized> RequestCommandParameter<mem::Shared<S>> for mem::S
     }
 }
 
-impl<S: sf::IObject + ?Sized> ResponseCommandParameter for mem::Shared<S> {
+
+impl ResponseCommandParameter for mem::Shared<dyn ISessionObject> {
     fn before_response_write(session: &Self, ctx: &mut ServerContext) -> Result<()> {
-        let session_copy = unsafe { session.clone().to::<dyn ISessionObject>() };
+        let session_copy: mem::Shared<dyn ISessionObject> = session.clone();
+
+        //let session_copy: mem::Shared<dyn ISessionObject> = unsafe {core::mem::transmute::<mem::Shared<S>, mem::Shared<dyn ISe>>(session_copy)};
         if ctx.ctx.object_info.is_domain() {
             let domain_table = ctx.domain_table.clone().ok_or(rc::ResultDomainNotFound::make())?;
-            let domain_object_id = domain_table.get().allocate_id()?;
+            let domain_object_id = domain_table.lock().allocate_id()?;
             ctx.ctx.out_params.push_domain_object(domain_object_id)?;
-            domain_table.get().domains.push(ServerHolder::new_domain_session(0, domain_object_id, session_copy));
+            domain_table.lock().domains.push(ServerHolder::new_domain_session(0, domain_object_id, session_copy));
             Ok(())
         }
         else {
@@ -153,8 +157,9 @@ impl<S: sf::IObject + ?Sized> ResponseCommandParameter for mem::Shared<S> {
         Ok(())
     }
 }
-
-pub trait ISessionObject: sf::IObject {}
+pub trait ISessionObject: sf::IObject {
+    fn try_handle_request_by_id(&mut self, req_id: u32, protocol: CommandProtocol, server_ctx: &mut ServerContext) -> Option<Result<()>>;
+}
 
 pub trait IServerObject: ISessionObject {
     fn new() -> Self where Self: Sized;
@@ -304,9 +309,9 @@ impl ServerHolder {
             true => {
                 let forward_object_id = self.mitm_forward_info.convert_current_object_to_domain()?;
                 self.mitm_forward_info.domain_object_id = forward_object_id;
-                dom_table.get().allocate_specific_id(forward_object_id)?
+                dom_table.lock().allocate_specific_id(forward_object_id)?
             },
-            false => dom_table.get().allocate_id()?
+            false => dom_table.lock().allocate_id()?
         };
 
         self.info.domain_object_id = domain_object_id;
@@ -317,12 +322,12 @@ impl ServerHolder {
         if !self.service_name.is_empty() {
             #[cfg(feature = "services")]
             {
-                let sm = service::new_named_port_object::<sm::UserInterface>()?;
+                let mut sm = service::new_named_port_object::<sm::UserInterface>()?;
                 match self.is_mitm_service {
-                    true => sm.get().atmosphere_uninstall_mitm(self.service_name)?,
-                    false => sm.get().unregister_service(self.service_name)?
+                    true => sm.atmosphere_uninstall_mitm(self.service_name)?,
+                    false => sm.unregister_service(self.service_name)?
                 };
-                sm.get().detach_client(sf::ProcessId::new())?;
+                sm.detach_client(sf::ProcessId::new())?;
             }
         }
 
@@ -370,9 +375,13 @@ impl<'a> HipcManager<'a> {
 }
 
 impl<'a> sf::IObject for HipcManager<'a> {
-    ipc_sf_object_impl_default_command_metadata!();
+    //ipc_sf_object_impl_default_command_metadata!();
 
-    fn get_session(&mut self) -> &mut sf::Session {
+    fn get_session(&self) -> &sf::Session {
+        &self.dummy_session
+    }
+
+    fn get_session_mut(&mut self) -> &mut sf::Session {
         &mut self.dummy_session
     }
 }
@@ -411,7 +420,11 @@ impl<'a> IHipcManager for HipcManager<'a> {
     }
 }
 
-impl<'a> ISessionObject for HipcManager<'a> {}
+impl<'a> ISessionObject for HipcManager<'a> {
+    fn try_handle_request_by_id(&mut self, req_id: u32, protocol: CommandProtocol, server_ctx: &mut ServerContext) -> Option<Result<()>> {
+        <Self as IHipcManager>::try_handle_request_by_id(self, req_id, protocol, server_ctx)
+    }
+}
 
 pub struct MitmQueryService<S: IMitmService> {
     phantom: core::marker::PhantomData<S>,
@@ -434,20 +447,28 @@ impl<S: IMitmService> Default for MitmQueryService<S> {
 }
 
 impl<S: IMitmService> sf::IObject for MitmQueryService<S> {
-    ipc_sf_object_impl_default_command_metadata!();
+    //ipc_sf_object_impl_default_command_metadata!();
 
-    fn get_session(&mut self) -> &mut sf::Session {
+    fn get_session(&self) -> &sf::Session {
+        &self.dummy_session
+    }
+
+    fn get_session_mut(&mut self) -> &mut sf::Session {
         &mut self.dummy_session
     }
 }
 
-impl<S: IMitmService> IMitmQueryService for MitmQueryService<S> {
+impl<S: IMitmService> IMitmQueryServiceServer for MitmQueryService<S> {
     fn should_mitm(&mut self, info: sm::mitm::MitmProcessInfo) -> Result<bool> {
         Ok(S::should_mitm(info))
     }
 }
 
-impl<S: IMitmService> ISessionObject for MitmQueryService<S> {}
+impl<S: IMitmService> ISessionObject for MitmQueryService<S> {
+    fn try_handle_request_by_id(&mut self, req_id: u32, protocol: CommandProtocol, server_ctx: &mut ServerContext) -> Option<Result<()>> {
+        None
+    }
+}
 
 pub trait INamedPort: IServerObject {
     fn get_port_name() -> &'static str;
@@ -487,8 +508,7 @@ impl<const P: usize> ServerManager<P> {
                 handles_index += 1;
             }
         }
-
-        unsafe { core::slice::from_raw_parts(self.wait_handles.as_ptr(), handles_index) }
+        &self.wait_handles[..handles_index]
     }
 
     #[inline(always)]
@@ -512,19 +532,18 @@ impl<const P: usize> ServerManager<P> {
                     let target_server = match is_domain {
                         true => match ctx.object_info.owns_handle {
                             true => server_holder.server.clone().ok_or(rc::ResultSignaledServerNotFound::make())?,
-                            false => domain_table.ok_or(rc::ResultDomainNotFound::make())?.get().find_domain(ctx.object_info.domain_object_id)?
+                            false => domain_table.ok_or(rc::ResultDomainNotFound::make())?.lock().find_domain(ctx.object_info.domain_object_id)?
                         },
                         false => server_holder.server.clone().ok_or(rc::ResultSignaledServerNotFound::make())?
                     };
                     // Nothing done on success here, as if the command succeeds it will automatically respond by itself.
                     let mut command_found = false;
-                    let command_table = target_server.get().get_command_metadata_table();
-                    for command in &command_table {
-                        if command.matches(rq_id) {
+                    {
+                        let protocol = ctx.object_info.protocol;
+                        let mut server_ctx = ServerContext::new(ctx, DataWalker::empty(), domain_table_clone.clone(), &mut new_sessions);
+                        if let Some(result) = target_server.lock().try_handle_request_by_id(rq_id, protocol, &mut server_ctx) {
                             command_found = true;
-                            let protocol = ctx.object_info.protocol;
-                            let mut server_ctx = ServerContext::new(ctx, DataWalker::empty(), domain_table_clone.clone(), &mut new_sessions);
-                            if let Err(rc) = target_server.get().call_self_server_command(command.command_fn, protocol, &mut server_ctx) {
+                            if let Err(rc) = result {
                                 if server_holder.is_mitm_service && sm::mitm::rc::ResultShouldForwardToSession::matches(rc) {
                                     if let Err(rc) = send_to_forward_handle() {
                                         cmif::server::write_request_command_response_on_msg_buffer(ctx, rc, command_type);
@@ -566,7 +585,7 @@ impl<const P: usize> ServerManager<P> {
             cmif::DomainCommandType::SendMessage => do_handle_request()?,
             cmif::DomainCommandType::Close => {
                 if !ctx.object_info.owns_handle {
-                    domain_table_clone.ok_or(rc::ResultDomainNotFound::make())?.get().deallocate_domain(ctx.object_info.domain_object_id);
+                    domain_table_clone.ok_or(rc::ResultDomainNotFound::make())?.lock().deallocate_domain(ctx.object_info.domain_object_id);
                 }
                 else {
                     // TODO: Abort? Error?
@@ -588,14 +607,12 @@ impl<const P: usize> ServerManager<P> {
                 let mut hipc_manager = HipcManager::new(server_holder, P);
                 // Nothing done on success here, as if the command succeeds it will automatically respond by itself.
                 let mut command_found = false;
-                let command_table = hipc_manager.get_command_metadata_table();
-                for command in &command_table {
-                    if command.matches(rq_id) {
+                {
+                    let mut unused_new_sessions: Vec<ServerHolder> = Vec::new();
+                    let mut server_ctx = ServerContext::new(ctx, DataWalker::empty(), None, &mut unused_new_sessions);
+                    if let Some(result) = <HipcManager as ISessionObject>::try_handle_request_by_id(&mut hipc_manager, rq_id, CommandProtocol::Cmif, &mut server_ctx) {
                         command_found = true;
-                        let mut unused_new_sessions: Vec<ServerHolder> = Vec::new();
-                        let mut server_ctx = ServerContext::new(ctx, DataWalker::empty(), None, &mut unused_new_sessions);
-
-                        if let Err(rc) = hipc_manager.call_self_server_command(command.command_fn, CommandProtocol::Cmif, &mut server_ctx) {
+                        if let Err(rc) = result {
                             cmif::server::write_control_command_response_on_msg_buffer(ctx, rc, command_type);
                         }
                     }
@@ -693,10 +710,10 @@ impl<const P: usize> ServerManager<P> {
                         if server_holder.is_mitm_service {
                             #[cfg(feature = "services")]
                             {
-                                let sm = service::new_named_port_object::<sm::UserInterface>()?;
-                                let (info, session_handle) = sm.get().atmosphere_acknowledge_mitm_session(server_holder.service_name)?;
+                                let mut sm = service::new_named_port_object::<sm::UserInterface>()?;
+                                let (info, session_handle) = sm.atmosphere_acknowledge_mitm_session(server_holder.service_name)?;
                                 new_sessions.push(server_holder.make_new_mitm_session(new_handle, session_handle.handle, info)?);
-                                sm.get().detach_client(sf::ProcessId::new())?;
+                                sm.detach_client(sf::ProcessId::new())?;
                             }
                         }
                         else {
@@ -770,10 +787,10 @@ impl<const P: usize> ServerManager<P> {
     pub fn register_service_server<S: IService + 'static>(&mut self) -> Result<()> {
         let service_name = S::get_name();
         
-        let sm = service::new_named_port_object::<sm::UserInterface>()?;
-        let service_handle = sm.get().register_service(service_name, false, S::get_max_sesssions())?;
+        let mut sm = service::new_named_port_object::<sm::UserInterface>()?;
+        let service_handle = sm.register_service(service_name, false, S::get_max_sesssions())?;
         self.register_server::<S>(service_handle.handle, service_name);
-        sm.get().detach_client(sf::ProcessId::new())?;
+        sm.detach_client(sf::ProcessId::new())?;
         Ok(())
     }
     
@@ -781,16 +798,16 @@ impl<const P: usize> ServerManager<P> {
     pub fn register_mitm_service_server<S: IMitmService + 'static>(&mut self) -> Result<()> {
         let service_name = S::get_name();
 
-        let sm = service::new_named_port_object::<sm::UserInterface>()?;
-        let (mitm_handle, query_handle) = sm.get().atmosphere_install_mitm(service_name)?;
+        let mut sm = service::new_named_port_object::<sm::UserInterface>()?;
+        let (mitm_handle, query_handle) = sm.atmosphere_install_mitm(service_name)?;
 
         self.register_mitm_server::<S>(mitm_handle.handle, service_name);
 
         let mitm_query_srv = mem::Shared::new(MitmQueryService::<S>::new());
         self.register_session(query_handle.handle, mitm_query_srv);
 
-        sm.get().atmosphere_clear_future_mitm(service_name)?;
-        sm.get().detach_client(sf::ProcessId::new())?;
+        sm.atmosphere_clear_future_mitm(service_name)?;
+        sm.detach_client(sf::ProcessId::new())?;
         Ok(())
     }
 

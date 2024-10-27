@@ -90,7 +90,7 @@ impl Binder {
 
     fn transact_parcel_impl(&mut self, transaction_id: dispdrv::ParcelTransactionId, payload: parcel::ParcelPayload) -> Result<parcel::Parcel> {
         let response_payload = parcel::ParcelPayload::new();
-        self.hos_binder_driver.get().transact_parcel(self.handle, transaction_id, 0, sf::Buffer::from_other_var(&payload), sf::Buffer::from_other_var(&response_payload))?;
+        self.hos_binder_driver.lock().transact_parcel(self.handle, transaction_id, 0, sf::Buffer::from_other_var(&payload), sf::Buffer::from_other_var(&response_payload))?;
         
         let mut parcel = parcel::Parcel::new();
         parcel.load_from(response_payload);
@@ -115,14 +115,14 @@ impl Binder {
 
     /// Increases the [`Binder`]'s reference counts
     pub fn increase_refcounts(&mut self) -> Result<()> {
-        self.hos_binder_driver.get().adjust_refcount(self.handle, 1, dispdrv::RefcountType::Weak)?;
-        self.hos_binder_driver.get().adjust_refcount(self.handle, 1, dispdrv::RefcountType::Strong)
+        self.hos_binder_driver.lock().adjust_refcount(self.handle, 1, dispdrv::RefcountType::Weak)?;
+        self.hos_binder_driver.lock().adjust_refcount(self.handle, 1, dispdrv::RefcountType::Strong)
     }
 
     /// Decreases the [`Binder`]'s reference counts
     pub fn decrease_refcounts(&mut self) -> Result<()> {
-        self.hos_binder_driver.get().adjust_refcount(self.handle, -1, dispdrv::RefcountType::Weak)?;
-        self.hos_binder_driver.get().adjust_refcount(self.handle, -1, dispdrv::RefcountType::Strong)
+        self.hos_binder_driver.lock().adjust_refcount(self.handle, -1, dispdrv::RefcountType::Weak)?;
+        self.hos_binder_driver.lock().adjust_refcount(self.handle, -1, dispdrv::RefcountType::Strong)
     }
 
     /// Performs a connection
@@ -272,6 +272,6 @@ impl Binder {
     /// 
     /// * `handle_type`: The [`NativeHandleType`][`dispdrv::NativeHandleType`] value
     pub fn get_native_handle(&mut self, handle_type: dispdrv::NativeHandleType) -> Result<sf::CopyHandle> {
-        self.hos_binder_driver.get().get_native_handle(self.handle, handle_type)
+        self.hos_binder_driver.lock().get_native_handle(self.handle, handle_type)
     }
 }

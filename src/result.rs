@@ -35,6 +35,7 @@ const fn unpack_description(value: u32) -> u32 {
 pub struct ResultCode {
     value: u32
 }
+//api_mark_request_command_parameters_types_as_copy!(ResultCode);
 
 impl ResultCode {
     /// Creates a [`ResultCode`] from a raw value

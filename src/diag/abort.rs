@@ -1,6 +1,7 @@
 //! Aborting implementation
 
 use crate::result::*;
+use crate::service::fatal::IService;
 use crate::svc;
 use crate::mem::alloc;
 use crate::rrt0;
@@ -15,8 +16,6 @@ use crate::service;
 #[cfg(feature = "services")]
 use crate::service::fatal;
 
-#[cfg(feature = "services")]
-use crate::service::fatal::IService;
 
 define_bit_enum! {
     /// Represents a system to abort, plus optional flags they have
@@ -63,8 +62,8 @@ fn do_abort(level: AbortLevel, rc: ResultCode) {
         #[cfg(feature = "services")]
         {
             match service::new_service_object::<fatal::Service>() {
-                Ok(fatal) => {
-                    let _ = fatal.get().throw_fatal_with_policy(rc, fatal::FatalPolicy::ErrorScreen, sf::ProcessId::new());
+                Ok(mut fatal) => {
+                    let _ = fatal.throw_fatal_with_policy(rc, fatal::FatalPolicy::ErrorScreen, sf::ProcessId::new());
                 },
                 _ => {}
             };

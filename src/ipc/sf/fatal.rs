@@ -9,9 +9,11 @@ pub enum FatalPolicy {
     ErrorReport,
     ErrorScreen,
 }
+//api_mark_request_command_parameters_types_as_copy!(FatalPolicy);
 
+ipc_sf_define_default_interface_client!(Service);
 ipc_sf_define_interface_trait! {
-    trait IService {
+	trait Service {
         throw_fatal_with_policy [1, version::VersionInterval::all()]: (rc: ResultCode, policy: FatalPolicy, process_id: sf::ProcessId) => ();
     }
 }

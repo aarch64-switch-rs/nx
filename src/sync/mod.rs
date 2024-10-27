@@ -38,6 +38,7 @@ impl<'a> Drop for ScopedLock<'a> {
     }
 }
 
+
 //////////// MUTEX
 
 /// Represents a value whose access is controlled by an inner [`Mutex`]
@@ -69,11 +70,21 @@ impl<T> Mutex<T> {
             self.raw_lock.unlock();
         }
     }
+}
 
+impl <T: ?Sized> Mutex<T> { 
     /// Locks the Mutex and returns a guarded reference to the inner value
     pub fn lock(&self) -> MutexGuard<'_, T>{
         self.raw_lock.lock();
         MutexGuard { lock: self }
+    }
+
+    pub fn try_lock(&self) -> Option<MutexGuard<'_, T>> {
+        if self.raw_lock.try_lock() {
+            Some(MutexGuard { lock: self })
+        } else {
+            None
+        }
     }
 }
 
@@ -107,7 +118,7 @@ impl<'borrow, T: ?Sized> MutexGuard<'borrow, T> {
     }
 }
 
-impl<'borrow, T> core::ops::Deref for MutexGuard<'borrow, T> {
+impl<'borrow, T: ?Sized> core::ops::Deref for MutexGuard<'borrow, T> {
     type Target = T;
 
     fn deref(&self) -> &T {
@@ -115,7 +126,7 @@ impl<'borrow, T> core::ops::Deref for MutexGuard<'borrow, T> {
     }
 }
 
-impl<'borrow, T> core::ops::DerefMut for MutexGuard<'borrow, T> {
+impl<'borrow, T: ?Sized> core::ops::DerefMut for MutexGuard<'borrow, T> {
 
     fn deref_mut(&mut self) -> &mut T {
         let mut_ref = unsafe { self.lock.object_cell.get().as_mut().expect("We know the pointer is valid as we have a valid ref to the parent") };

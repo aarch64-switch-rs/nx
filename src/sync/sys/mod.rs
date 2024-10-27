@@ -7,7 +7,7 @@ pub mod rwlock;
 
 #[inline(always)]
 fn get_current_thread_handle() -> u32 {
-    unsafe {thread::get_current_thread()}.expect("the current thread should always have a configured ThreadType object").handle()
+    unsafe {&*thread::current()}.handle()
 }
 
 #[inline(always)]

@@ -14,6 +14,21 @@ use core::panic;
 
 pub mod rc;
 
+#[doc(hidden)]
+pub trait AsInner<Inner: ?Sized> {
+    fn as_inner(&self) -> &Inner;
+}
+
+#[doc(hidden)]
+#[allow(dead_code)] // not used on all platforms
+pub trait AsInnerMut<Inner: ?Sized> {
+    fn as_inner_mut(&mut self) -> &mut Inner;
+}
+
+#[doc(hidden)]
+pub trait IntoInner<Inner> {
+    fn into_inner(self) -> Inner;
+}
 /// Represents a 16-byte UUID
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
@@ -21,6 +36,7 @@ pub struct Uuid {
     /// The UUID byte array
     pub uuid: [u8; 0x10]
 }
+//api_mark_request_command_parameters_types_as_copy!(Uuid);
 
 /// Represents a pair of a pointer and a size
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -59,9 +75,50 @@ impl PointerAndSize {
     }
 }
 
+/// Represents a pair of a pointer and a size
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[repr(C)]
+pub struct ConstPointerAndSize {
+    /// The pointer address
+    pub address: *const u8,
+    /// The pointer size
+    pub size: usize
+}
+
+impl ConstPointerAndSize {
+    /// Creates an empty, thus invalid [`ConstPointerAndSize`] (with a null pointer and size `0`)
+    #[inline]
+    pub const fn empty() -> Self {
+        Self { address: ptr::null(), size: 0 }
+    }
+
+    /// Creates a [`ConstPointerAndSize`]
+    /// 
+    /// # Arguments
+    /// 
+    /// * `address`: The address
+    /// * `size`: The size
+    #[inline]
+    pub const fn new(address: *const u8, size: usize) -> Self {
+        Self { address, size }
+    }
+
+    /// Checks whether the [`PointerAndSize`] is valid
+    /// 
+    /// Essentially, this checks that the pointer isn't null and that the size is non-zero
+    #[inline]
+    pub fn is_valid(&self) -> bool {
+        !self.address.is_null() && (self.size != 0)
+    }
+}
+
 pub(crate) const fn const_usize_min(a: usize, b: usize) -> usize {
     // TODO: const min traits
     if a > b { b } else { a }
+}
+pub(crate) const fn const_usize_max(a: usize, b: usize) -> usize {
+    // TODO: const min traits
+    if a < b { b } else { a }
 }
 
 /// Represents a C-like string of a given size (mostly like a C `char[S]` array)
@@ -72,6 +129,42 @@ pub(crate) const fn const_usize_min(a: usize, b: usize) -> usize {
 pub struct CString<const S: usize> {
     /// The actual array (like `char[S]` in C)
     pub c_str: [u8; S]
+}
+impl<const S: usize> crate::ipc::server::RequestCommandParameter<CString<S>> for CString<S> {
+    fn after_request_read(ctx: &mut crate::ipc::server::ServerContext) -> Result<Self> {
+        Ok(ctx.raw_data_walker.advance_get())
+    }
+}
+
+impl<const S: usize> crate::ipc::server::ResponseCommandParameter for CString<S> {
+        fn before_response_write(_raw: &Self, ctx: &mut crate::ipc::server::ServerContext) -> Result<()> {
+        ctx.raw_data_walker.advance::<Self>();
+        Ok(())
+    }
+
+    fn after_response_write(raw: &Self, ctx: &mut crate::ipc::server::ServerContext) -> Result<()> {
+        ctx.raw_data_walker.advance_set(*raw);
+        Ok(())
+    }
+}
+
+impl<const S: usize> crate::ipc::client::RequestCommandParameter for CString<S> {
+    fn before_request_write(_raw: &Self, walker: &mut crate::ipc::DataWalker, _ctx: &mut crate::ipc::CommandContext) -> crate::result::Result<()> {
+        walker.advance::<Self>();
+        Ok(())
+    }
+
+    fn before_send_sync_request(raw: &Self, walker: &mut crate::ipc::DataWalker, _ctx: &mut crate::ipc::CommandContext) -> crate::result::Result<()> {
+        walker.advance_set(*raw);
+        Ok(())
+    }
+}
+
+
+impl<const S: usize> crate::ipc::client::ResponseCommandParameter<CString<S>> for CString<S> {
+    fn after_response_read(walker: &mut crate::ipc::DataWalker, _ctx: &mut crate::ipc::CommandContext) -> crate::result::Result<Self> {
+        Ok(walker.advance_get())
+    }
 }
 
 impl<const S: usize> fmt::Debug for CString<S> {
@@ -229,6 +322,13 @@ impl<const S: usize> CString<S> {
     }
 }
 
+impl<S: AsRef<str>, const LEN: usize> From<S> for CString<LEN> {
+    fn from(value: S) -> Self {
+        let reffed_val: &str = value.as_ref();
+        Self::from_str(reffed_val)
+    }
+}
+
 /// Represents a C-like 16-bit string of a given size (mostly like a C `char16_t[S]` array)
 /// 
 /// Note that `char` is 4-bytes in Rust for encoding reasons, thus we must stick to `u16` arrays
@@ -237,6 +337,43 @@ impl<const S: usize> CString<S> {
 pub struct CString16<const S: usize> {
     /// The actual array (like `char16_t[S]` in C)
     pub c_str: [u16; S]
+}
+
+impl<const S: usize> crate::ipc::server::RequestCommandParameter<CString16<S>> for CString16<S> {
+    fn after_request_read(ctx: &mut crate::ipc::server::ServerContext) -> Result<Self> {
+        Ok(ctx.raw_data_walker.advance_get())
+    }
+}
+
+impl<const S: usize> crate::ipc::server::ResponseCommandParameter for CString16<S> {
+        fn before_response_write(_raw: &Self, ctx: &mut crate::ipc::server::ServerContext) -> Result<()> {
+        ctx.raw_data_walker.advance::<Self>();
+        Ok(())
+    }
+
+    fn after_response_write(raw: &Self, ctx: &mut crate::ipc::server::ServerContext) -> Result<()> {
+        ctx.raw_data_walker.advance_set(*raw);
+        Ok(())
+    }
+}
+
+impl<const S: usize> crate::ipc::client::RequestCommandParameter for CString16<S> {
+    fn before_request_write(_raw: &Self, walker: &mut crate::ipc::DataWalker, _ctx: &mut crate::ipc::CommandContext) -> crate::result::Result<()> {
+        walker.advance::<Self>();
+        Ok(())
+    }
+
+    fn before_send_sync_request(raw: &Self, walker: &mut crate::ipc::DataWalker, _ctx: &mut crate::ipc::CommandContext) -> crate::result::Result<()> {
+        walker.advance_set(*raw);
+        Ok(())
+    }
+}
+
+
+impl<const S: usize> crate::ipc::client::ResponseCommandParameter<CString16<S>> for CString16<S> {
+    fn after_response_read(walker: &mut crate::ipc::DataWalker, _ctx: &mut crate::ipc::CommandContext) -> crate::result::Result<Self> {
+        Ok(walker.advance_get())
+    }
 }
 
 impl<const S: usize> fmt::Debug for CString16<S> {
@@ -410,44 +547,6 @@ pub unsafe fn str_ptr_len(str_ptr: *const u8) -> usize {
     .expect("There will be a null byte (or crash) eventually")
 }
 
-/// Copies one `&str` into another, and returns the destination `&str`
-/// 
-/// # Arguments
-/// 
-/// * `dst_str`: The destination `&str`
-/// * `src_str`: The source `&str`
-pub fn str_copy<'d>(dst_str: &'d str, src_str: &str) -> &'d str {
-    let dst_str_len = dst_str.len().min(src_str.len());
-
-    unsafe {
-        let dst_buf = dst_str.as_ptr() as *mut u8;
-        let src_buf = src_str.as_ptr();
-
-        for i in 0..dst_str_len as isize {
-            *dst_buf.offset(i) = *src_buf.offset(i);
-        }
-
-        let dst_slice = core::slice::from_raw_parts_mut(dst_buf, dst_str_len);
-        core::str::from_utf8_unchecked(dst_slice)
-    }
-}
-
-/// Works like `core::mem::transmute`, but being less restrictive and extremely more unsafe
-/// 
-/// Seriously, use this at your own risk, it is only used in this library in places where it's expected to work
-/// 
-/// # Arguments
-/// 
-/// `t`: Value to get transmuted
-pub unsafe fn raw_transmute<T: Copy, U: Copy>(t: T) -> U {
-    union RawTransmuteUnion<T: Copy, U: Copy> {
-        t: T,
-        u: U
-    }
-    let tmp = RawTransmuteUnion::<T, U> { t };
-    tmp.u
-}
-
 /// Simplified panic handler using a provided [`Logger`] type, available as a helpful default panic handler
 /// 
 /// This handler does the following:
@@ -459,7 +558,7 @@ pub unsafe fn raw_transmute<T: Copy, U: Copy>(t: T) -> U {
 /// * `info`: `PanicInfo` object got from the actual panic handler
 /// * `desired_level`: Desired [`AbortLevel`][`abort::AbortLevel`] to abort with
 pub fn simple_panic_handler<L: Logger>(info: &panic::PanicInfo, desired_level: abort::AbortLevel) -> ! {
-    let thread_name = match unsafe {thread::get_current_thread()}.map(|t| t.name.get_str()) {
+    let thread_name = match unsafe {thread::current().as_ref()}.map(|t|t.name.get_str()) {
         Some(Ok(name)) => name,
         _ => "<unknown>",
     };

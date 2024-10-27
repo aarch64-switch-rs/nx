@@ -1,5 +1,5 @@
 use core::sync::atomic::{AtomicBool, AtomicU32};
-use core::sync::atomic::Ordering::{Acquire, Relaxed, Release};
+use core::sync::atomic::Ordering::{Acquire, Release};
 
 use super::get_current_thread_handle;
 use super::mutex::Mutex;

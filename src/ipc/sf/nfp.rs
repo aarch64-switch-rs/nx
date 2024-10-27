@@ -1,6 +1,5 @@
 use crate::result::*;
 use crate::ipc::sf;
-use crate::mem;
 use crate::util;
 use crate::ipc::sf::applet;
 use crate::ipc::sf::mii;
@@ -27,14 +26,14 @@ pub struct DeviceHandle {
 }
 const_assert!(core::mem::size_of::<DeviceHandle>() == 0x8);
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 #[repr(u32)]
 pub enum State {
     NonInitialized = 0,
     Initialized = 1
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 #[repr(u32)]
 pub enum DeviceState {
     Initialized = 0,
@@ -209,8 +208,10 @@ pub enum WriteType {
     Unk1 = 1
 }
 
+//api_mark_request_command_parameters_types_as_copy!(DeviceHandle, ModelType, MountTarget, BreakType, WriteType, State, DeviceState);
+ipc_sf_define_default_interface_client!(User);
 ipc_sf_define_interface_trait! {
-    trait IUser {
+	trait User {
         initialize [0, version::VersionInterval::all()]: (aruid: applet::AppletResourceUserId, process_id: sf::ProcessId, mcu_data: sf::InMapAliasBuffer<McuVersionData>) => ();
         finalize [1, version::VersionInterval::all()]: () => ();
         list_devices [2, version::VersionInterval::all()]: (out_devices: sf::OutPointerBuffer<DeviceHandle>) => (count: u32);
@@ -239,14 +240,16 @@ ipc_sf_define_interface_trait! {
     }
 }
 
+ipc_sf_define_default_interface_client!(UserManager);
 ipc_sf_define_interface_trait! {
-    trait IUserManager {
-        create_user_interface [0, version::VersionInterval::all()]: () => (user_interface: mem::Shared<dyn IUser>);
+	trait UserManager {
+        create_user_interface [0, version::VersionInterval::all()]: () => (user_interface: User);
     }
 }
 
+ipc_sf_define_default_interface_client!(System);
 ipc_sf_define_interface_trait! {
-    trait ISystem {
+	trait System {
         initialize_system [0, version::VersionInterval::all()]: (aruid: applet::AppletResourceUserId, process_id: sf::ProcessId, mcu_data: sf::InMapAliasBuffer<McuVersionData>) => ();
         finalize_system [1, version::VersionInterval::all()]: () => ();
         list_devices [2, version::VersionInterval::all()]: (out_devices: sf::OutPointerBuffer<DeviceHandle>) => (count: u32);
@@ -276,14 +279,16 @@ ipc_sf_define_interface_trait! {
     }
 }
 
+ipc_sf_define_default_interface_client!(SystemManager);
 ipc_sf_define_interface_trait! {
-    trait ISystemManager {
-        create_system_interface [0, version::VersionInterval::all()]: () => (system_interface: mem::Shared<dyn ISystem>);
+	trait SystemManager {
+        create_system_interface [0, version::VersionInterval::all()]: () => (system_interface: System);
     }
 }
 
+ipc_sf_define_default_interface_client!(Debug);
 ipc_sf_define_interface_trait! {
-    trait IDebug {
+	trait Debug {
         initialize_debug [0, version::VersionInterval::all()]: (aruid: applet::AppletResourceUserId, process_id: sf::ProcessId, mcu_data: sf::InMapAliasBuffer<McuVersionData>) => ();
         finalize_debug [1, version::VersionInterval::all()]: () => ();
         list_devices [2, version::VersionInterval::all()]: (out_devices: sf::OutPointerBuffer<DeviceHandle>) => (count: u32);
@@ -326,8 +331,9 @@ ipc_sf_define_interface_trait! {
     }
 }
 
+ipc_sf_define_default_interface_client!(DebugManager);
 ipc_sf_define_interface_trait! {
-    trait IDebugManager {
-        create_debug_interface [0, version::VersionInterval::all()]: () => (debug_interface: mem::Shared<dyn IDebug>);
+	trait DebugManager {
+        create_debug_interface [0, version::VersionInterval::all()]: () => (debug_interface: Debug);
     }
 }

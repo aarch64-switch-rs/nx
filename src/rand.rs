@@ -25,25 +25,24 @@ pub trait RandomGenerator {
 
 use crate::ipc::sf;
 use crate::service;
-use crate::service::spl;
-use crate::service::spl::IRandomInterface;
+use crate::service::spl::{RandomInterface, IRandomInterface};
 use crate::mem;
 
 /// Represents a pseudo-RNG using [`spl`]'s [`RandomInterface`][`spl::RandomInterface`] interface
+#[derive(Clone)]
 pub struct SplCsrngGenerator {
-    csrng: mem::Shared<dyn IRandomInterface>
+    csrng: mem::Shared<RandomInterface>
 }
 
 impl SplCsrngGenerator {
     /// Creates a new [`SplCsrngGenerator`]
     pub fn new() -> Result<Self> {
-        let csrng = service::new_service_object::<spl::RandomInterface>()?;
-        Ok(Self { csrng })
+        Ok(Self { csrng: mem::Shared::new(service::new_service_object::<RandomInterface>()?) })
     }
 }
 
 impl RandomGenerator for SplCsrngGenerator {
     fn random_bytes(&mut self, buf: *mut u8, size: usize) -> Result<()> {
-        self.csrng.get().generate_random_bytes(sf::Buffer::from_mut_ptr(buf, size))
+        self.csrng.lock().generate_random_bytes(sf::Buffer::from_mut_ptr(buf, size))
     }
 }

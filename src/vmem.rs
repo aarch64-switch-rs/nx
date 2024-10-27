@@ -1,17 +1,20 @@
 //! Virtual memory support
 
-use core::ptr;
+use core::arch::aarch64::vmvn_p8;
+use core::ptr::{self, null_mut};
+use core::sync::atomic::AtomicPtr;
+
 use crate::result::*;
-use crate::sync::{self, sys::mutex::Mutex as RawMutex};
-use crate::svc;
+use crate::sync::RwLock;
+use crate::svc::{self, MemoryInfo};
 use crate::mem::alloc;
 
-/// Represents a virtual region of memory
+/// Represents a virtual region of memory, represented as pointer-sized uints. i.e. [start, end)
 #[derive(Copy, Clone, Default)]
 pub struct VirtualRegion {
     /// The start address of the region
     pub start: usize,
-    /// The end address of the region
+    /// The (non inclusive) end address of the region
     pub end: usize
 }
 
@@ -28,9 +31,30 @@ impl VirtualRegion {
     ///
     /// * `address` - The address to check
     #[inline]
-    pub const fn contains(&self, address: usize) -> bool {
+    pub const fn contains_addr(&self, address: usize) -> bool {
         (address >= self.start) && (address < self.end)
     }
+
+    /// Returns whether the specified region is fully contained in the region
+    ///
+    /// # Arguments
+    ///
+    /// * `other` - The region to check
+    #[inline]
+    pub const fn contains(&self, other: Self) -> bool {
+        self.start <= other.start && self.end >= other.end
+    }
+
+    /// Returns whether the other region overlaps this instance
+    ///
+    /// # Arguments
+    ///
+    /// * `other` - The other region to check
+    #[inline]
+    pub const fn overlaps(&self, other: Self) -> bool {
+        !( other.end <= self.start || self.end <= other.start )
+    }
+
 }
 
 pub enum VirtualRegionType {
@@ -39,63 +63,74 @@ pub enum VirtualRegionType {
     LegacyAlias
 }
 
-static mut G_STACK_REGION: VirtualRegion = VirtualRegion::null();
-static mut G_HEAP_REGION: VirtualRegion = VirtualRegion::null();
-static mut G_LEGACY_ALIAS_REGION: VirtualRegion = VirtualRegion::null();
-static mut G_ADDRESS_SPACE: VirtualRegion = VirtualRegion::null();
-static mut G_CURRENT_ADDRESS: usize = 0;
-static mut G_LOCK: RawMutex = RawMutex::new();
+pub(crate) struct StandardRegions {
+    stack: VirtualRegion,
+    heap: VirtualRegion,
+    legacy_alias: VirtualRegion,
+    global_address_space: VirtualRegion,
+}
+
+impl StandardRegions {
+    pub(crate) const fn null() -> Self {
+        Self {
+            stack: VirtualRegion::null(),
+            heap: VirtualRegion::null(),
+            legacy_alias: VirtualRegion::null(),
+            global_address_space: VirtualRegion::null(),
+        }
+    }
+
+    pub(crate) const fn is_valid(&self, region: VirtualRegion) -> bool {
+        self.global_address_space.contains(region)
+    }
+
+    pub(crate) const fn is_valid_for_reservation(&self, region: VirtualRegion) -> bool {
+        self.global_address_space.contains(region) // the region will be in valid memory
+        && !self.stack.overlaps(region) // the region won't be in the memory space reserved for stacks
+        && !self.heap.overlaps(region) // the region won't be in the memory space reserved for heaps
+        && !self.legacy_alias.overlaps(region) // the region won't be in the legacy alias region
+    }
+}
+
+static STANDARD_VMEM_REGIONS: RwLock<StandardRegions> = RwLock::new(StandardRegions::null());
+static NEXT_FREE_PTR: AtomicPtr<u8> = AtomicPtr::new(null_mut());
 
 /// Gets the current process's address space [`VirtualRegion`]
 /// 
 /// Note that [`initialize()`] must have been called before for the region to be valid (although it's automatically called on [`rrt0`][`crate::rrt0`])
 pub fn get_address_space() -> VirtualRegion {
-    unsafe {
-        let _ = sync::ScopedLock::new(&mut *ptr::addr_of_mut!(G_LOCK));
-        G_ADDRESS_SPACE
-    }
+    STANDARD_VMEM_REGIONS.read().global_address_space
 }
 
 /// Gets the current process's stack [`VirtualRegion`]
 /// 
 /// Note that [`initialize()`] must have been called before for the region to be valid (although it's automatically called on [`rrt0`][`crate::rrt0`])
 pub fn get_stack_region() -> VirtualRegion {
-    unsafe {
-        let _ = sync::ScopedLock::new(&mut *ptr::addr_of_mut!(G_LOCK));
-        G_STACK_REGION
-    }
+    STANDARD_VMEM_REGIONS.read().stack
 }
 
 /// Gets the current process's heap [`VirtualRegion`]
 /// 
 /// Note that [`initialize()`] must have been called before for the region to be valid (although it's automatically called on [`rrt0`][`crate::rrt0`])
 pub fn get_heap_region() -> VirtualRegion {
-    unsafe {
-        let _ = sync::ScopedLock::new(&mut *ptr::addr_of_mut!(G_LOCK));
-        G_HEAP_REGION
-    }
+    STANDARD_VMEM_REGIONS.read().heap
 }
 
 /// Gets the current process's legacy alias [`VirtualRegion`]
 /// 
 /// Note that [`initialize()`] must have been called before for the region to be valid (although it's automatically called on [`rrt0`][`crate::rrt0`])
 pub fn get_legacy_alias_region() -> VirtualRegion {
-    unsafe {
-        let _ = sync::ScopedLock::new(&mut *ptr::addr_of_mut!(G_LOCK));
-        G_LEGACY_ALIAS_REGION
-    }
+    STANDARD_VMEM_REGIONS.read().legacy_alias
 }
 
-fn read_region_info(region: *mut VirtualRegion, address_info_id: svc::InfoId, size_info_id: svc::InfoId) -> Result<()> {
-    let address = svc::get_info(address_info_id, svc::CURRENT_PROCESS_PSEUDO_HANDLE, 0)? as usize;
+fn read_region_info(address_info_id: svc::InfoId, size_info_id: svc::InfoId) -> Result<VirtualRegion> {
+    let start = svc::get_info(address_info_id, svc::CURRENT_PROCESS_PSEUDO_HANDLE, 0)? as usize;
     let size = svc::get_info(size_info_id, svc::CURRENT_PROCESS_PSEUDO_HANDLE, 0)? as usize;
 
-    unsafe {
-        // Safety: pointer will never be null here
-        (*region).start = address;
-        (*region).end = address + size;
-    }
-    Ok(())
+    Ok(VirtualRegion {
+        start,
+        end: start+size
+    })
 }
 
 /// Initializes virtual memory support
@@ -104,13 +139,14 @@ fn read_region_info(region: *mut VirtualRegion, address_info_id: svc::InfoId, si
 /// 
 /// This is automatically called on [`rrt0`][`crate::rrt0`]
 pub fn initialize() -> Result<()> {
-    unsafe {
-        let _ = sync::ScopedLock::new(&mut *ptr::addr_of_mut!(G_LOCK));
-        read_region_info(ptr::addr_of_mut!(G_ADDRESS_SPACE), svc::InfoId::AslrRegionAddress, svc::InfoId::AslrRegionSize)?;
-        read_region_info(ptr::addr_of_mut!(G_STACK_REGION), svc::InfoId::StackRegionAddress, svc::InfoId::StackRegionSize)?;
-        read_region_info(ptr::addr_of_mut!(G_HEAP_REGION), svc::InfoId::HeapRegionAddress, svc::InfoId::HeapRegionSize)?;
-        read_region_info(ptr::addr_of_mut!(G_LEGACY_ALIAS_REGION), svc::InfoId::AliasRegionAddress, svc::InfoId::AliasRegionSize)?;
-    }
+    use svc::InfoId::*;
+    let mut guard = STANDARD_VMEM_REGIONS.write();
+
+    guard.global_address_space = read_region_info(AslrRegionAddress, AslrRegionSize)?;
+    guard.stack = read_region_info(StackRegionAddress, StackRegionSize)?;
+    guard.heap = read_region_info(HeapRegionAddress, HeapRegionSize)?;
+    guard.legacy_alias = read_region_info(AliasRegionAddress, AliasRegionSize)?;
+
     Ok(())
 }
 
@@ -122,50 +158,51 @@ pub fn initialize() -> Result<()> {
 /// 
 /// * `size`: The size of the virtual memory to allocate
 pub fn allocate(size: usize) -> Result<*mut u8> {
-    unsafe {
-        let _ = sync::ScopedLock::new(&mut *ptr::addr_of_mut!(G_LOCK));
+    use core::sync::atomic::Ordering::*;
 
-        let mut address = G_CURRENT_ADDRESS;
+    let vmem_guard = STANDARD_VMEM_REGIONS.read();
+    let original_free_ptr = NEXT_FREE_PTR.load(Relaxed);
+    let mut attempt_addr = original_free_ptr as usize;
 
-        loop {
-            address += alloc::PAGE_ALIGNMENT;
-
-            if !G_ADDRESS_SPACE.contains(address) {
-                address = G_ADDRESS_SPACE.start;
-            }
-
-            let current_address = address + size;
-            let (memory_info, _) = svc::query_memory(address as *mut u8)?;
-            let info_address = memory_info.base_address + memory_info.size;
-            if memory_info.state != svc::MemoryState::Free {
-                address = info_address;
-                continue;
-            }
-
-            if current_address > info_address {
-                address = info_address;
-                continue;
-            }
-
-            let end = current_address - 1;
-
-            if G_STACK_REGION.contains(address) || G_STACK_REGION.contains(end) {
-                address = G_STACK_REGION.end;
-                continue;
-            }
-            if G_HEAP_REGION.contains(address) || G_HEAP_REGION.contains(end) {
-                address = G_HEAP_REGION.end;
-                continue;
-            }
-            if G_LEGACY_ALIAS_REGION.contains(address) || G_LEGACY_ALIAS_REGION.contains(end) {
-                address = G_LEGACY_ALIAS_REGION.end;
-                continue;
-            }
-
-            break;
+    loop {
+        if !vmem_guard.global_address_space.contains_addr(attempt_addr) {
+            attempt_addr = vmem_guard.global_address_space.start;
         }
 
-        G_CURRENT_ADDRESS = address + size;
-        Ok(address as *mut u8)
+        let attempt_region = VirtualRegion {start: attempt_addr, end: attempt_addr + size };
+        if vmem_guard.stack.overlaps(attempt_region) {
+            attempt_addr = vmem_guard.stack.end;
+            continue
+        }
+
+        if vmem_guard.heap.overlaps(attempt_region) {
+            attempt_addr = vmem_guard.heap.end;
+            continue;
+        }
+
+        if vmem_guard.legacy_alias.overlaps(attempt_region) {
+            attempt_addr = vmem_guard.legacy_alias.end;
+            continue;
+        }
+
+        // we have an address that isn't in a predefined region. So now we're going to just check if it's already mapped for something
+        match svc::query_memory(attempt_addr as *mut u8)? {
+            (memory_info, _) if memory_info.state == svc::MemoryState::Free => {
+                match NEXT_FREE_PTR.compare_exchange(original_free_ptr, attempt_addr as *mut u8, SeqCst, SeqCst) {
+                    Ok(_) => {
+                        return Ok(attempt_addr as *mut u8);
+                    },
+                    Err(new_attempt_addr) => {
+                        attempt_addr = new_attempt_addr as usize;
+                        continue;
+                    }
+                }
+
+            }
+            (memory_info, _) => {
+                attempt_addr = memory_info.base_address + memory_info.size;
+                continue;
+            }
+        }
     }
 }

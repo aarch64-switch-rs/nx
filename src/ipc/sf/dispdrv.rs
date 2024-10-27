@@ -36,8 +36,11 @@ pub enum NativeHandleType {
 
 pub type BinderHandle = i32;
 
+//api_mark_request_command_parameters_types_as_copy!(ParcelTransactionId, RefcountType, NativeHandleType);
+
+ipc_sf_define_default_interface_client!(HOSBinderDriver);
 ipc_sf_define_interface_trait! { 
-    trait IHOSBinderDriver {
+    trait HOSBinderDriver {
         transact_parcel [0, version::VersionInterval::all()]: (binder_handle: BinderHandle, transaction_id: ParcelTransactionId, flags: u32, in_parcel: sf::InMapAliasBuffer<u8>, out_parcel: sf::OutMapAliasBuffer<u8>) => ();
         adjust_refcount [1, version::VersionInterval::all()]: (binder_handle: BinderHandle, add_value: i32, refcount_type: RefcountType) => ();
         get_native_handle [2, version::VersionInterval::all()]: (binder_handle: BinderHandle, handle_type: NativeHandleType) => (native_handle: sf::CopyHandle);

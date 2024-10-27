@@ -87,13 +87,13 @@ impl IFileSystem for FileSystem {
         super::get_entry_type(path)
     }
     
-    fn open_file(&mut self, mode: fsp::FileOpenMode, path_buf: sf::InFixedPointerBuffer<fsp::Path>) -> Result<mem::Shared<dyn fsp::IFile>> {
+    fn open_file(&mut self, mode: fsp::FileOpenMode, path_buf: sf::InFixedPointerBuffer<fsp::Path>) -> Result<fs_sf::File> {
         let path = self.make_path(&path_buf)?;
         let file_accessor = super::open_file(path, super::convert_file_open_mode_to_option(mode))?;
-        Ok(mem::Shared::new(fs_sf::File::new(file_accessor.get_object())))
+        Ok(fs_sf::File::new(file_accessor.get_object()))
     }
 
-    fn open_directory(&mut self, mode: fsp::DirectoryOpenMode, path_buf: sf::InFixedPointerBuffer<fsp::Path>) -> Result<mem::Shared<dyn fsp::IDirectory>> {
+    fn open_directory(&mut self, mode: fsp::DirectoryOpenMode, path_buf: sf::InFixedPointerBuffer<fsp::Path>) -> Result<mem::Shared<fs_sf::Directory>> {
         let path = self.make_path(&path_buf)?;
         let dir_accessor = super::open_directory(path, mode)?;
         Ok(mem::Shared::new(fs_sf::Directory::new(dir_accessor.get_object())))

@@ -29,6 +29,7 @@
 //! ```
 
 use crate::elf;
+use crate::elf::mod0;
 use crate::result::*;
 use crate::svc;
 use crate::mem::alloc;
@@ -50,11 +51,12 @@ use crate::service;
 use crate::service::set;
 
 #[cfg(feature = "services")]
-use crate::service::set::ISystemSettingsServer;
+use crate::service::set::SystemSettingsServer;
 
 use core::ptr;
 use core::mem;
 use core::arch::asm;
+use core::sync::atomic::AtomicBool;
 
 // These functions must be implemented by any binary using this crate
 
@@ -146,7 +148,8 @@ pub fn get_module_name() -> ModulePath {
 }
 
 static G_EXIT_FN: sync::Mutex<Option<ExitFn>> = sync::Mutex::new(None);
-static mut G_MAIN_THREAD: sync::Mutex<Option<thread::Thread>> = sync::Mutex::new(None);
+static G_MAIN_THREAD: sync::Mutex<Option<thread::Thread>> = sync::Mutex::new(None);
+static EH_FRAME_HDR_SECTION: elf::EhFrameHdrPtr = elf::EhFrameHdrPtr::new();
 
 /// Exits the current process
 /// 
@@ -171,9 +174,10 @@ fn initialize_version(hbl_hos_version_opt: Option<hbl::Version>) {
     else {
         #[cfg(feature = "services")]
         {
+            use crate::ipc::sf::set::ISystemSettingsServer;
             let set_sys = service::new_service_object::<set::SystemSettingsServer>().unwrap();
-            let fw_version: set::FirmwareVersion = Default::default();
-            set_sys.get().get_firmware_version(sf::Buffer::from_var(&fw_version)).unwrap();
+            let mut fw_version: set::FirmwareVersion = Default::default();
+            set_sys.get_firmware_version(sf::Buffer::from_mut_var(&mut fw_version)).unwrap();
 
             let version = version::Version::new(fw_version.major, fw_version.minor, fw_version.micro);
             version::set_version(version);
@@ -213,18 +217,11 @@ unsafe fn normal_entry(maybe_abi_cfg_entries_ptr: *const hbl::AbiConfigEntry, ma
                     main_thread_handle = (*abi_entry).value[0] as svc::Handle;
                 },
                 hbl::AbiConfigEntryKey::NextLoadPath => {
-                    let next_load_path_data = (*abi_entry).value[0] as *mut u8;
-                    let next_load_path_data_len = util::str_ptr_len(next_load_path_data as *const u8);
-                    let next_load_argv_data = (*abi_entry).value[1] as *mut u8;
-                    let next_load_argv_data_len = util::str_ptr_len(next_load_argv_data as *const u8);
-                    
-                    let next_load_path_slice = core::slice::from_raw_parts(next_load_path_data, next_load_path_data_len);
-                    let next_load_argv_slice = core::slice::from_raw_parts(next_load_argv_data, next_load_argv_data_len);
-                    if let Ok(next_load_path) = core::str::from_utf8(next_load_path_slice) {
-                        if let Ok(next_load_argv) = core::str::from_utf8(next_load_argv_slice) {
-                            hbl::set_next_load_entry_ptr(next_load_path, next_load_argv);
-                        }
-                    }
+                    // lengths from nx-hbloader:source/main.c
+                    // https://github.com/switchbrew/nx-hbloader/blob/cd6a723acbeabffd827a8bdc40563066f5401fb7/source/main.c#L13-L14
+                    let next_load_path: &'static mut util::CString<512> = core::mem::transmute((*abi_entry).value[0]);
+                    let next_load_argv: &'static mut util::CString<2048> = core::mem::transmute((*abi_entry).value[1]);
+                    hbl::set_next_load_entry_ptr(next_load_path, next_load_argv);
                 },
                 hbl::AbiConfigEntryKey::OverrideHeap => {
                     heap.address = (*abi_entry).value[0] as *mut u8;
@@ -274,10 +271,7 @@ unsafe fn normal_entry(maybe_abi_cfg_entries_ptr: *const hbl::AbiConfigEntry, ma
     // Initialize the main thread object and initialize its TLS section
     // TODO: query memory for main thread stack address/size?
     
-    let main_thread_handle: thread::Thread = thread::Thread::new_remote(main_thread_handle, "MainThread", ptr::null_mut(), 0).unwrap();
-    {
-        G_MAIN_THREAD.set(Some(main_thread_handle));
-    }
+    
 
     // Initialize virtual memory
     vmem::initialize().unwrap();
@@ -294,10 +288,20 @@ unsafe fn normal_entry(maybe_abi_cfg_entries_ptr: *const hbl::AbiConfigEntry, ma
     heap = initialize_heap(heap);
     alloc::initialize(heap);
 
+    let main_thread_handle: thread::Thread = thread::Thread::new_remote("MainThread", main_thread_handle);
+    G_MAIN_THREAD.set(Some(main_thread_handle));
+
     // Initialize version support
     initialize_version(hos_version_opt);
 
+    // Try to initialize seme applet-specific globals
+    #[cfg(feature = "services")] {
+        let _  = service::applet::initialize();
+    }
+
     // TODO: extend this (init more stuff, etc.)?
+
+
 
     // Unwrap main(), which will trigger a panic if it didn't succeed
     main().unwrap();
@@ -311,6 +315,10 @@ unsafe fn normal_entry(maybe_abi_cfg_entries_ptr: *const hbl::AbiConfigEntry, ma
         crate::fs::finalize_fspsrv_session();
     }
     
+    #[cfg(feature = "la")]
+    {
+        crate::la::finalize()
+    }
     
 
     // Successful exit by default
@@ -356,26 +364,20 @@ unsafe extern "C" fn __nx_rrt0_entry(arg0: usize, arg1: usize) {
         out(reg) self_base_address
     );
 
+    // TODO: migrate to the providence APIs
     let (info, _) = svc::query_memory(self_base_address).unwrap();
-    let aslr_base_address = info.base_address as *const u8;
+    let aslr_base_address = info.base_address as *mut u8;
 
     // assume that the MOD0 structure is at the start of .text
     let start_dyn = elf::mod0::find_start_dyn_address(aslr_base_address).unwrap();
     elf::relocate_with_dyn(aslr_base_address, start_dyn as *const elf::Dyn).unwrap();
 
-    extern "C" {
-        static mut __bss_start: u8;
-        static mut __bss_end: u8;
-    }
+    mod0::zero_bss_section(aslr_base_address).unwrap();
 
-    let bss_start_addr = ptr::addr_of_mut!(__bss_start) as *const _ as *mut u64;
-    let bss_end_addr = ptr::addr_of_mut!(__bss_end) as *const _ as *mut u64;
 
-    let mut cur_bss_addr = bss_start_addr;
-    while cur_bss_addr < bss_end_addr {
-        ptr::write_volatile(cur_bss_addr, 0);
-        cur_bss_addr = cur_bss_addr.add(1);
-    }
+    EH_FRAME_HDR_SECTION.set(mod0::find_eh_frame_header(aslr_base_address).unwrap());
+    unwinding::custom_eh_frame_finder::set_custom_eh_frame_finder(&EH_FRAME_HDR_SECTION).unwrap();
+
     // make sure that the writes are complete before there are any accesses
     core::sync::atomic::compiler_fence(core::sync::atomic::Ordering::SeqCst);
 

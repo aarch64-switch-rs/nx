@@ -10,19 +10,19 @@ pub use crate::ipc::sf::nv::*;
 pub trait NvDrvService: client::IClientObject {}
 
 impl<S: NvDrvService> INvDrvServices for S {
-    fn open(&mut self, path: sf::InMapAliasBuffer<u8>) -> Result<(Fd, ErrorCode)> {
+    fn open(&self, path: sf::InMapAliasBuffer<u8>) -> Result<(Fd, ErrorCode)> {
         ipc_client_send_request_command!([self.get_info(); 0] (path) => (fd: Fd, error_code: ErrorCode))
     }
 
-    fn ioctl(&mut self, fd: Fd, id: IoctlId, in_buf: sf::InAutoSelectBuffer<u8>, out_buf: sf::OutAutoSelectBuffer<u8>) -> Result<ErrorCode> {
+    fn ioctl(&self, fd: Fd, id: IoctlId, in_buf: sf::InAutoSelectBuffer<u8>, out_buf: sf::OutAutoSelectBuffer<u8>) -> Result<ErrorCode> {
         ipc_client_send_request_command!([self.get_info(); 1] (fd, id, in_buf, out_buf) => (error_code: ErrorCode))
     }
 
-    fn close(&mut self, fd: Fd) -> Result<ErrorCode> {
+    fn close(&self, fd: Fd) -> Result<ErrorCode> {
         ipc_client_send_request_command!([self.get_info(); 2] (fd) => (error_code: ErrorCode))
     }
 
-    fn initialize(&mut self, transfer_mem_size: u32, self_process_handle: sf::CopyHandle, transfer_mem_handle: sf::CopyHandle) -> Result<ErrorCode> {
+    fn initialize(&self, transfer_mem_size: u32, self_process_handle: sf::CopyHandle, transfer_mem_handle: sf::CopyHandle) -> Result<ErrorCode> {
         ipc_client_send_request_command!([self.get_info(); 3] (transfer_mem_size, self_process_handle, transfer_mem_handle) => (error_code: ErrorCode))
     }
 }

@@ -1,6 +1,92 @@
 #![macro_use]
 
-/// Simplifies the creation of a (client-side IPC) type implementing an IPC interface
+/// Simplifies the creation of a (client-side IPC) type implementing an IPC interface (and implementing the trait)
+/// 
+/// # Examples
+/// 
+/// ```
+/// 
+/// // This already creates the client-IPC type and impls IObject and the SF trait below
+/// ipc_sf_define_default_interface_client!(ExampleInterface);
+/// 
+/// ipc_sf_define_interface_trait! {
+///     trait ExampleInterface {
+///         command_1 [1, VersionInterval::all()]: (in_32: u32) => (out_16: u16);
+///         command_2 [20, VersionInterval::all()]: (in_8: u8) => ();
+///     }
+/// }
+/// ```
+#[macro_export]
+macro_rules! ipc_sf_define_default_interface_client {
+    ($t:ident) => {
+        paste::paste! {
+            pub struct $t {
+                pub (crate) session: $crate::ipc::sf::Session
+            }        
+
+            impl $crate::ipc::sf::IObject for $t {
+
+                fn get_session(&self) -> & $crate::ipc::sf::Session {
+                    &self.session
+                }
+                fn get_session_mut(&mut self) -> &mut $crate::ipc::sf::Session {
+                    &mut self.session
+                }
+            }
+
+            impl $crate::ipc::client::IClientObject for $t {
+                fn new(session: $crate::ipc::sf::Session) -> Self {
+                    Self { session }
+                }
+            }
+
+            unsafe impl Sync for $t {}
+            unsafe impl Send for $t {}
+
+            impl $crate::ipc::client::RequestCommandParameter for $t {
+                fn before_request_write(session: &Self, _walker: &mut $crate::ipc::DataWalker, ctx: &mut $crate::ipc::CommandContext) -> Result<()> {
+                    ctx.in_params.add_object(session.session.object_info)
+                }
+            
+                fn before_send_sync_request(_session: &Self, _walker: &mut $crate::ipc::DataWalker, _ctx: &mut $crate::ipc::CommandContext) -> Result<()> {
+                    Ok(())
+                }
+            }
+
+            impl $crate::ipc::client::ResponseCommandParameter<$t> for $t {
+                fn after_response_read(_walker: &mut $crate::ipc::DataWalker, ctx: &mut $crate::ipc::CommandContext) -> Result<Self> {
+                    let object_info = ctx.pop_object()?;
+                    Ok(Self { session: $crate::ipc::sf::Session::from(object_info)})
+                }
+            }
+            impl $crate::ipc::server::RequestCommandParameter<$t> for $t {
+                fn after_request_read(_ctx: &mut $crate::ipc::server::ServerContext) -> Result<Self> {
+                    // TODO: determine if we need to do this, since this is a server side operation of a client object?
+                    // probably needs to be supported right?
+                    $crate::ipc::sf::hipc::rc::ResultUnsupportedOperation::make_err()
+                }
+            }
+
+            impl $crate::ipc::server::ResponseCommandParameter for $t {
+                fn before_response_write(_session: &Self, _ctx: &mut $crate::ipc::server::ServerContext) -> Result<()> {
+                    // TODO: determine if we need to do this, since this is a server side operation of a client object?
+                    // probably needs to be supported right?
+                    $crate::ipc::sf::hipc::rc::ResultUnsupportedOperation::make_err()
+                }
+            
+                fn after_response_write(_session: &Self, _ctx: &mut $crate::ipc::server::ServerContext) -> Result<()> {
+                    // TODO: determine if we need to do this, since this is a server side operation of a client object?
+                    // probably needs to be supported right?
+                    $crate::ipc::sf::hipc::rc::ResultUnsupportedOperation::make_err()
+                }
+            }
+
+            impl [<I $t>] for $t {}
+        }
+    }
+}
+
+/// Simplifies the creation of a (client-side IPC) type implementing an IPC interface, without implementing the trait or IPC serialization
 /// 
 /// # Examples
 /// 
@@ -18,22 +104,27 @@
 macro_rules! ipc_client_define_object_default {
     ($t:ident) => {
         pub struct $t {
-            session: sf::Session
+            pub (crate) session: $crate::ipc::sf::Session
         }        
 
         impl $crate::ipc::sf::IObject for $t {
-            $crate::ipc_sf_object_impl_default_command_metadata!();
 
-            fn get_session(&mut self) -> &mut sf::Session {
+            fn get_session(&self) -> & $crate::ipc::sf::Session {
+                &self.session
+            }
+            fn get_session_mut(&mut self) -> &mut $crate::ipc::sf::Session {
                 &mut self.session
             }
         }
 
         impl $crate::ipc::client::IClientObject for $t {
-            fn new(session: sf::Session) -> Self {
+            fn new(session: $crate::ipc::sf::Session) -> Self {
                 Self { session }
             }
         }
+
+        unsafe impl Sync for $t {}
+        unsafe impl Send for $t {}
     };
 }
 
@@ -113,4 +204,49 @@ macro_rules! ipc_client_send_control_command {
 
         Ok(( $( $out_param as _ ),* ))
     }};
+}
+
+#[macro_export]
+macro_rules! client_mark_request_command_parameters_types_as_copy {
+    ($($t:ty),*) => {
+        $(
+        //const_assert!($t::is_pod());
+        impl $crate::ipc::client::RequestCommandParameter for $t {
+            fn before_request_write(_raw: &Self, walker: &mut $crate::ipc::DataWalker, _ctx: &mut $crate::ipc::CommandContext) -> $crate::result::Result<()> {
+                walker.advance::<Self>();
+                Ok(())
+            }
+        
+            fn before_send_sync_request(raw: &Self, walker: &mut $crate::ipc::DataWalker, _ctx: &mut $crate::ipc::CommandContext) -> $crate::result::Result<()> {
+                walker.advance_set(*raw);
+                Ok(())
+            }
+        }
+        
+        
+        impl $crate::ipc::client::ResponseCommandParameter<$t> for $t {
+            fn after_response_read(walker: &mut $crate::ipc::DataWalker, _ctx: &mut $crate::ipc::CommandContext) -> $crate::result::Result<Self> {
+                Ok(walker.advance_get())
+            }
+        })*
+    };
+}
+
+impl<T: Copy, const N: usize> crate::ipc::client::RequestCommandParameter for [T;N] {
+    fn before_request_write(_raw: &Self, walker: &mut crate::ipc::DataWalker, _ctx: &mut crate::ipc::CommandContext) -> crate::result::Result<()> {
+        walker.advance::<Self>();
+        Ok(())
+    }
+
+    fn before_send_sync_request(raw: &Self, walker: &mut crate::ipc::DataWalker, _ctx: &mut crate::ipc::CommandContext) -> crate::result::Result<()> {
+        walker.advance_set(*raw);
+        Ok(())
+    }
+}
+
+
+impl<T: Copy, const N: usize> crate::ipc::client::ResponseCommandParameter<[T;N]> for [T;N] {
+    fn after_response_read(walker: &mut crate::ipc::DataWalker, _ctx: &mut crate::ipc::CommandContext) -> crate::result::Result<Self> {
+        Ok(walker.advance_get())
+    }
 }

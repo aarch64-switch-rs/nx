@@ -1,22 +1,26 @@
 use super::*;
-use crate::version;
-use alloc::vec::Vec;
+use crate::{util, version};
 use alloc::string::String;
+use alloc::vec::Vec;
 
 pub struct Buffer<const A: BufferAttribute, T> {
     buf: *mut T,
-    count: usize
+    count: usize,
 }
 
 impl<const A: BufferAttribute, T> Buffer<A, T> {
     pub const fn get_expected_size() -> usize {
-        mem::size_of::<T>()
+        // Calculate align-padded size of each element in the buffer (in case a type has a larger alignment than its size)
+        util::const_usize_max(
+            mem::size_of::<T>(),
+            mem::align_of::<T>()
+        )
     }
 
     pub const fn empty() -> Self {
         Self {
             buf: ptr::null_mut(),
-            count: 0
+            count: 0,
         }
     }
 
@@ -25,22 +29,19 @@ impl<const A: BufferAttribute, T> Buffer<A, T> {
     pub const fn new(addr: *mut u8, size: usize) -> Self {
         Self {
             buf: addr as *mut T,
-            count: size / Self::get_expected_size()
+            count: size / Self::get_expected_size(),
         }
     }
-    
+
     pub const fn from_ptr(buf: *const T, count: usize) -> Self {
         Self {
             buf: buf as *mut T,
-            count
+            count,
         }
     }
 
     pub const fn from_mut_ptr(buf: *mut T, count: usize) -> Self {
-        Self {
-            buf,
-            count
-        }
+        Self { buf, count }
     }
 
     pub const fn from_var(var: &T) -> Self {
@@ -54,11 +55,17 @@ impl<const A: BufferAttribute, T> Buffer<A, T> {
     // TODO: ensure sizeof(T) is a multiple of sizeof(U)
 
     pub const fn from_other_var<U>(var: &U) -> Self {
-        Self::from_ptr(var as *const U as *const T, mem::size_of::<U>() / Self::get_expected_size())
+        Self::from_ptr(
+            var as *const U as *const T,
+            mem::size_of::<U>() / Self::get_expected_size(),
+        )
     }
 
     pub const fn from_other_mut_var<U>(var: &mut U) -> Self {
-        Self::from_mut_ptr(var as *mut U as *mut T, mem::size_of::<U>() / Self::get_expected_size())
+        Self::from_mut_ptr(
+            var as *mut U as *mut T,
+            mem::size_of::<U>() / Self::get_expected_size(),
+        )
     }
 
     pub const fn from_array(arr: &[T]) -> Self {
@@ -86,15 +93,11 @@ impl<const A: BufferAttribute, T> Buffer<A, T> {
     }
 
     pub const fn get_var(&self) -> &T {
-        unsafe {
-            &*(self.buf as *const T)
-        }
+        unsafe { &*(self.buf as *const T) }
     }
 
     pub fn get_mut_var(&mut self) -> &mut T {
-        unsafe {
-            &mut *self.buf
-        }
+        unsafe { &mut *self.buf }
     }
 
     pub fn set_var(&mut self, t: T) {
@@ -104,15 +107,11 @@ impl<const A: BufferAttribute, T> Buffer<A, T> {
     }
 
     pub fn get_slice(&self) -> &[T] {
-        unsafe {
-            core::slice::from_raw_parts(self.buf as *const T, self.count)
-        }
+        unsafe { core::slice::from_raw_parts(self.buf as *const T, self.count) }
     }
 
     pub fn get_mut_slice(&mut self) -> &mut [T] {
-        unsafe {
-            core::slice::from_raw_parts_mut(self.buf, self.count)
-        }
+        unsafe { core::slice::from_raw_parts_mut(self.buf, self.count) }
     }
 }
 
@@ -135,25 +134,79 @@ impl<const A: BufferAttribute> Buffer<A, u8> {
         unsafe {
             // First memset to zero so that it will be a valid nul-terminated string
             core::ptr::write_bytes(self.buf, 0, self.count);
-            core::ptr::copy(string.as_ptr(), self.buf, core::cmp::min(self.count - 1, string.len()));
+            core::ptr::copy(
+                string.as_ptr(),
+                self.buf,
+                core::cmp::min(self.count - 1, string.len()),
+            );
         }
     }
 }
 
-pub type InMapAliasBuffer<T> = Buffer<{bit_group!{ BufferAttribute [In, MapAlias] }}, T>;
-pub type OutMapAliasBuffer<T> = Buffer<{bit_group!{ BufferAttribute [Out, MapAlias] }}, T>;
-pub type InNonSecureMapAliasBuffer<T> = Buffer<{bit_group!{ BufferAttribute [In, MapAlias, MapTransferAllowsNonSecure] }}, T>;
-pub type OutNonSecureMapAliasBuffer<T> = Buffer<{bit_group!{ BufferAttribute [Out, MapAlias, MapTransferAllowsNonSecure] }}, T>;
-pub type InAutoSelectBuffer<T> = Buffer<{bit_group!{ BufferAttribute [In, AutoSelect] }}, T>;
-pub type OutAutoSelectBuffer<T> = Buffer<{bit_group!{ BufferAttribute [Out, AutoSelect] }}, T>;
-pub type InPointerBuffer<T> = Buffer<{bit_group!{ BufferAttribute [In, Pointer] }}, T>;
-pub type OutPointerBuffer<T> = Buffer<{bit_group!{ BufferAttribute [Out, Pointer] }}, T>;
-pub type InFixedPointerBuffer<T> = Buffer<{bit_group!{ BufferAttribute [In, Pointer, FixedSize] }}, T>;
-pub type OutFixedPointerBuffer<T> = Buffer<{bit_group!{ BufferAttribute [Out, Pointer, FixedSize] }}, T>;
+pub type InMapAliasBuffer<T> = Buffer<
+    {
+        bit_group! { BufferAttribute [In, MapAlias] }
+    },
+    T,
+>;
+pub type OutMapAliasBuffer<T> = Buffer<
+    {
+        bit_group! { BufferAttribute [Out, MapAlias] }
+    },
+    T,
+>;
+pub type InNonSecureMapAliasBuffer<T> = Buffer<
+    {
+        bit_group! { BufferAttribute [In, MapAlias, MapTransferAllowsNonSecure] }
+    },
+    T,
+>;
+pub type OutNonSecureMapAliasBuffer<T> = Buffer<
+    {
+        bit_group! { BufferAttribute [Out, MapAlias, MapTransferAllowsNonSecure] }
+    },
+    T,
+>;
+pub type InAutoSelectBuffer<T> = Buffer<
+    {
+        bit_group! { BufferAttribute [In, AutoSelect] }
+    },
+    T,
+>;
+pub type OutAutoSelectBuffer<T> = Buffer<
+    {
+        bit_group! { BufferAttribute [Out, AutoSelect] }
+    },
+    T,
+>;
+pub type InPointerBuffer<T> = Buffer<
+    {
+        bit_group! { BufferAttribute [In, Pointer] }
+    },
+    T,
+>;
+pub type OutPointerBuffer<T> = Buffer<
+    {
+        bit_group! { BufferAttribute [Out, Pointer] }
+    },
+    T,
+>;
+pub type InFixedPointerBuffer<T> = Buffer<
+    {
+        bit_group! { BufferAttribute [In, Pointer, FixedSize] }
+    },
+    T,
+>;
+pub type OutFixedPointerBuffer<T> = Buffer<
+    {
+        bit_group! { BufferAttribute [Out, Pointer, FixedSize] }
+    },
+    T,
+>;
 
 #[derive(Clone)]
 pub struct Handle<const M: HandleMode> {
-    pub handle: svc::Handle
+    pub handle: svc::Handle,
 }
 
 impl<const M: HandleMode> Handle<M> {
@@ -162,12 +215,12 @@ impl<const M: HandleMode> Handle<M> {
     }
 }
 
-pub type CopyHandle = Handle<{HandleMode::Copy}>;
-pub type MoveHandle = Handle<{HandleMode::Move}>;
+pub type CopyHandle = Handle<{ HandleMode::Copy }>;
+pub type MoveHandle = Handle<{ HandleMode::Move }>;
 
 #[derive(Clone, Default)]
 pub struct ProcessId {
-    pub process_id: u64
+    pub process_id: u64,
 }
 
 impl ProcessId {
@@ -176,9 +229,7 @@ impl ProcessId {
     }
 
     pub const fn new() -> ProcessId {
-        Self {
-            process_id: 0
-        }
+        Self { process_id: 0 }
     }
 }
 
@@ -188,20 +239,16 @@ impl ProcessId {
 #[repr(C)]
 pub union EnumAsPrimitiveType<E: Copy + Clone, T: Copy + Clone> {
     val: T,
-    enum_val: E
+    enum_val: E,
 }
 
 impl<E: Copy + Clone, T: Copy + Clone> EnumAsPrimitiveType<E, T> {
     pub fn from(enum_val: E) -> Self {
-        Self {
-            enum_val
-        }
+        Self { enum_val }
     }
 
     pub fn from_val(val: T) -> Self {
-        Self {
-            val
-        }
+        Self { val }
     }
 
     pub fn get(&self) -> E {
@@ -221,20 +268,77 @@ impl<E: Copy + Clone, T: Copy + Clone> EnumAsPrimitiveType<E, T> {
     }
 }
 
+impl<E: Copy + Clone, T: Copy + Clone> server::RequestCommandParameter<EnumAsPrimitiveType<E, T>>
+    for EnumAsPrimitiveType<E, T>
+{
+    fn after_request_read(ctx: &mut server::ServerContext) -> Result<Self> {
+        Ok(ctx.raw_data_walker.advance_get())
+    }
+}
+
+impl<E: Copy + Clone, T: Copy + Clone> server::ResponseCommandParameter
+    for EnumAsPrimitiveType<E, T>
+{
+    fn before_response_write(_raw: &Self, ctx: &mut server::ServerContext) -> Result<()> {
+        ctx.raw_data_walker.advance::<Self>();
+        Ok(())
+    }
+
+    fn after_response_write(raw: &Self, ctx: &mut server::ServerContext) -> Result<()> {
+        ctx.raw_data_walker.advance_set(*raw);
+        Ok(())
+    }
+}
+
+impl<E: Copy + Clone, T: Copy + Clone> client::RequestCommandParameter
+    for EnumAsPrimitiveType<E, T>
+{
+    fn before_request_write(
+        _raw: &Self,
+        walker: &mut crate::ipc::DataWalker,
+        _ctx: &mut crate::ipc::CommandContext,
+    ) -> crate::result::Result<()> {
+        walker.advance::<Self>();
+        Ok(())
+    }
+
+    fn before_send_sync_request(
+        raw: &Self,
+        walker: &mut crate::ipc::DataWalker,
+        _ctx: &mut crate::ipc::CommandContext,
+    ) -> crate::result::Result<()> {
+        walker.advance_set(*raw);
+        Ok(())
+    }
+}
+
+impl<E: Copy + Clone, T: Copy + Clone> client::ResponseCommandParameter<EnumAsPrimitiveType<E, T>>
+    for EnumAsPrimitiveType<E, T>
+{
+    fn after_response_read(
+        walker: &mut crate::ipc::DataWalker,
+        _ctx: &mut crate::ipc::CommandContext,
+    ) -> crate::result::Result<Self> {
+        Ok(walker.advance_get())
+    }
+}
+
 #[derive(Default)]
 pub struct Session {
-    pub object_info: ObjectInfo
+    pub object_info: ObjectInfo,
 }
 
 impl Session {
-    pub const fn new() -> Self  {
-        Self { object_info: ObjectInfo::new() }
+    pub const fn new() -> Self {
+        Self {
+            object_info: ObjectInfo::new(),
+        }
     }
 
     pub const fn from(object_info: ObjectInfo) -> Self {
         Self { object_info }
     }
-    
+
     pub const fn from_handle(handle: svc::Handle) -> Self {
         Self::from(ObjectInfo::from_handle(handle))
     }
@@ -256,15 +360,22 @@ impl Session {
         if self.object_info.is_valid() {
             if self.object_info.is_domain() {
                 let mut ctx = CommandContext::new_client(self.object_info);
-                cmif::client::write_request_command_on_msg_buffer(&mut ctx, None, cmif::DomainCommandType::Close);
+                cmif::client::write_request_command_on_msg_buffer(
+                    &mut ctx,
+                    None,
+                    cmif::DomainCommandType::Close,
+                );
                 let _ = svc::send_sync_request(self.object_info.handle);
-            }
-            else if self.object_info.owns_handle {
+            } else if self.object_info.owns_handle {
                 let mut ctx = CommandContext::new_client(self.object_info);
-                
+
                 match self.object_info.protocol {
-                    CommandProtocol::Cmif => cmif::client::write_close_command_on_msg_buffer(&mut ctx),
-                    CommandProtocol::Tipc => tipc::client::write_close_command_on_msg_buffer(&mut ctx)
+                    CommandProtocol::Cmif => {
+                        cmif::client::write_close_command_on_msg_buffer(&mut ctx)
+                    }
+                    CommandProtocol::Tipc => {
+                        tipc::client::write_close_command_on_msg_buffer(&mut ctx)
+                    }
                 };
 
                 let _ = svc::send_sync_request(self.object_info.handle);
@@ -286,17 +397,21 @@ impl Drop for Session {
 pub struct CommandMetadata {
     pub rq_id: u32,
     pub command_fn: server::CommandFn,
-    pub ver_intv: version::VersionInterval
+    pub ver_intv: version::VersionInterval,
 }
 
 pub type CommandMetadataTable = Vec<CommandMetadata>;
 
 impl CommandMetadata {
-    pub const fn new(rq_id: u32, command_fn: server::CommandFn, ver_intv: version::VersionInterval) -> Self {
+    pub const fn new(
+        rq_id: u32,
+        command_fn: server::CommandFn,
+        ver_intv: version::VersionInterval,
+    ) -> Self {
         Self {
             rq_id,
             command_fn,
-            ver_intv
+            ver_intv,
         }
     }
 
@@ -313,14 +428,16 @@ impl CommandMetadata {
 // TODO: think of a proper way to migrate call_self_server_command / command_fn stuff to server and avoid it being on every single IObject?
 
 pub trait IObject {
-    fn get_session(&mut self) -> &mut Session;
+    fn get_session(&self) -> &Session;
 
-    fn get_command_metadata_table(&self) -> CommandMetadataTable;
+    fn get_session_mut(&mut self) -> &mut Session;
+
+    /*fn get_command_metadata_table(&self) -> CommandMetadataTable;
 
     fn call_self_server_command(&mut self, command_fn: server::CommandFn, protocol: CommandProtocol, ctx: &mut server::ServerContext) -> Result<()> {
         let self_fn: server::CommandSpecificFn<Self> = unsafe { core::mem::transmute(command_fn) };
         (self_fn)(self, protocol, ctx)
-    }
+    }*/
 }
 
 pub mod sm;

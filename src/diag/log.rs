@@ -78,7 +78,7 @@ fn format_plain_string_log_impl(metadata: &LogMetadata, log_type: &str) -> Strin
         LogSeverity::Error => "Error",
         LogSeverity::Fatal => "Fatal",
     };
-    let thread_name = match unsafe { thread::get_current_thread().unwrap().name.get_str()} {
+    let thread_name = match unsafe { thread::current().as_ref().unwrap().name.get_str()} {
         Ok(name) => name,
         _ => "<unknown>",
     };
