@@ -342,11 +342,11 @@ impl Context {
             )?
         };
 
-        let aruid = applet::GLOBAL_ARUID.load(core::sync::atomic::Ordering::Relaxed);
-        let pid = ProcessId::from(svc::get_process_id(svc::CURRENT_PROCESS_PSEUDO_HANDLE)?);
+        let _aruid = applet::GLOBAL_ARUID.load(core::sync::atomic::Ordering::Relaxed);
+        let _pid = ProcessId::from(svc::get_process_id(svc::CURRENT_PROCESS_PSEUDO_HANDLE)?);
 
         hid_srv.activate_npad(ProcessId::new())?;
-        let _did_error  = hid_srv.set_supported_npad_style_set(ProcessId::new(), supported_style_tags);
+        let _did_error  = hid_srv.set_supported_npad_style_set( supported_style_tags, ProcessId::new());
         let _did_error2 = hid_srv.set_supported_npad_id_type(ProcessId::new(), players);
 
         Ok(Self {

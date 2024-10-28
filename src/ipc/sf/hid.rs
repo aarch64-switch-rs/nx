@@ -507,92 +507,17 @@ ipc_sf_define_interface_trait! {
     }
 }
 
-//api_mark_request_command_parameters_types_as_copy!(NpadIdType, NpadJoyDeviceType);
+ipc_sf_define_default_interface_client!(HidServer);
 ipc_sf_define_interface_trait! {
 	trait HidServer {
         create_applet_resource [0, version::VersionInterval::all(), mut]: (process_id: sf::ProcessId) => (applet_resource: AppletResource);
-        set_supported_npad_style_set [100, version::VersionInterval::all(), mut]: (process_id: sf::ProcessId, npad_style_tag: NpadStyleTag) => ();
+        set_supported_npad_style_set [100, version::VersionInterval::all(), mut]: ( npad_style_tag: NpadStyleTag, process_id: sf::ProcessId) => ();
         get_supported_npad_style_set [101, version::VersionInterval::all()]: (process_id: sf::ProcessId) => (npad_style_tag: NpadStyleTag);
         set_supported_npad_id_type [102, version::VersionInterval::all(), mut]: (process_id: sf::ProcessId, npad_ids: sf::InPointerBuffer<NpadIdType>) => ();
         activate_npad [103, version::VersionInterval::all(), mut]: (process_id: sf::ProcessId) => ();
         deactivate_npad [104, version::VersionInterval::all(), mut]: (process_id: sf::ProcessId) => ();
-        activate_npad_with_revision [109, version::VersionInterval::all(), mut]: (process_id: sf::ProcessId, revision: i32, aruid: applet::AppletResourceUserId) => ();
-        set_npad_joy_assignment_mode_single [123, version::VersionInterval::all(), mut]: (process_id: sf::ProcessId, npad_id: NpadIdType, joy_type: NpadJoyDeviceType) => ();
-        set_npad_joy_assignment_mode_dual [124, version::VersionInterval::all(), mut]: (process_id: sf::ProcessId, npad_id: NpadIdType) => ();
+        activate_npad_with_revision [109, version::VersionInterval::all(), mut]: (revision: i32, process_id: sf::ProcessId) => ();
+        set_npad_joy_assignment_mode_single [123, version::VersionInterval::all(), mut]: (npad_id: NpadIdType, process_id: sf::ProcessId, joy_type: NpadJoyDeviceType) => ();
+        set_npad_joy_assignment_mode_dual [124, version::VersionInterval::all(), mut]: (npad_id: NpadIdType, process_id: sf::ProcessId) => ();
     }
-}
-
-
-/// We can't use the default implementation here because some of the arguments in the IPC client are reversed in the IPC request
-/// We are doing the implmentation of the client object manually below.
-pub struct HidServer {
-    pub (crate) session: crate::ipc::sf::Session
-}        
-
-impl crate::ipc::sf::IObject for HidServer {
-
-    fn get_session(&self) -> & crate::ipc::sf::Session {
-        &self.session
-    }
-    fn get_session_mut(&mut self) -> &mut crate::ipc::sf::Session {
-        &mut self.session
-    }
-}
-
-impl crate::ipc::client::IClientObject for HidServer {
-    fn new(session: crate::ipc::sf::Session) -> Self {
-        Self { session }
-    }
-}
-
-unsafe impl Sync for HidServer {}
-unsafe impl Send for HidServer {}
-
-impl crate::ipc::client::RequestCommandParameter for HidServer {
-    fn before_request_write(session: &Self, _walker: &mut crate::ipc::DataWalker, ctx: &mut crate::ipc::CommandContext) -> Result<()> {
-        ctx.in_params.add_object(session.session.object_info)
-    }
-
-    fn before_send_sync_request(_session: &Self, _walker: &mut crate::ipc::DataWalker, _ctx: &mut crate::ipc::CommandContext) -> Result<()> {
-        Ok(())
-    }
-}
-
-impl crate::ipc::client::ResponseCommandParameter<HidServer> for HidServer {
-    fn after_response_read(_walker: &mut crate::ipc::DataWalker, ctx: &mut crate::ipc::CommandContext) -> Result<Self> {
-        let object_info = ctx.pop_object()?;
-        Ok(Self { session: crate::ipc::sf::Session::from(object_info)})
-    }
-}
-impl crate::ipc::server::RequestCommandParameter<HidServer> for HidServer {
-    fn after_request_read(_ctx: &mut crate::ipc::server::ServerContext) -> Result<Self> {
-        // TODO: determine if we need to do this, since this is a server side operation of a client object?
-        // probably needs to be supported right?
-        crate::ipc::sf::hipc::rc::ResultUnsupportedOperation::make_err()
-    }
-}
-
-impl crate::ipc::server::ResponseCommandParameter for HidServer {
-    fn before_response_write(_session: &Self, _ctx: &mut crate::ipc::server::ServerContext) -> Result<()> {
-        // TODO: determine if we need to do this, since this is a server side operation of a client object?
-        // probably needs to be supported right?
-        crate::ipc::sf::hipc::rc::ResultUnsupportedOperation::make_err()
-    }
-
-    fn after_response_write(_session: &Self, _ctx: &mut crate::ipc::server::ServerContext) -> Result<()> {
-        // TODO: determine if we need to do this, since this is a server side operation of a client object?
-        // probably needs to be supported right?
-        crate::ipc::sf::hipc::rc::ResultUnsupportedOperation::make_err()
-    }
-}
-
-impl IHidServer for HidServer {
-    fn set_supported_npad_style_set(&mut self, aruid: sf::ProcessId, npad_style_tag: NpadStyleTag) -> Result<()> {
-        ipc_client_send_request_command!([self.session.object_info; 100] (npad_style_tag, aruid) => ())
-    }
-
-    fn set_npad_joy_assignment_mode_single(&mut self, aruid: sf::ProcessId, npad_id: NpadIdType, joy_type: NpadJoyDeviceType) -> Result<()> {
-        ipc_client_send_request_command!([self.session.object_info; 123] (npad_id, aruid, joy_type) => ())
-    }
-
 }
