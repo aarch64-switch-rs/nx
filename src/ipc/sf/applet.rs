@@ -2,6 +2,8 @@ use crate::result::*;
 use crate::ipc::sf;
 use crate::version;
 
+use super::CmifPidPlaceholder;
+
 pub type AppletResourceUserId = u64;
 
 #[derive(Copy, Clone)]
@@ -148,6 +150,6 @@ ipc_sf_define_interface_trait! {
 ipc_sf_define_default_interface_client!(AllSystemAppletProxiesService);
 ipc_sf_define_interface_trait! {
 	trait AllSystemAppletProxiesService {
-        open_library_applet_proxy [201, version::VersionInterval::from(version::Version::new(3,0,0))]: (process_id: sf::ProcessId, self_process_handle: sf::CopyHandle, applet_attribute: sf::InMapAliasBuffer<AppletAttribute>) => (library_applet_proxy: LibraryAppletProxy);
+        open_library_applet_proxy [201, version::VersionInterval::from(version::Version::new(3,0,0))]: (process_id: sf::ProcessId, _reserved: CmifPidPlaceholder, self_process_handle: sf::CopyHandle, applet_attribute: sf::InMapAliasBuffer<AppletAttribute>) => (library_applet_proxy: LibraryAppletProxy);
     }
 }

@@ -64,7 +64,7 @@ pub struct ParcelData {
     /// Unknown, usually zeros
     pub unk_zero: [u8; 0xC],
     /// NUL-terminated string containing `"dispdrv"`
-    pub dispdrv_str: util::CString<0x8>,
+    pub dispdrv_str: util::ArrayString<0x8>,
     /// Unknown, usually zeros
     pub unk_zero_2: [u8; 8],
 }

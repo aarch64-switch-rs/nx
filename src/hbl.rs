@@ -13,7 +13,7 @@ use crate::sync::Mutex;
 use crate::sync::MutexGuard;
 use crate::sync::RwLock;
 use crate::util;
-use crate::util::CString;
+use crate::util::ArrayString;
 use crate::version;
 
 /// Represents the entry value keys for a hbl ABI context
@@ -204,12 +204,12 @@ pub fn get_loader_info() -> &'static str {
     *G_LOADER_INFO.read()
 }
 
-static G_NEXT_LOAD_PATH: Mutex<Option<&'static mut CString<512>>> = Mutex::new(None);
-static G_NEXT_LOAD_ARGV: Mutex<Option<&'static mut CString<2048>>> = Mutex::new(None);
+static G_NEXT_LOAD_PATH: Mutex<Option<&'static mut ArrayString<512>>> = Mutex::new(None);
+static G_NEXT_LOAD_ARGV: Mutex<Option<&'static mut ArrayString<2048>>> = Mutex::new(None);
 
 pub(crate) fn set_next_load_entry_ptr(
-    next_load_path: &'static mut CString<512>,
-    next_load_argv: &'static mut CString<2048>,
+    next_load_path: &'static mut ArrayString<512>,
+    next_load_argv: &'static mut ArrayString<2048>,
 ) {
     *G_NEXT_LOAD_PATH.lock() = Some(next_load_path);
     *G_NEXT_LOAD_ARGV.lock() = Some(next_load_argv);
@@ -218,15 +218,15 @@ pub(crate) fn set_next_load_entry_ptr(
 /// Gets the next load path, AKA the path of the homebrew NRO which will be executed after this one exits
 ///
 /// This value will only be set/useful if the current code is running through HBL
-pub fn get_next_load_path() -> Option<CString<512>>{
-    G_NEXT_LOAD_PATH.lock().as_ref().map(|s: &&mut CString<512>| (*s).clone())
+pub fn get_next_load_path() -> Option<ArrayString<512>>{
+    G_NEXT_LOAD_PATH.lock().as_ref().map(|s: &&mut ArrayString<512>| (*s).clone())
 }
 
 /// Gets the next load argv, AKA the argv of the homebrew NRO which will be executed after this one exits
 ///
 /// This value will only be set/useful if the current code is running through HBL
-pub fn get_next_load_argv() -> Option<CString<2048>>{
-    G_NEXT_LOAD_ARGV.lock().as_ref().map(|s: &&mut CString<2048>| (*s).clone())
+pub fn get_next_load_argv() -> Option<ArrayString<2048>>{
+    G_NEXT_LOAD_ARGV.lock().as_ref().map(|s: &&mut ArrayString<2048>| (*s).clone())
 }
 
 /// Sets the next homebrew NRO (path and argv) to execute after this one exits

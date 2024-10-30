@@ -1,6 +1,7 @@
 use crate::result::*;
 use crate::ipc::sf;
 use crate::util;
+use crate::ipc::sf::CmifPidPlaceholder;
 use crate::version;
 
 pub mod rc;
@@ -50,7 +51,7 @@ pub enum DirectoryEntryType {
     File = 1
 }
 
-pub type Path = util::CString<0x301>;
+pub type Path = util::ArrayString<0x301>;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
@@ -154,7 +155,7 @@ ipc_sf_define_interface_trait! {
 ipc_sf_define_default_interface_client!(FileSystemProxy);
 ipc_sf_define_interface_trait! {
 	trait FileSystemProxy {
-        set_current_process [1, version::VersionInterval::all()]: (process_id: sf::ProcessId) => ();
+        set_current_process [1, version::VersionInterval::all()]: (process_id: sf::ProcessId, _pid_placeholder: CmifPidPlaceholder) => ();
         open_sd_card_filesystem [18, version::VersionInterval::all()]: () => (sd_filesystem: FileSystem);
         output_access_log_to_sd_card [1006, version::VersionInterval::all()]: (log_buf: sf::InMapAliasBuffer<u8>) => ();
     }

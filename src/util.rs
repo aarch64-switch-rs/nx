@@ -126,17 +126,17 @@ pub(crate) const fn const_usize_max(a: usize, b: usize) -> usize {
 /// Note that `char` is 4-bytes in Rust for encoding reasons, thus we must stick to `u8` arrays
 #[derive(Copy, Clone)]
 #[repr(C)]
-pub struct CString<const S: usize> {
+pub struct ArrayString<const S: usize> {
     /// The actual array (like `char[S]` in C)
     pub c_str: [u8; S]
 }
-impl<const S: usize> crate::ipc::server::RequestCommandParameter<CString<S>> for CString<S> {
+impl<const S: usize> crate::ipc::server::RequestCommandParameter<ArrayString<S>> for ArrayString<S> {
     fn after_request_read(ctx: &mut crate::ipc::server::ServerContext) -> Result<Self> {
         Ok(ctx.raw_data_walker.advance_get())
     }
 }
 
-impl<const S: usize> crate::ipc::server::ResponseCommandParameter for CString<S> {
+impl<const S: usize> crate::ipc::server::ResponseCommandParameter for ArrayString<S> {
         fn before_response_write(_raw: &Self, ctx: &mut crate::ipc::server::ServerContext) -> Result<()> {
         ctx.raw_data_walker.advance::<Self>();
         Ok(())
@@ -148,7 +148,7 @@ impl<const S: usize> crate::ipc::server::ResponseCommandParameter for CString<S>
     }
 }
 
-impl<const S: usize> crate::ipc::client::RequestCommandParameter for CString<S> {
+impl<const S: usize> crate::ipc::client::RequestCommandParameter for ArrayString<S> {
     fn before_request_write(_raw: &Self, walker: &mut crate::ipc::DataWalker, _ctx: &mut crate::ipc::CommandContext) -> crate::result::Result<()> {
         walker.advance::<Self>();
         Ok(())
@@ -161,20 +161,20 @@ impl<const S: usize> crate::ipc::client::RequestCommandParameter for CString<S> 
 }
 
 
-impl<const S: usize> crate::ipc::client::ResponseCommandParameter<CString<S>> for CString<S> {
+impl<const S: usize> crate::ipc::client::ResponseCommandParameter<ArrayString<S>> for ArrayString<S> {
     fn after_response_read(walker: &mut crate::ipc::DataWalker, _ctx: &mut crate::ipc::CommandContext) -> crate::result::Result<Self> {
         Ok(walker.advance_get())
     }
 }
 
-impl<const S: usize> fmt::Debug for CString<S> {
+impl<const S: usize> fmt::Debug for ArrayString<S> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let str_data = self.get_str().unwrap_or("<invalid-str>");
         write!(f, "{}", str_data)
     }
 }
 
-impl<const S: usize> PartialEq for CString<S> {
+impl<const S: usize> PartialEq for ArrayString<S> {
     fn eq(&self, other: &Self) -> bool {
         if let Ok(self_str) = self.get_str() {
             if let Ok(other_str) = other.get_str() {
@@ -185,15 +185,15 @@ impl<const S: usize> PartialEq for CString<S> {
     }
 }
 
-impl<const S: usize> Eq for CString<S> {}
+impl<const S: usize> Eq for ArrayString<S> {}
 
-impl<const S: usize> Default for CString<S> {
+impl<const S: usize> Default for ArrayString<S> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<const S: usize> CString<S> {
+impl<const S: usize> ArrayString<S> {
     /// Creates an empty [`CString`]
     pub const fn new() -> Self {
         Self { c_str: [0; S] }
@@ -322,7 +322,7 @@ impl<const S: usize> CString<S> {
     }
 }
 
-impl<S: AsRef<str>, const LEN: usize> From<S> for CString<LEN> {
+impl<S: AsRef<str>, const LEN: usize> From<S> for ArrayString<LEN> {
     fn from(value: S) -> Self {
         let reffed_val: &str = value.as_ref();
         Self::from_str(reffed_val)
@@ -334,18 +334,18 @@ impl<S: AsRef<str>, const LEN: usize> From<S> for CString<LEN> {
 /// Note that `char` is 4-bytes in Rust for encoding reasons, thus we must stick to `u16` arrays
 #[derive(Copy, Clone)]
 #[repr(C)]
-pub struct CString16<const S: usize> {
+pub struct ArrayWideString<const S: usize> {
     /// The actual array (like `char16_t[S]` in C)
     pub c_str: [u16; S]
 }
 
-impl<const S: usize> crate::ipc::server::RequestCommandParameter<CString16<S>> for CString16<S> {
+impl<const S: usize> crate::ipc::server::RequestCommandParameter<ArrayWideString<S>> for ArrayWideString<S> {
     fn after_request_read(ctx: &mut crate::ipc::server::ServerContext) -> Result<Self> {
         Ok(ctx.raw_data_walker.advance_get())
     }
 }
 
-impl<const S: usize> crate::ipc::server::ResponseCommandParameter for CString16<S> {
+impl<const S: usize> crate::ipc::server::ResponseCommandParameter for ArrayWideString<S> {
         fn before_response_write(_raw: &Self, ctx: &mut crate::ipc::server::ServerContext) -> Result<()> {
         ctx.raw_data_walker.advance::<Self>();
         Ok(())
@@ -357,7 +357,7 @@ impl<const S: usize> crate::ipc::server::ResponseCommandParameter for CString16<
     }
 }
 
-impl<const S: usize> crate::ipc::client::RequestCommandParameter for CString16<S> {
+impl<const S: usize> crate::ipc::client::RequestCommandParameter for ArrayWideString<S> {
     fn before_request_write(_raw: &Self, walker: &mut crate::ipc::DataWalker, _ctx: &mut crate::ipc::CommandContext) -> crate::result::Result<()> {
         walker.advance::<Self>();
         Ok(())
@@ -370,20 +370,20 @@ impl<const S: usize> crate::ipc::client::RequestCommandParameter for CString16<S
 }
 
 
-impl<const S: usize> crate::ipc::client::ResponseCommandParameter<CString16<S>> for CString16<S> {
+impl<const S: usize> crate::ipc::client::ResponseCommandParameter<ArrayWideString<S>> for ArrayWideString<S> {
     fn after_response_read(walker: &mut crate::ipc::DataWalker, _ctx: &mut crate::ipc::CommandContext) -> crate::result::Result<Self> {
         Ok(walker.advance_get())
     }
 }
 
-impl<const S: usize> fmt::Debug for CString16<S> {
+impl<const S: usize> fmt::Debug for ArrayWideString<S> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let str_data = self.get_string().unwrap_or("<invalid-str>".to_string());
         write!(f, "{}", str_data)
     }
 }
 
-impl<const S: usize> PartialEq for CString16<S> {
+impl<const S: usize> PartialEq for ArrayWideString<S> {
     fn eq(&self, other: &Self) -> bool {
         if let Ok(self_str) = self.get_string() {
             if let Ok(other_str) = other.get_string() {
@@ -394,15 +394,15 @@ impl<const S: usize> PartialEq for CString16<S> {
     }
 }
 
-impl<const S: usize> Eq for CString16<S> {}
+impl<const S: usize> Eq for ArrayWideString<S> {}
 
-impl<const S: usize> Default for CString16<S> {
+impl<const S: usize> Default for ArrayWideString<S> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<const S: usize> CString16<S> {
+impl<const S: usize> ArrayWideString<S> {
     /// Creates an empty [`CString16`]
     pub const fn new() -> Self {
         Self { c_str: [0; S] }
@@ -526,7 +526,7 @@ impl<const S: usize> CString16<S> {
     }
 }
 
-impl<const S: usize> core::str::FromStr for CString16<S> {
+impl<const S: usize> core::str::FromStr for ArrayWideString<S> {
     type Err = ResultCode;
     fn from_str(s: &str) -> core::result::Result<Self, Self::Err> {
         let mut cstr = Self::new();

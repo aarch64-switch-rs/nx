@@ -326,10 +326,12 @@ impl Context {
             player_count += 1;
         }
 
+        let aruid = applet::GLOBAL_ARUID.load(core::sync::atomic::Ordering::Relaxed);
+
         let players = sf::Buffer::from_array(&players[..player_count]);
 
         let mut hid_srv = service::new_service_object::<hid::HidServer>()?;
-        let mut applet_res = hid_srv.create_applet_resource(sf::ProcessId::new())?;
+        let mut applet_res = hid_srv.create_applet_resource(ProcessId::new(), aruid)?;
 
         let shmem_handle = applet_res.get_shared_memory_handle()?;
         let shmem_address = vmem::allocate(shmem::SHMEM_SIZE)?;
@@ -342,12 +344,12 @@ impl Context {
             )?
         };
 
-        let _aruid = applet::GLOBAL_ARUID.load(core::sync::atomic::Ordering::Relaxed);
-        let _pid = ProcessId::from(svc::get_process_id(svc::CURRENT_PROCESS_PSEUDO_HANDLE)?);
+        
+        Self::activate_npad(&mut hid_srv, aruid)?;
+        hid_srv.set_supported_npad_style_set( ProcessId::new(), supported_style_tags, aruid)?;
+        hid_srv.set_supported_npad_id_type(ProcessId::new(), aruid, players)?;
 
-        hid_srv.activate_npad(ProcessId::new())?;
-        let _did_error  = hid_srv.set_supported_npad_style_set( supported_style_tags, ProcessId::new());
-        let _did_error2 = hid_srv.set_supported_npad_id_type(ProcessId::new(), players);
+        let _styles = hid_srv.get_supported_npad_style_set(ProcessId::new(), aruid);
 
         Ok(Self {
             hid_service: hid_srv,
@@ -358,32 +360,20 @@ impl Context {
         })
     }
 
-    // TODO - use the new version of npad activation
-    /*fn activate_npad(hid_srv: &mut HidServer, aruid: AppletResourceUserId) -> Result<()> {
+    fn activate_npad(hid_srv: &mut HidServer, aruid: AppletResourceUserId) -> Result<()> {
         let current_version = version::get_version();
         if current_version < version::Version::new(5, 0, 0) {
-            hid_srv.activate_npad(ProcessId::new())
+            hid_srv.activate_npad(ProcessId::new(), aruid)
         } else {
-            let mut revision = 1;
-            if version::VersionInterval::from(version::Version::new(6, 0, 0))
-                .contains(current_version)
-            {
-                revision = 2;
-            }
-            if version::VersionInterval::from(version::Version::new(8, 0, 0))
-                .contains(current_version)
-            {
-                revision = 3;
-            }
-            if version::VersionInterval::from(version::Version::new(18, 0, 0))
-                .contains(current_version)
-            {
-                revision = 5;
-            }
-
+            let revision = match current_version.major {
+                0..6 => 1,
+                6..8 => 2,
+                8..18 => 3,
+                18.. => 5
+            };
             hid_srv.activate_npad_with_revision(ProcessId::new(), revision, aruid)
         }
-    }*/
+    }
 
     /// Opens a [`Player`] type for the specified [`NpadIdType`][`hid::NpadIdType`]
     ///
@@ -436,7 +426,7 @@ impl Context {
 impl Drop for Context {
     /// Destroys the [`Context`], unmapping the shared-memory and closing it, and also closing its [`IHidServer`] session
     fn drop(&mut self) {
-        let _ = self.hid_service.deactivate_npad(sf::ProcessId::new());
+        let _ = self.hid_service.deactivate_npad(ProcessId::new(), 0);
         let _ = unsafe {
             svc::unmap_shared_memory(self.shmem_handle, self.shmem_ptr, shmem::SHMEM_SIZE)
         };

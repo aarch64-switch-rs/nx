@@ -15,10 +15,10 @@ pub struct FirmwareVersion {
     pub revision_minor: u8,
     pub pad_2: u8,
     pub pad_3: u8,
-    pub platform: util::CString<0x20>,
-    pub version_hash: util::CString<0x40>,
-    pub display_version: util::CString<0x18>,
-    pub display_title: util::CString<0x80>
+    pub platform: util::ArrayString<0x20>,
+    pub version_hash: util::ArrayString<0x40>,
+    pub display_version: util::ArrayString<0x18>,
+    pub display_title: util::ArrayString<0x80>
 }
 const_assert!(core::mem::size_of::<FirmwareVersion>() == 0x100);
 

@@ -16,6 +16,6 @@ impl service::INamedPort for UserInterface {
             self.session.object_info.protocol = ipc::CommandProtocol::Tipc;
         }
 
-        self.register_client(sf::ProcessId::new())
+        self.register_client(sf::ProcessId::new(), Default::default())
     }
 }

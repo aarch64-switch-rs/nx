@@ -1,7 +1,7 @@
 use crate::result::*;
 use crate::version;
 use crate::ipc::sf;
-use crate::util::CString;
+use crate::util::ArrayString;
 use core::fmt::{Display, Debug, Formatter, Result as FmtResult};
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Default)]
@@ -87,7 +87,7 @@ pub enum ContentInstallType {
     Unknown = 0x7
 }
 
-pub type ContentPath = CString<0x301>;
+pub type ContentPath = ArrayString<0x301>;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]

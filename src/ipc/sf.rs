@@ -218,20 +218,36 @@ impl<const M: HandleMode> Handle<M> {
 pub type CopyHandle = Handle<{ HandleMode::Copy }>;
 pub type MoveHandle = Handle<{ HandleMode::Move }>;
 
+
 #[derive(Clone, Default)]
 pub struct ProcessId {
-    pub process_id: u64,
+    pub inner: u64,
 }
 
 impl ProcessId {
     pub const fn from(process_id: u64) -> Self {
-        Self { process_id }
+        Self { inner: process_id }
     }
 
-    pub const fn new() -> ProcessId {
-        Self { process_id: 0 }
+    pub const fn new() -> Self {
+        Self { inner: 0 }
     }
 }
+
+/// Unfortunately, the s
+#[derive(Clone, PartialEq, Eq, Debug, Default)]
+#[repr(transparent)]
+pub struct CmifPidPlaceholder(u64);
+
+impl CmifPidPlaceholder {
+    pub fn new() -> Self {
+        Self(0)
+    }
+    pub(crate) fn from(should_be_zero: u64) -> Self {
+        Self(should_be_zero)
+    }
+}
+
 
 // This is used, for instance, with u8-sized enums which are sent/received as u32s in commands
 

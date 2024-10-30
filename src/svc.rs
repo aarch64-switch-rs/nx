@@ -133,7 +133,7 @@ pub enum InfoId {
 pub struct AttachProcessDebugEventInfo {
     pub program_id: ncm::ProgramId,
     pub process_id: u64,
-    pub name: util::CString<12>,
+    pub name: util::ArrayString<12>,
     pub flags: u32,
     pub user_exception_context_address: u64
 }

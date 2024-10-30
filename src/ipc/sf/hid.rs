@@ -3,6 +3,8 @@ use crate::ipc::sf;
 use crate::service::applet;
 use crate::version;
 
+use super::applet::AppletResourceUserId;
+
 pub mod shmem;
 
 define_bit_enum! {
@@ -510,14 +512,14 @@ ipc_sf_define_interface_trait! {
 ipc_sf_define_default_interface_client!(HidServer);
 ipc_sf_define_interface_trait! {
 	trait HidServer {
-        create_applet_resource [0, version::VersionInterval::all(), mut]: (process_id: sf::ProcessId) => (applet_resource: AppletResource);
-        set_supported_npad_style_set [100, version::VersionInterval::all(), mut]: ( npad_style_tag: NpadStyleTag, process_id: sf::ProcessId) => ();
-        get_supported_npad_style_set [101, version::VersionInterval::all()]: (process_id: sf::ProcessId) => (npad_style_tag: NpadStyleTag);
-        set_supported_npad_id_type [102, version::VersionInterval::all(), mut]: (process_id: sf::ProcessId, npad_ids: sf::InPointerBuffer<NpadIdType>) => ();
-        activate_npad [103, version::VersionInterval::all(), mut]: (process_id: sf::ProcessId) => ();
-        deactivate_npad [104, version::VersionInterval::all(), mut]: (process_id: sf::ProcessId) => ();
-        activate_npad_with_revision [109, version::VersionInterval::all(), mut]: (revision: i32, process_id: sf::ProcessId) => ();
-        set_npad_joy_assignment_mode_single [123, version::VersionInterval::all(), mut]: (npad_id: NpadIdType, process_id: sf::ProcessId, joy_type: NpadJoyDeviceType) => ();
-        set_npad_joy_assignment_mode_dual [124, version::VersionInterval::all(), mut]: (npad_id: NpadIdType, process_id: sf::ProcessId) => ();
+        create_applet_resource [0, version::VersionInterval::all(), mut]: (process_id: sf::ProcessId, aruid: AppletResourceUserId) => (applet_resource: AppletResource);
+        set_supported_npad_style_set [100, version::VersionInterval::all(), mut]: (process_id: sf::ProcessId, npad_style_tag: NpadStyleTag, aruid: AppletResourceUserId) => ();
+        get_supported_npad_style_set [101, version::VersionInterval::all()]: (process_id: sf::ProcessId, aruid: AppletResourceUserId) => (npad_style_tag: NpadStyleTag);
+        set_supported_npad_id_type [102, version::VersionInterval::all(), mut]: (process_id: sf::ProcessId, aruid: AppletResourceUserId, npad_ids: sf::InPointerBuffer<NpadIdType>) => ();
+        activate_npad [103, version::VersionInterval::all(), mut]: (process_id: sf::ProcessId, aruid: AppletResourceUserId) => ();
+        deactivate_npad [104, version::VersionInterval::all(), mut]: (process_id: sf::ProcessId, aruid: AppletResourceUserId) => ();
+        activate_npad_with_revision [109, version::VersionInterval::all(), mut]: (process_id: sf::ProcessId, revision: i32, aruid: AppletResourceUserId) => ();
+        set_npad_joy_assignment_mode_single [123, version::VersionInterval::all(), mut]: (process_id: sf::ProcessId, npad_id: NpadIdType, aruid: AppletResourceUserId, joy_type: NpadJoyDeviceType) => ();
+        set_npad_joy_assignment_mode_dual [124, version::VersionInterval::all(), mut]: (process_id: sf::ProcessId, npad_id: NpadIdType, aruid: AppletResourceUserId) => ();
     }
 }

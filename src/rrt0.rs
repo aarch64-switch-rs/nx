@@ -105,7 +105,7 @@ pub struct ModulePath {
     /// The length of the module name
     path_len: u32,
     /// The module name string
-    path: util::CString<0x200>
+    path: util::ArrayString<0x200>
 }
 
 impl ModulePath {
@@ -119,16 +119,16 @@ impl ModulePath {
         Self {
             _zero: 0,
             path_len: name.as_bytes().len() as u32,
-            path: util::CString::from_str(name)
+            path: util::ArrayString::from_str(name)
         }
     }
 
     pub fn set_name(&mut self, new_name: &str) {
-        self.path = util::CString::from_str(new_name);
+        self.path = util::ArrayString::from_str(new_name);
         self.path_len = new_name.as_bytes().len() as u32
     }
 
-    pub fn get_name(&self) -> util::CString<0x200> {
+    pub fn get_name(&self) -> util::ArrayString<0x200> {
         self.path
     }
 }
@@ -219,8 +219,8 @@ unsafe fn normal_entry(maybe_abi_cfg_entries_ptr: *const hbl::AbiConfigEntry, ma
                 hbl::AbiConfigEntryKey::NextLoadPath => {
                     // lengths from nx-hbloader:source/main.c
                     // https://github.com/switchbrew/nx-hbloader/blob/cd6a723acbeabffd827a8bdc40563066f5401fb7/source/main.c#L13-L14
-                    let next_load_path: &'static mut util::CString<512> = core::mem::transmute((*abi_entry).value[0]);
-                    let next_load_argv: &'static mut util::CString<2048> = core::mem::transmute((*abi_entry).value[1]);
+                    let next_load_path: &'static mut util::ArrayString<512> = core::mem::transmute((*abi_entry).value[0]);
+                    let next_load_argv: &'static mut util::ArrayString<2048> = core::mem::transmute((*abi_entry).value[1]);
                     hbl::set_next_load_entry_ptr(next_load_path, next_load_argv);
                 },
                 hbl::AbiConfigEntryKey::OverrideHeap => {
@@ -267,12 +267,7 @@ unsafe fn normal_entry(maybe_abi_cfg_entries_ptr: *const hbl::AbiConfigEntry, ma
             abi_entry = abi_entry.add(1);
         }
     }
-
-    // Initialize the main thread object and initialize its TLS section
-    // TODO: query memory for main thread stack address/size?
-    
-    
-
+  
     // Initialize virtual memory
     vmem::initialize().unwrap();
 
@@ -294,15 +289,10 @@ unsafe fn normal_entry(maybe_abi_cfg_entries_ptr: *const hbl::AbiConfigEntry, ma
     // Initialize version support
     initialize_version(hos_version_opt);
 
-    // Try to initialize seme applet-specific globals
     #[cfg(feature = "services")] {
-        let _  = service::applet::initialize();
+        service::applet::initialize().unwrap();
     }
-
-    // TODO: extend this (init more stuff, etc.)?
-
-
-
+    
     // Unwrap main(), which will trigger a panic if it didn't succeed
     main().unwrap();
 
@@ -315,6 +305,11 @@ unsafe fn normal_entry(maybe_abi_cfg_entries_ptr: *const hbl::AbiConfigEntry, ma
         crate::fs::finalize_fspsrv_session();
     }
     
+    
+    #[cfg(feature = "services")] {
+        let _  = service::applet::finalize();
+    }
+
     #[cfg(feature = "la")]
     {
         crate::la::finalize()

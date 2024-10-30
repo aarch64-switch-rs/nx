@@ -4,7 +4,9 @@ use crate::util;
 use crate::ipc::sf::applet;
 use crate::version;
 
-pub type DisplayName = util::CString<0x40>;
+use super::applet::AppletResourceUserId;
+
+pub type DisplayName = util::ArrayString<0x40>;
 
 define_bit_enum! {
     LayerFlags (u32) {
@@ -43,7 +45,7 @@ pub enum LayerStackId {
 ipc_sf_define_default_interface_client!(ManagerDisplayService);
 ipc_sf_define_interface_trait! {
 	trait ManagerDisplayService {
-        create_managed_layer [2010, version::VersionInterval::all(), mut]: (flags: LayerFlags, display_id: DisplayId, aruid: applet::AppletResourceUserId) => (id: LayerId);
+        create_managed_layer [2010, version::VersionInterval::all(), mut]: (flags: LayerFlags, display_id: DisplayId, raw_aruid: u64) => (id: LayerId);
         destroy_managed_layer [2011, version::VersionInterval::all()]: (id: LayerId) => ();
         add_to_layer_stack [6000, version::VersionInterval::all()]: (stack: LayerStackId, layer: LayerId) => ();
     }
@@ -69,7 +71,7 @@ ipc_sf_define_interface_trait! {
         get_manager_display_service [102, version::VersionInterval::all()]: () => (manager_display_service: ManagerDisplayService);
         open_display [1010, version::VersionInterval::all(), mut]: (name: DisplayName) => (id: DisplayId);
         close_display [1020, version::VersionInterval::all(), mut]: (id: DisplayId) => ();
-        open_layer [2020, version::VersionInterval::all(), mut]: (name: DisplayName, id: LayerId, aruid: sf::ProcessId, out_native_window: sf::OutMapAliasBuffer<u8>) => (native_window_size: usize);
+        open_layer [2020, version::VersionInterval::all(), mut]: (process_id: sf::ProcessId, name: DisplayName, id: LayerId, aruid: AppletResourceUserId, out_native_window: sf::OutMapAliasBuffer<u8>) => (native_window_size: usize);
         create_stray_layer [2030, version::VersionInterval::all(), mut]: (flags: LayerFlags, display_id: DisplayId, out_native_window: sf::OutMapAliasBuffer<u8>) => (id: LayerId, native_window_size: usize);
         destroy_stray_layer [2031, version::VersionInterval::all(), mut]: (id: LayerId) => ();
         get_display_vsync_event [5202, version::VersionInterval::all()]: (id: DisplayId) => (event_handle: sf::CopyHandle);

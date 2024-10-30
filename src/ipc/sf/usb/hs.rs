@@ -63,7 +63,7 @@ const_assert!(core::mem::size_of::<InterfaceProfile>() == 0x1B8);
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]
 pub struct InterfaceInfo {
-    pub unk_str: util::CString<0x40>,
+    pub unk_str: util::ArrayString<0x40>,
     pub bus_id: u32,
     pub device_id: u32,
     pub device_descriptor: super::DeviceDescriptor,

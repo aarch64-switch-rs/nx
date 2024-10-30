@@ -4,6 +4,7 @@ use crate::util;
 use crate::ipc::sf::applet;
 use crate::ipc::sf::mii;
 use crate::ipc::sf::hid;
+use crate::ipc::sf::CmifPidPlaceholder;
 use crate::version;
 
 use super::ncm;
@@ -85,7 +86,7 @@ const_assert!(core::mem::size_of::<TagInfo>() == 0x58);
 pub struct RegisterInfo {
     pub mii_charinfo: mii::CharInfo,
     pub first_write_date: Date,
-    pub name: util::CString<41>,
+    pub name: util::ArrayString<41>,
     pub font_region: u8,
     pub reserved: [u8; 0x7A]
 }
@@ -155,7 +156,7 @@ const_assert!(core::mem::size_of::<AdminInfo>() == 0x40);
 pub struct RegisterInfoPrivate {
     pub mii_store_data: mii::StoreData,
     pub first_write_date: Date,
-    pub name: util::CString<41>,
+    pub name: util::ArrayString<41>,
     pub unk: u8,
     pub reserved: [u8; 0x8E]
 }
@@ -180,7 +181,7 @@ pub struct NfpData {
     pub mii_3ds_format: [u8; 0x60],
     pub unk_v5: [u8; 0x8],
     pub first_write_date: Date,
-    pub name: util::CString16<11>,
+    pub name: util::ArrayWideString<11>,
     pub unk_v6: u8,
     pub unk_v7: u8,
     pub register_info_crc: u32,
@@ -212,7 +213,7 @@ pub enum WriteType {
 ipc_sf_define_default_interface_client!(User);
 ipc_sf_define_interface_trait! {
 	trait User {
-        initialize [0, version::VersionInterval::all()]: (process_id: sf::ProcessId, aruid: applet::AppletResourceUserId, mcu_data: sf::InMapAliasBuffer<McuVersionData>) => ();
+        initialize [0, version::VersionInterval::all()]: (aruid: applet::AppletResourceUserId, mcu_data: sf::InMapAliasBuffer<McuVersionData>) => ();
         finalize [1, version::VersionInterval::all()]: () => ();
         list_devices [2, version::VersionInterval::all()]: (out_devices: sf::OutPointerBuffer<DeviceHandle>) => (count: u32);
         start_detection [3, version::VersionInterval::all()]: (device_handle: DeviceHandle) => ();
@@ -250,7 +251,7 @@ ipc_sf_define_interface_trait! {
 ipc_sf_define_default_interface_client!(System);
 ipc_sf_define_interface_trait! {
 	trait System {
-        initialize_system [0, version::VersionInterval::all()]: (process_id: sf::ProcessId, aruid: applet::AppletResourceUserId, mcu_data: sf::InMapAliasBuffer<McuVersionData>) => ();
+        initialize_system [0, version::VersionInterval::all()]: (process_id: sf::ProcessId, aruid: applet::AppletResourceUserId, _reserved: CmifPidPlaceholder, mcu_data: sf::InMapAliasBuffer<McuVersionData>) => ();
         finalize_system [1, version::VersionInterval::all()]: () => ();
         list_devices [2, version::VersionInterval::all()]: (out_devices: sf::OutPointerBuffer<DeviceHandle>) => (count: u32);
         start_detection [3, version::VersionInterval::all()]: (device_handle: DeviceHandle) => ();
@@ -289,7 +290,7 @@ ipc_sf_define_interface_trait! {
 ipc_sf_define_default_interface_client!(Debug);
 ipc_sf_define_interface_trait! {
 	trait Debug {
-        initialize_debug [0, version::VersionInterval::all()]: (process_id: sf::ProcessId, aruid: applet::AppletResourceUserId, mcu_data: sf::InMapAliasBuffer<McuVersionData>) => ();
+        initialize_debug [0, version::VersionInterval::all()]: (aruid: applet::AppletResourceUserId, mcu_data: sf::InMapAliasBuffer<McuVersionData>) => ();
         finalize_debug [1, version::VersionInterval::all()]: () => ();
         list_devices [2, version::VersionInterval::all()]: (out_devices: sf::OutPointerBuffer<DeviceHandle>) => (count: u32);
         start_detection [3, version::VersionInterval::all()]: (device_handle: DeviceHandle) => ();

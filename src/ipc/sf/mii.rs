@@ -507,7 +507,7 @@ pub enum GlassType {
 #[repr(C)]
 pub struct CharInfo {
     pub id: CreateId,
-    pub name: util::CString16<11>,
+    pub name: util::ArrayWideString<11>,
     pub font_region: FontRegion,
     pub favorite_color: u8,
     pub gender: Gender,
@@ -1028,7 +1028,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
 #[repr(C)]
 pub struct CoreData {
     pub data: [u8; 0x1C],
-    pub name: util::CString16<10>
+    pub name: util::ArrayWideString<10>
 }
 const_assert!(core::mem::size_of::<CoreData>() == 0x30);
 

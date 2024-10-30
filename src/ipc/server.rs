@@ -106,8 +106,8 @@ impl<const M: HandleMode> ResponseCommandParameter for sf::Handle<M> {
 impl RequestCommandParameter<sf::ProcessId> for sf::ProcessId {
     fn after_request_read(ctx: &mut ServerContext) -> Result<Self> {
         if ctx.ctx.in_params.send_process_id {
-            // TODO: is this really how process ID works? (is the in raw u64 just placeholder data, is it always present...?)
-            let _ = ctx.raw_data_walker.advance_get::<u64>();
+            //let _ = ctx.raw_data_walker.advance_get::<u64>();
+
             Ok(sf::ProcessId::from(ctx.ctx.in_params.process_id)) 
         }
         else {
@@ -117,6 +117,20 @@ impl RequestCommandParameter<sf::ProcessId> for sf::ProcessId {
 }
 
 impl !ResponseCommandParameter for sf::ProcessId {}
+
+impl RequestCommandParameter<sf::CmifPidPlaceholder> for sf::CmifPidPlaceholder {
+    fn after_request_read(ctx: &mut ServerContext) -> Result<Self> {
+        if ctx.ctx.in_params.send_process_id {
+            // should theoretically be empty since the PID is filled into the ctx by the kernel
+            Ok(Self::from(ctx.raw_data_walker.advance_get::<u64>()))
+        }
+        else {
+            sf::hipc::rc::ResultUnsupportedOperation::make_err()
+        }
+    }
+}
+
+impl !ResponseCommandParameter for sf::CmifPidPlaceholder {}
 
 impl<S: sf::IObject> RequestCommandParameter<S> for Arc<Mutex<S>> {
     default fn after_request_read(_ctx: &mut ServerContext) -> Result<S> {
@@ -327,7 +341,7 @@ impl ServerHolder {
                     true => sm.atmosphere_uninstall_mitm(self.service_name)?,
                     false => sm.unregister_service(self.service_name)?
                 };
-                sm.detach_client(sf::ProcessId::new())?;
+                sm.detach_client(sf::ProcessId::new(), Default::default())?;
             }
         }
 
@@ -713,7 +727,7 @@ impl<const P: usize> ServerManager<P> {
                                 let mut sm = service::new_named_port_object::<sm::UserInterface>()?;
                                 let (info, session_handle) = sm.atmosphere_acknowledge_mitm_session(server_holder.service_name)?;
                                 new_sessions.push(server_holder.make_new_mitm_session(new_handle, session_handle.handle, info)?);
-                                sm.detach_client(sf::ProcessId::new())?;
+                                sm.detach_client(sf::ProcessId::new(), Default::default())?;
                             }
                         }
                         else {
@@ -790,7 +804,7 @@ impl<const P: usize> ServerManager<P> {
         let mut sm = service::new_named_port_object::<sm::UserInterface>()?;
         let service_handle = sm.register_service(service_name, false, S::get_max_sesssions())?;
         self.register_server::<S>(service_handle.handle, service_name);
-        sm.detach_client(sf::ProcessId::new())?;
+        sm.detach_client(sf::ProcessId::new(), Default::default())?;
         Ok(())
     }
     
@@ -807,7 +821,7 @@ impl<const P: usize> ServerManager<P> {
         self.register_session(query_handle.handle, mitm_query_srv);
 
         sm.atmosphere_clear_future_mitm(service_name)?;
-        sm.detach_client(sf::ProcessId::new())?;
+        sm.detach_client(sf::ProcessId::new(), Default::default())?;
         Ok(())
     }
 

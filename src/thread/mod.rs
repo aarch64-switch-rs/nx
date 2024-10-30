@@ -967,8 +967,8 @@ pub fn available_parallelism() -> usize {
 
 
 /////////////////////////////////
-/// Represents a [`Thread`]'s name, a 32-byte `CString`
-pub type ThreadName = util::CString<0x20>;
+/// Represents a [`Thread`]'s name, a 32-byte `ArrayString`
+pub type ThreadName = util::ArrayString<0x20>;
 
 /// Represents the state of a [`Thread`]
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]

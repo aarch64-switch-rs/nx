@@ -64,7 +64,28 @@ impl<const M: HandleMode> ResponseCommandParameter<sf::Handle<M>> for sf::Handle
 
 impl RequestCommandParameter for sf::ProcessId {
     fn before_request_write(_process_id: &Self, walker: &mut DataWalker, ctx: &mut CommandContext) -> Result<()> {
+        // signal to the kernel that we need a PID injected into the request
         ctx.in_params.send_process_id = true;
+        /*if ctx.object_info.uses_cmif_protocol() && WRITE_SLOT {
+            // TIPC doesn't set this placeholder space for process IDs
+            walker.advance::<u64>();
+        }*/
+        Ok(())
+    }
+
+    fn before_send_sync_request(process_id: &Self, walker: &mut DataWalker, ctx: &mut CommandContext) -> Result<()> {
+        // Same as above
+        /*if ctx.object_info.uses_cmif_protocol() && WRITE_SLOT {
+            walker.advance_set(process_id.inner);
+        }*/
+        Ok(())
+    }
+}
+
+impl !ResponseCommandParameter<sf::ProcessId> for sf::ProcessId {}
+
+impl RequestCommandParameter for sf::CmifPidPlaceholder {
+    fn before_request_write(_process_id: &Self, walker: &mut DataWalker, ctx: &mut CommandContext) -> Result<()> {
         if ctx.object_info.uses_cmif_protocol() {
             // TIPC doesn't set this placeholder space for process IDs
             walker.advance::<u64>();
@@ -72,16 +93,16 @@ impl RequestCommandParameter for sf::ProcessId {
         Ok(())
     }
 
-    fn before_send_sync_request(process_id: &Self, walker: &mut DataWalker, ctx: &mut CommandContext) -> Result<()> {
+    fn before_send_sync_request(val: &Self, walker: &mut DataWalker, ctx: &mut CommandContext) -> Result<()> {
         // Same as above
         if ctx.object_info.uses_cmif_protocol() {
-            walker.advance_set(process_id.process_id);
+            walker.advance_set(0u64);
         }
         Ok(())
     }
 }
 
-impl !ResponseCommandParameter<sf::ProcessId> for sf::ProcessId {}
+impl !ResponseCommandParameter<sf::CmifPidPlaceholder> for sf::CmifPidPlaceholder {}
 
 
 impl<S: sf::IObject + ?Sized> RequestCommandParameter for mem::Shared<S> {

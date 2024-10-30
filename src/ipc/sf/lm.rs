@@ -22,6 +22,6 @@ ipc_sf_define_interface_trait! {
 ipc_sf_define_default_interface_client!(LogService);
 ipc_sf_define_interface_trait! {
 	trait LogService {
-        open_logger [0, version::VersionInterval::all(), mut]: (process_id: sf::ProcessId) => (logger: Logger);
+        open_logger [0, version::VersionInterval::all(), mut]: (raw_process_id: u64) => (logger: Logger);
     }
 }

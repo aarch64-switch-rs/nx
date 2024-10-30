@@ -5,6 +5,7 @@ use crate::result::*;
 use crate::service;
 use crate::mem;
 use crate::mem::alloc;
+use crate::service::applet::AppletResourceUserId;
 use crate::service::vi::ApplicationDisplayService;
 use crate::service::vi::IManagerDisplayService;
 use crate::service::vi::ISystemDisplayService;
@@ -1081,7 +1082,7 @@ impl Context {
         let native_window = parcel::ParcelPayload::new();
 
         let layer_id = manager_display_service.create_managed_layer(layer_flags, display_id, aruid)?;
-        self.application_display_service.lock().open_layer(display_name_v, layer_id, sf::ProcessId::from(aruid), sf::Buffer::from_other_var(&native_window))?;
+        self.application_display_service.lock().open_layer(sf::ProcessId::new(), display_name_v, layer_id, aruid, sf::Buffer::from_other_var(&native_window))?;
         Self::set_layer_position_impl(layer_id, x, y, &mut system_display_service)?;
         Self::set_layer_size_impl(layer_id, width, height, &mut system_display_service)?;
         Self::set_layer_z_impl(display_id, layer_id, z, &mut system_display_service)?;
