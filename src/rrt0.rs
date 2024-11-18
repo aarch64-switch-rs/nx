@@ -35,6 +35,7 @@ use crate::svc;
 use crate::mem::alloc;
 use crate::svc::Handle;
 use crate::sync;
+use crate::thread::get_thread_local_region;
 use crate::util;
 use crate::hbl;
 use crate::thread;
@@ -50,13 +51,14 @@ use crate::service;
 #[cfg(feature = "services")]
 use crate::service::set;
 
-#[cfg(feature = "services")]
-use crate::service::set::SystemSettingsServer;
 
 use core::ptr;
 use core::mem;
 use core::arch::asm;
+use core::ptr::addr_of_mut;
 use core::sync::atomic::AtomicBool;
+
+use atomic_enum::atomic_enum;
 
 // These functions must be implemented by any binary using this crate
 
@@ -68,8 +70,9 @@ extern "Rust" {
 /// Represents the fn pointer used for exiting
 pub type ExitFn = extern "C" fn(ResultCode) -> !;
 
+#[atomic_enum]
 /// Represents the executable type of the current process
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[derive(PartialEq, Eq, Default)]
 pub enum ExecutableType {
     #[default]
     None,
@@ -77,21 +80,29 @@ pub enum ExecutableType {
     Nro
 }
 
-static mut G_EXECUTABLE_TYPE: ExecutableType = ExecutableType::None;
+/*
+pub enum ExecutableType {
+    None = -2,
+    #[default]
+    Default = -1,
+    Application = 0,
+    SystemApplet = 1,
+    LibraryApplet = 2,
+    OverlayApplet = 3,
+    SystemApplication = 4
+}*/
+
+static G_EXECUTABLE_TYPE: AtomicExecutableType = AtomicExecutableType::new(ExecutableType::None);
 
 pub(crate) fn set_executable_type(exec_type: ExecutableType) {
-    unsafe {
-        G_EXECUTABLE_TYPE = exec_type;
-    }
+    G_EXECUTABLE_TYPE.store(exec_type, core::sync::atomic::Ordering::SeqCst);
 }
 
 /// Gets the current process's executable type
 /// 
 /// Note that this can be used to determine if this process was launched through HBL or not (if so, we would be a homebrew NRO and this would return [`ExecutableType::Nro`])
 pub fn get_executable_type() -> ExecutableType {
-    unsafe {
-        G_EXECUTABLE_TYPE
-    }
+    G_EXECUTABLE_TYPE.load(core::sync::atomic::Ordering::Relaxed)
 }
 
 /// Represents the process module format used by processes
@@ -119,7 +130,7 @@ impl ModulePath {
         Self {
             _zero: 0,
             path_len: name.as_bytes().len() as u32,
-            path: util::ArrayString::from_str(name)
+            path: util::ArrayString::from_str_truncate_null(name)
         }
     }
 
@@ -185,8 +196,22 @@ fn initialize_version(hbl_hos_version_opt: Option<hbl::Version>) {
     }
 }
 
+static mut MAIN_THREAD: thread::imp::Thread = thread::imp::Thread::empty();
+
+#[inline]
+unsafe fn set_main_thread_tlr(handle: svc::Handle) {
+    let tlr_raw = get_thread_local_region();
+    (*tlr_raw).nx_thread_vars.handle = handle;
+    (*tlr_raw).nx_thread_vars.magic = thread::imp::LibNxThreadVars::MAGIC;
+
+    MAIN_THREAD.__nx_thread.handle = handle;
+
+    (*tlr_raw).nx_thread_vars.thread_ref = addr_of_mut!(MAIN_THREAD);
+
+}
+
 #[allow(unsafe_op_in_unsafe_fn)]
-unsafe fn normal_entry(maybe_abi_cfg_entries_ptr: *const hbl::AbiConfigEntry, maybe_main_thread_handle: usize, lr_exit_fn: ExitFn) {
+unsafe fn normal_entry(maybe_abi_cfg_entries_ptr: *const hbl::AbiConfigEntry, maybe_main_thread_handle: usize, lr_exit_fn: Option<ExitFn>) {
     let exec_type = match !maybe_abi_cfg_entries_ptr.is_null() && (maybe_main_thread_handle == usize::MAX) {
         true => ExecutableType::Nro,
         false => ExecutableType::Nso
@@ -267,17 +292,23 @@ unsafe fn normal_entry(maybe_abi_cfg_entries_ptr: *const hbl::AbiConfigEntry, ma
             abi_entry = abi_entry.add(1);
         }
     }
-  
+
+    if exec_type == ExecutableType::Nso {
+        // we need to set up our own ThreadLocalRegion with our thread structs
+        set_main_thread_tlr(main_thread_handle);
+    }
+
     // Initialize virtual memory
     vmem::initialize().unwrap();
-
+    
     // Set exit function (will be null for non-hbl NROs)
     match exec_type {
         ExecutableType::Nro => {
-            *G_EXIT_FN.lock() = Some(lr_exit_fn);
+            *G_EXIT_FN.lock() = lr_exit_fn;
         },
         _ => {}
     }
+    
     
     // Initialize heap and memory allocation
     heap = initialize_heap(heap);
@@ -289,12 +320,10 @@ unsafe fn normal_entry(maybe_abi_cfg_entries_ptr: *const hbl::AbiConfigEntry, ma
     // Initialize version support
     initialize_version(hos_version_opt);
 
-    #[cfg(feature = "services")] {
-        service::applet::initialize().unwrap();
-    }
-    
     // Unwrap main(), which will trigger a panic if it didn't succeed
-    main().unwrap();
+    let res = main();
+
+    res.unwrap();
 
     // unmount fs devices
     #[cfg(feature = "fs")]
@@ -320,36 +349,38 @@ unsafe fn normal_entry(maybe_abi_cfg_entries_ptr: *const hbl::AbiConfigEntry, ma
     exit(ResultSuccess::make());
 }
 
-unsafe fn exception_entry(_exc_type: svc::ExceptionType, _stack_top: *mut u8) -> ! {
-    // TODO: user exception handler?
-    svc::return_from_exception(svc::rc::ResultNotHandled::make());
-}
-
 #[no_mangle]
 #[linkage = "weak"]
 #[allow(unsafe_op_in_unsafe_fn)]
 unsafe extern "C" fn __nx_rrt0_entry(arg0: usize, arg1: usize) {
-    let lr_exit_fn: ExitFn;
-    asm!(
-        "mov {}, lr",
-        out(reg) lr_exit_fn
-    );
-
     /*
     Possible entry arguments:
-    - NSO/KIP: x0 = 0, x1 = <main-thread-handle>
+    - NSO/KIP: x0 = 0, x1 = <main-thread-handle>e
     - NRO (hbl): x0 = <abi-config-entries-ptr>, x1 = usize::MAX
     - Exception: x0 = <exception-type>, x1 = <stack-top>
     */
-
     if (arg0 != 0) && (arg1 != usize::MAX) {
+        //unreachable!("This should never happen as we handle it in the rrt0.s asm runtime");
         // Handle exception entry
         let exc_type: svc::ExceptionType = mem::transmute(arg0 as u32);
         let stack_top = arg1 as *mut u8;
-        exception_entry(exc_type, stack_top);
+        crate::exception::__nx_exception_dispatch(exc_type, stack_top);
     }
-    
-    
+
+    let lr_exit_fn: Option<ExitFn>;
+    let lr_raw: usize;
+    asm!(
+        "mov {}, lr",
+        out(reg) lr_raw
+    );
+
+    lr_exit_fn = match lr_raw {
+        0 => None,
+        ptr => {
+            unsafe { Some(core::mem::transmute(ptr))}
+        }
+    };
+
     // We actually want `_start` which is at the start of the .text region, but we don't know if
     // it will be close enough to support lookup via `adr`.
     // Since this function is in `.text` anyway, use QueryMemory SVC to find the actual start
@@ -368,7 +399,6 @@ unsafe extern "C" fn __nx_rrt0_entry(arg0: usize, arg1: usize) {
     elf::relocate_with_dyn(aslr_base_address, start_dyn as *const elf::Dyn).unwrap();
 
     mod0::zero_bss_section(aslr_base_address).unwrap();
-
 
     EH_FRAME_HDR_SECTION.set(mod0::find_eh_frame_header(aslr_base_address).unwrap());
     unwinding::custom_eh_frame_finder::set_custom_eh_frame_finder(&EH_FRAME_HDR_SECTION).unwrap();

@@ -128,8 +128,9 @@ pub(crate) const fn const_usize_max(a: usize, b: usize) -> usize {
 #[repr(C)]
 pub struct ArrayString<const S: usize> {
     /// The actual array (like `char[S]` in C)
-    pub c_str: [u8; S]
+    c_str: [u8; S]
 }
+
 impl<const S: usize> crate::ipc::server::RequestCommandParameter<ArrayString<S>> for ArrayString<S> {
     fn after_request_read(ctx: &mut crate::ipc::server::ServerContext) -> Result<Self> {
         Ok(ctx.raw_data_walker.advance_get())
@@ -194,12 +195,12 @@ impl<const S: usize> Default for ArrayString<S> {
 }
 
 impl<const S: usize> ArrayString<S> {
-    /// Creates an empty [`CString`]
+    /// Creates an empty [`ArrayString`]
     pub const fn new() -> Self {
         Self { c_str: [0; S] }
     }
 
-    /// Creates a [`CString`] from a given byte array
+    /// Creates a [`ArrayString`] from a given byte array
     /// 
     /// # Arguments
     /// 
@@ -208,117 +209,121 @@ impl<const S: usize> ArrayString<S> {
         Self { c_str: raw_bytes }
     }
 
-    /// Creates a [`CString`] from a given `&str`
+    /// Creates a [`ArrayString`] from a given `&str`
     /// 
-    /// This creates an empty [`CString`] and calls [`CString::set_str`] on it
+    /// This creates an empty [`ArrayString`] and initializes it with the provided string.
+    /// This will copy at max `S - 1` bytes/chars in order to ensure that the string is NUL-terminated.
+    /// This will truncate the string at the first null, so we can unconditionally return and keep it const.
     /// 
     /// # Arguments
     /// 
     /// * `string`: The `&str` to use
-    pub const fn from_str(string: &str) -> Self {
+    pub const fn from_str_truncate_null(string: &str)  -> Self {
+        let mut out = Self::new();
+        let string = string.as_bytes();
+        let len = const_usize_min(S-1, string.len());
+        let mut offset = 0;
+        // truncate at nuls since we're writing a cstr
+        while offset < len && string[offset] != 0 {
+            out.c_str[offset] = string[offset];
+            offset += 1;
+        }
+
+        out
+    }
+
+    /// Creates a [`ArrayString`] from a given `&str`
+    /// 
+    /// This creates an empty [`ArrayString`] and calls [`ArrayString::set_str`] on it
+    /// 
+    /// # Arguments
+    /// 
+    /// * `string`: The `&str` to use
+    pub fn from_str(string: &str) -> Self {
         let mut cstr = Self::new();
-        cstr.set_str(string);
+        let _ = cstr.set_str(string);
         cstr
     }
 
-    /// Creates a [`CString`] from a given `String`
+    /// Creates a [`ArrayString`] from a given `String`
     /// 
-    /// This creates an empty [`CString`] and calls [`CString::set_string`] on it
+    /// This creates an empty [`ArrayString`] and calls [`ArrayString::set_string`] on it
     /// 
     /// # Arguments
     /// 
     /// * `string`: The `String` to use
-    pub fn from_string(string: String) -> Self {
+    pub fn from_string(string: &String) -> Self {
         let mut cstr = Self::new();
-        cstr.set_string(string);
+        let _ = cstr.set_string(string);
         cstr
     }
 
-    const fn copy_str_to(string: &str, ptr: *mut u8, ptr_len: usize) {
-        unsafe {
-            ptr::write_bytes(ptr, 0, ptr_len);
-            if !string.is_empty() {
-                ptr::copy(string.as_ptr(), ptr, const_usize_min(string.as_bytes().len(), ptr_len - 1));
-            }
-        }
-    }
-    
-    fn copy_string_to(string: String, ptr: *mut u8, ptr_len: usize) {
-        unsafe {
-            ptr::write_bytes(ptr, 0, ptr_len);
-            if !string.is_empty() {
-                ptr::copy(string.as_ptr(), ptr, core::cmp::min(ptr_len - 1, string.len()));
-            }
-        }
-    }
-
-    fn read_str_from(ptr: *const u8, str_len: usize) -> Result<&'static str> {
-        if str_len == 0 {
-            Ok("")
-        }
-        else {
-            unsafe {
-                match core::str::from_utf8(core::slice::from_raw_parts(ptr, str_len)) {
-                    Ok(name) => Ok(name.trim_end_matches('\0')),
-                    Err(_) => rc::ResultInvalidUtf8Conversion::make_err()
-                }
-            }
-        }
-    }
-    
-    fn read_string_from(ptr: *const u8, str_len: usize) -> Result<String> {
-        Ok(String::from(Self::read_str_from(ptr, str_len)?))
-    }
-
-    /// Returns the length of the [`CString`]
+    /// Returns the length of the [`ArrayString`]
     /// 
     /// This is similar to C's `strlen()` function, thus taking into account the string's NUL-termination
     pub fn len(&self) -> usize {
-        for i in 0..S {
-            if self.c_str[i] == 0 {
-                return i;
-            }
-        }
-
-        S
+        self.c_str.iter().position(|byte| *byte == 0).expect("We should always have at least one null as we always make sure to keep the last index null")
     }
 
-    /// Returns whether this [`CString`] is empty
+    /// Returns whether this [`ArrayString`] is empty
     #[inline(always)]
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
 
-    /// Sets a `&str` as the contents of this [`CString`]
+    /// Sets a `&str` as the contents of this [`ArrayString`]
     /// 
     /// This will copy at max `S - 1` bytes/chars in order to ensure that the string is NUL-terminated
+    /// Returns and error when the string has internal nulls. Truncates the written strings over `S-1` bytes in length.
     /// 
     /// # Arguments
     /// 
     /// * `string`: The `&str` to set
-    pub const fn set_str(&mut self, string: &str) {
-        Self::copy_str_to(string, &mut self.c_str as *mut _ as *mut u8, S)
+    pub fn set_str(&mut self, string: &str) -> Result<()> {
+        // we're writing a c-string, so we can't have internal nuls
+        result_return_if!(string.find('\0').is_some(), rc::ResultInvalidUtf8Conversion);
+
+        self.c_str = [0;S];
+        let string = string.as_bytes();
+        let len = const_usize_min(S-1, string.len());
+        let mut offset = 0;
+        while offset < len {
+            self.c_str[offset] = string[offset];
+            offset += 1;
+        }
+
+        Ok(())
     }
 
-    /// Sets a `String` as the contents of this [`CString`]
+    /// Sets a string as the contents of this [`ArrayString`]
     /// 
     /// This will copy at max `S - 1` bytes/chars in order to ensure that the string is NUL-terminated
     /// 
     /// # Arguments
     /// 
-    /// * `string`: The `String` to set
-    pub fn set_string(&mut self, string: String) {
-        Self::copy_string_to(string, &mut self.c_str as *mut _ as *mut u8, S)
+    /// * `string`: The content to set
+    pub fn set_string(&mut self, string: &String) -> Result<()> {
+        self.set_str(string.as_str())
     }
 
-    /// Gets a `&str` corresponding to this [`CString`]
-    pub fn get_str(&self) -> Result<&'static str> {
-        Self::read_str_from(&self.c_str as *const _ as *const u8, self.len())
+    /// Gets a `&str` corresponding to this [`ArrayString`]
+    pub fn get_str(&self) -> Result<&str> {
+        core::ffi::CStr::from_bytes_until_nul(&self.c_str).expect("We should never error as we always keep a null at the last index").to_str().map_err(|_| rc::ResultInvalidUtf8Conversion::make())
     }
 
-    /// Gets a `String` corresponding to this [`CString`]
+    /// Gets a `String` corresponding to this [`ArrayString`]
     pub fn get_string(&self) -> Result<String> {
-        Self::read_string_from(&self.c_str as *const _ as *const u8, self.len())
+        self.get_str().map(Into::into)
+    }
+
+    /// Borrows a view into the whole array
+    pub fn as_buffer(&self) -> &[u8;S] {
+        &self.c_str
+    }
+
+    /// Borrows only the initialized bytes (including the null terminator)
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.c_str[..(self.len()+1)]
     }
 }
 
@@ -336,7 +341,7 @@ impl<S: AsRef<str>, const LEN: usize> From<S> for ArrayString<LEN> {
 #[repr(C)]
 pub struct ArrayWideString<const S: usize> {
     /// The actual array (like `char16_t[S]` in C)
-    pub c_str: [u16; S]
+    c_wstr: [u16; S]
 }
 
 impl<const S: usize> crate::ipc::server::RequestCommandParameter<ArrayWideString<S>> for ArrayWideString<S> {
@@ -385,12 +390,7 @@ impl<const S: usize> fmt::Debug for ArrayWideString<S> {
 
 impl<const S: usize> PartialEq for ArrayWideString<S> {
     fn eq(&self, other: &Self) -> bool {
-        if let Ok(self_str) = self.get_string() {
-            if let Ok(other_str) = other.get_string() {
-                return self_str == other_str;
-            }
-        }
-        false
+        self.c_wstr.as_slice().eq(other.c_wstr.as_slice())
     }
 }
 
@@ -403,126 +403,111 @@ impl<const S: usize> Default for ArrayWideString<S> {
 }
 
 impl<const S: usize> ArrayWideString<S> {
-    /// Creates an empty [`CString16`]
+    /// Creates an empty [`ArrayString16`]
     pub const fn new() -> Self {
-        Self { c_str: [0; S] }
+        Self {c_wstr: [0; S] }
     }
 
-    /// Creates a [`CString16`] from a given byte array
+    /// Creates a [`ArrayString16`] from a given byte array
     /// 
     /// # Arguments
     /// 
     /// * `raw_bytes`: Byte array to use
     pub const fn from_raw(raw_bytes: [u16; S]) -> Self {
-        Self { c_str: raw_bytes }
+        Self {c_wstr: raw_bytes }
     }
 
-    /// Creates a [`CString16`] from a given `String`
+    /// Creates a [`ArrayString16`] from a given `String`
     /// 
-    /// This creates an empty [`CString16`] and calls [`CString16::set_string`] on it
+    /// This creates an empty [`ArrayString16`] and calls [`ArrayString16::set_string`] on it
     /// 
     /// # Arguments
     /// 
     /// * `string`: The `String` to use
-    pub fn from_string(string: String) -> Result<Self> {
+    pub fn from_string(string: String) -> Self {
         let mut cstr = Self::new();
-        cstr.set_string(string)?;
-        Ok(cstr)
+        cstr.set_string(string);
+        cstr
     }
 
-    fn copy_str_to(string: &str, ptr: *mut u16, ptr_len: usize) -> Result<()> {
-        let mut encode_buf: [u16; 2] = [0; 2];
-        let mut i: isize = 0;
-        unsafe {
-            ptr::write_bytes(ptr, 0, ptr_len);
-            for ch in string.chars() {
-                let enc = ch.encode_utf16(&mut encode_buf);
-                *ptr.offset(i) = enc[0];
-
-                i += 1;
-                if i as usize > (ptr_len - 1) {
-                    break;
-                }
-            }
-        }
-        Ok(())
-    }
-    
-    fn read_string_from(ptr: *const u16, str_len: usize) -> Result<String> {
-        let mut string = String::new();
-        if str_len > 0 {
-            unsafe {
-                let tmp_slice = core::slice::from_raw_parts(ptr, str_len);
-                for ch_v in core::char::decode_utf16(tmp_slice.iter().cloned()) {
-                    if let Ok(ch) = ch_v {
-                        string.push(ch);
-                    }
-                    else {
-                        break;
-                    }
-                }
-            }
-        }
-        Ok(string)
-    }
-
-    /// Returns the length of the [`CString16`]
+    /// Returns the length of the [`ArrayString16`]
     /// 
     /// This is similar to C's `strlen()` function, thus taking into account the string's NUL-termination
     pub fn len(&self) -> usize {
-        for i in 0..S {
-            if self.c_str[i] == 0 {
-                return i;
-            }
-        }
-
-        S
+        self.c_wstr.iter().position(|word| *word == 0).expect("We will have at least one null as we always keep the last index null")
     }
 
-    /// Returns if this [`CString16`] is empty
+    /// Returns if this [`ArrayString16`] is empty
     #[inline(always)]
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
 
-    /// Sets a `&str` as the contents of this [`CString16`]
+    /// Sets a `&str` as the contents of this [`ArrayString16`]
     /// 
     /// This will copy at max `S - 1` bytes/chars in order to ensure that the string is NUL-terminated
     /// 
     /// # Arguments
     /// 
     /// * `string`: The `&str` to set
-    pub fn set_str(&mut self, string: &str) -> Result<()> {
-        Self::copy_str_to(string, &mut self.c_str as *mut _ as *mut u16, S)
+    pub fn set_str(&mut self, string: &str) {
+        let mut c_str = &mut self.c_wstr[..S-1];
+        let mut char_buf = [0u16;2];
+        for char in string.chars() {
+            let encoded_char = char.encode_utf16(&mut char_buf);
+
+            // we can't write any u16s if there aren't enough for surrogate pairs
+            // so we bail out early
+            if encoded_char.len() > c_str.len() {
+                break;
+            }
+            // a character will always be at least one u16
+            c_str[0] = encoded_char[0].to_be();
+
+            // check if character required 4-byte encoding
+            if encoded_char.len() == 2 {
+                c_str[1] = encoded_char[1].to_be();
+            }
+
+            // advance the window by the length of the written u16 buffer
+            c_str = &mut c_str[encoded_char.len()..]
+            
+        }
     }
 
-    /// Sets a `String` as the contents of this [`CString16`]
+    /// Sets a `String` as the contents of this [`ArrayString16`]
     /// 
     /// This will copy at max `S - 1` bytes/chars in order to ensure that the string is NUL-terminated
     /// 
     /// # Arguments
     /// 
     /// * `string`: The `String` to set
-    pub fn set_string(&mut self, string: String) -> Result<()> {
-        self.set_str(string.as_str())
+    pub fn set_string(&mut self, string: impl AsRef<str>) {
+        self.set_str(string.as_ref())
     }
 
-    /// Gets a `String` corresponding to this [`CString16`]
+    /// Gets a `String` corresponding to this [`ArrayString16`]
     pub fn get_string(&self) -> Result<String> {
-        Self::read_string_from(&self.c_str as *const _ as *const u16, self.len())
+        // create a clone of the internal buffer
+        let mut tmp = self.c_wstr.clone();
+
+        // convert the u16s from big-endian encoding
+        let _: () = tmp[..self.len()].iter_mut().map(|place| *place = u16::from_be(*place)).collect();
+
+        // we don't need to use the endian version, since we've already converted from be-encoding
+        let pulled_string = String::from_utf16(&tmp[..self.len()]).map_err(|_| rc::ResultInvalidUtf16Conversion::make())?;
+
+        Ok(pulled_string)
     }
 
-    /// Returns a copy of this [`CString16`] but with all chars byte-swapped
-    /// 
-    /// Essentially, this calls `swap_bytes()` on all the string copy array elements
-    pub fn swap_chars(&self) -> Self {
-        let mut self_copy = *self;
+    /// Borrows a view into the whole array
+    pub fn as_buffer(&self) -> &[u16;S] {
+        &self.c_wstr
+    }
 
-        for i in 0..S {
-            self_copy.c_str[i] = self.c_str[i].swap_bytes();
-        }
-
-        self_copy
+    /// Borrows only the initialized bytes (including the null terminator)
+    pub fn as_u16s(&self) -> &[u16] {
+        &self.c_wstr[..(self.len()+1)]
     }
 }
 
@@ -530,7 +515,7 @@ impl<const S: usize> core::str::FromStr for ArrayWideString<S> {
     type Err = ResultCode;
     fn from_str(s: &str) -> core::result::Result<Self, Self::Err> {
         let mut cstr = Self::new();
-        cstr.set_str(s)?;
+        cstr.set_str(s);
         Ok(cstr)
     }
 }

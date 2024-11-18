@@ -1,4 +1,3 @@
-use crate::ipc::sf::CmifPidPlaceholder;
 use crate::{result::*, util};
 use crate::ipc::sf;
 use crate::version;
@@ -63,11 +62,11 @@ impl core::fmt::Debug for ServiceName {
 ipc_sf_define_default_interface_client!(UserInterface);
 ipc_sf_define_interface_trait! {
 	trait UserInterface {
-        register_client [0, version::VersionInterval::all()]: (process_id: sf::ProcessId, _pid_placeholder: CmifPidPlaceholder) => ();
+        register_client [0, version::VersionInterval::all()]: (process_id: sf::ProcessId) => ();
         get_service_handle [1, version::VersionInterval::all()]: (name: ServiceName) => (service_handle: sf::MoveHandle);
         register_service [2, version::VersionInterval::all()]: (name: ServiceName, is_light: bool, max_sessions: i32) => (port_handle: sf::MoveHandle);
         unregister_service [3, version::VersionInterval::all()]: (name: ServiceName) => ();
-        detach_client [4, version::VersionInterval::from(version::Version::new(11,0,0)), mut]: (process_id: sf::ProcessId, _reserved: CmifPidPlaceholder) => ();
+        detach_client [4, version::VersionInterval::from(version::Version::new(11,0,0)), mut]: (process_id: sf::ProcessId) => ();
         atmosphere_install_mitm [65000, version::VersionInterval::all()]: (name: ServiceName) => (port_handle: sf::MoveHandle, query_handle: sf::MoveHandle);
         atmosphere_uninstall_mitm [65001, version::VersionInterval::all()]: (name: ServiceName) => ();
         atmosphere_acknowledge_mitm_session [65003, version::VersionInterval::all()]: (name: ServiceName) => (info: mitm::MitmProcessInfo, session_handle: sf::MoveHandle);

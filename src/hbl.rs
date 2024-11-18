@@ -1,7 +1,6 @@
 //! HBL (homebrew loader) ABI support and utils
 
 use atomic_enum::atomic_enum;
-use zeroize::Zeroize;
 use core::sync::atomic::AtomicU32;
 use core::sync::atomic::Ordering;
 use core::sync::atomic::Ordering::Relaxed;
@@ -10,9 +9,7 @@ use crate::result::*;
 use crate::svc::Handle;
 use crate::svc::INVALID_HANDLE;
 use crate::sync::Mutex;
-use crate::sync::MutexGuard;
 use crate::sync::RwLock;
-use crate::util;
 use crate::util::ArrayString;
 use crate::version;
 
@@ -240,12 +237,12 @@ pub fn get_next_load_argv() -> Option<ArrayString<2048>>{
 /// 
 /// Returns true if the buffers have been initialized, else false.
 /// 
-pub fn set_next_load_entry(next_load_path: &'static str, next_load_argv: &'static str) -> (bool, bool) {
-    (
+pub fn set_next_load_entry(next_load_path: &'static str, next_load_argv: &'static str) -> Result<(bool, bool)> {
+    Ok((
         {
             let mut path_handle = G_NEXT_LOAD_PATH.lock();  
             if let Some(buffer) = path_handle.as_mut() {
-                (*buffer).set_str(next_load_path);
+                (*buffer).set_str(next_load_path)?;
                 true
             } else {
                 false
@@ -254,13 +251,13 @@ pub fn set_next_load_entry(next_load_path: &'static str, next_load_argv: &'stati
         {
             let mut argv_handle = G_NEXT_LOAD_ARGV.lock();
             if let Some(buffer) = argv_handle.as_mut() {
-                (*buffer).set_str(next_load_argv);
+                (*buffer).set_str(next_load_argv)?;
                 true
             } else {
                 false
             }
         }
-    )
+    ))
 }
 
 static G_RANDOM_SEED: generic_once_cell::OnceCell<crate::sync::sys::mutex::Mutex, (u64, u64)> = generic_once_cell::OnceCell::new();

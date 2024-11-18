@@ -1,9 +1,6 @@
 use crate::ipc::sf::sm;
 use crate::result::*;
-use crate::ipc::sf;
 use crate::service;
-use crate::service::dispdrv;
-use crate::service::applet;
 
 pub use crate::ipc::sf::vi::*;
 

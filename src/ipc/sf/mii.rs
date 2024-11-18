@@ -1539,7 +1539,7 @@ impl CoreData {
     pub fn from_charinfo(char_info: CharInfo) -> Result<Self> {
         let mut core_data = Self::default();
 
-        core_data.name.set_string(char_info.name.get_string()?)?;
+        core_data.name.set_string(char_info.name.get_string()?);
         core_data.set_font_region(char_info.font_region);
         core_data.set_favorite_color(char_info.favorite_color);
         core_data.set_gender(char_info.gender);
@@ -1595,7 +1595,7 @@ impl CoreData {
     pub fn to_charinfo(&self) -> Result<CharInfo> {
         let mut charinfo: CharInfo = Default::default();
 
-        charinfo.name.set_string(self.name.get_string()?)?;
+        charinfo.name.set_string(self.name.get_string()?);
         charinfo.font_region = self.get_font_region();
         charinfo.favorite_color = self.get_favorite_color();
         charinfo.gender = self.get_gender();

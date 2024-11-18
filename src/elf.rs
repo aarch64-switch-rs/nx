@@ -1,6 +1,6 @@
 //! ELF (aarch64) support and utils
 
-use core::{ptr::null_mut, sync::atomic::{AtomicPtr, AtomicUsize}};
+use core::{ptr::null_mut, sync::atomic::AtomicPtr};
 
 use unwinding::custom_eh_frame_finder::{FrameInfo, FrameInfoKind};
 

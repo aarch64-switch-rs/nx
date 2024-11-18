@@ -5,7 +5,6 @@ use crate::result::*;
 use crate::service;
 use crate::mem;
 use crate::mem::alloc;
-use crate::service::applet::AppletResourceUserId;
 use crate::service::vi::ApplicationDisplayService;
 use crate::service::vi::IManagerDisplayService;
 use crate::service::vi::ISystemDisplayService;
@@ -931,19 +930,19 @@ impl Context {
         // Storing it as a IObject shared-ptr since different vi services have different base interfaces...
         let (vi_srv, application_display_srv) = match vi_kind {
             ViServiceKind::Manager => {
-                let mut vi_srv = service::new_service_object::<vi::ManagerRootService>()?;
+                let vi_srv = service::new_service_object::<vi::ManagerRootService>()?;
                 let app_disp_srv: mem::Shared<ApplicationDisplayService> = mem::Shared::new(vi_srv.get_display_service(vi::DisplayServiceMode::Privileged)?);
 
                 (ViServiceDispatcher::Manager(vi_srv), app_disp_srv)
             },
             ViServiceKind::System => {
-                let mut vi_srv = service::new_service_object::<vi::SystemRootService>()?;
+                let vi_srv = service::new_service_object::<vi::SystemRootService>()?;
                 let app_disp_srv: mem::Shared<ApplicationDisplayService> = mem::Shared::new(vi_srv.get_display_service(vi::DisplayServiceMode::Privileged)?);
 
                 (ViServiceDispatcher::System(vi_srv), app_disp_srv)
             },
             ViServiceKind::Application => {
-                let mut vi_srv = service::new_service_object::<vi::ApplicationRootService>()?;
+                let vi_srv = service::new_service_object::<vi::ApplicationRootService>()?;
                 let app_disp_srv: mem::Shared<ApplicationDisplayService> = mem::Shared::new(vi_srv.get_display_service(vi::DisplayServiceMode::User)?);
 
                 (ViServiceDispatcher::Application(vi_srv), app_disp_srv)
@@ -1081,8 +1080,8 @@ impl Context {
         let mut manager_display_service = self.application_display_service.lock().get_manager_display_service()?;
         let native_window = parcel::ParcelPayload::new();
 
-        let layer_id = manager_display_service.create_managed_layer(layer_flags, display_id, aruid)?;
-        self.application_display_service.lock().open_layer(sf::ProcessId::new(), display_name_v, layer_id, aruid, sf::Buffer::from_other_var(&native_window))?;
+        let layer_id = manager_display_service.create_managed_layer(layer_flags, display_id, aruid.aruid)?;
+        self.application_display_service.lock().open_layer(display_name_v, layer_id, aruid, sf::Buffer::from_other_var(&native_window))?;
         Self::set_layer_position_impl(layer_id, x, y, &mut system_display_service)?;
         Self::set_layer_size_impl(layer_id, width, height, &mut system_display_service)?;
         Self::set_layer_z_impl(display_id, layer_id, z, &mut system_display_service)?;

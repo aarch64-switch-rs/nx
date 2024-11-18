@@ -1,7 +1,6 @@
 use crate::result::*;
 use crate::ipc::sf;
 use crate::util;
-use crate::ipc::sf::applet;
 use crate::version;
 
 use super::applet::AppletResourceUserId;
@@ -66,12 +65,12 @@ ipc_sf_define_interface_trait! {
 ipc_sf_define_default_interface_client!(ApplicationDisplayService);
 ipc_sf_define_interface_trait! {
 	trait ApplicationDisplayService {
-        get_relay_service [100, version::VersionInterval::all()]: () => (relay_service: crate::service::dispdrv::HOSBinderDriver);
+        get_relay_service [100, version::VersionInterval::all()]: () => (relay_service: sf::dispdrv::HOSBinderDriver);
         get_system_display_service [101, version::VersionInterval::all()]: () => (system_display_service: SystemDisplayService);
         get_manager_display_service [102, version::VersionInterval::all()]: () => (manager_display_service: ManagerDisplayService);
         open_display [1010, version::VersionInterval::all(), mut]: (name: DisplayName) => (id: DisplayId);
         close_display [1020, version::VersionInterval::all(), mut]: (id: DisplayId) => ();
-        open_layer [2020, version::VersionInterval::all(), mut]: (process_id: sf::ProcessId, name: DisplayName, id: LayerId, aruid: AppletResourceUserId, out_native_window: sf::OutMapAliasBuffer<u8>) => (native_window_size: usize);
+        open_layer [2020, version::VersionInterval::all(), mut]: (name: DisplayName, id: LayerId, aruid: AppletResourceUserId, out_native_window: sf::OutMapAliasBuffer<u8>) => (native_window_size: usize);
         create_stray_layer [2030, version::VersionInterval::all(), mut]: (flags: LayerFlags, display_id: DisplayId, out_native_window: sf::OutMapAliasBuffer<u8>) => (id: LayerId, native_window_size: usize);
         destroy_stray_layer [2031, version::VersionInterval::all(), mut]: (id: LayerId) => ();
         get_display_vsync_event [5202, version::VersionInterval::all()]: (id: DisplayId) => (event_handle: sf::CopyHandle);

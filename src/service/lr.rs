@@ -1,6 +1,5 @@
 use super::*;
 use crate::service;
-use self::sf::ncm;
 
 pub use crate::ipc::sf::lr::*;
 

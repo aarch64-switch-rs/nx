@@ -5,7 +5,6 @@ use crate::ipc::sf::sm;
 use crate::mem;
 use crate::service;
 use crate::sync;
-use crate::util;
 use crate::{result::*, svc};
 
 pub use crate::ipc::sf::applet::*;
@@ -25,16 +24,18 @@ pub fn initialize() -> Result<()>{
     let _ = ALL_SYSTEM_APPLET_PROXY_SERVICE.set(mem::Shared::new(so?));
 
     let applet_attr = AppletAttribute::default();
-    let _ = LIBRARY_APPLET_PROXY.set(mem::Shared::new(ALL_SYSTEM_APPLET_PROXY_SERVICE.get().unwrap().lock().open_library_applet_proxy(
+    let applet_proxy  = ALL_SYSTEM_APPLET_PROXY_SERVICE.get().unwrap().lock().open_library_applet_proxy(
         sf::ProcessId::new(),
-        Default::default(),
         sf::CopyHandle::from(svc::CURRENT_PROCESS_PSEUDO_HANDLE),
         sf::InMapAliasBuffer::from_other_var(&applet_attr),
-    )?));
+    );
+    let _ = LIBRARY_APPLET_PROXY.set(mem::Shared::new(applet_proxy?));
 
-    let _ = WINDOW_CONTROLLER.set(mem::Shared::new(LIBRARY_APPLET_PROXY.get().unwrap().lock().get_window_controller()?));
+    let window_controller = LIBRARY_APPLET_PROXY.get().unwrap().lock().get_window_controller();
+    let _ = WINDOW_CONTROLLER.set(mem::Shared::new(window_controller?));
 
-    GLOBAL_ARUID.store(WINDOW_CONTROLLER.get().unwrap().lock().get_applet_resource_user_id()?, core::sync::atomic::Ordering::Release);
+    let aruid = WINDOW_CONTROLLER.get().unwrap().lock().get_applet_resource_user_id();
+    GLOBAL_ARUID.store(aruid?, core::sync::atomic::Ordering::Release);
 
     Ok(())
 }
@@ -42,9 +43,9 @@ pub fn initialize() -> Result<()>{
 /// Finalizes library applet support, dropping the shared resources. pub(crate) as it should only run in rrt0.rs
 pub(crate) fn finalize() {
 
-    WINDOW_CONTROLLER.get().unwrap().clone().inner.lock().session.close();
-    LIBRARY_APPLET_PROXY.get().unwrap().clone().inner.lock().session.close();
-    ALL_SYSTEM_APPLET_PROXY_SERVICE.get().unwrap().clone().inner.lock().session.close();
+    WINDOW_CONTROLLER.get().map(|inner| inner.lock().session.close());
+    LIBRARY_APPLET_PROXY.get().map(|inner| inner.lock().session.close());
+    ALL_SYSTEM_APPLET_PROXY_SERVICE.get().map(|inner| inner.lock().session.close());
 }
 
 pub fn get_window_controller() -> mem::Shared<WindowController> {

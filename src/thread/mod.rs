@@ -4,13 +4,13 @@ use ::alloc::boxed::Box;
 use ::alloc::string::String;
 use ::alloc::string::ToString;
 use ::alloc::sync::Arc;
+use imp::LibNxThreadVars;
 
 use crate::diag::abort;
 use crate::diag::abort::AbortLevel;
 use crate::result::*;
 use crate::svc;
 use crate::util;
-use core::any::Any;
 use core::cell::UnsafeCell;
 use core::fmt;
 use core::marker::PhantomData;
@@ -18,7 +18,6 @@ use core::mem;
 use core::mem::ManuallyDrop;
 use core::ptr::addr_of;
 use core::ptr::addr_of_mut;
-use core::sync::atomic::AtomicU32;
 use core::pin::Pin;
 use core::arch::asm;
 
@@ -305,7 +304,7 @@ impl Builder {
         let Builder { name, stack_size, priority, core } = self;
 
         let stack_size = stack_size.unwrap_or(0x8000);
-        let name = name.map(ThreadName::from_string).unwrap_or(ThreadName::new());
+        let name = name.map(|s| ThreadName::from_string(&s)).unwrap_or(ThreadName::new());
         let priority = priority.unwrap_or_default();
         let core = core.unwrap_or_default();
 
@@ -453,18 +452,18 @@ pub struct Thread {
 
 impl Thread {
     // Used in runtime to construct main thread
-    pub(crate) fn new_main() -> Thread {
-        unsafe { Self::new_named("MainThread") }
-    }
+    //pub(crate) fn new_main() -> Thread {
+    //    unsafe { Self::new_named("MainThread") }
+    //}
 
-    pub(crate) unsafe fn new_named<S: AsRef<str>>(name: S) -> Thread {
-        unsafe {Self::new_inner(name.as_ref().into())}
-    }
+    //pub(crate) unsafe fn new_named<S: AsRef<str>>(name: S) -> Thread {
+    //    unsafe {Self::new_inner(name.as_ref().into())}
+    //}
 
     pub fn new_remote<S: AsRef<str>>(name: S, handle: svc::Handle) -> Thread {
         Self {
             inner:
-            Pin::new(Arc::new(Inner { parker: Default::default(), name: name.as_ref().into(), thread_handle: UnsafeCell::new(handle) }))
+            Pin::new(Arc::new(Inner { name: name.as_ref().into(), thread_handle: UnsafeCell::new(handle) }))
         }
     }
 
@@ -486,55 +485,10 @@ impl Thread {
             addr_of_mut!((*ptr).real_thread.__nx_thread.handle).write(svc::INVALID_HANDLE);*/
             addr_of_mut!((*ptr).name).write(name);
             addr_of_mut!((*ptr).thread_handle).write(UnsafeCell::new(svc::INVALID_HANDLE));
-            Parker::new_in_place(addr_of_mut!((*ptr).parker));
             Pin::new_unchecked(arc.assume_init())
         };
 
         Thread { inner }
-    }
-
-    /// Like the public [`park`], but callable on any handle. This is used to
-    /// allow parking in TLS destructors.
-    ///
-    /// # Safety
-    /// May only be called from the thread to which this handle belongs.
-    pub(crate) unsafe fn park(&self) {
-        self.inner.as_ref().parker().park()
-    }
-
-    /// Atomically makes the handle's token available if it is not already.
-    ///
-    /// Every thread is equipped with some basic low-level blocking support, via
-    /// the [`park`][park] function and the `unpark()` method. These can be
-    /// used as a more CPU-efficient implementation of a spinlock.
-    ///
-    /// See the [park documentation][park] for more details.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use crate::thread;
-    /// use crate::time::Duration;
-    ///
-    /// let parked_thread = thread::Builder::new()
-    ///     .spawn(|| {
-    ///         println!("Parking thread");
-    ///         thread::park();
-    ///         println!("Thread unparked");
-    ///     })
-    ///     .unwrap();
-    ///
-    /// // Let some time pass for the thread to be spawned.
-    /// thread::sleep(Duration::from_millis(10));
-    ///
-    /// println!("Unpark the thread");
-    /// parked_thread.thread().unpark();
-    ///
-    /// parked_thread.join().unwrap();
-    /// ```
-    #[inline]
-    pub fn unpark(&self) {
-        self.inner.as_ref().parker().unpark();
     }
 
     /// Gets the thread's unique identifier.
@@ -609,7 +563,6 @@ impl fmt::Debug for Thread {
 }
 
 struct Inner {
-    parker: Parker,
     name: ThreadName,
     thread_handle: 
     UnsafeCell<svc::Handle>, //imp::Thread
@@ -618,37 +571,11 @@ struct Inner {
 unsafe impl Sync for Inner {}
 
 impl Inner {
-    fn parker(&self) -> &Parker {
-        &self.parker
-    }
-
     pub(self) unsafe fn set_handle(&self, handle: svc::Handle) {
         unsafe {*self.thread_handle.get() = handle};
     }
 }
 
-
-#[derive(Debug, Default)]
-struct Parker {
-    wait_flag: AtomicU32
-}
-
-impl Parker {
-    const UNPARKED: u32 = 0;
-    const PARKED: u32 = u32::MAX;
-
-    fn park(&self) {
-        todo!()
-    }
-
-    fn unpark(&self) {
-        todo!()
-    }
-
-    unsafe fn new_in_place(place: *mut Self) {
-        unsafe {*place = Self {wait_flag: AtomicU32::new(Self::UNPARKED)}};
-    }
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 // JoinHandle
@@ -749,7 +676,7 @@ struct JoinInner<'scope, T> {
 
 impl<'scope, T> JoinInner<'scope, T> {
     fn join(mut self) -> Result<T> {
-        self.native.join();
+        let _ = self.native.join();
         Arc::get_mut(&mut self.packet).unwrap().result.get_mut().take().unwrap()
     }
     fn wait_exit(&self, timeout: i64) -> crate::result::Result<()> {
@@ -1016,8 +943,7 @@ impl ThreadPriority {
     pub fn to_raw(self) -> i32 {
         match self {
             Self::Inherit => {
-                let current_thread_ref = unsafe {current().as_ref()}.expect("The thread pointer should always be loadable");
-                svc::get_thread_priority(current_thread_ref.__nx_thread.handle).unwrap_or(0x2C)
+                svc::get_thread_priority(svc::CURRENT_THREAD_PSEUDO_HANDLE).unwrap_or(0x2C)
             },
             Self::Default => 0x2C,
             Self::Set(v) => {
@@ -1038,13 +964,13 @@ impl TryFrom<i32> for ThreadPriority {
     }
 }
 
-mod imp {
+pub mod imp {
     use core::{alloc::{Allocator, Layout}, pin::Pin, ptr::{addr_of, null, null_mut, NonNull}};
 
     use alloc::{alloc::Global, boxed::Box, sync::Arc};
     use linked_list_allocator::align_up_size;
 
-    use crate::{mem::alloc::PAGE_ALIGNMENT, svc, wait::wait_handles};
+    use crate::{mem::alloc::PAGE_ALIGNMENT, svc, util::ArrayString, wait::wait_handles};
     use super::{thread_wrapper, ThreadArgs, ThreadId, ThreadName, ThreadPriority, ThreadStartCore, ThreadState};
 
     pub type Thread = StratosphereThreadType;
@@ -1113,7 +1039,7 @@ mod imp {
 
     impl StratosphereThreadType {
 
-        const MAGIC: u16 = 0xF5A5;
+        pub (crate) const MAGIC: u16 = 0xF5A5;
 
         pub(crate) fn join(&self) -> crate::result::Result<()> {
             wait_handles(&[self.__nx_thread.handle], -1).map(|_| ())
@@ -1138,12 +1064,12 @@ mod imp {
             svc::get_thread_id(self.handle())
         }
 
-        pub (crate) fn empty() -> Self {
+        pub (crate) const fn empty() -> Self {
             
             Self {
-                __intrusive_thread_list_node: Default::default(),
-                __thread_wait_list: Default::default(),
-                _reserved: Default::default(),
+                __intrusive_thread_list_node: [0,0],
+                __thread_wait_list: [0,0],
+                _reserved: [0;4],
                 state: ThreadState::NotInitialized,
                 stack_is_aliased: false,
                 _auto_registered: false,
@@ -1151,13 +1077,13 @@ mod imp {
                 magic: Self::MAGIC,
                 _base_priority: 0x2C,
                 version: 1,
-                name: Default::default(),
+                name: ArrayString::new(),
                 name_ptr: null(),
                 id: 0,
                 original_stack_top: null_mut(),
                 stack_top: null_mut(),
                 stack_size: 0,
-                entry: Some(thread_wrapper),
+                entry: None,
                 _initial_fiber: null_mut(),
                 _current_fiber: null_mut(),
                 arguments: null(),
@@ -1165,7 +1091,7 @@ mod imp {
                 _internal_condvar_storage: 0,
                 _nn_sdk_internal_tls_type: null_mut(),
                 __nx_thread_pointer: null(),
-                __nx_thread: LibNxThread { handle: svc::INVALID_HANDLE, owns_stack_mem:true , stack_mem: null_mut(), stack_mirror: null_mut(), stack_sz: 0, tls_array: null_mut(), _next: null_mut(), _prev_next: null_mut() }
+                __nx_thread: LibNxThread { handle: svc::INVALID_HANDLE, owns_stack_mem:true , stack_mem: null_mut(), stack_mirror: null_mut(), _stack_sz: 0, _tls_array: null_mut(), _next: null_mut(), _prev_next: null_mut() }
             }
         }
 
@@ -1199,6 +1125,7 @@ mod imp {
                 debug_assert!(arc.state == ThreadState::NotInitialized);
 
                 arc.__nx_thread.handle = handle;
+                arc.entry = Some(thread_wrapper);
                 arc.arguments = entry_args_raw;
                 arc.name_ptr = addr_of!(arc.name).cast();
                 arc.__nx_thread_pointer = addr_of!(arc.__nx_thread);
@@ -1217,7 +1144,7 @@ mod imp {
     impl Drop for StratosphereThreadType {
         fn drop(&mut self) {
             if self.state == ThreadState::Started {
-                self.join();
+                let _ = self.join();
             }
 
             if !self.stack_top.is_null() {
@@ -1246,33 +1173,49 @@ mod imp {
         /// Pointer to stack memory mirror.
         stack_mirror: *mut u8,
         /// Stack size.
-        stack_sz:usize,
+        _stack_sz: usize,
         // array of thread local objects
-        tls_array: *mut *mut (),
+        _tls_array: *mut *mut (),
         // pointer to next thread in doubly linked list of current threads
         _next: *mut Self,
         // pointer to previous thread in doubly linked list of current threads
         _prev_next: *mut *mut Self
     }
 
-    impl LibNxThread {
-        const MAGIC: u32 = u32::from_le_bytes(*b"!TV$");
+    #[derive(Clone, Debug)]
+    #[repr(C)]
+    pub struct LibNxThreadVars {
+        // Thread Handle
+        pub handle: u32,
+        // Magic val: !TV$,
+        pub magic: u32,
+        // thread pointer
+        pub thread_ref: *mut StratosphereThreadType,
+        pub _reent_ptr: *mut (),
+        pub _tls_tp: *mut ()
+    }
+    const_assert!(core::mem::size_of::<LibNxThreadVars>() == 0x20);
+    impl LibNxThreadVars {
+        pub const MAGIC: u32 = u32::from_le_bytes(*b"!TV$");
     }
 }
 
 
 
 /// Represents the console's Thread Local Region layout
-#[derive(Copy, Clone)]
+#[derive(Clone, Debug)]
 #[repr(C)]
 pub struct ThreadLocalRegion {
     /// The region used for IPC messages
     pub msg_buffer: [u8; 0x100],
     /// The disabled counter
-    pub disable_counter: u16,
+    pub _disable_counter: u16,
     /// The interrupt flag
-    pub interrupt_flag: u16,
-    pub reserved_1: [u8; 0x4],
+    pub _interrupt_flag: u16,
+    pub _cache_maintenance_flag: u8, // HOS v14.0.0.+
+    pub _reserved_1: [u8;0x3],
+    // These we are ignoring since we're going to use the libnx threadVars anyway and just not use anything in this region
+    /*pub reserved_1: [u8; 0x4],
     pub reserved_2: [u8; 0x78],
     // use u32s as that is the required alignment
     pub tls: [u32; 0x50/size_of::<u32>()],
@@ -1282,8 +1225,11 @@ pub struct ThreadLocalRegion {
     pub eh_globals: [u8; 0x8],
     pub thread_ptr: *mut u8,
     /// The region we (and Nintendo) use to store the current [`Thread`] reference
-    pub thread_ref: *mut imp::StratosphereThreadType,
+    pub thread_ref: *mut imp::StratosphereThreadType,*/
+    pub _ignored: [u8; /*end offset */ (0x200 - core::mem::size_of::<LibNxThreadVars>()) - /*start offset*/ 0x108],
+    pub nx_thread_vars: LibNxThreadVars
 }
+const_assert!(core::mem::size_of::<ThreadLocalRegion>() == 0x200);
 
 /// Gets the current thread's [`ThreadLocalRegion`] address
 #[inline(always)]
@@ -1299,7 +1245,7 @@ pub unsafe fn get_thread_local_region() -> *mut ThreadLocalRegion {
 }
 
 pub(crate) unsafe fn current() -> *mut imp::Thread {
-    (*get_thread_local_region()).thread_ref
+    (*get_thread_local_region()).nx_thread_vars.thread_ref
 }
 
 /// Sets the current [`Thread`] reference on the current [`ThreadLocalRegion`]
@@ -1316,372 +1262,11 @@ pub unsafe fn set_current_thread(thread_ref: *mut imp::Thread) {
         (*thread_ref).name_ptr = addr_of!((*thread_ref).name) as *const _;
         let tlr = get_thread_local_region();
         debug_assert!(!tlr.is_null(), "tlr should always be valid, as the kernel sets tpidrro_el0 on context switch, and creates the TLR for us.");
-        (*tlr).thread_ref = thread_ref;
+        (*tlr).nx_thread_vars.thread_ref = thread_ref;
+        (*tlr).nx_thread_vars.handle = (*thread_ref).__nx_thread.handle;
+        (*tlr).nx_thread_vars.magic = imp::LibNxThreadVars::MAGIC;
     }
 }
-
-
-
-/*
-/// Represents the entrypoint information of a [`Thread`]
-#[repr(C)]
-struct ThreadEntryArgs {
-    // we can't drop this at the end, as this is a self reference to the a Thread object that this struct is a member of.
-    thread_object_pointer: *const Thread,
-    entry: fn(),
-    _args: usize,
-    _reent: usize,
-    _tls: usize,
-    _padding: usize
-}
-
-impl ThreadEntryArgs {
-    pub fn new(entry: fn()) -> Self {
-        Self {
-            thread_object_pointer: null(),
-            entry,
-            _args: 0,
-            _reent: 0,
-            _tls: 0,
-            _padding: 0
-        }
-    }
-
-    pub (self) fn set_thread_pointer(&mut self, thread_ref: *const Thread) {
-        self.thread_object_pointer = thread_ref;
-    }
-
-    /// # SAFETY: The thread entry point must be set before calling this function
-    unsafe fn run(&self) {
-            (self.entry)();
-    }
-}
-
-unsafe extern "C" fn thread_entry_impl(entry_args_ref: *mut u8) -> ! {
-    let entry_args_ref = (entry_args_ref as *mut ThreadEntryArgs)
-        .as_mut()
-        .expect("We should never be sent a null pointer, or the thread context will be corrupted");
-    
-    
-    let tlr = get_thread_local_region();
-    (*tlr).thread_vars.thread = core::mem::transmute(entry_args_ref.thread_object_pointer);
-    (*tlr).thread_vars._reent = (*entry_args_ref)._reent;
-    (*tlr).thread_vars._tls_tp = 0; //we're not supporting thread local storage right now
-    (*tlr).thread_vars.handle = (*entry_args_ref.thread_object_pointer).handle;
-    (*tlr).thread_vars.magic = ThreadVars::MAGIC;
-
-    entry_args_ref.run();
-        
-    exit()
-}
-
-/// Represents a meta-value for the priority of a new [`Thread`] to be determined by the current [`Thread`]'s priority
-pub const PRIORITY_AUTO: i32 = -1;
-
-// Note: our thread type attempts to kind-of mimic the official nn::os::ThreadType struct, at least so that the thread name is properly accessible from TLS by, for instance, creport -- thus all the reserved fields
-// We act like nn::os::ThreadType version 1
-
-const CURRENT_THREAD_VERSION: u16 = 1;
-
-/// Represents a thread
-#[repr(C)]
-pub struct Thread {
-    pub state: ThreadState,
-    pub owns_stack: bool,
-    _pad: [u8; 2],
-    pub handle: svc::Handle,
-    pub stack: *mut u8,
-    pub stack_size: usize,
-    pub reserved: [u8; 0x26],
-    pub version: u16,
-    _reserved_2: [u8; 0xF8],
-    entry: Option<ThreadEntryArgs>,
-    pub reserved_3: [u8; 0x28],
-    pub name: ThreadName,
-    pub name_addr: *mut u8,
-     _reserved_4: [u8; 0x20],
-}
-
-impl Thread { 
-    /// Creates an empty, thus invalid [`Thread`]
-    pub const fn new_invalid() -> Self {
-        Self {
-            state: ThreadState::NotInitialized,
-            owns_stack: false,
-            _pad: [0; 2],
-            handle: 0,
-            stack: ptr::null_mut(),
-            stack_size: 0,
-            reserved: [0; 0x26],
-            version: CURRENT_THREAD_VERSION,
-            _reserved_2: [0; 0xF8],
-            entry: None,
-            reserved_3: [0; 0x28],
-            name: ThreadName::new(),
-            name_addr: ptr::null_mut(),
-            _reserved_4: [0; 0x20],
-        }
-    }
-
-    fn new_impl(handle: svc::Handle, state: ThreadState, name: &str, stack: *mut u8, stack_size: usize, owns_stack: bool, entry: Option<ThreadEntryArgs>) -> Result<Self> {
-        let mut thread = Self {
-            state,
-            owns_stack,
-            _pad: [0; 2],
-            handle,
-            stack,
-            stack_size,
-            reserved: [0; 0x26],
-            version: CURRENT_THREAD_VERSION,
-            _reserved_2: [0; 0xF8],
-            entry,
-            reserved_3: [0; 0x28],
-            name: ThreadName::new(),
-            name_addr: ptr::null_mut(),
-            _reserved_4: [0; 0x20],
-        };
-        //thread.name_addr = &mut thread.name as *mut ThreadName as *mut u8;
-        thread.name.set_str(name);
-        Ok(thread)
-    }
-
-    /// Creates a [`Thread`] from an existing thread handle, a name, and stack
-    /// 
-    /// # Arguments
-    /// 
-    /// * `handle`: The remote thread handle
-    /// * `name`: The custom thread name
-    /// * `stack`: The remote stack address
-    /// * `stack_size`: The remote stack size
-    #[inline]
-    #[allow(clippy::not_unsafe_ptr_arg_deref)]
-    pub fn new_remote(handle: svc::Handle, name: &str, stack: *mut u8, stack_size: usize) -> Result<Self> {
-        //result_return_unless!(!stack.is_null(), rc::ResultInvalidStack);
-        //result_return_unless!(!stack.is_aligned_to(alloc::PAGE_ALIGNMENT), rc::ResultInvalidStack);
-
-        Self::new_impl(handle, ThreadState::Started, name, stack, stack_size, false, None)
-    }
-    
-    /// Creates a new [`Thread`] with an entrypoint + args, name and stack
-    /// 
-    /// Note that it needs to be initialized ([`Thread::initialize`]) before being started ([`Thread::start`])
-    /// 
-    /// # Arguments
-    /// 
-    /// * `entry`: The entrypoint function, taking args
-    /// * `args`: The entrypoint arguments
-    /// * `name`: The desired thread name
-    /// * `stack`: The stack address. SAFETY: Must live as long as the thread is running
-    /// * `stack_size`: The stack size
-    #[allow(clippy::not_unsafe_ptr_arg_deref)]
-    pub fn new_with_stack(entry: fn(), name: &str, stack: *mut u8, stack_size: usize) -> Result<Self> {
-        result_return_unless!(!stack.is_null(), rc::ResultInvalidStack);
-        result_return_unless!(!stack.is_aligned_to(alloc::PAGE_ALIGNMENT), rc::ResultInvalidStack);
-
-        let thread_entry: ThreadEntryArgs = ThreadEntryArgs::new(entry);
-        Self::new_impl(svc::INVALID_HANDLE, ThreadState::NotInitialized, name, stack, stack_size, false, Some(thread_entry))
-    }
-    
-    /// Creates a new [`Thread`] with an entrypoint + args, name and stack
-    /// 
-    /// Same as calling [`Thread::new_with_stack`] but with the stack being automatically allocated from heap
-    /// 
-    /// Note that it needs to be initialized ([`Thread::initialize()`]) before being started ([`Thread::start()`])
-    /// 
-    /// # Arguments
-    /// 
-    /// * `entry`: The entrypoint function, taking args
-    /// * `args`: The entrypoint arguments
-    /// * `name`: The desired thread name
-    /// * `stack_size`: The desired stack size
-    pub fn new(entry: fn(), name: &str, stack_size: usize) -> Result<Self> {
-        let stack = unsafe {::alloc::alloc::Global.allocate(Layout::from_size_align_unchecked(stack_size, alloc::PAGE_ALIGNMENT))}?;
-
-        let thread_entry: ThreadEntryArgs = ThreadEntryArgs::new(entry);
-        Self::new_impl(svc::INVALID_HANDLE, ThreadState::NotInitialized, name, stack.as_mut_ptr().cast(), stack_size, true, Some(thread_entry))
-    }
-    /// Creates a new [`Thread`] with an entrypoint + args, name and stack
-    /// 
-    /// Same as calling [`Thread::new_with_stack`] but with the stack a pre-allocated slice
-    /// 
-    /// Note that it needs to be initialized ([`Thread::initialize()`]) before being started ([`Thread::start()`])
-    /// 
-    /// # Arguments
-    /// 
-    /// * `entry`: The entrypoint function, taking args
-    /// * `args`: The entrypoint arguments
-    /// * `name`: The desired thread name
-    /// * `stack`: The pre-allocated stack memory for the thread
-    pub fn new_with_buffer(entry: fn(), name: &str, stack: &mut [u8]) -> Result<Self> {
-        let thread_entry: ThreadEntryArgs = ThreadEntryArgs::new(entry);
-        Self::new_impl(svc::INVALID_HANDLE, ThreadState::NotInitialized, name, stack.as_mut_ptr(), stack.len(), false, Some(thread_entry))
-    }
-
-    /// Initializes a [`Thread`]
-    /// 
-    /// Technically, this actually "creates" it using [`svc::create_thread`]
-    /// 
-    /// It must be in [`ThreadState::NotInitialized`], otherwise this will fail with [`ResultInvalidState`][`rc::ResultInvalidState`]
-    /// 
-    /// # Arguments
-    /// 
-    /// * `priority`: The desired priority
-    /// * `processor_id`: The desired processor ID to start the thread on
-    pub fn initialize(self: &mut Pin<&mut Self>, priority: ThreadPriority, processor_id: ThreadStartCore) -> Result<()> {
-        result_return_unless!(self.state == ThreadState::NotInitialized, rc::ResultInvalidState);
-        result_return_unless!(self.entry.is_some(), rc::ResultInvalidState);
-
-        let raw_self_ptr: *const Self = self.as_mut().deref();
-
-        let stack_top_addr = unsafe {self.stack.add(self.stack_size)};
-        let priority = priority.to_raw(processor_id);
-        let entry_mut = self.entry.as_mut();
-        let entry_mut = entry_mut.ok_or(rc::ResultInvalidState::make())?;
-        entry_mut.set_thread_pointer(raw_self_ptr);
-
-        match unsafe {svc::create_thread(thread_entry_impl, entry_mut as *mut _ as *mut u8, stack_top_addr, priority, processor_id as i32)} {
-            Ok(handle) => {
-                self.handle = handle;
-            },
-            Err(e) => {
-                return Err(e);
-            }
-        }        
-        self.state = ThreadState::Initialized;
-        Ok(())
-    }
-
-    /// Starts the [`Thread`]
-    /// 
-    /// It must be in [`ThreadState::Initialized`] or [`ThreadState::Terminated`], otherwise this will fail with [`ResultInvalidState`][`rc::ResultInvalidState`]
-    /// 
-    /// Essentially uses [`svc::start_thread`]
-    pub fn start(self: &mut Pin<&mut Self>) -> Result<()> {
-        result_return_unless!((self.state == ThreadState::Initialized) || (self.state == ThreadState::Terminated), rc::ResultInvalidState);
-
-        svc::start_thread(self.handle)?;
-
-        self.state = ThreadState::Started;
-        Ok(())
-    }
-
-    /// Joins the [`Thread`]
-    /// 
-    /// It must be in [`ThreadState::Started`], otherwise this will fail with [`ResultInvalidState`][`rc::ResultInvalidState`]
-    /// 
-    /// Essentially waits for the thread handle, which will signal when it finishes
-    pub fn join(&mut self) -> Result<()> {
-        result_return_unless!(self.state == ThreadState::Started, rc::ResultInvalidState);
-        
-        wait::wait_handles(&[self.handle], -1)?;
-
-        self.state = ThreadState::Terminated;
-        Ok(())
-    }
-
-    /// Joins the [`Thread`], with a timout
-    /// 
-    /// It must be in [`ThreadState::Started`], otherwise this will fail with [`ResultInvalidState`][`rc::ResultInvalidState`]
-    /// 
-    /// Essentially waits for the thread handle, which will signal when it finishes
-    pub fn join_wait(self: &mut Pin<&mut Self>, timeout: i64) -> Result<()> {
-        result_return_unless!(self.state == ThreadState::Started, rc::ResultInvalidState);
-        
-        wait::wait_handles(&[self.handle], timeout)?;
-
-        self.state = ThreadState::Terminated;
-        Ok(())
-    }
-
-    /// Gets whether this [`Thread`] is remote
-    #[inline]
-    pub fn is_remote(&self) -> bool {
-        self.entry.is_none()
-    }
-
-    /// Gets this [`Thread`]'s handle
-    #[inline]
-    pub fn handle(&self) -> svc::Handle {
-        self.handle
-    }
-
-    /// Gets this [`Thread`]'s priority
-    /// 
-    /// It must be in any state but [`ThreadState::NotInitialized`], otherwise this will fail with [`ResultInvalidState`][`rc::ResultInvalidState`]
-    /// 
-    /// Essentially uses [`svc::get_thread_priority`]
-    pub fn priority(&self) -> Result<i32> {
-        result_return_unless!(self.state != ThreadState::NotInitialized, rc::ResultInvalidState);
-
-        svc::get_thread_priority(self.handle)
-    }
-
-    /// Gets this [`Thread`]'s ID
-    /// 
-    /// It must be in any state but [`ThreadState::NotInitialized`], otherwise this will fail with [`ResultInvalidState`][`rc::ResultInvalidState`]
-    /// 
-    /// Essentially uses [`svc::get_thread_id`]
-    pub fn id(&self) -> Result<u64> {
-        result_return_unless!(self.state != ThreadState::NotInitialized, rc::ResultInvalidState);
-        
-        svc::get_thread_id(self.handle)
-    } 
-}
-
-impl Drop for Thread {
-    /// Destroys the [`Thread`], doing the following:
-    /// * Waits for it to finish (see [`Thread::join`]) if it's running
-    /// * Frees the stack memory if it was automatically allocated on creation
-    /// * Closes the thread handle if it isn't remote, effectively closing the thread
-    fn drop(&mut self) {
-        // If it's still active, finalize it
-        if self.state == ThreadState::Started {
-            let _ = self.join();
-        }
-
-        if self.owns_stack {
-            // we know that this was created with a matching call to the Global allocator in Self::new
-            // as that is the only way to get an owned stack.
-            unsafe {::alloc::alloc::Global.deallocate( ptr::NonNull::new_unchecked(self.stack), Layout::from_size_align_unchecked(self.stack_size, alloc::PAGE_ALIGNMENT)) };
-        }
-
-        // If a thread is not created (like the main thread) the entry field will have nothing, and we definitely should not close threads we did not create...
-        if !self.is_remote() {
-            let _ = svc::close_handle(self.handle);
-        }
-
-        self.state = ThreadState::NotInitialized;
-    }
-}
-
-
-
-/// Libnx's thread information struct, including a self reference to the thread's descriptor object
-#[derive(Debug, Copy, Clone)]
-#[repr(C)]
-pub struct ThreadVars {
-    /// magic value '!TV$'
-    magic: u32,
-    
-    // Thread handle, for mutexes
-    handle: svc::Handle,
-
-    // Pointer to the current thread (if exists)
-    pub (crate) thread: *mut Thread,
-
-    // Pointer to this thread's newlib state - unusued
-    _reent: usize,
-    
-    // Pointer to this thread's thread-local segment - unused
-    _tls_tp: usize
-
-}
-
-impl ThreadVars {
-    const MAGIC: u32 = 0x21545624; // !TV$
-}
-
-*/
 
 /// Sleeps for the given timeout
 /// 

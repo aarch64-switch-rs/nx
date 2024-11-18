@@ -3,7 +3,6 @@
 use rc::ResultInvalidControllerId;
 
 use crate::ipc::sf;
-use crate::ipc::sf::ProcessId;
 use crate::result::*;
 use crate::service;
 use crate::service::applet;
@@ -293,7 +292,7 @@ pub struct Context {
     applet_resource: AppletResource,
     supported_style_tags: hid::NpadStyleTag,
     shmem_handle: svc::Handle,
-    shmem_ptr: *const u8,
+    shmem_ptr: &'static u8,
 }
 
 impl Context {
@@ -326,12 +325,11 @@ impl Context {
             player_count += 1;
         }
 
-        let aruid = applet::GLOBAL_ARUID.load(core::sync::atomic::Ordering::Relaxed);
-
+        let aruid = AppletResourceUserId::new(applet::GLOBAL_ARUID.load(core::sync::atomic::Ordering::Relaxed));
         let players = sf::Buffer::from_array(&players[..player_count]);
 
         let mut hid_srv = service::new_service_object::<hid::HidServer>()?;
-        let mut applet_res = hid_srv.create_applet_resource(ProcessId::new(), aruid)?;
+        let mut applet_res = hid_srv.create_applet_resource(aruid.clone())?;
 
         let shmem_handle = applet_res.get_shared_memory_handle()?;
         let shmem_address = vmem::allocate(shmem::SHMEM_SIZE)?;
@@ -345,25 +343,26 @@ impl Context {
         };
 
         
-        Self::activate_npad(&mut hid_srv, aruid)?;
-        hid_srv.set_supported_npad_style_set( ProcessId::new(), supported_style_tags, aruid)?;
-        hid_srv.set_supported_npad_id_type(ProcessId::new(), aruid, players)?;
+        
+        Self::activate_npad(&mut hid_srv, aruid.clone())?;
+        hid_srv.set_supported_npad_style_set(supported_style_tags, aruid.clone())?;
+        hid_srv.set_supported_npad_id_type(aruid.clone(), players)?;
 
-        let _styles = hid_srv.get_supported_npad_style_set(ProcessId::new(), aruid);
+        let _styles = hid_srv.get_supported_npad_style_set(aruid);
 
         Ok(Self {
             hid_service: hid_srv,
             applet_resource: applet_res,
             supported_style_tags,
             shmem_handle: shmem_handle.handle,
-            shmem_ptr: shmem_address as *const u8,
+            shmem_ptr: unsafe {shmem_address.as_ref().unwrap()},
         })
     }
 
     fn activate_npad(hid_srv: &mut HidServer, aruid: AppletResourceUserId) -> Result<()> {
         let current_version = version::get_version();
         if current_version < version::Version::new(5, 0, 0) {
-            hid_srv.activate_npad(ProcessId::new(), aruid)
+            hid_srv.activate_npad(aruid)
         } else {
             let revision = match current_version.major {
                 0..6 => 1,
@@ -371,7 +370,7 @@ impl Context {
                 8..18 => 3,
                 18.. => 5
             };
-            hid_srv.activate_npad_with_revision(ProcessId::new(), revision, aruid)
+            hid_srv.activate_npad_with_revision(revision, aruid)
         }
     }
 
@@ -397,17 +396,17 @@ impl Context {
             let cur_ver = version::get_version();
             let touch_screen_shmem =
                 if hid::shmem::SharedMemoryFormatV1::VERSION_INTERVAL.contains(cur_ver) {
-                    &(*(self.shmem_ptr as *const hid::shmem::SharedMemoryFormatV1)).touch_screen
+                    &(*(self.shmem_ptr as *const _ as *const hid::shmem::SharedMemoryFormatV1)).touch_screen
                 } else if hid::shmem::SharedMemoryFormatV2::VERSION_INTERVAL.contains(cur_ver) {
-                    &(*(self.shmem_ptr as *const hid::shmem::SharedMemoryFormatV2)).touch_screen
+                    &(*(self.shmem_ptr as *const _ as *const hid::shmem::SharedMemoryFormatV2)).touch_screen
                 } else if hid::shmem::SharedMemoryFormatV3::VERSION_INTERVAL.contains(cur_ver) {
-                    &(*(self.shmem_ptr as *const hid::shmem::SharedMemoryFormatV3)).touch_screen
+                    &(*(self.shmem_ptr as *const _ as *const hid::shmem::SharedMemoryFormatV3)).touch_screen
                 } else if hid::shmem::SharedMemoryFormatV4::VERSION_INTERVAL.contains(cur_ver) {
-                    &(*(self.shmem_ptr as *const hid::shmem::SharedMemoryFormatV4)).touch_screen
+                    &(*(self.shmem_ptr as *const _ as *const hid::shmem::SharedMemoryFormatV4)).touch_screen
                 } else if hid::shmem::SharedMemoryFormatV5::VERSION_INTERVAL.contains(cur_ver) {
-                    &(*(self.shmem_ptr as *const hid::shmem::SharedMemoryFormatV5)).touch_screen
+                    &(*(self.shmem_ptr as *const _ as *const hid::shmem::SharedMemoryFormatV5)).touch_screen
                 } else if hid::shmem::SharedMemoryFormatV6::VERSION_INTERVAL.contains(cur_ver) {
-                    &(*(self.shmem_ptr as *const hid::shmem::SharedMemoryFormatV6)).touch_screen
+                    &(*(self.shmem_ptr as *const _ as *const hid::shmem::SharedMemoryFormatV6)).touch_screen
                 } else {
                     // TODO: result?
                     panic!("Unexpected version mismatch");
@@ -426,7 +425,7 @@ impl Context {
 impl Drop for Context {
     /// Destroys the [`Context`], unmapping the shared-memory and closing it, and also closing its [`IHidServer`] session
     fn drop(&mut self) {
-        let _ = self.hid_service.deactivate_npad(ProcessId::new(), 0);
+        let _ = self.hid_service.deactivate_npad(AppletResourceUserId::new(0));
         let _ = unsafe {
             svc::unmap_shared_memory(self.shmem_handle, self.shmem_ptr, shmem::SHMEM_SIZE)
         };

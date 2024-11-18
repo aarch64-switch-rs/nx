@@ -16,13 +16,8 @@ static_assertions = "1.1.0"
 lock_api = { version = "0.4.12", features = ["nightly"] }
 generic_once_cell = "0.1.1"
 once_cell = { version = "1.19.0", default-features = false, features = ["race"] }
-#bon = { version = "2.2.0", features = ["alloc"] }
-#backtrace = { version = "0.3.74", default-features = false }
 atomic_enum = "0.3.0"
 zeroize = { version = "1.8.1", features = ["alloc", "aarch64"] }
-#proc-macro2 = "1.0.87"
-#quote = "1.0.37"
-#syn = "2.0.79"
 unwinding = {version = "0.2.2", default-features = false, features = ["unwinder", "panic", "fde-custom", "personality"]}
 
 [features]

@@ -1,5 +1,5 @@
 use crate::result::*;
-use crate::ipc::sf::{self, sm};
+use crate::ipc::sf::{sm};
 use crate::service;
 
 pub use crate::ipc::sf::psm::*;

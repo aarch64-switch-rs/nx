@@ -88,7 +88,6 @@ impl <T: ?Sized> Mutex<T> {
     }
 }
 
-
 impl<T: Copy> Mutex<T> {
     /// Gets a copy of the value, doing a lock-unlock operation in the process
     pub fn get_val(&self) -> T {
@@ -100,8 +99,10 @@ impl<T: Copy> Mutex<T> {
         }
     }
 }
-unsafe impl<T: ?Sized + Send> Sync for Mutex<T> {}
-unsafe impl<T: ?Sized + Send> Send for Mutex<T> {}
+
+// we only have a bound on Sync instead of Send, because we don't implement into_inner
+unsafe impl<T: ?Sized + Sync> Sync for Mutex<T> {}
+unsafe impl<T: ?Sized + Sync> Send for Mutex<T> {}
 
 pub struct MutexGuard<'borrow, T:?Sized> {
     pub(self) lock: &'borrow Mutex<T>

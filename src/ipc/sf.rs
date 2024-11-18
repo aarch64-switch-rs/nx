@@ -221,33 +221,42 @@ pub type MoveHandle = Handle<{ HandleMode::Move }>;
 
 #[derive(Clone, Default)]
 pub struct ProcessId {
-    pub inner: u64,
+    pub process_id: u64,
 }
 
 impl ProcessId {
     pub const fn from(process_id: u64) -> Self {
-        Self { inner: process_id }
+        Self { process_id }
     }
 
     pub const fn new() -> Self {
-        Self { inner: 0 }
+        Self { process_id: 0 }
     }
 }
 
-/// Unfortunately, the s
-#[derive(Clone, PartialEq, Eq, Debug, Default)]
-#[repr(transparent)]
-pub struct CmifPidPlaceholder(u64);
-
-impl CmifPidPlaceholder {
-    pub fn new() -> Self {
-        Self(0)
-    }
-    pub(crate) fn from(should_be_zero: u64) -> Self {
-        Self(should_be_zero)
-    }
+/// AppletResourceUserIds are restricted to the values of zero, or the process' PID.
+/// When they are sent over an IPC interface, they also trigger the sending of a PID descriptor in the HIPC request,
+/// so there is an additional field for the PID. This field is filled in by the kernel during a request, and is read
+/// out of the headers in the same way as the `ProcessId`[`ProcessId`] above.
+/// 
+/// This allows the crate to just send the `AppletResourceUserId` object when the IPC interface is expecting this value
+/// and the `send_pid` flag. This also allows us to have a `ProcessId` type that creates it's own pid placeholder in CMIF
+/// IPC requests.
+#[derive(Clone, Default)]
+pub struct AppletResourceUserId {
+    pub process_id: u64,
+    pub aruid: u64
 }
 
+impl AppletResourceUserId {
+    pub const fn from(process_id: u64, aruid: u64) -> Self {
+        Self { process_id, aruid }
+    }
+
+    pub const fn new(aruid: u64) -> Self {
+        Self { process_id: 0, aruid }
+    }
+}
 
 // This is used, for instance, with u8-sized enums which are sent/received as u32s in commands
 

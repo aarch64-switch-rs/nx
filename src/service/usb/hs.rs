@@ -1,7 +1,6 @@
 use crate::result::*;
-use crate::ipc::sf::{self, sm};
+use crate::ipc::sf::{sm};
 use crate::service;
-use crate::ipc::sf::usb;
 
 pub use crate::ipc::sf::usb::hs::*;
 

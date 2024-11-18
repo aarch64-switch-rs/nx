@@ -1,4 +1,4 @@
-.section .text, "ax", %progbits
+.section .rodata, "aw", %progbits
 .align 2
 
 .global __module_header

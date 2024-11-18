@@ -57,6 +57,7 @@
 #![feature(try_blocks)]
 #![feature(get_mut_unchecked)]
 #![feature(unsafe_pin_internals)]
+#![feature(str_from_utf16_endian)]
 #![macro_use]
 
 use core::arch::global_asm;
@@ -69,6 +70,7 @@ global_asm!(include_str!("mod0.s"));
 global_asm!(include_str!("arm.s"));
 global_asm!(include_str!("mem.s"));
 global_asm!(include_str!("svc.s"));
+//global_asm!(include_str!("exception.s"));
 
 #[macro_use]
 extern crate alloc;
@@ -90,6 +92,8 @@ pub mod util;
 pub mod mem;
 
 pub mod elf;
+
+pub mod exception;
 
 pub mod sync;
 

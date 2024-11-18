@@ -2,7 +2,7 @@
 
 use zeroize::Zeroize;
 
-use crate::{result::*, util};
+use crate::result::*;
 
 /// Represents the `MOD0` start layout
 /// 

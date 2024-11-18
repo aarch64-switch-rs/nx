@@ -15,6 +15,6 @@ impl service::IService for FileSystemProxy {
     }
 
     fn post_initialize(&mut self) -> Result<()> {
-        self.set_current_process(sf::ProcessId::new(), Default::default())
+        self.set_current_process(sf::ProcessId::new())
     }
 }

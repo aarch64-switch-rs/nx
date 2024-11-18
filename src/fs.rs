@@ -35,7 +35,7 @@ pub type OperationId = fsp::fsp_sf::OperationId;
 pub type FileQueryRangeInfo = fsp::fsp_sf::FileQueryRangeInfo;
 
 /// Represents a file
-pub trait File {
+pub trait File: Sync {
     /// Reads data from the file, returning the actual read size
     /// 
     /// # Arguments
@@ -44,7 +44,7 @@ pub trait File {
     /// * `out_buf`: The out data address to fill
     /// * `out_buf_size`: The size of data to read
     /// * `option`: [`FileReadOption`] value
-    fn read(&mut self, offset: usize, out_buf: *mut u8, out_buf_size: usize, option: FileReadOption) -> Result<usize>;
+    fn read(&mut self, offset: usize, out_buf: &mut [u8], option: FileReadOption) -> Result<usize>;
 
     /// Writes data to a file (this one doesn't return the actual written size, thanks N)
     /// 
@@ -54,7 +54,7 @@ pub trait File {
     /// * `buf`: The data address to write from
     /// * `buf_size`: The size of data to write
     /// * `option`: [`FileWriteOption`] value
-    fn write(&mut self, offset: usize, buf: *const u8, buf_size: usize, option: FileWriteOption) -> Result<()>;
+    fn write(&mut self, offset: usize, buf: &[u8], option: FileWriteOption) -> Result<()>;
 
     /// Flushes the file
     fn flush(&mut self) -> Result<()>;
@@ -95,7 +95,7 @@ pub trait File {
 }
 
 /// Represents a directory
-pub trait Directory {
+pub trait Directory: Sync {
     /// Reads existing entries, returning the actual number of read entries
     /// 
     /// The max number of entries to read is determined by the output array size and the actually existing entry count
@@ -110,7 +110,7 @@ pub trait Directory {
 }
 
 /// Represents a filesystem
-pub trait FileSystem: Sync + Send {
+pub trait FileSystem: Sync {
     /// Creates a file
     /// 
     /// # Arguments
@@ -118,35 +118,35 @@ pub trait FileSystem: Sync + Send {
     /// * `path`: The path to use
     /// * `size`: The initial file size
     /// * `attribute`: The file attribute
-    fn create_file(&mut self, path: String, attribute: FileAttribute, size: usize) -> Result<()>;
+    fn create_file(&mut self, path: &str, attribute: FileAttribute, size: usize) -> Result<()>;
 
     /// Deletes a file
     /// 
     /// # Arguments
     /// 
     /// * `path`: The path to use
-    fn delete_file(&mut self, path: String) -> Result<()>;
+    fn delete_file(&mut self, path: &str) -> Result<()>;
 
     /// Creates a directory
     /// 
     /// # Arguments
     /// 
     /// * `path`: The path to use
-    fn create_directory(&mut self, path: String) -> Result<()>;
+    fn create_directory(&mut self, path: &str) -> Result<()>;
 
     /// Deletes a directory
     /// 
     /// # Arguments
     /// 
     /// * `path`: The path to use
-    fn delete_directory(&mut self, path: String) -> Result<()>;
+    fn delete_directory(&mut self, path: &str) -> Result<()>;
 
     /// Deletes a directory and all its children files/directories
     /// 
     /// # Arguments
     /// 
     /// * `path`: The path to use
-    fn delete_directory_recursively(&mut self, path: String) -> Result<()>;
+    fn delete_directory_recursively(&mut self, path: &str) -> Result<()>;
 
     /// Renames a file
     /// 
@@ -154,7 +154,7 @@ pub trait FileSystem: Sync + Send {
     /// 
     /// * `old_path`: The old path to use
     /// * `new_path`: The new path to use
-    fn rename_file(&mut self, old_path: String, new_path: String) -> Result<()>;
+    fn rename_file(&mut self, old_path: &str, new_path: &str) -> Result<()>;
 
     /// Renames a directory
     /// 
@@ -162,14 +162,14 @@ pub trait FileSystem: Sync + Send {
     /// 
     /// * `old_path`: The old path to use
     /// * `new_path`: The new path to use
-    fn rename_directory(&mut self, old_path: String, new_path: String) -> Result<()>;
+    fn rename_directory(&mut self, old_path: &str, new_path: &str) -> Result<()>;
 
     /// Gets a path's [`DirectoryEntryType`]
     /// 
     /// # Arguments
     /// 
     /// * `path`: The path to use
-    fn get_entry_type(&mut self, path: String) -> Result<DirectoryEntryType>;
+    fn get_entry_type(&mut self, path: &str) -> Result<DirectoryEntryType>;
 
     /// Opens a [`File`]
     /// 
@@ -177,7 +177,7 @@ pub trait FileSystem: Sync + Send {
     /// 
     /// * `path`: The path to use
     /// * `mode`: The open mode
-    fn open_file(&mut self, path: String, mode: FileOpenMode) -> Result<mem::Shared<dyn File>>;
+    fn open_file(&mut self, path: &str, mode: FileOpenMode) -> Result<mem::Shared<dyn File>>;
 
     /// Opens a [`Directory`]
     /// 
@@ -185,7 +185,7 @@ pub trait FileSystem: Sync + Send {
     /// 
     /// * `path`: The path to use
     /// * `mode`: The open mode
-    fn open_directory(&mut self, path: String, mode: DirectoryOpenMode) -> Result<mem::Shared<dyn Directory>>;
+    fn open_directory(&mut self, path: &str, mode: DirectoryOpenMode) -> Result<mem::Shared<dyn Directory>>;
 
     /// Commits the filesystem
     fn commit(&mut self) -> Result<()>;
@@ -195,28 +195,28 @@ pub trait FileSystem: Sync + Send {
     /// # Argument
     /// 
     /// * `path`: The path to use
-    fn get_free_space_size(&mut self, path: String) -> Result<usize>;
+    fn get_free_space_size(&mut self, path: &str) -> Result<usize>;
 
     /// Gets the total space size at a given path
     /// 
     /// # Argument
     /// 
     /// * `path`: The path to use
-    fn get_total_space_size(&mut self, path: String) -> Result<usize>;
+    fn get_total_space_size(&mut self, path: &str) -> Result<usize>;
 
     /// Deletes all the children files/directories inside a directory
     /// 
     /// # Arguments
     /// 
     /// * `path`: The path to use
-    fn clean_directory_recursively(&mut self, path: String) -> Result<()>;
+    fn clean_directory_recursively(&mut self, path: &str) -> Result<()>;
 
     /// Gets the [`FileTimeStampRaw`] of a file
     /// 
     /// # Arguments
     /// 
     /// * `path`: The path to use
-    fn get_file_time_stamp_raw(&mut self, path: String) -> Result<FileTimeStampRaw>;
+    fn get_file_time_stamp_raw(&mut self, path: &str) -> Result<FileTimeStampRaw>;
 
     /// Queries on a path
     /// 
@@ -227,13 +227,18 @@ pub trait FileSystem: Sync + Send {
     /// * `in_buf_size`: Input data size
     /// * `out_buf`: Output data
     /// * `out_buf_size`: Output data size
-    fn query_entry(&mut self, path: String, query_id: QueryId, in_buf: *const u8, in_buf_size: usize, out_buf: *mut u8, out_buf_size: usize) -> Result<()>;
+    fn query_entry(&mut self, path: &str, query_id: QueryId, in_buf: *const u8, in_buf_size: usize, out_buf: *mut u8, out_buf_size: usize) -> Result<()>;
 }
 
 /// Represents a wrapper [`File`] implementation to translate IPC [`IFile`] objects to [`File`] objects
 pub struct ProxyFile {
     file_obj: mem::Shared<dyn IFile>
 }
+
+
+// TODO: Remove. This fixes a problem in emuiibo but this whole construct is probably not needed.
+unsafe impl Sync for ProxyFile {}
+unsafe impl Send for ProxyFile {}
 
 impl ProxyFile {
     /// Creates a new [`ProxyFile`] from a [`IFile`] shared object
@@ -249,12 +254,12 @@ impl ProxyFile {
 }
 
 impl File for ProxyFile {
-    fn read(&mut self, offset: usize, out_buf: *mut u8, out_buf_size: usize, option: FileReadOption) -> Result<usize> {
-        self.file_obj.lock().read(option, offset, out_buf_size, ipc_sf::Buffer::from_mut_ptr(out_buf, out_buf_size))
+    fn read(&mut self, offset: usize, out_buf: &mut[u8], option: FileReadOption) -> Result<usize> {
+        self.file_obj.lock().read(option, offset, out_buf.len(), ipc_sf::Buffer::from_mut_array(out_buf))
     }
 
-    fn write(&mut self, offset: usize, buf: *const u8, buf_size: usize, option: FileWriteOption) -> Result<()> {
-        self.file_obj.lock().write(option, offset, buf_size, ipc_sf::Buffer::from_ptr(buf, buf_size))
+    fn write(&mut self, offset: usize, buf: &[u8], option: FileWriteOption) -> Result<()> {
+        self.file_obj.lock().write(option, offset, buf.len(), ipc_sf::Buffer::from_array(buf))
     }
 
     fn flush(&mut self) -> Result<()> {
@@ -283,6 +288,10 @@ impl File for ProxyFile {
 pub struct ProxyDirectory {
     dir_obj: mem::Shared<dyn IDirectory>
 }
+
+// TODO: Remove because we don't actually have a guarantee that IDirectory is Sync
+unsafe impl Sync for ProxyDirectory {}
+unsafe impl Send for ProxyDirectory {}
 
 impl ProxyDirectory {
     /// Creates a new [`ProxyDirectory`] from a [`IDirectory`] shared object
@@ -330,56 +339,56 @@ impl ProxyFileSystem {
 }
 
 impl FileSystem for ProxyFileSystem {
-    fn create_file(&mut self, path: String, attribute: FileAttribute, size: usize) -> Result<()> {
-        let sf_path = fsp::fsp_sf::Path::from_string(path);
+    fn create_file(&mut self, path: &str, attribute: FileAttribute, size: usize) -> Result<()> {
+        let sf_path = fsp::fsp_sf::Path::from_str(path);
         self.fs_obj.lock().create_file(attribute, size, ipc_sf::Buffer::from_var(&sf_path))
     }
 
-    fn delete_file(&mut self, path: String) -> Result<()> {
-        let sf_path = fsp::fsp_sf::Path::from_string(path);
+    fn delete_file(&mut self, path: &str) -> Result<()> {
+        let sf_path = fsp::fsp_sf::Path::from_str(path);
         self.fs_obj.lock().delete_file(ipc_sf::Buffer::from_var(&sf_path))
     }
 
-    fn create_directory(&mut self, path: String) -> Result<()> {
-        let sf_path = fsp::fsp_sf::Path::from_string(path);
+    fn create_directory(&mut self, path: &str) -> Result<()> {
+        let sf_path = fsp::fsp_sf::Path::from_str(path);
         self.fs_obj.lock().create_directory(ipc_sf::Buffer::from_var(&sf_path))
     }
 
-    fn delete_directory(&mut self, path: String) -> Result<()> {
-        let sf_path = fsp::fsp_sf::Path::from_string(path);
+    fn delete_directory(&mut self, path: &str) -> Result<()> {
+        let sf_path = fsp::fsp_sf::Path::from_str(path);
         self.fs_obj.lock().delete_directory(ipc_sf::Buffer::from_var(&sf_path))
     }
 
-    fn delete_directory_recursively(&mut self, path: String) -> Result<()> {
-        let sf_path = fsp::fsp_sf::Path::from_string(path);
+    fn delete_directory_recursively(&mut self, path: &str) -> Result<()> {
+        let sf_path = fsp::fsp_sf::Path::from_str(path);
         self.fs_obj.lock().delete_directory_recursively(ipc_sf::Buffer::from_var(&sf_path))
     }
 
-    fn get_entry_type(&mut self, path: String) -> Result<DirectoryEntryType> {
-        let sf_path = fsp::fsp_sf::Path::from_string(path);
+    fn get_entry_type(&mut self, path: &str) -> Result<DirectoryEntryType> {
+        let sf_path = fsp::fsp_sf::Path::from_str(path);
         self.fs_obj.lock().get_entry_type(ipc_sf::Buffer::from_var(&sf_path))
     }
 
-    fn rename_file(&mut self, old_path: String, new_path: String) -> Result<()> {
-        let sf_old_path = fsp::fsp_sf::Path::from_string(old_path);
-        let sf_new_path = fsp::fsp_sf::Path::from_string(new_path);
+    fn rename_file(&mut self, old_path: &str, new_path: &str) -> Result<()> {
+        let sf_old_path = fsp::fsp_sf::Path::from_str(old_path);
+        let sf_new_path = fsp::fsp_sf::Path::from_str(new_path);
         self.fs_obj.lock().rename_file(ipc_sf::Buffer::from_var(&sf_old_path), ipc_sf::Buffer::from_var(&sf_new_path))
     }
 
-    fn rename_directory(&mut self, old_path: String, new_path: String) -> Result<()> {
-        let sf_old_path = fsp::fsp_sf::Path::from_string(old_path);
-        let sf_new_path = fsp::fsp_sf::Path::from_string(new_path);
+    fn rename_directory(&mut self, old_path: &str, new_path: &str) -> Result<()> {
+        let sf_old_path = fsp::fsp_sf::Path::from_str(old_path);
+        let sf_new_path = fsp::fsp_sf::Path::from_str(new_path);
         self.fs_obj.lock().rename_directory(ipc_sf::Buffer::from_var(&sf_old_path), ipc_sf::Buffer::from_var(&sf_new_path))
     }
 
-    fn open_file(&mut self, path: String, mode: FileOpenMode) -> Result<mem::Shared<dyn File>> {
-        let sf_path = fsp::fsp_sf::Path::from_string(path);
-        let file_obj = self.fs_obj.lock().open_file(mode, ipc_sf::Buffer::from_var(&sf_path))?;
-        Ok(mem::Shared::new(ProxyFile::new(mem::Shared::new(file_obj))))
+    fn open_file(&mut self, path: &str, mode: FileOpenMode) -> Result<mem::Shared<dyn File>> {
+        let sf_path = fsp::fsp_sf::Path::from_str(path);
+        let file_obj = self.fs_obj.lock().open_file(mode, ipc_sf::Buffer::from_var(&sf_path));
+        Ok(mem::Shared::new(ProxyFile::new(mem::Shared::new(file_obj?))))
     }
 
-    fn open_directory(&mut self, path: String, mode: DirectoryOpenMode) -> Result<mem::Shared<dyn Directory>> {
-        let sf_path = fsp::fsp_sf::Path::from_string(path);
+    fn open_directory(&mut self, path: &str, mode: DirectoryOpenMode) -> Result<mem::Shared<dyn Directory>> {
+        let sf_path = fsp::fsp_sf::Path::from_str(path);
         let dir_obj = self.fs_obj.lock().open_directory(mode, ipc_sf::Buffer::from_var(&sf_path))?;
         Ok(mem::Shared::new(ProxyDirectory::new(mem::Shared::new(dir_obj))))
     }
@@ -388,37 +397,37 @@ impl FileSystem for ProxyFileSystem {
         self.fs_obj.lock().commit()
     }
 
-    fn get_free_space_size(&mut self, path: String) -> Result<usize> {
-        let sf_path = fsp::fsp_sf::Path::from_string(path);
+    fn get_free_space_size(&mut self, path: &str) -> Result<usize> {
+        let sf_path = fsp::fsp_sf::Path::from_str(path);
         self.fs_obj.lock().get_free_space_size(ipc_sf::Buffer::from_var(&sf_path))
     }
 
-    fn get_total_space_size(&mut self, path: String) -> Result<usize> {
-        let sf_path = fsp::fsp_sf::Path::from_string(path);
+    fn get_total_space_size(&mut self, path: &str) -> Result<usize> {
+        let sf_path = fsp::fsp_sf::Path::from_str(path);
         self.fs_obj.lock().get_total_space_size(ipc_sf::Buffer::from_var(&sf_path))
     }
 
-    fn clean_directory_recursively(&mut self, path: String) -> Result<()> {
-        let sf_path = fsp::fsp_sf::Path::from_string(path);
+    fn clean_directory_recursively(&mut self, path: &str) -> Result<()> {
+        let sf_path = fsp::fsp_sf::Path::from_str(path);
         self.fs_obj.lock().clean_directory_recursively(ipc_sf::Buffer::from_var(&sf_path))
     }
 
-    fn get_file_time_stamp_raw(&mut self, path: String) -> Result<FileTimeStampRaw> {
-        let sf_path = fsp::fsp_sf::Path::from_string(path);
+    fn get_file_time_stamp_raw(&mut self, path: &str) -> Result<FileTimeStampRaw> {
+        let sf_path = fsp::fsp_sf::Path::from_str(path);
         self.fs_obj.lock().get_file_time_stamp_raw(ipc_sf::Buffer::from_var(&sf_path))
     }
 
-    fn query_entry(&mut self, path: String, query_id: QueryId, in_buf: *const u8, in_buf_size: usize, out_buf: *mut u8, out_buf_size: usize) -> Result<()> {
-        let sf_path = fsp::fsp_sf::Path::from_string(path);
+    fn query_entry(&mut self, path: &str, query_id: QueryId, in_buf: *const u8, in_buf_size: usize, out_buf: *mut u8, out_buf_size: usize) -> Result<()> {
+        let sf_path = fsp::fsp_sf::Path::from_str(path);
         self.fs_obj.lock().query_entry(ipc_sf::Buffer::from_var(&sf_path), query_id, ipc_sf::Buffer::from_ptr(in_buf, in_buf_size), ipc_sf::Buffer::from_mut_ptr(out_buf, out_buf_size))
     }
 }
 
 /// Represents an offset kind/relativeness
-pub enum Whence {
-    Start,
-    Current,
-    End
+pub enum SeekFrom {
+    Start(usize),
+    Current(isize),
+    End(isize)
 }
 
 /// Represents a wrapper type to simplify file access
@@ -426,6 +435,9 @@ pub struct FileAccessor {
     file: mem::Shared<dyn File>,
     offset: usize
 }
+
+// we can do this because we never leak the `file` field, which would require us to also require `Send` on the trait `File`
+unsafe impl Sync for FileAccessor {}
 
 impl FileAccessor {
     /// Creates a new [`FileAccessor`] from a given [`File`] shared object
@@ -455,30 +467,16 @@ impl FileAccessor {
     /// # Arguments
     /// 
     /// * `offset`: The offset to seek to
-    /// * `whence`: The offset relativeness
-    pub fn seek(&mut self, offset: usize, whence: Whence) -> Result<()> {
-        match whence {
-            Whence::Start => self.offset = offset,
-            Whence::Current => self.offset += offset,
-            Whence::End => {
+    pub fn seek(&mut self, pos: SeekFrom) -> Result<()> {
+        match pos {
+            SeekFrom::Start(offset) => self.offset = offset,
+            SeekFrom::Current(offset) => self.offset = self.offset.wrapping_add_signed(offset),
+            SeekFrom::End(offset)=> {
                 let size = self.get_size()?;
-                self.offset = size + offset;
+                self.offset = size.wrapping_add_signed(offset);
             }
         };
         Ok(())
-    }
-
-    /// Reads data in the given buffer
-    /// 
-    /// 
-    /// # Arguments
-    /// 
-    /// * `out_buf`: The output array address
-    /// * `buf_count`: The output type count to read (not size in bytes but item count)
-    pub fn read<T>(&mut self, out_buf: *mut T, buf_count: usize) -> Result<usize> {
-        let read_size = self.file.lock().read(self.offset, out_buf as *mut u8, buf_count * cmem::size_of::<T>(), FileReadOption::None())?;
-        self.offset += read_size;
-        Ok(read_size)
     }
 
     /// Reads data in the given array
@@ -486,40 +484,32 @@ impl FileAccessor {
     /// # Arguments
     /// 
     /// * `out_arr`: The output array
-    pub fn read_array<T>(&mut self, out_arr: &mut [T]) -> Result<usize> {
-        self.read(out_arr.as_mut_ptr(), out_arr.len())
+    pub fn read_array<T: Copy>(&mut self, out_arr: &mut [T]) -> Result<usize> {
+        let read_size = self.file.lock().read(self.offset, unsafe {core::slice::from_raw_parts_mut(out_arr.as_mut_ptr() as _, out_arr.len() * cmem::size_of::<T>())}, FileReadOption::None())?;
+        self.offset += read_size;
+        Ok(read_size)
     }
 
     /// Reads a value
-    pub fn read_val<T>(&mut self) -> Result<T> {
+    pub fn read_val<T: Copy>(&mut self) -> Result<T> {
         let mut t = unsafe { cmem::zeroed::<T>() };
-        self.read(&mut t, 1)?;
+        let read_size = self.file.lock().read(self.offset, unsafe {core::slice::from_raw_parts_mut(&mut t as *mut T as _, cmem::size_of::<T>())}, FileReadOption::None())?;
+        self.offset += read_size;
         Ok(t)
     }
 
     // TODO (writes): some sort of "flush" flag to not always flush after writing?
-
-    /// Writes data from the given buffer
-    /// 
-    /// 
-    /// # Arguments
-    /// 
-    /// * `buf`: The input array address
-    /// * `buf_count`: The input type count to write (not size in bytes but item count)
-    pub fn write<T>(&mut self, buf: *const T, buf_count: usize) -> Result<()> {
-        let buf_size = buf_count * cmem::size_of::<T>();
-        self.file.lock().write(self.offset, buf as *const u8, buf_size, FileWriteOption::Flush())?;
-        self.offset += buf_size;
-        Ok(())
-    }
 
     /// Writes data from the given array
     /// 
     /// # Arguments
     /// 
     /// * `arr`: The input array
-    pub fn write_array<T>(&mut self, arr: &[T]) -> Result<()> {
-        self.write(arr.as_ptr(), arr.len())
+    pub fn write_array<T: Copy>(&mut self, arr: &[T]) -> Result<()> {
+        let transmuted: &[u8] = unsafe { core::slice::from_raw_parts(arr.as_ptr() as _, arr.len() * cmem::size_of::<T>())};
+        self.file.lock().write(self.offset, transmuted, FileWriteOption::Flush())?;
+        self.offset += transmuted.len();
+        Ok(())
     }
 
     /// Writes a value
@@ -527,8 +517,14 @@ impl FileAccessor {
     /// # Arguments
     /// 
     /// * `t`: The value to write
-    pub fn write_val<T>(&mut self, t: &T) -> Result<()> {
-        self.write(t as *const T, 1)
+    pub fn write_val<T: Copy>(&mut self, t: &T) -> Result<()> {
+        let transmuted = unsafe {
+            core::slice::from_raw_parts(t as *const T as *const u8, cmem::size_of::<T>())
+        };
+
+        self.file.lock().write(self.offset, transmuted, FileWriteOption::Flush())?;
+        self.offset += transmuted.len();
+        Ok(())
     }
 }
 
@@ -572,100 +568,26 @@ impl DirectoryAccessor {
     }
 }
 
-enum PathSegmentType {
-    Invalid,
-    Root,
-    Normal
-}
-
-pub(crate) struct PathSegment {
-    name: String,
-    segment_type: PathSegmentType
-}
-
-impl PathSegment {
-    pub const fn from(name: String, segment_type: PathSegmentType) -> Self {
-        Self { name, segment_type }
-    }
-
-    pub const fn new() -> Self {
-        Self::from(String::new(), PathSegmentType::Invalid)
-    }
-}
-
-type UnpackedPath = Vec<PathSegment>;
-
-fn unpack_path_impl(path: String) -> UnpackedPath {
-    let mut unpacked_path: UnpackedPath = UnpackedPath::new();
-
-    for sub_path in path.split('/') {
-        let mut cur_segment = PathSegment::new();
-        if sub_path.ends_with(':') {
-            cur_segment.segment_type = PathSegmentType::Root;
-            cur_segment.name = String::from(sub_path);
-            unpacked_path.push(cur_segment);
-        }
-        else if sub_path == ".." {
-            unpacked_path.pop();
-        }
-        else {
-            cur_segment.segment_type = PathSegmentType::Normal;
-            cur_segment.name = String::from(sub_path);
-            unpacked_path.push(cur_segment);
-        }
-    }
-
-    unpacked_path
-}
-
-fn unpack_path(path: String) -> Result<UnpackedPath> {
-    let unpacked_path = unpack_path_impl(path);
-    result_return_if!(unpacked_path.is_empty(), 0xBAD);
-    Ok(unpacked_path)
-}
-
-fn pack_path(unpacked_path: UnpackedPath, add_root: bool) -> String {
-    let mut path = String::new();
-    if !add_root {
-        path.push('/');
-    }
-    
-    for path_segment in unpacked_path {
-        match path_segment.segment_type {
-            PathSegmentType::Root => {
-                if add_root {
-                    path = format!("{}{}/", path, path_segment.name);
-                }
-            },
-            PathSegmentType::Normal => path = format!("{}{}/", path, path_segment.name),
-            _ => {}
-        }
-    }
-    
-    // Minimum path must be "/"
-    if path.len() > 1 {
-        path.pop();
-    }
-
-    path
-}
-
 pub(crate) struct FileSystemDevice {
-    root_name: PathSegment,
+    mount_name: String,
     fs: mem::Shared<dyn FileSystem>
 }
 
 impl FileSystemDevice {
-    pub fn from(root_name: PathSegment, fs: mem::Shared<dyn FileSystem>) -> Self {
-        Self { root_name, fs }
+    pub fn new(mount_name: String, fs: mem::Shared<dyn FileSystem>) -> Self {
+        Self { mount_name, fs }
     }
 }
+
+unsafe impl Sync for FileSystemDevice {}
+unsafe impl Send for FileSystemDevice {}
+
 pub (crate) static G_DEVICES: sync::Mutex<Vec<FileSystemDevice>> = sync::Mutex::new(Vec::new());
 
-fn find_device_by_name(name: &PathSegment) -> Result<mem::Shared<dyn FileSystem>> {
+fn find_device_by_name(name: &str) -> Result<mem::Shared<dyn FileSystem>> {
         let device_guard = G_DEVICES.lock();
         for device in device_guard.iter() {
-            if device.root_name.name == name.name {
+            if device.mount_name.as_str() == name {
                 return Ok(device.fs.clone());
             }
         }
@@ -733,12 +655,8 @@ pub fn get_fspsrv_session() -> Result<mem::Shared<fsp::srv::FileSystemProxy>> {
 /// 
 /// * `name`: The mount name
 /// * `fs`: The [`FileSystem`] shared object
-pub fn mount(name: &str, fs: mem::Shared<dyn FileSystem>) -> Result<()> {
-    let root_name = PathSegment::from(format!("{}:", name), PathSegmentType::Root);
-
-    G_DEVICES.lock().push(FileSystemDevice::from(root_name, fs));
-
-    Ok(())
+pub fn mount(name: &str, fs: mem::Shared<dyn FileSystem>) {
+    G_DEVICES.lock().push(FileSystemDevice::new(String::from(name), fs));
 }
 
 //// Mounts an IPC [`IFileSystem`]
@@ -749,9 +667,9 @@ pub fn mount(name: &str, fs: mem::Shared<dyn FileSystem>) -> Result<()> {
 /// 
 /// * `name`: The mount name
 /// * `fs_obj`: The [`IFileSystem`] shared object
-pub fn mount_fsp_filesystem(name: &str, fs_obj: mem::Shared<dyn IFileSystem>) -> Result<()> {
+pub fn mount_fsp_filesystem(name: &str, fs_obj: mem::Shared<dyn IFileSystem>) {
     let proxy_fs = mem::Shared::new(ProxyFileSystem::new(fs_obj));
-    mount(name, proxy_fs)
+    mount(name, proxy_fs);
 }
 
 /// Mounts the system's SD card using `fsp-srv` support
@@ -763,7 +681,8 @@ pub fn mount_fsp_filesystem(name: &str, fs_obj: mem::Shared<dyn IFileSystem>) ->
 /// * `name`: The name of the mount that we store for the sdcard
 pub fn mount_sd_card(name: &str) -> Result<()> {
     let sd_fs_obj = get_fspsrv_session()?.lock().open_sd_card_filesystem()?;
-    mount_fsp_filesystem(name, mem::Shared::new(sd_fs_obj))
+    mount_fsp_filesystem(name, mem::Shared::new(sd_fs_obj));
+    Ok(())
 }
 
 /// Unmounts a mounted filesystem
@@ -774,7 +693,7 @@ pub fn mount_sd_card(name: &str) -> Result<()> {
 /// 
 /// * `mount_name`: The mount name
 pub fn unmount(mount_name: &str) {
-    G_DEVICES.lock().deref_mut().retain(|dev| dev.root_name.name.as_str() != mount_name);
+    G_DEVICES.lock().deref_mut().retain(|dev| dev.mount_name.as_str() != mount_name);
 }
 
 /// Unmounts all filesystems
@@ -789,10 +708,9 @@ pub fn unmount_all() {
 /// # Arguments
 /// 
 /// * `path`: The path to use
-pub fn get_path_filesystem(path: String) -> Result<mem::Shared<dyn FileSystem>> {
-    let unpacked_path = unpack_path(path)?;
-    let fs = find_device_by_name(unpacked_path.first().unwrap())?;
-    
+pub fn get_path_filesystem(path: &str) -> Result<mem::Shared<dyn FileSystem>> {
+    let split = path.find(|c| c == ':').ok_or(rc::ResultDeviceNotFound::make())?;
+    let fs = find_device_by_name(&path[..split])?;
     Ok(fs)
 }
 
@@ -803,12 +721,12 @@ pub fn get_path_filesystem(path: String) -> Result<mem::Shared<dyn FileSystem>> 
 /// # Arguments
 /// 
 /// * `path`: The path to use
-pub fn format_path(path: String) -> Result<(mem::Shared<dyn FileSystem>, String)> {
-    let unpacked_path = unpack_path(path)?;
-    let fs = find_device_by_name(unpacked_path.first().unwrap())?;
-    let processed_path = pack_path(unpacked_path, false);
+pub fn format_path<'s>(path: &'s str) -> Result<(mem::Shared<dyn FileSystem>, &'s str)> {
+    let split = path.find(':');
+    let split = split.ok_or(rc::ResultDeviceNotFound::make())?;
+    let fs = find_device_by_name(&path[..split])?;
     
-    Ok((fs, processed_path))
+    Ok((fs, &path[split+1..]))
 }
 
 /// Creates a file
@@ -818,7 +736,7 @@ pub fn format_path(path: String) -> Result<(mem::Shared<dyn FileSystem>, String)
 /// * `path`: The path to use
 /// * `size`: The initial file size, default/IPC behaviour is to fill the file with zeros
 /// * `attribute`: The file attribute, default/IPC behaviour uses this to allow creating "concatenation files" (allowing 32GB+ files in FAT32 filesystems)
-pub fn create_file(path: String, size: usize, attribute: FileAttribute) -> Result<()> {
+pub fn create_file(path: &str, size: usize, attribute: FileAttribute) -> Result<()> {
     let (fs, processed_path) = format_path(path)?;
     let mut fs_handle = fs.lock();
     fs_handle.create_file(processed_path, attribute, size)
@@ -829,7 +747,7 @@ pub fn create_file(path: String, size: usize, attribute: FileAttribute) -> Resul
 /// # Arguments
 /// 
 /// * `path`: The path to use
-pub fn delete_file(path: String) -> Result<()> {
+pub fn delete_file(path: &str) -> Result<()> {
     let (fs, processed_path) = format_path(path)?;
 
     let mut fs_handle = fs.lock();
@@ -841,7 +759,7 @@ pub fn delete_file(path: String) -> Result<()> {
 /// # Arguments
 /// 
 /// * `path`: The path to use
-pub fn create_directory(path: String) -> Result<()> {
+pub fn create_directory(path: &str) -> Result<()> {
     let (fs, processed_path) = format_path(path)?;
 
     let mut fs_handle = fs.lock();
@@ -855,7 +773,7 @@ pub fn create_directory(path: String) -> Result<()> {
 /// # Arguments
 /// 
 /// * `path`: The path to use
-pub fn delete_directory(path: String) -> Result<()> {
+pub fn delete_directory(path: &str) -> Result<()> {
     let (fs, processed_path) = format_path(path)?;
 
     let mut fs_handle = fs.lock();
@@ -867,7 +785,7 @@ pub fn delete_directory(path: String) -> Result<()> {
 /// # Arguments
 /// 
 /// * `path`: The path to use
-pub fn delete_directory_recursively(path: String) -> Result<()> {
+pub fn delete_directory_recursively(path: &str) -> Result<()> {
     let (fs, processed_path) = format_path(path)?;
 
     let mut fs_handle = fs.lock();
@@ -879,7 +797,7 @@ pub fn delete_directory_recursively(path: String) -> Result<()> {
 /// # Arguments
 /// 
 /// * `path`: The path to use
-pub fn clean_directory_recursively(path: String) -> Result<()> {
+pub fn clean_directory_recursively(path: &str) -> Result<()> {
     let (fs, processed_path) = format_path(path)?;
 
     let mut fs_handle = fs.lock();
@@ -893,7 +811,7 @@ pub fn clean_directory_recursively(path: String) -> Result<()> {
 /// # Arguments
 /// 
 /// * `path`: The path to use
-pub fn get_entry_type(path: String) -> Result<DirectoryEntryType> {
+pub fn get_entry_type(path: &str) -> Result<DirectoryEntryType> {
     let (fs, processed_path) = format_path(path)?;
 
     let mut fs_handle = fs.lock();
@@ -944,7 +862,7 @@ pub fn convert_file_open_mode_to_option(mode: FileOpenMode) -> FileOpenOption {
 /// 
 /// * `old_path`: The old path to use
 /// * `new_path`: The new path to use
-pub fn rename_file(old_path: String, new_path: String) -> Result<()> {
+pub fn rename_file(old_path: &str, new_path: &str) -> Result<()> {
     let (old_fs, processed_old_path) = format_path(old_path)?;
     let (new_fs, processed_new_path) = format_path(new_path)?;
     result_return_unless!(::alloc::sync::Arc::<Mutex<(dyn FileSystem + 'static)>>::ptr_eq(&old_fs.inner, &new_fs.inner), rc::ResultNotInSameFileSystem);
@@ -959,7 +877,7 @@ pub fn rename_file(old_path: String, new_path: String) -> Result<()> {
 /// 
 /// * `old_path`: The old path to use
 /// * `new_path`: The new path to use
-pub fn rename_directory(old_path: String, new_path: String) -> Result<()> {
+pub fn rename_directory(old_path: &str, new_path: &str) -> Result<()> {
     let (old_fs, processed_old_path) = format_path(old_path)?;
     let (new_fs, processed_new_path) = format_path(new_path)?;
     result_return_unless!(::alloc::sync::Arc::<Mutex<(dyn FileSystem + 'static)>>::ptr_eq(&old_fs.inner, &new_fs.inner), rc::ResultNotInSameFileSystem);
@@ -978,15 +896,16 @@ pub fn rename_directory(old_path: String, new_path: String) -> Result<()> {
 /// 
 /// * `old_path`: The old path to use
 /// * `new_path`: The new path to use
-pub fn rename(old_path: String, new_path: String) -> Result<()> {
+pub fn rename(old_path: &str, new_path: &str) -> Result<()> {
     let (old_fs, processed_old_path) = format_path(old_path)?;
     let (new_fs, processed_new_path) = format_path(new_path)?;
     result_return_unless!(::alloc::sync::Arc::<Mutex<(dyn FileSystem + 'static)>>::ptr_eq(&old_fs.inner, &new_fs.inner), rc::ResultNotInSameFileSystem);
+    let mut fs_handle = old_fs.lock();
 
-    let entry_type = old_fs.lock().get_entry_type(processed_old_path.clone())?;
+    let entry_type = fs_handle.get_entry_type(processed_old_path)?;
     match entry_type {
-        DirectoryEntryType::Directory => old_fs.lock().rename_directory(processed_old_path, processed_new_path),
-        DirectoryEntryType::File => old_fs.lock().rename_file(processed_old_path, processed_new_path)
+        DirectoryEntryType::Directory => fs_handle.rename_directory(processed_old_path, processed_new_path),
+        DirectoryEntryType::File => fs_handle.rename_file(processed_old_path, processed_new_path)
     }
 }
 
@@ -996,17 +915,18 @@ pub fn rename(old_path: String, new_path: String) -> Result<()> {
 /// 
 /// * `path`: The path to use
 /// * `option`: The open option
-pub fn open_file(path: String, option: FileOpenOption) -> Result<FileAccessor> {
+pub fn open_file(path: &str, option: FileOpenOption) -> Result<FileAccessor> {
     let (fs, processed_path) = format_path(path)?;
+    let mut fs_lock = fs.lock();
 
     let mode = convert_file_open_option_to_mode(option);
-    let file = match fs.lock().open_file(processed_path.clone(), mode) {
+    let file = match fs_lock.open_file(processed_path, mode) {
         Ok(file) => file,
         Err(rc) => {
             if fsp::fsp_sf::rc::ResultPathNotFound::matches(rc) && option.contains(FileOpenOption::Create()) {
                 // Create the file if it doesn't exist and we were told to do so
-                fs.lock().create_file(processed_path.clone(), FileAttribute::None(), 0)?;
-                fs.lock().open_file(processed_path, mode)?
+                fs_lock.create_file(processed_path, FileAttribute::None(), 0)?;
+                fs_lock.open_file(processed_path, mode)?
             }
             else {
                 return Err(rc);
@@ -1020,7 +940,7 @@ pub fn open_file(path: String, option: FileOpenOption) -> Result<FileAccessor> {
     };
     
     let mut file_acc = FileAccessor::new(file);
-    file_acc.seek(offset, Whence::Start)?;
+    file_acc.seek(SeekFrom::Start(offset))?;
     Ok(file_acc)
 }
 
@@ -1030,7 +950,7 @@ pub fn open_file(path: String, option: FileOpenOption) -> Result<FileAccessor> {
 /// 
 /// * `path`: The path to use
 /// * `mode`: The open mode
-pub fn open_directory(path: String, mode: DirectoryOpenMode) -> Result<DirectoryAccessor> {
+pub fn open_directory(path: &str, mode: DirectoryOpenMode) -> Result<DirectoryAccessor> {
     let (fs, processed_path) = format_path(path)?;
 
     let dir = fs.lock().open_directory(processed_path, mode)?;
@@ -1044,9 +964,8 @@ pub fn open_directory(path: String, mode: DirectoryOpenMode) -> Result<Directory
 /// # Argument
 /// 
 /// * `path`: The path to use
-pub fn commit(path: String) -> Result<()> {
-    let unpacked_path = unpack_path(path)?;
-    let fs = find_device_by_name(unpacked_path.first().unwrap())?;
+pub fn commit(path: &str) -> Result<()> {
+    let (fs, _) = format_path(path)?;
     let mut fs_handle = fs.lock();
     fs_handle.commit()
 }
@@ -1056,7 +975,7 @@ pub fn commit(path: String) -> Result<()> {
 /// # Argument
 /// 
 /// * `path`: The path to use
-pub fn get_free_space_size(path: String) -> Result<usize> {
+pub fn get_free_space_size(path: &str) -> Result<usize> {
     let (fs, processed_path) = format_path(path)?;
 
     let mut fs_handle = fs.lock();
@@ -1068,7 +987,7 @@ pub fn get_free_space_size(path: String) -> Result<usize> {
 /// # Argument
 /// 
 /// * `path`: The path to use
-pub fn get_total_space_size(path: String) -> Result<usize> {
+pub fn get_total_space_size(path: &str) -> Result<usize> {
     let (fs, processed_path) = format_path(path)?;
 
     let mut fs_handle = fs.lock();
@@ -1080,7 +999,7 @@ pub fn get_total_space_size(path: String) -> Result<usize> {
 /// # Arguments
 /// 
 /// * `path`: The path to use
-pub fn get_file_time_stamp_raw(path: String) -> Result<FileTimeStampRaw> {
+pub fn get_file_time_stamp_raw(path: &str) -> Result<FileTimeStampRaw> {
     let (fs, processed_path) = format_path(path)?;
 
     let mut fs_handle = fs.lock();
@@ -1096,7 +1015,7 @@ pub fn get_file_time_stamp_raw(path: String) -> Result<FileTimeStampRaw> {
 /// * `in_buf_size`: Input data size
 /// * `out_buf`: Output data
 /// * `out_buf_size`: Output data size
-pub fn query_entry(path: String, query_id: QueryId, in_buf: *const u8, in_buf_size: usize, out_buf: *mut u8, out_buf_size: usize) -> Result<()> {
+pub fn query_entry(path: &str, query_id: QueryId, in_buf: *const u8, in_buf_size: usize, out_buf: *mut u8, out_buf_size: usize) -> Result<()> {
     let (fs, processed_path) = format_path(path)?;
 
     let mut fs_handle = fs.lock();
@@ -1111,7 +1030,7 @@ pub fn query_entry(path: String, query_id: QueryId, in_buf: *const u8, in_buf_si
 /// 
 /// * `path`: The path to use
 #[inline]
-pub fn set_concatenation_file_attribute(path: String) -> Result<()> {
+pub fn set_concatenation_file_attribute(path: &str) -> Result<()> {
     query_entry(path, QueryId::SetConcatenationFileAttribute, ptr::null(), 0, ptr::null_mut(), 0)
 }
 

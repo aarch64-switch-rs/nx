@@ -1,8 +1,5 @@
-use crate::ipc::sf::applet;
 use crate::ipc::sf::sm;
-use crate::ipc::sf::hid;
 use crate::result::*;
-use crate::ipc::sf;
 use crate::service;
 
 pub use crate::ipc::sf::nfp::*;

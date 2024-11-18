@@ -1,13 +1,10 @@
 //! Virtual memory support
 
-use core::arch::aarch64::vmvn_p8;
-use core::ptr::{self, null_mut};
+use core::ptr::null_mut;
 use core::sync::atomic::AtomicPtr;
 
 use crate::result::*;
-use crate::sync::RwLock;
-use crate::svc::{self, MemoryInfo};
-use crate::mem::alloc;
+use crate::svc;
 
 /// Represents a virtual region of memory, represented as pointer-sized uints. i.e. [start, end)
 #[derive(Copy, Clone, Default)]
@@ -63,6 +60,7 @@ pub enum VirtualRegionType {
     LegacyAlias
 }
 
+/// The standard memory regions for NX processes
 pub(crate) struct StandardRegions {
     stack: VirtualRegion,
     heap: VirtualRegion,
@@ -71,15 +69,6 @@ pub(crate) struct StandardRegions {
 }
 
 impl StandardRegions {
-    pub(crate) const fn null() -> Self {
-        Self {
-            stack: VirtualRegion::null(),
-            heap: VirtualRegion::null(),
-            legacy_alias: VirtualRegion::null(),
-            global_address_space: VirtualRegion::null(),
-        }
-    }
-
     pub(crate) const fn is_valid(&self, region: VirtualRegion) -> bool {
         self.global_address_space.contains(region)
     }
@@ -92,35 +81,37 @@ impl StandardRegions {
     }
 }
 
-static STANDARD_VMEM_REGIONS: RwLock<StandardRegions> = RwLock::new(StandardRegions::null());
+static STANDARD_VMEM_REGIONS: generic_once_cell::OnceCell<crate::sync::sys::mutex::Mutex, StandardRegions> = generic_once_cell::OnceCell::new();
+//static mut STANDARD_VMEM_REGIONS: StandardRegions = StandardRegions::null();
 static NEXT_FREE_PTR: AtomicPtr<u8> = AtomicPtr::new(null_mut());
+
 
 /// Gets the current process's address space [`VirtualRegion`]
 /// 
 /// Note that [`initialize()`] must have been called before for the region to be valid (although it's automatically called on [`rrt0`][`crate::rrt0`])
 pub fn get_address_space() -> VirtualRegion {
-    STANDARD_VMEM_REGIONS.read().global_address_space
+    STANDARD_VMEM_REGIONS.get().unwrap().global_address_space.clone()
 }
 
 /// Gets the current process's stack [`VirtualRegion`]
 /// 
 /// Note that [`initialize()`] must have been called before for the region to be valid (although it's automatically called on [`rrt0`][`crate::rrt0`])
 pub fn get_stack_region() -> VirtualRegion {
-    STANDARD_VMEM_REGIONS.read().stack
+    STANDARD_VMEM_REGIONS.get().unwrap().stack.clone()
 }
 
 /// Gets the current process's heap [`VirtualRegion`]
 /// 
 /// Note that [`initialize()`] must have been called before for the region to be valid (although it's automatically called on [`rrt0`][`crate::rrt0`])
 pub fn get_heap_region() -> VirtualRegion {
-    STANDARD_VMEM_REGIONS.read().heap
+    STANDARD_VMEM_REGIONS.get().unwrap().heap.clone()
 }
 
 /// Gets the current process's legacy alias [`VirtualRegion`]
 /// 
 /// Note that [`initialize()`] must have been called before for the region to be valid (although it's automatically called on [`rrt0`][`crate::rrt0`])
 pub fn get_legacy_alias_region() -> VirtualRegion {
-    STANDARD_VMEM_REGIONS.read().legacy_alias
+    STANDARD_VMEM_REGIONS.get().unwrap().legacy_alias.clone()
 }
 
 fn read_region_info(address_info_id: svc::InfoId, size_info_id: svc::InfoId) -> Result<VirtualRegion> {
@@ -140,12 +131,15 @@ fn read_region_info(address_info_id: svc::InfoId, size_info_id: svc::InfoId) -> 
 /// This is automatically called on [`rrt0`][`crate::rrt0`]
 pub fn initialize() -> Result<()> {
     use svc::InfoId::*;
-    let mut guard = STANDARD_VMEM_REGIONS.write();
 
-    guard.global_address_space = read_region_info(AslrRegionAddress, AslrRegionSize)?;
-    guard.stack = read_region_info(StackRegionAddress, StackRegionSize)?;
-    guard.heap = read_region_info(HeapRegionAddress, HeapRegionSize)?;
-    guard.legacy_alias = read_region_info(AliasRegionAddress, AliasRegionSize)?;
+    let _ = STANDARD_VMEM_REGIONS.set(
+        StandardRegions {
+            global_address_space: read_region_info(AslrRegionAddress, AslrRegionSize)?,
+            stack: read_region_info(StackRegionAddress, StackRegionSize)?,
+            heap: read_region_info(HeapRegionAddress, HeapRegionSize)?,
+            legacy_alias: read_region_info(AliasRegionAddress, AliasRegionSize)?
+        }
+    );
 
     Ok(())
 }
@@ -160,28 +154,28 @@ pub fn initialize() -> Result<()> {
 pub fn allocate(size: usize) -> Result<*mut u8> {
     use core::sync::atomic::Ordering::*;
 
-    let vmem_guard = STANDARD_VMEM_REGIONS.read();
+    let vmem_regions = STANDARD_VMEM_REGIONS.get().unwrap();
     let original_free_ptr = NEXT_FREE_PTR.load(Relaxed);
     let mut attempt_addr = original_free_ptr as usize;
 
     loop {
-        if !vmem_guard.global_address_space.contains_addr(attempt_addr) {
-            attempt_addr = vmem_guard.global_address_space.start;
+        if !vmem_regions.global_address_space.contains_addr(attempt_addr) {
+            attempt_addr = vmem_regions.global_address_space.start;
         }
 
         let attempt_region = VirtualRegion {start: attempt_addr, end: attempt_addr + size };
-        if vmem_guard.stack.overlaps(attempt_region) {
-            attempt_addr = vmem_guard.stack.end;
+        if vmem_regions.stack.overlaps(attempt_region) {
+            attempt_addr = vmem_regions.stack.end;
             continue
         }
 
-        if vmem_guard.heap.overlaps(attempt_region) {
-            attempt_addr = vmem_guard.heap.end;
+        if vmem_regions.heap.overlaps(attempt_region) {
+            attempt_addr = vmem_regions.heap.end;
             continue;
         }
 
-        if vmem_guard.legacy_alias.overlaps(attempt_region) {
-            attempt_addr = vmem_guard.legacy_alias.end;
+        if vmem_regions.legacy_alias.overlaps(attempt_region) {
+            attempt_addr = vmem_regions.legacy_alias.end;
             continue;
         }
 

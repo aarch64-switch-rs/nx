@@ -62,7 +62,7 @@ pub fn read_command_response_from_msg_buffer(ctx: &mut CommandContext) {
 
 #[inline(always)]
 pub fn write_request_command_on_msg_buffer(ctx: &mut CommandContext, request_id: u32) {
-    // TIPC directly sends the request ID here, withot wasting data words
+    // TIPC directly sends the request ID here, without wasting data words
     let command_type = request_id + 16;
     write_command_on_msg_buffer(ctx, command_type, ctx.in_params.data_size);
 

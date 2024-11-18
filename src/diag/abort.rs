@@ -1,7 +1,6 @@
 //! Aborting implementation
 
 use crate::result::*;
-use crate::service::fatal::IService;
 use crate::svc;
 use crate::mem::alloc;
 use crate::rrt0;
@@ -61,9 +60,10 @@ fn do_abort(level: AbortLevel, rc: ResultCode) {
     if level == AbortLevel::FatalThrow() {
         #[cfg(feature = "services")]
         {
+            use fatal::IService;
             match service::new_service_object::<fatal::Service>() {
-                Ok(mut fatal) => {
-                    let _ = fatal.throw_fatal_with_policy(sf::ProcessId::new(), rc, fatal::FatalPolicy::ErrorScreen, Default::default());
+                Ok(fatal) => {
+                    let _ = fatal.throw_fatal_with_policy(rc, fatal::FatalPolicy::ErrorScreen, sf::ProcessId::new());
                 },
                 _ => {}
             };

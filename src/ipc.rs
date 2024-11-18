@@ -371,7 +371,10 @@ impl DataWalker {
             self.cur_offset += core::mem::size_of::<T>() as isize;
 
             let data_ref = self.ptr.offset(offset) as *const T;
-            data_ref.read_volatile()
+
+            // even though we have aligned the offsets of the output data, we unfortunately don't know that the raw
+            // data pointer will be aligned for out type, so we need to do an unaligned read (in libnx they just memcpy into the output object)
+            data_ref.read_unaligned()
         }
     }
 
@@ -384,7 +387,9 @@ impl DataWalker {
             self.cur_offset += core::mem::size_of::<T>() as isize;
 
             let data_ref = self.ptr.offset(offset) as *mut T;
-            data_ref.write_volatile(t);
+
+            // As above, we need an unaligned read just incase self.ptr doesn't have sufficiently large alignment
+            data_ref.write_unaligned(t);
         }
     }
 

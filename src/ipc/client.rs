@@ -1,3 +1,5 @@
+use sf::hipc;
+
 use super::*;
 use crate::mem;
 
@@ -66,44 +68,43 @@ impl RequestCommandParameter for sf::ProcessId {
     fn before_request_write(_process_id: &Self, walker: &mut DataWalker, ctx: &mut CommandContext) -> Result<()> {
         // signal to the kernel that we need a PID injected into the request
         ctx.in_params.send_process_id = true;
-        /*if ctx.object_info.uses_cmif_protocol() && WRITE_SLOT {
+        if ctx.object_info.uses_cmif_protocol(){
             // TIPC doesn't set this placeholder space for process IDs
             walker.advance::<u64>();
-        }*/
+        }
         Ok(())
     }
 
     fn before_send_sync_request(process_id: &Self, walker: &mut DataWalker, ctx: &mut CommandContext) -> Result<()> {
         // Same as above
-        /*if ctx.object_info.uses_cmif_protocol() && WRITE_SLOT {
-            walker.advance_set(process_id.inner);
-        }*/
+        if ctx.object_info.uses_cmif_protocol() {
+            walker.advance_set(process_id.process_id);
+        }
         Ok(())
     }
 }
 
 impl !ResponseCommandParameter<sf::ProcessId> for sf::ProcessId {}
 
-impl RequestCommandParameter for sf::CmifPidPlaceholder {
-    fn before_request_write(_process_id: &Self, walker: &mut DataWalker, ctx: &mut CommandContext) -> Result<()> {
-        if ctx.object_info.uses_cmif_protocol() {
-            // TIPC doesn't set this placeholder space for process IDs
-            walker.advance::<u64>();
-        }
+impl RequestCommandParameter for sf::AppletResourceUserId {
+    fn before_request_write(_aruid: &Self, walker: &mut DataWalker, ctx: &mut CommandContext) -> Result<()> {
+        result_return_unless!(ctx.object_info.uses_cmif_protocol(), hipc::rc::ResultUnsupportedOperation);
+
+        // signal to the kernel that we need a PID injected into the request
+        ctx.in_params.send_process_id = true;
+        walker.advance::<u64>();
         Ok(())
     }
 
-    fn before_send_sync_request(val: &Self, walker: &mut DataWalker, ctx: &mut CommandContext) -> Result<()> {
-        // Same as above
-        if ctx.object_info.uses_cmif_protocol() {
-            walker.advance_set(0u64);
-        }
+    fn before_send_sync_request(aruid: &Self, walker: &mut DataWalker, ctx: &mut CommandContext) -> Result<()> {
+        result_return_unless!(ctx.object_info.uses_cmif_protocol(), hipc::rc::ResultUnsupportedOperation);
+        // write the aruid into the slot
+        walker.advance_set(aruid.aruid);
         Ok(())
     }
 }
 
-impl !ResponseCommandParameter<sf::CmifPidPlaceholder> for sf::CmifPidPlaceholder {}
-
+impl !ResponseCommandParameter<sf::AppletResourceUserId> for sf::AppletResourceUserId {}
 
 impl<S: sf::IObject + ?Sized> RequestCommandParameter for mem::Shared<S> {
     fn before_request_write(session: &Self, _walker: &mut DataWalker, ctx: &mut CommandContext) -> Result<()> {

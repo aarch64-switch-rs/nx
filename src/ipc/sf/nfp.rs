@@ -4,7 +4,6 @@ use crate::util;
 use crate::ipc::sf::applet;
 use crate::ipc::sf::mii;
 use crate::ipc::sf::hid;
-use crate::ipc::sf::CmifPidPlaceholder;
 use crate::version;
 
 use super::ncm;
@@ -251,7 +250,7 @@ ipc_sf_define_interface_trait! {
 ipc_sf_define_default_interface_client!(System);
 ipc_sf_define_interface_trait! {
 	trait System {
-        initialize_system [0, version::VersionInterval::all()]: (process_id: sf::ProcessId, aruid: applet::AppletResourceUserId, _reserved: CmifPidPlaceholder, mcu_data: sf::InMapAliasBuffer<McuVersionData>) => ();
+        initialize_system [0, version::VersionInterval::all()]: (aruid: applet::AppletResourceUserId, _reserved: u64, mcu_data: sf::InMapAliasBuffer<McuVersionData>) => ();
         finalize_system [1, version::VersionInterval::all()]: () => ();
         list_devices [2, version::VersionInterval::all()]: (out_devices: sf::OutPointerBuffer<DeviceHandle>) => (count: u32);
         start_detection [3, version::VersionInterval::all()]: (device_handle: DeviceHandle) => ();
