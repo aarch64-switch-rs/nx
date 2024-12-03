@@ -22,21 +22,19 @@ macro_rules! ipc_sf_define_default_interface_client {
         paste::paste! {
             pub struct $t {
                 pub (crate) session: $crate::ipc::sf::Session
-            }        
-
-            impl $crate::ipc::sf::IObject for $t {
-
-                fn get_session(&self) -> & $crate::ipc::sf::Session {
-                    &self.session
-                }
-                fn get_session_mut(&mut self) -> &mut $crate::ipc::sf::Session {
-                    &mut self.session
-                }
             }
 
             impl $crate::ipc::client::IClientObject for $t {
                 fn new(session: $crate::ipc::sf::Session) -> Self {
                     Self { session }
+                }
+
+                fn get_session(&self) -> & $crate::ipc::sf::Session {
+                    &self.session
+                }
+
+                fn get_session_mut(&mut self) -> &mut $crate::ipc::sf::Session {
+                    &mut self.session
                 }
             }
 
@@ -68,20 +66,21 @@ macro_rules! ipc_sf_define_default_interface_client {
             }
 
             impl $crate::ipc::server::ResponseCommandParameter for $t {
+                type CarryState = ();
                 fn before_response_write(_session: &Self, _ctx: &mut $crate::ipc::server::ServerContext) -> Result<()> {
                     // TODO: determine if we need to do this, since this is a server side operation of a client object?
                     // probably needs to be supported right?
                     $crate::ipc::sf::hipc::rc::ResultUnsupportedOperation::make_err()
                 }
             
-                fn after_response_write(_session: &Self, _ctx: &mut $crate::ipc::server::ServerContext) -> Result<()> {
+                fn after_response_write(_session: Self, _carry_state: (), _ctx: &mut $crate::ipc::server::ServerContext) -> Result<()> {
                     // TODO: determine if we need to do this, since this is a server side operation of a client object?
                     // probably needs to be supported right?
                     $crate::ipc::sf::hipc::rc::ResultUnsupportedOperation::make_err()
                 }
             }
 
-            impl [<I $t>] for $t {}
+            impl [<I$t>] for $t {}
         }
     }
 }
@@ -105,21 +104,18 @@ macro_rules! ipc_client_define_object_default {
     ($t:ident) => {
         pub struct $t {
             pub (crate) session: $crate::ipc::sf::Session
-        }        
+        }
 
-        impl $crate::ipc::sf::IObject for $t {
+        impl $crate::ipc::client::IClientObject for $t {
+            fn new(session: $crate::ipc::sf::Session) -> Self {
+                Self { session }
+            }
 
             fn get_session(&self) -> & $crate::ipc::sf::Session {
                 &self.session
             }
             fn get_session_mut(&mut self) -> &mut $crate::ipc::sf::Session {
                 &mut self.session
-            }
-        }
-
-        impl $crate::ipc::client::IClientObject for $t {
-            fn new(session: $crate::ipc::sf::Session) -> Self {
-                Self { session }
             }
         }
 

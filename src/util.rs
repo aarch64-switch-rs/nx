@@ -12,6 +12,8 @@ use core::ptr;
 use core::fmt;
 use core::panic;
 
+use nx_derive::{Request, Response};
+
 pub mod rc;
 
 #[doc(hidden)]
@@ -30,13 +32,12 @@ pub trait IntoInner<Inner> {
     fn into_inner(self) -> Inner;
 }
 /// Represents a 16-byte UUID
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct Uuid {
     /// The UUID byte array
     pub uuid: [u8; 0x10]
 }
-//api_mark_request_command_parameters_types_as_copy!(Uuid);
 
 /// Represents a pair of a pointer and a size
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -138,13 +139,14 @@ impl<const S: usize> crate::ipc::server::RequestCommandParameter<ArrayString<S>>
 }
 
 impl<const S: usize> crate::ipc::server::ResponseCommandParameter for ArrayString<S> {
+    type CarryState = ();
         fn before_response_write(_raw: &Self, ctx: &mut crate::ipc::server::ServerContext) -> Result<()> {
         ctx.raw_data_walker.advance::<Self>();
         Ok(())
     }
 
-    fn after_response_write(raw: &Self, ctx: &mut crate::ipc::server::ServerContext) -> Result<()> {
-        ctx.raw_data_walker.advance_set(*raw);
+    fn after_response_write(raw: Self, _carry_state: (), ctx: &mut crate::ipc::server::ServerContext) -> Result<()> {
+        ctx.raw_data_walker.advance_set(raw);
         Ok(())
     }
 }
@@ -351,13 +353,14 @@ impl<const S: usize> crate::ipc::server::RequestCommandParameter<ArrayWideString
 }
 
 impl<const S: usize> crate::ipc::server::ResponseCommandParameter for ArrayWideString<S> {
+    type CarryState = ();
         fn before_response_write(_raw: &Self, ctx: &mut crate::ipc::server::ServerContext) -> Result<()> {
         ctx.raw_data_walker.advance::<Self>();
         Ok(())
     }
 
-    fn after_response_write(raw: &Self, ctx: &mut crate::ipc::server::ServerContext) -> Result<()> {
-        ctx.raw_data_walker.advance_set(*raw);
+    fn after_response_write(raw: Self, _carry_state: (), ctx: &mut crate::ipc::server::ServerContext) -> Result<()> {
+        ctx.raw_data_walker.advance_set(raw);
         Ok(())
     }
 }

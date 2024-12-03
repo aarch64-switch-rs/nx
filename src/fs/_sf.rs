@@ -13,8 +13,7 @@ use crate::service;
 
 /// Represents a wrapper IPC [`IDirectory`] object around a [`Directory`][`super::Directory`] object
 pub struct Directory {
-    dir_obj: mem::Shared<dyn super::Directory>,
-    dummy_session: sf::Session
+    dir_obj: mem::Shared<dyn super::Directory>
 }
 
 impl Directory {
@@ -25,17 +24,8 @@ impl Directory {
     /// * `dir_obj`: The [`Directory`][`super::Directory`] object to wrap
     pub fn new(dir_obj: mem::Shared<dyn super::Directory>) -> Self {
         Self {
-            dir_obj,
-            dummy_session: sf::Session::new()
+            dir_obj
         }
-    }
-}
-
-impl sf::IObject for Directory {
-    ipc_sf_object_impl_default_command_metadata!();
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.dummy_session
     }
 }
 
@@ -53,8 +43,7 @@ impl server::ISessionObject for Directory {}
 
 /// Represents a wrapper IPC [`IFile`] object around a [`File`][`super::File`] object
 pub struct File {
-    file_obj: mem::Shared<dyn super::File>,
-    dummy_session: sf::Session
+    file_obj: mem::Shared<dyn super::File>
 }
 
 impl File {
@@ -65,17 +54,8 @@ impl File {
     /// * `file_obj`: The [`File`][`super::File`] object to wrap
     pub fn new(file_obj: mem::Shared<dyn super::File>) -> Self {
         Self {
-            file_obj,
-            dummy_session: sf::Session::new()
+            file_obj
         }
-    }
-}
-
-impl sf::IObject for File {
-    ipc_sf_object_impl_default_command_metadata!();
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.dummy_session
     }
 }
 
@@ -113,8 +93,7 @@ impl server::ISessionObject for File {}
 
 /// Represents a wrapper IPC [`IFileSystem`] object around a [`FileSystem`][`super::FileSystem`] object
 pub struct FileSystem {
-    fs_obj: mem::Shared<dyn super::FileSystem>,
-    dummy_session: sf::Session
+    fs_obj: mem::Shared<dyn super::FileSystem>
 }
 
 impl FileSystem {
@@ -125,19 +104,11 @@ impl FileSystem {
     /// * `fs_obj`: The [`FileSystem`][`super::FileSystem`] object to wrap
     pub fn new(fs_obj: mem::Shared<dyn super::FileSystem>) -> Self {
         Self {
-            fs_obj,
-            dummy_session: sf::Session::new()
+            fs_obj
         }
     }
 }
 
-impl sf::IObject for FileSystem {
-    ipc_sf_object_impl_default_command_metadata!();
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.dummy_session
-    }
-}
 /*
 impl IFileSystem for FileSystem {
     fn create_file(&mut self, attribute: fsp::FileAttribute, size: usize, path_buf: sf::InFixedPointerBuffer<fsp::Path>) -> Result<()> {

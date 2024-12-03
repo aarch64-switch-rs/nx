@@ -1,6 +1,8 @@
 pub mod hs;
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+use nx_derive::{Request, Response};
+
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u8)]
 pub enum DescriptorType {
     Device = 0x1,
@@ -18,7 +20,7 @@ pub enum DescriptorType {
     SsEndPointCompanion = 0x30
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 pub enum ClassCode {
     #[default]
@@ -42,7 +44,7 @@ pub enum ClassCode {
     VendorSpec = 0xFF
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]
 pub struct InterfaceDescriptor {
     length: u8,
@@ -57,7 +59,7 @@ pub struct InterfaceDescriptor {
 }
 const_assert!(core::mem::size_of::<InterfaceDescriptor>() == 0x9);
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C, packed)]
 pub struct EndPointDescriptor {
     length: u8,
@@ -68,9 +70,8 @@ pub struct EndPointDescriptor {
     interval: u8
 }
 const_assert!(core::mem::size_of::<EndPointDescriptor>() == 0x7);
-//api_mark_request_command_parameters_types_as_copy!(EndPointDescriptor);
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]
 pub struct SsEndPointCompanionDescriptor {
     length: u8,
@@ -81,7 +82,7 @@ pub struct SsEndPointCompanionDescriptor {
 }
 const_assert!(core::mem::size_of::<SsEndPointCompanionDescriptor>() == 0x6);
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]
 pub struct DeviceDescriptor {
     length: u8,
@@ -101,7 +102,7 @@ pub struct DeviceDescriptor {
 }
 const_assert!(core::mem::size_of::<DeviceDescriptor>() == 0x12);
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C, packed)]
 pub struct ConfigDescriptor {
     length: u8,

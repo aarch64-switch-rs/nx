@@ -4,7 +4,9 @@ use crate::version;
 
 pub use super::AppletResourceUserId;
 
-#[derive(Copy, Clone)]
+use nx_derive::{Request, Response};
+
+#[derive(Request, Response, Copy, Clone)]
 #[repr(C)]
 pub struct AppletAttribute {
     flag: u8,
@@ -18,7 +20,7 @@ impl Default for AppletAttribute {
 }
 const_assert!(core::mem::size_of::<AppletAttribute>() == 0x80);
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
 pub enum ScreenShotPermission {
     Inherit,
@@ -26,7 +28,7 @@ pub enum ScreenShotPermission {
     Disable
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
 pub enum AppletId {
     None = 0x00,
@@ -75,7 +77,7 @@ pub enum AppletId {
     AppletILA2 = 0x3FE
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
 pub enum LibraryAppletMode {
     AllForeground,
@@ -88,66 +90,65 @@ pub enum LibraryAppletMode {
 ipc_sf_define_default_interface_client!(StorageAccessor);
 ipc_sf_define_interface_trait! {
 	trait StorageAccessor {
-        get_size [0, version::VersionInterval::all()]: () => (size: usize);
-        write [10, version::VersionInterval::all()]: (offset: usize, buf: sf::InAutoSelectBuffer<u8>) => ();
-        read [11, version::VersionInterval::all()]: (offset: usize, buf: sf::OutAutoSelectBuffer<u8>) => ();
+        get_size [0, version::VersionInterval::all()]: () => (size: usize) (size: usize);
+        write [10, version::VersionInterval::all()]: (offset: usize, buf: sf::InAutoSelectBuffer<u8>) =>  () ();
+        read [11, version::VersionInterval::all()]: (offset: usize, buf: sf::OutAutoSelectBuffer<u8>) =>  () ();
     }
 }
 
 ipc_sf_define_default_interface_client!(Storage);
 ipc_sf_define_interface_trait! {
 	trait Storage {
-        open [0, version::VersionInterval::all()]: () => (storage_accessor: StorageAccessor);
+        open [0, version::VersionInterval::all()]: () => (storage_accessor: StorageAccessor) (storage_accessor: StorageAccessor);
     }
 }
 
 ipc_sf_define_default_interface_client!(LibraryAppletAccessor);
 ipc_sf_define_interface_trait! {
 	trait LibraryAppletAccessor {
-        get_applet_state_changed_event [0, version::VersionInterval::all()]: () => (applet_state_changed_event: sf::CopyHandle);
-        start [10, version::VersionInterval::all()]: () => ();
-        push_in_data [100, version::VersionInterval::all()]: (storage: Storage) => ();
-        pop_out_data [101, version::VersionInterval::all()]: () => (storage: Storage);
+        get_applet_state_changed_event [0, version::VersionInterval::all()]: () => (applet_state_changed_event: sf::CopyHandle) (applet_state_changed_event: sf::CopyHandle);
+        start [10, version::VersionInterval::all()]: () => () ();
+        push_in_data [100, version::VersionInterval::all()]: (storage: Storage) =>  () ();
+        pop_out_data [101, version::VersionInterval::all()]: () => (storage: Storage) (storage: Storage);
     }
 }
 
-//api_mark_request_command_parameters_types_as_copy!(AppletId, LibraryAppletMode);
+
 ipc_sf_define_default_interface_client!(LibraryAppletCreator);
 ipc_sf_define_interface_trait! {
 	trait LibraryAppletCreator {
-        create_library_applet [0, version::VersionInterval::all()]: (applet_id: AppletId, applet_mode: LibraryAppletMode) => (library_applet_accessor: LibraryAppletAccessor);
-        create_storage [10, version::VersionInterval::all()]: (size: usize) => (storage: Storage);
+        create_library_applet [0, version::VersionInterval::all()]: (applet_id: AppletId, applet_mode: LibraryAppletMode) =>  (library_applet_accessor: LibraryAppletAccessor) (library_applet_accessor: session_type!(LibraryAppletAccessor));
+        create_storage [10, version::VersionInterval::all()]: (size: usize) =>  (storage: Storage) (storage: Storage);
     }
 }
 
 ipc_sf_define_default_interface_client!(WindowController);
 ipc_sf_define_interface_trait! {
 	trait WindowController {
-        get_applet_resource_user_id [1, version::VersionInterval::all()]: () => (aruid: u64);
-        acquire_foreground_rights [10, version::VersionInterval::all()]: () => ();
+        get_applet_resource_user_id [1, version::VersionInterval::all()]: () => (aruid: u64) (aruid: u64);
+        acquire_foreground_rights [10, version::VersionInterval::all()]: () => () ();
     }
 }
 
-//api_mark_request_command_parameters_types_as_copy!(ScreenShotPermission);
 ipc_sf_define_default_interface_client!(SelfController);
 ipc_sf_define_interface_trait! {
 	trait SelfController {
-        set_screenshot_permission [10, version::VersionInterval::all()]: (permission: ScreenShotPermission) => ();
+        set_screenshot_permission [10, version::VersionInterval::all()]: (permission: ScreenShotPermission) =>  () ();
     }
 }
 
 ipc_sf_define_default_interface_client!(LibraryAppletProxy);
 ipc_sf_define_interface_trait! {
 	trait LibraryAppletProxy {
-        get_self_controller [1, version::VersionInterval::all()]: () => (self_controller: SelfController);
-        get_window_controller [2, version::VersionInterval::all()]: () => (window_controller: WindowController);
-        get_library_applet_creator [11, version::VersionInterval::all()]: () => (library_applet_creator: LibraryAppletCreator);
+        get_self_controller [1, version::VersionInterval::all()]: () => (self_controller: SelfController) (self_controller: session_type!(SelfController));
+        get_window_controller [2, version::VersionInterval::all()]: () => (window_controller: WindowController) (window_controller: session_type!(WindowController));
+        get_library_applet_creator [11, version::VersionInterval::all()]: () => (library_applet_creator: LibraryAppletCreator) (library_applet_creator: session_type!(AllSystemAppletProxiesService));
     }
 }
 
 ipc_sf_define_default_interface_client!(AllSystemAppletProxiesService);
 ipc_sf_define_interface_trait! {
 	trait AllSystemAppletProxiesService {
-        open_library_applet_proxy [201, version::VersionInterval::from(version::Version::new(3,0,0))]: (process_id: sf::ProcessId, self_process_handle: sf::CopyHandle, applet_attribute: sf::InMapAliasBuffer<AppletAttribute>) => (library_applet_proxy: LibraryAppletProxy);
+        open_library_applet_proxy [201, version::VersionInterval::from(version::Version::new(3,0,0))]: (process_id: sf::ProcessId, self_process_handle: sf::CopyHandle, applet_attribute: sf::InMapAliasBuffer<AppletAttribute>) =>  (library_applet_proxy: LibraryAppletProxy) (library_applet_proxy: session_type!(LibraryAppletProxy));
     }
 }

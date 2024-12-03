@@ -42,15 +42,11 @@
 #![feature(coerce_unsized)]
 #![feature(linkage)]
 #![feature(unsize)]
-#![feature(const_mut_refs)]
 #![feature(fn_traits)]
 #![feature(negative_impls)]
-#![feature(const_ptr_write)]
-#![feature(const_intrinsic_copy)]
 #![feature(let_chains)]
 #![feature(pointer_is_aligned_to)]
 #![feature(trusted_len)]
-//#![feature(ptr_internals)]
 #![feature(layout_for_ptr)]
 #![feature(set_ptr_value)]
 #![feature(alloc_layout_extra)]
@@ -71,6 +67,8 @@ global_asm!(include_str!("arm.s"));
 global_asm!(include_str!("mem.s"));
 global_asm!(include_str!("svc.s"));
 //global_asm!(include_str!("exception.s"));
+
+extern crate self as nx;
 
 #[macro_use]
 extern crate alloc;

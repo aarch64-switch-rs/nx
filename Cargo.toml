@@ -3,6 +3,10 @@ name = "nx"
 version = "0.1.0"
 authors = ["XorTroll"]
 edition = "2021"
+include = [
+    "src",
+    "nx_derive"
+]
 
 [lib]
 #proc-macro = true
@@ -18,7 +22,8 @@ generic_once_cell = "0.1.1"
 once_cell = { version = "1.19.0", default-features = false, features = ["race"] }
 atomic_enum = "0.3.0"
 zeroize = { version = "1.8.1", features = ["alloc", "aarch64"] }
-unwinding = {version = "0.2.2", default-features = false, features = ["unwinder", "panic", "fde-custom", "personality"]}
+unwinding = {version = "0.2.4", default-features = false, features = ["unwinder", "panic", "fde-custom", "personality"]}
+nx-derive ={ path = "nx-derive/"}
 
 [features]
 services = []
@@ -30,5 +35,6 @@ input = ["services"]
 la = ["services"]
 rand = ["services"]
 
-#[lints.rust]
+[lints.rust]
+internal_features = "allow" # We need this since we're peeking into a Pin while implementing the Threading API.
 #unsafe_op_in_unsafe_fn = "deny"

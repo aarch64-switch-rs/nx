@@ -12,7 +12,7 @@ pub trait ResponseCommandParameter<O> {
     fn after_response_read(walker: &mut DataWalker, ctx: &mut CommandContext) -> Result<O>;
 }
 
-
+/*
 impl<T: Copy> RequestCommandParameter for T {
     default fn before_request_write(_raw: &Self, walker: &mut DataWalker, _ctx: &mut CommandContext) -> Result<()> {
         walker.advance::<Self>();
@@ -23,14 +23,14 @@ impl<T: Copy> RequestCommandParameter for T {
         walker.advance_set(*raw);
         Ok(())
     }
-}
+} 
 
 
 impl<T: Copy> ResponseCommandParameter<T> for T {
     default fn after_response_read(walker: &mut DataWalker, _ctx: &mut CommandContext) -> Result<Self> {
         Ok(walker.advance_get())
     }
-}
+}*/
 
 impl<const A: BufferAttribute, T> RequestCommandParameter for sf::Buffer<A, T> {
     fn before_request_write(buffer: &Self, _walker: &mut DataWalker, ctx: &mut CommandContext) -> Result<()> {
@@ -106,7 +106,7 @@ impl RequestCommandParameter for sf::AppletResourceUserId {
 
 impl !ResponseCommandParameter<sf::AppletResourceUserId> for sf::AppletResourceUserId {}
 
-impl<S: sf::IObject + ?Sized> RequestCommandParameter for mem::Shared<S> {
+impl<S: IClientObject + ?Sized> RequestCommandParameter for mem::Shared<S> {
     fn before_request_write(session: &Self, _walker: &mut DataWalker, ctx: &mut CommandContext) -> Result<()> {
         ctx.in_params.add_object(session.lock().get_session().object_info)
     }
@@ -123,8 +123,12 @@ impl<S: IClientObject + 'static + Sized> ResponseCommandParameter<mem::Shared<S>
     }
 }
 
-pub trait IClientObject: sf::IObject {
+pub trait IClientObject {
     fn new(session: sf::Session) -> Self where Self: Sized;
+
+    fn get_session(&self) -> &sf::Session;
+
+    fn get_session_mut(&mut self) -> &mut sf::Session;
 
     fn get_info(&self) -> ObjectInfo {
         self.get_session().object_info

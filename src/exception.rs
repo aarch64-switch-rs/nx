@@ -1,6 +1,6 @@
 use crate::result::ResultBase;
 use crate::svc;
-
+/*
 /// Armv8 CPU register.
 union CpuRegister {
     /// 64-bit AArch64 register view.
@@ -45,11 +45,6 @@ struct ExceptionContext {
 
     ///< Fault Address Register.
     far: CpuRegister
-} 
-
-#[no_mangle]
-pub(crate) unsafe extern "C" fn __nx_exception_dispatch(_reason: svc::ExceptionType, _stack_top: *mut u8) ->  !{
-    svc::return_from_exception(svc::rc::ResultNotHandled::make());
 }
 
 #[no_mangle]
@@ -57,4 +52,11 @@ pub(crate) unsafe extern "C" fn __nx_exception_dispatch(_reason: svc::ExceptionT
 unsafe extern "C" fn __nx_exception_handler(_ctx: *mut ExceptionContext) -> ! {
     // TODO: user exception handler?
     svc::return_from_exception(svc::rc::ResultNotHandled::make());
+} 
+*/
+
+#[no_mangle]
+pub(crate) unsafe extern "C" fn __nx_exception_dispatch(_reason: svc::ExceptionType, _stack_top: *mut u8) ->  !{
+    svc::return_from_exception(svc::rc::ResultNotHandled::make());
 }
+

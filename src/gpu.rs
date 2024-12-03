@@ -926,8 +926,6 @@ impl Context {
     /// * `vi_kind`: The [`ViServiceKind`]
     /// * `transfer_mem_size`: The transfer memory size to use
     pub fn new(nv_kind: NvDrvServiceKind, vi_kind: ViServiceKind, transfer_mem_size: usize) -> Result<Self> {
-        // Note: need to store a reference of the vi-service since it works as a domain, thus closing the original handle leaves all opened interfaces unusable
-        // Storing it as a IObject shared-ptr since different vi services have different base interfaces...
         let (vi_srv, application_display_srv) = match vi_kind {
             ViServiceKind::Manager => {
                 let vi_srv = service::new_service_object::<vi::ManagerRootService>()?;

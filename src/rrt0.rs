@@ -56,7 +56,6 @@ use core::ptr;
 use core::mem;
 use core::arch::asm;
 use core::ptr::addr_of_mut;
-use core::sync::atomic::AtomicBool;
 
 use atomic_enum::atomic_enum;
 

@@ -3,6 +3,8 @@
 use core::result;
 use core::fmt;
 
+use nx_derive::{Request, Response};
+
 const MODULE_BITS: u32 = 9;
 const DESCRIPTION_BITS: u32 = 13;
 const DEFAULT_VALUE: u32 = 0;
@@ -30,12 +32,11 @@ const fn unpack_description(value: u32) -> u32 {
 /// Results are often displayed/shown, for example, like `2168-0002`, which corresponds to `<2000 + module>-<description>`
 /// 
 /// [`Debug`][`fmt::Debug`] formatting formats the results as a hex-value (`0x4A8`), while [`Display`][`fmt::Display`] formatting formats the result in the format described above (`2168-0002`)
-#[derive(Copy, Clone, PartialEq, Eq, Default)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Default)]
 #[repr(C)]
 pub struct ResultCode {
     value: u32
 }
-//api_mark_request_command_parameters_types_as_copy!(ResultCode);
 
 impl ResultCode {
     /// Creates a [`ResultCode`] from a raw value

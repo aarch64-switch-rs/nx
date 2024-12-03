@@ -5,7 +5,6 @@ use crate::mem;
 use super::*;
 use alloc::sync::Arc;
 use alloc::vec::Vec;
-use sf::IObject;
 use sf::hipc::IHipcManager;
 use sf::hipc::IMitmQueryServiceServer;
 use sf::sm::IUserInterface;
@@ -24,47 +23,28 @@ pub mod rc;
 
 const MAX_COUNT: usize = wait::MAX_OBJECT_COUNT as usize;
 
-pub struct ServerContext<'a> {
-    pub ctx: &'a mut CommandContext,
+pub struct ServerContext<'ctx> {
+    pub ctx: &'ctx mut CommandContext,
     pub raw_data_walker: DataWalker,
     pub domain_table: Option<mem::Shared<DomainTable>>,
-    pub new_sessions: &'a mut Vec<ServerHolder>
+    pub new_sessions: &'ctx mut Vec<ServerHolder>
 }
 
-impl<'a> ServerContext<'a> {
-    pub const fn new(ctx: &'a mut CommandContext, raw_data_walker: DataWalker, domain_table: Option<mem::Shared<DomainTable>>, new_sessions: &'a mut Vec<ServerHolder>) -> Self {
+impl<'ctx> ServerContext<'ctx> {
+    pub const fn new(ctx: &'ctx mut CommandContext, raw_data_walker: DataWalker, domain_table: Option<mem::Shared<DomainTable>>, new_sessions: &'ctx mut Vec<ServerHolder>) -> Self {
         Self { ctx, raw_data_walker, domain_table, new_sessions }
     }
 }
-
-pub type CommandFn = fn(&mut dyn IObject, CommandProtocol, &mut ServerContext) -> Result<()>;
-pub type CommandSpecificFn<T> = fn(&mut T, CommandProtocol, &mut ServerContext) -> Result<()>;
 
 pub trait RequestCommandParameter<O> {
     fn after_request_read(ctx: &mut ServerContext) -> Result<O>;
 }
 
+
 pub trait ResponseCommandParameter {
-    fn before_response_write(var: &Self, ctx: &mut ServerContext) -> Result<()>;
-    fn after_response_write(var: &Self, ctx: &mut ServerContext) -> Result<()>;
-}
-
-impl<T: Copy> RequestCommandParameter<T> for T {
-    default fn after_request_read(ctx: &mut ServerContext) -> Result<Self> {
-        Ok(ctx.raw_data_walker.advance_get())
-    }
-}
-
-impl<T: Copy> ResponseCommandParameter for T {
-    default fn before_response_write(_raw: &Self, ctx: &mut ServerContext) -> Result<()> {
-        ctx.raw_data_walker.advance::<Self>();
-        Ok(())
-    }
-
-    default fn after_response_write(raw: &Self, ctx: &mut ServerContext) -> Result<()> {
-        ctx.raw_data_walker.advance_set(*raw);
-        Ok(())
-    }
+    type CarryState: 'static;
+    fn before_response_write(var: &Self, ctx: &mut ServerContext) -> Result<Self::CarryState>;
+    fn after_response_write(var: Self, carry_state: Self::CarryState, ctx: &mut ServerContext) -> Result<()>;
 }
 
 impl<const A: BufferAttribute, T> RequestCommandParameter<sf::Buffer<A, T>> for sf::Buffer<A, T> {
@@ -91,11 +71,13 @@ impl<const M: HandleMode> RequestCommandParameter<sf::Handle<M>> for sf::Handle<
 }
 
 impl<const M: HandleMode> ResponseCommandParameter for sf::Handle<M> {
+    type CarryState = ();
+
     fn before_response_write(handle: &Self, ctx: &mut ServerContext) -> Result<()> {
         ctx.ctx.out_params.push_handle(handle.clone())
     }
 
-    fn after_response_write(_handle: &Self, _ctx: &mut ServerContext) -> Result<()> {
+    fn after_response_write(_handle: Self, _carry_state: (), _ctx: &mut ServerContext) -> Result<()> {
         Ok(())
     }
 }
@@ -133,14 +115,14 @@ impl RequestCommandParameter<sf::AppletResourceUserId> for sf::AppletResourceUse
 impl !ResponseCommandParameter for sf::AppletResourceUserId {}
 
 
-impl<S: sf::IObject> RequestCommandParameter<S> for Arc<Mutex<S>> {
+impl<S: super::client::IClientObject> RequestCommandParameter<S> for Arc<Mutex<S>> {
     default fn after_request_read(_ctx: &mut ServerContext) -> Result<S> {
         // TODO: implement this (added this placeholder impl for interfaces to actually be valid)
         sf::hipc::rc::ResultUnsupportedOperation::make_err()
     }
 }
 
-impl<S: sf::IObject + ?Sized> RequestCommandParameter<mem::Shared<S>> for mem::Shared<S> {
+impl<S: super::client::IClientObject + ?Sized> RequestCommandParameter<mem::Shared<S>> for mem::Shared<S> {
     fn after_request_read(_ctx: &mut ServerContext) -> Result<Self> {
         // TODO: implement this (added this placeholder impl for interfaces to actually be valid)
         sf::hipc::rc::ResultUnsupportedOperation::make_err()
@@ -148,31 +130,32 @@ impl<S: sf::IObject + ?Sized> RequestCommandParameter<mem::Shared<S>> for mem::S
 }
 
 
-impl ResponseCommandParameter for mem::Shared<dyn ISessionObject> {
-    fn before_response_write(session: &Self, ctx: &mut ServerContext) -> Result<()> {
-        let session_copy: mem::Shared<dyn ISessionObject> = session.clone();
-
-        //let session_copy: mem::Shared<dyn ISessionObject> = unsafe {core::mem::transmute::<mem::Shared<S>, mem::Shared<dyn ISe>>(session_copy)};
+impl<S: ISessionObject + 'static> ResponseCommandParameter for S {
+    type CarryState = u32;
+    fn before_response_write(_session: &Self, ctx: &mut ServerContext) -> Result<u32> {
         if ctx.ctx.object_info.is_domain() {
-            let domain_table = ctx.domain_table.clone().ok_or(rc::ResultDomainNotFound::make())?;
-            let domain_object_id = domain_table.lock().allocate_id()?;
+            let domain_object_id = ctx.domain_table.as_mut().ok_or(rc::ResultDomainNotFound::make())?.lock().allocate_id()?;
             ctx.ctx.out_params.push_domain_object(domain_object_id)?;
-            domain_table.lock().domains.push(ServerHolder::new_domain_session(0, domain_object_id, session_copy));
-            Ok(())
+            Ok(domain_object_id)
         }
         else {
             let (server_handle, client_handle) = svc::create_session(false, 0)?;
             ctx.ctx.out_params.push_handle(sf::MoveHandle::from(client_handle))?;
-            ctx.new_sessions.push(ServerHolder::new_session(server_handle, session_copy));
-            Ok(())
+            Ok(server_handle)
         }
     }
 
-    fn after_response_write(_session: &Self, _ctx: &mut ServerContext) -> Result<()> {
+    fn after_response_write(session: Self, carry_state: u32, ctx: &mut ServerContext) -> Result<()> {
+        if ctx.ctx.object_info.is_domain() {
+            ctx.domain_table.as_mut().ok_or(rc::ResultDomainNotFound::make())?.lock().domains.push(ServerHolder::new_domain_session(0, carry_state, mem::Shared::new(session)))
+        } else {
+            ctx.new_sessions.push(ServerHolder::new_session(carry_state, mem::Shared::new(session)));
+        }
         Ok(())
     }
 }
-pub trait ISessionObject: sf::IObject {
+
+pub trait ISessionObject {
     fn try_handle_request_by_id(&mut self, req_id: u32, protocol: CommandProtocol, server_ctx: &mut ServerContext) -> Option<Result<()>>;
 }
 
@@ -338,9 +321,14 @@ impl ServerHolder {
             #[cfg(feature = "services")]
             {
                 let mut sm = service::new_named_port_object::<sm::UserInterface>()?;
-                match self.is_mitm_service {
-                    true => sm.atmosphere_uninstall_mitm(self.service_name)?,
-                    false => sm.unregister_service(self.service_name)?
+                match (self.is_mitm_service, self.handle_type) {
+                    (true, WaitHandleType::Server) => {
+                        debug_assert!(self.info.owns_handle, "MitM server objects should always own their handles.");
+                        sm.atmosphere_uninstall_mitm(self.service_name)?;
+                        sf::Session::from(self.mitm_forward_info).close();
+                    },
+                    (false, _) => sm.unregister_service(self.service_name)?,
+                    _ => {}
                 };
                 sm.detach_client(sf::ProcessId::new())?;
             }
@@ -350,7 +338,6 @@ impl ServerHolder {
         if self.info.owns_handle {
             svc::close_handle(self.info.handle)?;
         }
-        sf::Session::from(self.mitm_forward_info).close();
         Ok(())
     }
 }
@@ -365,8 +352,7 @@ pub struct HipcManager<'a> {
     server_holder: &'a mut ServerHolder,
     pointer_buf_size: usize,
     pub cloned_object_server_handle: svc::Handle,
-    pub cloned_object_forward_handle: svc::Handle,
-    dummy_session: sf::Session
+    pub cloned_object_forward_handle: svc::Handle
 }
 
 impl<'a> HipcManager<'a> {
@@ -375,8 +361,7 @@ impl<'a> HipcManager<'a> {
             server_holder,
             pointer_buf_size,
             cloned_object_server_handle: svc::INVALID_HANDLE,
-            cloned_object_forward_handle: svc::INVALID_HANDLE,
-            dummy_session: sf::Session::new()
+            cloned_object_forward_handle: svc::INVALID_HANDLE
         }
     }
 
@@ -386,18 +371,6 @@ impl<'a> HipcManager<'a> {
 
     pub fn clone_object(&self) -> Result<ServerHolder> {
         self.server_holder.clone_self(self.cloned_object_server_handle, self.cloned_object_forward_handle)
-    }
-}
-
-impl<'a> sf::IObject for HipcManager<'a> {
-    //ipc_sf_object_impl_default_command_metadata!();
-
-    fn get_session(&self) -> &sf::Session {
-        &self.dummy_session
-    }
-
-    fn get_session_mut(&mut self) -> &mut sf::Session {
-        &mut self.dummy_session
     }
 }
 
@@ -442,15 +415,13 @@ impl<'a> ISessionObject for HipcManager<'a> {
 }
 
 pub struct MitmQueryService<S: IMitmService> {
-    phantom: core::marker::PhantomData<S>,
-    dummy_session: sf::Session
+    _phantom: core::marker::PhantomData<S>
 }
 
 impl<S: IMitmService> MitmQueryService<S> {
     pub fn new() -> Self {
         Self {
-            phantom: core::marker::PhantomData,
-            dummy_session: sf::Session::new()
+            _phantom: core::marker::PhantomData,
         }
     }
 }
@@ -461,17 +432,6 @@ impl<S: IMitmService> Default for MitmQueryService<S> {
     }
 }
 
-impl<S: IMitmService> sf::IObject for MitmQueryService<S> {
-    //ipc_sf_object_impl_default_command_metadata!();
-
-    fn get_session(&self) -> &sf::Session {
-        &self.dummy_session
-    }
-
-    fn get_session_mut(&mut self) -> &mut sf::Session {
-        &mut self.dummy_session
-    }
-}
 
 impl<S: IMitmService> IMitmQueryServiceServer for MitmQueryService<S> {
     fn should_mitm(&mut self, info: sm::mitm::MitmProcessInfo) -> Result<bool> {
@@ -835,7 +795,7 @@ impl<const P: usize> ServerManager<P> {
 
     pub fn process(&mut self) -> Result<()> {
         let handles = self.prepare_wait_handles();
-        let index = wait::wait_handles(handles, -1)?;
+        let index = wait::wait_handles(handles, 100_000)?;
 
         let signaled_handle = self.wait_handles[index];
         self.process_signaled_handle(signaled_handle)?;
@@ -846,6 +806,9 @@ impl<const P: usize> ServerManager<P> {
     pub fn loop_process(&mut self) -> Result<()> {
         loop {
             if let Err(rc) = self.process() {
+                if svc::rc::ResultTimedOut::matches(rc) {
+                    continue;
+                }
                 // TODO: handle results properly here
                 if svc::rc::ResultCancelled::matches(rc) {
                     break;

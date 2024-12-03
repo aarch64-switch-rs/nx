@@ -9,7 +9,9 @@ use crate::service;
 #[cfg(feature = "services")]
 use crate::service::set;
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+use nx_derive::{Request, Response};
+
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 pub enum Age {
     Young,
@@ -19,7 +21,7 @@ pub enum Age {
     All
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 pub enum Gender {
     Male,
@@ -28,7 +30,7 @@ pub enum Gender {
     All
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 pub enum FaceColor {
     Black,
@@ -45,7 +47,7 @@ define_bit_enum! {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u32)]
 pub enum SpecialKeyCode {
     #[default]
@@ -55,7 +57,7 @@ pub enum SpecialKeyCode {
 
 pub type CreateId = util::Uuid;
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 pub enum HairType {
     #[default]
@@ -193,7 +195,7 @@ pub enum HairType {
     LongFrontTwoBackPonyTails
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 pub enum MoleType {
     #[default]
@@ -201,7 +203,7 @@ pub enum MoleType {
     OneDot
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 pub enum HairFlip {
     #[default]
@@ -211,7 +213,7 @@ pub enum HairFlip {
 
 pub type CommonColor = u8;
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 pub enum EyeType {
     #[default]
@@ -277,7 +279,7 @@ pub enum EyeType {
     WhiteLarge
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 pub enum MouthType {
     #[default]
@@ -319,7 +321,7 @@ pub enum MouthType {
     Kiss
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 pub enum FontRegion {
     #[default]
@@ -329,7 +331,7 @@ pub enum FontRegion {
     Taiwan
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 pub enum FacelineType {
     #[default]
@@ -347,7 +349,7 @@ pub enum FacelineType {
     AngularSmall
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 pub enum FacelineColor {
     #[default]
@@ -363,7 +365,7 @@ pub enum FacelineColor {
     Espresso
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 pub enum FacelineWrinkle {
     #[default]
@@ -381,7 +383,7 @@ pub enum FacelineWrinkle {
     FoldsCrowsFrown
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 pub enum FacelineMake {
     #[default]
@@ -399,7 +401,7 @@ pub enum FacelineMake {
     StubbleBeard
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 pub enum EyebrowType {
     #[default]
@@ -429,7 +431,7 @@ pub enum EyebrowType {
     None
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 pub enum NoseType {
     #[default]
@@ -453,7 +455,7 @@ pub enum NoseType {
     ArrowLarge
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 pub enum BeardType {
     #[default]
@@ -465,7 +467,7 @@ pub enum BeardType {
     Full
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 pub enum MustacheType {
     #[default]
@@ -477,7 +479,7 @@ pub enum MustacheType {
     Toothbrush
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 pub enum GlassType {
     #[default]
@@ -503,7 +505,7 @@ pub enum GlassType {
     OpaqueAviator
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct CharInfo {
     pub id: CreateId,
@@ -561,7 +563,7 @@ pub struct CharInfo {
 }
 const_assert!(core::mem::size_of::<CharInfo>() == 0x58);
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
 pub enum CoreDataElement {
     HairType,
@@ -615,7 +617,7 @@ pub enum CoreDataElement {
     MoleScale
 }
 
-#[derive(Copy, Clone)]
+#[derive(Request, Response, Copy, Clone)]
 #[repr(C)]
 pub struct CoreDataElementInfo {
     pub byte_offset: u32,
@@ -1024,7 +1026,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct CoreData {
     pub data: [u8; 0x1C],
@@ -1677,7 +1679,7 @@ pub fn get_device_id() -> Result<CreateId> {
     service::new_service_object::<set::SystemSettingsServer>()?.get_mii_author_id()
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct StoreData {
     pub core_data: CoreData,
@@ -1735,22 +1737,21 @@ impl StoreData {
     }
 }
 
-//api_mark_request_command_parameters_types_as_copy!(SpecialKeyCode, CharInfo);
 
 ipc_sf_define_default_interface_client!(DatabaseService);
 ipc_sf_define_interface_trait! {
 	trait DatabaseService {
-        is_updated [0, version::VersionInterval::all()]: (flag: SourceFlag) => (updated: bool);
-        is_full [1, version::VersionInterval::all()]: () => (full: bool);
-        get_count [2, version::VersionInterval::all()]: (flag: SourceFlag) => (count: u32);
-        get_1 [4, version::VersionInterval::all()]: (flag: SourceFlag, out_char_infos: sf::OutMapAliasBuffer<CharInfo>) => (count: u32);
-        build_random [6, version::VersionInterval::all()]: (age: sf::EnumAsPrimitiveType<Age, u32>, gender: sf::EnumAsPrimitiveType<Gender, u32>, race: sf::EnumAsPrimitiveType<FaceColor, u32>) => (char_info: CharInfo);
+        is_updated [0, version::VersionInterval::all()]: (flag: SourceFlag) =>  (updated: bool) (updated: bool);
+        is_full [1, version::VersionInterval::all()]: () => (full: bool) (full: bool);
+        get_count [2, version::VersionInterval::all()]: (flag: SourceFlag) =>  (count: u32) (count: u32);
+        get_1 [4, version::VersionInterval::all()]: (flag: SourceFlag, out_char_infos: sf::OutMapAliasBuffer<CharInfo>) =>  (count: u32) (count: u32);
+        build_random [6, version::VersionInterval::all()]: (age: sf::EnumAsPrimitiveType<Age, u32>, gender: sf::EnumAsPrimitiveType<Gender, u32>, race: sf::EnumAsPrimitiveType<FaceColor, u32>) =>  (char_info: CharInfo) (char_info: CharInfo);
     }
 }
 
 ipc_sf_define_default_interface_client!(StaticService);
 ipc_sf_define_interface_trait! {
 	trait StaticService {
-        get_database_service [0, version::VersionInterval::all()]: (key_code: SpecialKeyCode) => (database_service: DatabaseService);
+        get_database_service [0, version::VersionInterval::all()]: (key_code: SpecialKeyCode) =>  (database_service: DatabaseService) (database_service: session_type!(DatabaseService));
     }
 }

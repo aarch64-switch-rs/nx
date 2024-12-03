@@ -44,7 +44,7 @@ macro_rules! define_bit_enum {
         }
     ) => {
         $(#[$a_meta])*
-        #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+        #[derive($crate::ipc::sf::Request, $crate::ipc::sf::Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
         #[repr(C)]
         pub struct $name($base);
         

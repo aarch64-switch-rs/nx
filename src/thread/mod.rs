@@ -625,13 +625,13 @@ impl Inner {
 /// [`crate::panic::resume_unwind`]: crate::panic::resume_unwind
 pub type Result<T> = core::result::Result<T, Box<dyn core::any::Any + Send + 'static>>;
 
-// This packet is used to communicate the return value between the spawned
-// thread and the rest of the program. It is shared through an `Arc` and
-// there's no need for a mutex here because synchronization happens with `join()`
-// (the caller will never read this packet until the thread has exited).
-//
-// An Arc to the packet is stored into a `JoinInner` which in turns is placed
-// in `JoinHandle`.
+/// This packet is used to communicate the return value between the spawned
+/// thread and the rest of the program. It is shared through an `Arc` and
+/// there's no need for a mutex here because synchronization happens with `join()`
+/// (the caller will never read this packet until the thread has exited).
+///
+/// An Arc to the packet is stored into a `JoinInner` which in turns is placed
+/// in `JoinHandle`.
 struct Packet<'scope, T> {
     scope: Option<Arc<scoped::ScopeData>>,
     result: UnsafeCell<Option<Result<T>>>,
@@ -1091,7 +1091,7 @@ pub mod imp {
                 _internal_condvar_storage: 0,
                 _nn_sdk_internal_tls_type: null_mut(),
                 __nx_thread_pointer: null(),
-                __nx_thread: LibNxThread { handle: svc::INVALID_HANDLE, owns_stack_mem:true , stack_mem: null_mut(), stack_mirror: null_mut(), _stack_sz: 0, _tls_array: null_mut(), _next: null_mut(), _prev_next: null_mut() }
+                __nx_thread: LibNxThread { handle: svc::INVALID_HANDLE, _owns_stack_mem:true , _stack_mem: null_mut(), _stack_mirror: null_mut(), _stack_sz: 0, _tls_array: null_mut(), _next: null_mut(), _prev_next: null_mut() }
             }
         }
 
@@ -1118,7 +1118,8 @@ pub mod imp {
 
             unsafe {
                 // SAFETY: we don't cause any moves here, so the pin invariant is met.
-                
+                // We also have to use `__pointer` here as we can only use deref_mut for types that are `UnPin`
+                // which this isn't (internal self-references). There is no guarantee this won't break between compiler versions unfortunately.
                 let arc = Arc::get_mut_unchecked(&mut self.__pointer);
 
                 // we can only do this when the remote thread has not yet started though
@@ -1167,11 +1168,11 @@ pub mod imp {
         /// Thread handle
         pub handle: u32,
         /// Whether the thread should clean up it's stack when it
-        owns_stack_mem: bool,
+        _owns_stack_mem: bool,
         /// Pointer to stack memory.
-        stack_mem: *mut u8,
+        _stack_mem: *mut u8,
         /// Pointer to stack memory mirror.
-        stack_mirror: *mut u8,
+        _stack_mirror: *mut u8,
         /// Stack size.
         _stack_sz: usize,
         // array of thread local objects

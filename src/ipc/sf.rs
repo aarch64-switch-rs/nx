@@ -1,7 +1,8 @@
 use super::*;
-use crate::{util, version};
-use alloc::string::String;
-use alloc::vec::Vec;
+use crate::util;
+use alloc::{string::String, vec::Vec};
+
+pub use nx_derive::{Request, Response};
 
 pub struct Buffer<const A: BufferAttribute, T> {
     buf: *mut T,
@@ -105,12 +106,26 @@ impl<const A: BufferAttribute, T> Buffer<A, T> {
             *self.buf = t;
         }
     }
+    
+    pub fn get_maybe_unaligned(&self) -> Vec<T> {
+        assert!(!self.buf.is_null());
+        let mut out = Vec::with_capacity(self.count);
+        for index in 0..self.count {
+            // SAFETY: we have already asserted on non-null `self.buf`
+            out.push(unsafe {core::ptr::read_unaligned(self.buf.add(index))});
+        }
 
-    pub fn get_slice(&self) -> &[T] {
+        out
+    }
+
+    /// Unfortunately this doesn't seem to have an alignment guarantee as the clients may ignore it (e.g. TOTK)
+    #[deprecated]
+    pub unsafe fn get_slice(&self) -> &[T] {
         unsafe { core::slice::from_raw_parts(self.buf as *const T, self.count) }
     }
 
-    pub fn get_mut_slice(&mut self) -> &mut [T] {
+    #[deprecated]
+    pub unsafe fn get_mut_slice(&mut self) -> &mut [T] {
         unsafe { core::slice::from_raw_parts_mut(self.buf, self.count) }
     }
 }
@@ -253,6 +268,11 @@ impl AppletResourceUserId {
         Self { process_id, aruid }
     }
 
+    #[cfg(feature = "services")]
+    pub fn from_global() -> Self {
+        Self {process_id: 0, aruid: nx::service::applet::GLOBAL_ARUID.load(core::sync::atomic::Ordering::SeqCst)}
+    }
+
     pub const fn new(aruid: u64) -> Self {
         Self { process_id: 0, aruid }
     }
@@ -304,13 +324,14 @@ impl<E: Copy + Clone, T: Copy + Clone> server::RequestCommandParameter<EnumAsPri
 impl<E: Copy + Clone, T: Copy + Clone> server::ResponseCommandParameter
     for EnumAsPrimitiveType<E, T>
 {
+    type CarryState = ();
     fn before_response_write(_raw: &Self, ctx: &mut server::ServerContext) -> Result<()> {
         ctx.raw_data_walker.advance::<Self>();
         Ok(())
     }
 
-    fn after_response_write(raw: &Self, ctx: &mut server::ServerContext) -> Result<()> {
-        ctx.raw_data_walker.advance_set(*raw);
+    fn after_response_write(raw: Self, _carry_state: (), ctx: &mut server::ServerContext) -> Result<()> {
+        ctx.raw_data_walker.advance_set(raw);
         Ok(())
     }
 }
@@ -417,52 +438,6 @@ impl Drop for Session {
     fn drop(&mut self) {
         self.close();
     }
-}
-
-pub struct CommandMetadata {
-    pub rq_id: u32,
-    pub command_fn: server::CommandFn,
-    pub ver_intv: version::VersionInterval,
-}
-
-pub type CommandMetadataTable = Vec<CommandMetadata>;
-
-impl CommandMetadata {
-    pub const fn new(
-        rq_id: u32,
-        command_fn: server::CommandFn,
-        ver_intv: version::VersionInterval,
-    ) -> Self {
-        Self {
-            rq_id,
-            command_fn,
-            ver_intv,
-        }
-    }
-
-    pub fn matches(&self, rq_id: u32) -> bool {
-        let cur_ver = version::get_version();
-        (self.rq_id == rq_id) && self.ver_intv.contains(cur_ver)
-    }
-}
-
-// This trait is analogous to N's nn::sf::IServiceObject type - the base trait for any kind of IPC interface
-// IClientObject / {IService, INamedPort} (on client module) and ISessionObject / {IServerObject, IMitmServerObject} (on server module) are superior types for specific kind of objects
-
-// TODO: make use of the command metadata on client side too (for instance for checking if the command is valid on the current system version, etc.)
-// TODO: think of a proper way to migrate call_self_server_command / command_fn stuff to server and avoid it being on every single IObject?
-
-pub trait IObject {
-    fn get_session(&self) -> &Session;
-
-    fn get_session_mut(&mut self) -> &mut Session;
-
-    /*fn get_command_metadata_table(&self) -> CommandMetadataTable;
-
-    fn call_self_server_command(&mut self, command_fn: server::CommandFn, protocol: CommandProtocol, ctx: &mut server::ServerContext) -> Result<()> {
-        let self_fn: server::CommandSpecificFn<Self> = unsafe { core::mem::transmute(command_fn) };
-        (self_fn)(self, protocol, ctx)
-    }*/
 }
 
 pub mod sm;

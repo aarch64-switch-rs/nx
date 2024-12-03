@@ -162,5 +162,6 @@ pub fn set_version(ver: Version) {
 /// 
 /// This value is set on [`rrt0`][`crate::rrt0`] to the actual system version
 pub fn get_version() -> Version {
-    G_VERSION.get_val()
+    let val = G_VERSION.get_val();
+    val
 }

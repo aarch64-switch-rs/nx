@@ -13,8 +13,7 @@ use crate::fs::sf as fs_sf;
 
 /// Represents an IPC [`IFileSystem`] object wrapping around a FS subdirectory path
 pub struct FileSystem {
-    sub_dir: String,
-    dummy_session: sf::Session
+    sub_dir: String
 }
 
 impl FileSystem {
@@ -25,22 +24,13 @@ impl FileSystem {
     /// * `sub_dir`: The subdirectory path to wrap
     pub fn new(sub_dir: String) -> Self {
         Self {
-            sub_dir,
-            dummy_session: sf::Session::new()
+            sub_dir
         }
     }
 
     fn make_path(&self, path_buf: &sf::InFixedPointerBuffer<fsp::Path>) -> Result<String> {
         let fs_path = path_buf.get_var().get_string()?;
         Ok(format!("{}/{}", self.sub_dir, fs_path))
-    }
-}
-
-impl sf::IObject for FileSystem {
-    ipc_sf_object_impl_default_command_metadata!();
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.dummy_session
     }
 }
 

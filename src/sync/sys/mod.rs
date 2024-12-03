@@ -1,4 +1,4 @@
-use core::arch::asm;
+//use core::arch::asm;
 
 use crate::thread;
 
@@ -10,6 +10,7 @@ fn get_current_thread_handle() -> u32 {
     unsafe {(*thread::get_thread_local_region()).nx_thread_vars.handle}
 }
 
+/*
 #[inline(always)]
 unsafe fn load_exclusive(ptr: *const u32) -> u32 {
     let value: u32;
@@ -42,4 +43,4 @@ fn clear_exclusive() {
     unsafe {
         asm!("clrex");
     }
-}
+}*/
