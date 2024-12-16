@@ -192,10 +192,10 @@ impl<'scope, 'env> Scope<'scope, 'env> {
 impl Builder {
     /// Spawns a new scoped thread using the settings set through this `Builder`.
     ///
-    /// Unlike [`Scope::spawn`], this method yields an [`io::Result`] to
+    /// Unlike [`Scope::spawn`], this method yields a [`Result`] to
     /// capture any failure to create the thread at the OS level.
     ///
-    /// [`io::Result`]: crate::io::Result
+    /// [`Result`]: crate::result::Result
     ///
     /// # Panics
     ///
@@ -281,7 +281,7 @@ impl<'scope, T> ScopedJoinHandle<'scope, T> {
     ///
     /// If the associated thread panics, [`Err`] is returned with the panic payload.
     ///
-    /// [atomic memory orderings]: crate::sync::atomic
+    /// [atomic memory orderings]: core::sync::atomic
     ///
     /// # Examples
     ///

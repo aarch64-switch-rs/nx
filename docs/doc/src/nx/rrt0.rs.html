@@ -1,6 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/rrt0.rs`."><title>rrt0.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0-nightly (c9f8f3438 2024-03-27)" data-channel="nightly" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
-            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../nx/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/rrt0.rs`."><title>rrt0.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-42caa33d.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.85.0-nightly (a47555110 2024-11-22)" data-channel="nightly" data-search-js="search-92e6798f.js" data-settings-js="settings-0f613d39.js" ><script src="../../static.files/storage-59e33391.js"></script><script defer src="../../static.files/src-script-56102188.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">nx/</div>rrt0.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -357,7 +356,62 @@
 <a href="#355" id="355">355</a>
 <a href="#356" id="356">356</a>
 <a href="#357" id="357">357</a>
-</pre></div><pre class="rust"><code><span class="doccomment">//! Initial code/entrypoint support and utils
+<a href="#358" id="358">358</a>
+<a href="#359" id="359">359</a>
+<a href="#360" id="360">360</a>
+<a href="#361" id="361">361</a>
+<a href="#362" id="362">362</a>
+<a href="#363" id="363">363</a>
+<a href="#364" id="364">364</a>
+<a href="#365" id="365">365</a>
+<a href="#366" id="366">366</a>
+<a href="#367" id="367">367</a>
+<a href="#368" id="368">368</a>
+<a href="#369" id="369">369</a>
+<a href="#370" id="370">370</a>
+<a href="#371" id="371">371</a>
+<a href="#372" id="372">372</a>
+<a href="#373" id="373">373</a>
+<a href="#374" id="374">374</a>
+<a href="#375" id="375">375</a>
+<a href="#376" id="376">376</a>
+<a href="#377" id="377">377</a>
+<a href="#378" id="378">378</a>
+<a href="#379" id="379">379</a>
+<a href="#380" id="380">380</a>
+<a href="#381" id="381">381</a>
+<a href="#382" id="382">382</a>
+<a href="#383" id="383">383</a>
+<a href="#384" id="384">384</a>
+<a href="#385" id="385">385</a>
+<a href="#386" id="386">386</a>
+<a href="#387" id="387">387</a>
+<a href="#388" id="388">388</a>
+<a href="#389" id="389">389</a>
+<a href="#390" id="390">390</a>
+<a href="#391" id="391">391</a>
+<a href="#392" id="392">392</a>
+<a href="#393" id="393">393</a>
+<a href="#394" id="394">394</a>
+<a href="#395" id="395">395</a>
+<a href="#396" id="396">396</a>
+<a href="#397" id="397">397</a>
+<a href="#398" id="398">398</a>
+<a href="#399" id="399">399</a>
+<a href="#400" id="400">400</a>
+<a href="#401" id="401">401</a>
+<a href="#402" id="402">402</a>
+<a href="#403" id="403">403</a>
+<a href="#404" id="404">404</a>
+<a href="#405" id="405">405</a>
+<a href="#406" id="406">406</a>
+<a href="#407" id="407">407</a>
+<a href="#408" id="408">408</a>
+<a href="#409" id="409">409</a>
+<a href="#410" id="410">410</a>
+<a href="#411" id="411">411</a>
+<a href="#412" id="412">412</a>
+<a href="#413" id="413">413</a></pre></div><pre class="rust"><code><span class="doccomment">//! Initial code/entrypoint support and utils
 //! 
 //! # Custom entrypoint
 //! 
@@ -375,7 +429,7 @@
 //! 
 //! On the default entrypoint routine, the internal system version (see [`get_version`][`version::get_version`] and [`set_version`][`version::set_version`]) gets set the following way:
 //! * If the process was launched through HBL, use the "HOS version" value we got from it
-//! * Otherwise (and if using the `services` feature), use settings services ([`SystemSettingsServer`][`crate::service::set::SystemSettingsServer`]) to get it
+//! * Otherwise (and if using the `services` feature), use settings services ([`SystemSettingsServer`][`crate::service::set::ISystemSettingsServer`]) to get it
 //! 
 //! If you wish to define your custom version setup (for instance, in contexts in which you wish to avoid executing the aforementioned setup), you can do so by redefining the `initialize_version` weak fn.
 //! 
@@ -388,11 +442,13 @@
 //! ```
 
 </span><span class="kw">use </span><span class="kw">crate</span>::elf;
+<span class="kw">use </span><span class="kw">crate</span>::elf::mod0;
 <span class="kw">use </span><span class="kw">crate</span>::result::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::svc;
 <span class="kw">use </span><span class="kw">crate</span>::mem::alloc;
 <span class="kw">use </span><span class="kw">crate</span>::svc::Handle;
 <span class="kw">use </span><span class="kw">crate</span>::sync;
+<span class="kw">use </span><span class="kw">crate</span>::thread::get_thread_local_region;
 <span class="kw">use </span><span class="kw">crate</span>::util;
 <span class="kw">use </span><span class="kw">crate</span>::hbl;
 <span class="kw">use </span><span class="kw">crate</span>::thread;
@@ -408,12 +464,13 @@
 <span class="attr">#[cfg(feature = <span class="string">"services"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::service::set;
 
-<span class="attr">#[cfg(feature = <span class="string">"services"</span>)]
-</span><span class="kw">use </span><span class="kw">crate</span>::service::set::ISystemSettingsServer;
 
 <span class="kw">use </span>core::ptr;
 <span class="kw">use </span>core::mem;
 <span class="kw">use </span>core::arch::asm;
+<span class="kw">use </span>core::ptr::addr_of_mut;
+
+<span class="kw">use </span>atomic_enum::atomic_enum;
 
 <span class="comment">// These functions must be implemented by any binary using this crate
 
@@ -425,8 +482,9 @@
 <span class="doccomment">/// Represents the fn pointer used for exiting
 </span><span class="kw">pub type </span>ExitFn = <span class="kw">extern </span><span class="string">"C" </span><span class="kw">fn</span>(ResultCode) -&gt; !;
 
-<span class="doccomment">/// Represents the executable type of the current process
-</span><span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+<span class="attr">#[atomic_enum]
+</span><span class="doccomment">/// Represents the executable type of the current process
+</span><span class="attr">#[derive(PartialEq, Eq, Default)]
 </span><span class="kw">pub enum </span>ExecutableType {
     <span class="attr">#[default]
     </span><span class="prelude-val">None</span>,
@@ -434,21 +492,29 @@
     Nro
 }
 
-<span class="kw">static </span><span class="kw-2">mut </span>G_EXECUTABLE_TYPE: ExecutableType = ExecutableType::None;
+<span class="comment">/*
+pub enum ExecutableType {
+    None = -2,
+    #[default]
+    Default = -1,
+    Application = 0,
+    SystemApplet = 1,
+    LibraryApplet = 2,
+    OverlayApplet = 3,
+    SystemApplication = 4
+}*/
+
+</span><span class="kw">static </span>G_EXECUTABLE_TYPE: AtomicExecutableType = AtomicExecutableType::new(ExecutableType::None);
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>set_executable_type(exec_type: ExecutableType) {
-    <span class="kw">unsafe </span>{
-        G_EXECUTABLE_TYPE = exec_type;
-    }
+    G_EXECUTABLE_TYPE.store(exec_type, core::sync::atomic::Ordering::SeqCst);
 }
 
 <span class="doccomment">/// Gets the current process's executable type
 /// 
 /// Note that this can be used to determine if this process was launched through HBL or not (if so, we would be a homebrew NRO and this would return [`ExecutableType::Nro`])
 </span><span class="kw">pub fn </span>get_executable_type() -&gt; ExecutableType {
-    <span class="kw">unsafe </span>{
-        G_EXECUTABLE_TYPE
-    }
+    G_EXECUTABLE_TYPE.load(core::sync::atomic::Ordering::Relaxed)
 }
 
 <span class="doccomment">/// Represents the process module format used by processes
@@ -458,11 +524,11 @@
 #[repr(C)]
 </span><span class="kw">pub struct </span>ModulePath {
     <span class="doccomment">/// Unused value
-    </span><span class="kw">pub </span>zero: u32,
+    </span>_zero: u32,
     <span class="doccomment">/// The length of the module name
-    </span><span class="kw">pub </span>path_len: u32,
+    </span>path_len: u32,
     <span class="doccomment">/// The module name string
-    </span><span class="kw">pub </span>path: util::CString&lt;<span class="number">0x200</span>&gt;
+    </span>path: util::ArrayString&lt;<span class="number">0x200</span>&gt;
 }
 
 <span class="kw">impl </span>ModulePath {
@@ -474,10 +540,19 @@
     </span><span class="attr">#[inline]
     </span><span class="kw">pub const fn </span>new(name: <span class="kw-2">&amp;</span>str) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            zero: <span class="number">0</span>,
-            path_len: name.len() <span class="kw">as </span>u32,
-            path: util::CString::from_str(name)
+            _zero: <span class="number">0</span>,
+            path_len: name.as_bytes().len() <span class="kw">as </span>u32,
+            path: util::ArrayString::from_str_truncate_null(name)
         }
+    }
+
+    <span class="kw">pub fn </span>set_name(<span class="kw-2">&amp;mut </span><span class="self">self</span>, new_name: <span class="kw-2">&amp;</span>str) {
+        <span class="self">self</span>.path = util::ArrayString::from_str(new_name);
+        <span class="self">self</span>.path_len = new_name.as_bytes().len() <span class="kw">as </span>u32
+    }
+
+    <span class="kw">pub fn </span>get_name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; util::ArrayString&lt;<span class="number">0x200</span>&gt; {
+        <span class="self">self</span>.path
     }
 }
 
@@ -495,18 +570,19 @@
     G_MODULE_NAME
 }
 
-<span class="kw">static </span><span class="kw-2">mut </span>G_EXIT_FN: sync::Locked&lt;<span class="prelude-ty">Option</span>&lt;ExitFn&gt;&gt; = sync::Locked::new(<span class="bool-val">false</span>, <span class="prelude-val">None</span>);
-<span class="kw">static </span><span class="kw-2">mut </span>G_MAIN_THREAD: thread::Thread = thread::Thread::empty();
+<span class="kw">static </span>G_EXIT_FN: sync::Mutex&lt;<span class="prelude-ty">Option</span>&lt;ExitFn&gt;&gt; = sync::Mutex::new(<span class="prelude-val">None</span>);
+<span class="kw">static </span>G_MAIN_THREAD: sync::Mutex&lt;<span class="prelude-ty">Option</span>&lt;thread::Thread&gt;&gt; = sync::Mutex::new(<span class="prelude-val">None</span>);
+<span class="kw">static </span>EH_FRAME_HDR_SECTION: elf::EhFrameHdrPtr = elf::EhFrameHdrPtr::new();
 
 <span class="doccomment">/// Exits the current process
 /// 
 /// This will call the HBL-specific exit fn if running as a homebrew NRO, or [`exit_process`][`svc::exit_process`] otherwise
 </span><span class="kw">pub fn </span>exit(rc: ResultCode) -&gt; ! {
-    <span class="kw">unsafe </span>{
-        <span class="kw">match </span>G_EXIT_FN.get() {
-            <span class="prelude-val">Some</span>(exit_fn) =&gt; exit_fn(rc),
-            <span class="prelude-val">None </span>=&gt; svc::exit_process()
-        }
+    <span class="kw">match </span><span class="kw-2">*</span>G_EXIT_FN.lock() {
+        <span class="prelude-val">Some</span>(exit_fn) =&gt; {
+            (exit_fn)(rc);
+        },
+        <span class="prelude-val">None </span>=&gt; svc::exit_process()
     }
 }
 
@@ -521,9 +597,10 @@
     <span class="kw">else </span>{
         <span class="attr">#[cfg(feature = <span class="string">"services"</span>)]
         </span>{
+            <span class="kw">use </span><span class="kw">crate</span>::ipc::sf::set::ISystemSettingsServer;
             <span class="kw">let </span>set_sys = service::new_service_object::&lt;set::SystemSettingsServer&gt;().unwrap();
-            <span class="kw">let </span>fw_version: set::FirmwareVersion = Default::default();
-            set_sys.get().get_firmware_version(sf::Buffer::from_var(<span class="kw-2">&amp;</span>fw_version)).unwrap();
+            <span class="kw">let </span><span class="kw-2">mut </span>fw_version: set::FirmwareVersion = Default::default();
+            set_sys.get_firmware_version(sf::Buffer::from_mut_var(<span class="kw-2">&amp;mut </span>fw_version)).unwrap();
 
             <span class="kw">let </span>version = version::Version::new(fw_version.major, fw_version.minor, fw_version.micro);
             version::set_version(version);
@@ -531,7 +608,22 @@
     }
 }
 
-<span class="kw">unsafe fn </span>normal_entry(maybe_abi_cfg_entries_ptr: <span class="kw-2">*const </span>hbl::AbiConfigEntry, maybe_main_thread_handle: usize, lr_exit_fn: ExitFn) {
+<span class="kw">static </span><span class="kw-2">mut </span>MAIN_THREAD: thread::imp::Thread = thread::imp::Thread::empty();
+
+<span class="attr">#[inline]
+</span><span class="kw">unsafe fn </span>set_main_thread_tlr(handle: svc::Handle) {
+    <span class="kw">let </span>tlr_raw = get_thread_local_region();
+    (<span class="kw-2">*</span>tlr_raw).nx_thread_vars.handle = handle;
+    (<span class="kw-2">*</span>tlr_raw).nx_thread_vars.magic = thread::imp::LibNxThreadVars::MAGIC;
+
+    MAIN_THREAD.__nx_thread.handle = handle;
+
+    (<span class="kw-2">*</span>tlr_raw).nx_thread_vars.thread_ref = <span class="macro">addr_of_mut!</span>(MAIN_THREAD);
+
+}
+
+<span class="attr">#[allow(unsafe_op_in_unsafe_fn)]
+</span><span class="kw">unsafe fn </span>normal_entry(maybe_abi_cfg_entries_ptr: <span class="kw-2">*const </span>hbl::AbiConfigEntry, maybe_main_thread_handle: usize, lr_exit_fn: <span class="prelude-ty">Option</span>&lt;ExitFn&gt;) {
     <span class="kw">let </span>exec_type = <span class="kw">match </span>!maybe_abi_cfg_entries_ptr.is_null() &amp;&amp; (maybe_main_thread_handle == usize::MAX) {
         <span class="bool-val">true </span>=&gt; ExecutableType::Nro,
         <span class="bool-val">false </span>=&gt; ExecutableType::Nso
@@ -562,18 +654,11 @@
                     main_thread_handle = (<span class="kw-2">*</span>abi_entry).value[<span class="number">0</span>] <span class="kw">as </span>svc::Handle;
                 },
                 hbl::AbiConfigEntryKey::NextLoadPath =&gt; {
-                    <span class="kw">let </span>next_load_path_data = (<span class="kw-2">*</span>abi_entry).value[<span class="number">0</span>] <span class="kw">as </span><span class="kw-2">*mut </span>u8;
-                    <span class="kw">let </span>next_load_path_data_len = util::str_ptr_len(next_load_path_data <span class="kw">as </span><span class="kw-2">*const </span>u8);
-                    <span class="kw">let </span>next_load_argv_data = (<span class="kw-2">*</span>abi_entry).value[<span class="number">1</span>] <span class="kw">as </span><span class="kw-2">*mut </span>u8;
-                    <span class="kw">let </span>next_load_argv_data_len = util::str_ptr_len(next_load_argv_data <span class="kw">as </span><span class="kw-2">*const </span>u8);
-                    
-                    <span class="kw">let </span>next_load_path_slice = core::slice::from_raw_parts(next_load_path_data, next_load_path_data_len);
-                    <span class="kw">let </span>next_load_argv_slice = core::slice::from_raw_parts(next_load_argv_data, next_load_argv_data_len);
-                    <span class="kw">if let </span><span class="prelude-val">Ok</span>(next_load_path) = core::str::from_utf8(next_load_path_slice) {
-                        <span class="kw">if let </span><span class="prelude-val">Ok</span>(next_load_argv) = core::str::from_utf8(next_load_argv_slice) {
-                            hbl::set_next_load_entry_ptr(next_load_path, next_load_argv);
-                        }
-                    }
+                    <span class="comment">// lengths from nx-hbloader:source/main.c
+                    // https://github.com/switchbrew/nx-hbloader/blob/cd6a723acbeabffd827a8bdc40563066f5401fb7/source/main.c#L13-L14
+                    </span><span class="kw">let </span>next_load_path: <span class="kw-2">&amp;</span><span class="lifetime">'static </span><span class="kw-2">mut </span>util::ArrayString&lt;<span class="number">512</span>&gt; = core::mem::transmute((<span class="kw-2">*</span>abi_entry).value[<span class="number">0</span>]);
+                    <span class="kw">let </span>next_load_argv: <span class="kw-2">&amp;</span><span class="lifetime">'static </span><span class="kw-2">mut </span>util::ArrayString&lt;<span class="number">2048</span>&gt; = core::mem::transmute((<span class="kw-2">*</span>abi_entry).value[<span class="number">1</span>]);
+                    hbl::set_next_load_entry_ptr(next_load_path, next_load_argv);
                 },
                 hbl::AbiConfigEntryKey::OverrideHeap =&gt; {
                     heap.address = (<span class="kw-2">*</span>abi_entry).value[<span class="number">0</span>] <span class="kw">as </span><span class="kw-2">*mut </span>u8;
@@ -616,101 +701,126 @@
                     <span class="comment">// TODO: invalid config entries?
                 </span>}
             }
-            abi_entry = abi_entry.offset(<span class="number">1</span>);
+            abi_entry = abi_entry.add(<span class="number">1</span>);
         }
     }
 
-    <span class="comment">// Initialize the main thread object and initialize its TLS section
-    // TODO: query memory for main thread stack address/size?
-    
-    </span>G_MAIN_THREAD = thread::Thread::new_remote(main_thread_handle, <span class="string">"MainThread"</span>, ptr::null_mut(), <span class="number">0</span>).unwrap();
-    thread::set_current_thread(<span class="macro">ptr::addr_of_mut!</span>(G_MAIN_THREAD));
+    <span class="kw">if </span>exec_type == ExecutableType::Nso {
+        <span class="comment">// we need to set up our own ThreadLocalRegion with our thread structs
+        </span>set_main_thread_tlr(main_thread_handle);
+    }
 
     <span class="comment">// Initialize virtual memory
     </span>vmem::initialize().unwrap();
-
+    
     <span class="comment">// Set exit function (will be null for non-hbl NROs)
     </span><span class="kw">match </span>exec_type {
-        ExecutableType::Nro =&gt; G_EXIT_FN.set(<span class="prelude-val">Some</span>(lr_exit_fn)),
-        ExecutableType::Nso =&gt; G_EXIT_FN.set(<span class="prelude-val">None</span>),
+        ExecutableType::Nro =&gt; {
+            <span class="kw-2">*</span>G_EXIT_FN.lock() = lr_exit_fn;
+        },
         <span class="kw">_ </span>=&gt; {}
-    };
+    }
+    
     
     <span class="comment">// Initialize heap and memory allocation
     </span>heap = initialize_heap(heap);
     alloc::initialize(heap);
 
+    <span class="kw">let </span>main_thread_handle: thread::Thread = thread::Thread::new_remote(<span class="string">"MainThread"</span>, main_thread_handle);
+    G_MAIN_THREAD.set(<span class="prelude-val">Some</span>(main_thread_handle));
+
     <span class="comment">// Initialize version support
     </span>initialize_version(hos_version_opt);
 
-    <span class="comment">// TODO: extend this (init more stuff, etc.)?
+    <span class="comment">// Unwrap main(), which will trigger a panic if it didn't succeed
+    </span><span class="kw">let </span>res = main();
 
-    // Unwrap main(), which will trigger a panic if it didn't succeed
-    </span>main().unwrap();
+    res.unwrap();
+
+    <span class="comment">// unmount fs devices
+    </span><span class="attr">#[cfg(feature = <span class="string">"fs"</span>)]
+    </span>{
+        <span class="comment">// clears any globally held fs dev handles
+        </span><span class="kw">crate</span>::fs::unmount_all();
+        <span class="comment">// clears the global fsp_srv session.
+        </span><span class="kw">crate</span>::fs::finalize_fspsrv_session();
+    }
+    
+    
+    <span class="attr">#[cfg(feature = <span class="string">"services"</span>)] </span>{
+        <span class="kw">let _  </span>= service::applet::finalize();
+    }
+
+    <span class="attr">#[cfg(feature = <span class="string">"la"</span>)]
+    </span>{
+        <span class="kw">crate</span>::la::finalize()
+    }
+    
 
     <span class="comment">// Successful exit by default
     </span>exit(ResultSuccess::make());
 }
 
-<span class="kw">unsafe fn </span>exception_entry(_exc_type: svc::ExceptionType, _stack_top: <span class="kw-2">*mut </span>u8) {
-    <span class="comment">// TODO: user exception handler?
-    </span>svc::return_from_exception(svc::rc::ResultNotHandled::make());
-}
-
 <span class="attr">#[no_mangle]
 #[linkage = <span class="string">"weak"</span>]
+#[allow(unsafe_op_in_unsafe_fn)]
 </span><span class="kw">unsafe extern </span><span class="string">"C" </span><span class="kw">fn </span>__nx_rrt0_entry(arg0: usize, arg1: usize) {
-    <span class="kw">let </span>lr_exit_fn: ExitFn;
-    <span class="macro">asm!</span>(
-        <span class="string">"mov {}, lr"</span>,
-        out(reg) lr_exit_fn
-    );
-
     <span class="comment">/*
     Possible entry arguments:
-    - NSO/KIP: x0 = 0, x1 = &lt;main-thread-handle&gt;
+    - NSO/KIP: x0 = 0, x1 = &lt;main-thread-handle&gt;e
     - NRO (hbl): x0 = &lt;abi-config-entries-ptr&gt;, x1 = usize::MAX
     - Exception: x0 = &lt;exception-type&gt;, x1 = &lt;stack-top&gt;
     */
-
     </span><span class="kw">if </span>(arg0 != <span class="number">0</span>) &amp;&amp; (arg1 != usize::MAX) {
-        <span class="comment">// Handle exception entry
+        <span class="comment">//unreachable!("This should never happen as we handle it in the rrt0.s asm runtime");
+        // Handle exception entry
         </span><span class="kw">let </span>exc_type: svc::ExceptionType = mem::transmute(arg0 <span class="kw">as </span>u32);
         <span class="kw">let </span>stack_top = arg1 <span class="kw">as </span><span class="kw-2">*mut </span>u8;
-        exception_entry(exc_type, stack_top);
+        <span class="kw">crate</span>::exception::__nx_exception_dispatch(exc_type, stack_top);
     }
-    <span class="kw">else </span>{
-        <span class="comment">// TODO: why does this return the address to __nx_rrt0_entry instead of actually _start?
-        // Since it's a valid .text address anyway, use QueryMemory SVC to find the actual start
-        </span><span class="kw">let </span>self_base_address: <span class="kw-2">*const </span>u8;
-        <span class="macro">asm!</span>(
-            <span class="string">"adr {}, _start"</span>,
-            out(reg) self_base_address
-        );
 
-        <span class="kw">let </span>(info, <span class="kw">_</span>) = svc::query_memory(self_base_address).unwrap();
-        <span class="kw">let </span>aslr_base_address = info.base_address <span class="kw">as </span><span class="kw-2">*const </span>u8;
+    <span class="kw">let </span>lr_exit_fn: <span class="prelude-ty">Option</span>&lt;ExitFn&gt;;
+    <span class="kw">let </span>lr_raw: usize;
+    <span class="macro">asm!</span>(
+        <span class="string">"mov {}, lr"</span>,
+        out(reg) lr_raw
+    );
 
-        <span class="kw">let </span>start_dyn = elf::mod0::find_start_dyn_address(aslr_base_address).unwrap();
-        elf::relocate_with_dyn(aslr_base_address, start_dyn <span class="kw">as </span><span class="kw-2">*const </span>elf::Dyn).unwrap();
-
-        <span class="kw">extern </span><span class="string">"C" </span>{
-            <span class="kw">static </span><span class="kw-2">mut </span>__bss_start: u8;
-            <span class="kw">static </span><span class="kw-2">mut </span>__bss_end: u8;
+    lr_exit_fn = <span class="kw">match </span>lr_raw {
+        <span class="number">0 </span>=&gt; <span class="prelude-val">None</span>,
+        ptr =&gt; {
+            <span class="kw">unsafe </span>{ <span class="prelude-val">Some</span>(core::mem::transmute(ptr))}
         }
+    };
 
-        <span class="kw">let </span>bss_start_addr = <span class="macro">ptr::addr_of_mut!</span>(__bss_start) <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_ as </span><span class="kw-2">*mut </span>u64;
-        <span class="kw">let </span>bss_end_addr = <span class="macro">ptr::addr_of_mut!</span>(__bss_end) <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_ as </span><span class="kw-2">*mut </span>u64;
+    <span class="comment">// We actually want `_start` which is at the start of the .text region, but we don't know if
+    // it will be close enough to support lookup via `adr`.
+    // Since this function is in `.text` anyway, use QueryMemory SVC to find the actual start
+    </span><span class="kw">let </span>self_base_address: <span class="kw-2">*const </span>u8;
+    <span class="macro">asm!</span>(
+        <span class="string">"adr {}, __nx_rrt0_entry"</span>,
+        out(reg) self_base_address
+    );
 
-        <span class="kw">let </span><span class="kw-2">mut </span>cur_bss_addr = bss_start_addr;
-        <span class="kw">while </span>cur_bss_addr &lt; bss_end_addr {
-            ptr::write_volatile(cur_bss_addr, <span class="number">0</span>);
-            cur_bss_addr = cur_bss_addr.add(<span class="number">1</span>);
-        }
+    <span class="comment">// TODO: migrate to the providence APIs
+    </span><span class="kw">let </span>(info, <span class="kw">_</span>) = svc::query_memory(self_base_address).unwrap();
+    <span class="kw">let </span>aslr_base_address = info.base_address <span class="kw">as </span><span class="kw-2">*mut </span>u8;
 
-        <span class="comment">// Handle NSO/KIP/NRO normal entry
-        </span><span class="kw">let </span>maybe_abi_cfg_entries_ptr = arg0 <span class="kw">as </span><span class="kw-2">*const </span>hbl::AbiConfigEntry;
-        <span class="kw">let </span>maybe_main_thread_handle = arg1;
-        normal_entry(maybe_abi_cfg_entries_ptr, maybe_main_thread_handle, lr_exit_fn);
-    }
+    <span class="comment">// assume that the MOD0 structure is at the start of .text
+    </span><span class="kw">let </span>start_dyn = elf::mod0::find_start_dyn_address(aslr_base_address).unwrap();
+    elf::relocate_with_dyn(aslr_base_address, start_dyn <span class="kw">as </span><span class="kw-2">*const </span>elf::Dyn).unwrap();
+
+    mod0::zero_bss_section(aslr_base_address).unwrap();
+
+    EH_FRAME_HDR_SECTION.set(mod0::find_eh_frame_header(aslr_base_address).unwrap());
+    unwinding::custom_eh_frame_finder::set_custom_eh_frame_finder(<span class="kw-2">&amp;</span>EH_FRAME_HDR_SECTION).unwrap();
+
+    <span class="comment">// make sure that the writes are complete before there are any accesses
+    </span>core::sync::atomic::compiler_fence(core::sync::atomic::Ordering::SeqCst);
+
+    <span class="comment">// Handle NSO/KIP/NRO normal entry
+    </span><span class="kw">let </span>maybe_abi_cfg_entries_ptr = arg0 <span class="kw">as </span><span class="kw-2">*const </span>hbl::AbiConfigEntry;
+    <span class="kw">let </span>maybe_main_thread_handle = arg1;
+    normal_entry(maybe_abi_cfg_entries_ptr, maybe_main_thread_handle, lr_exit_fn);
+    
 }</code></pre></div></section></main></body></html>

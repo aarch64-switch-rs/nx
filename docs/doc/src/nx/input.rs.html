@@ -1,6 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/input.rs`."><title>input.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0-nightly (c9f8f3438 2024-03-27)" data-channel="nightly" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
-            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../nx/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/input.rs`."><title>input.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-42caa33d.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.85.0-nightly (a47555110 2024-11-22)" data-channel="nightly" data-search-js="search-92e6798f.js" data-settings-js="settings-0f613d39.js" ><script src="../../static.files/storage-59e33391.js"></script><script defer src="../../static.files/src-script-56102188.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">nx/</div>input.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -323,19 +322,134 @@
 <a href="#321" id="321">321</a>
 <a href="#322" id="322">322</a>
 <a href="#323" id="323">323</a>
-</pre></div><pre class="rust"><code><span class="doccomment">//! Input utils and wrappers
+<a href="#324" id="324">324</a>
+<a href="#325" id="325">325</a>
+<a href="#326" id="326">326</a>
+<a href="#327" id="327">327</a>
+<a href="#328" id="328">328</a>
+<a href="#329" id="329">329</a>
+<a href="#330" id="330">330</a>
+<a href="#331" id="331">331</a>
+<a href="#332" id="332">332</a>
+<a href="#333" id="333">333</a>
+<a href="#334" id="334">334</a>
+<a href="#335" id="335">335</a>
+<a href="#336" id="336">336</a>
+<a href="#337" id="337">337</a>
+<a href="#338" id="338">338</a>
+<a href="#339" id="339">339</a>
+<a href="#340" id="340">340</a>
+<a href="#341" id="341">341</a>
+<a href="#342" id="342">342</a>
+<a href="#343" id="343">343</a>
+<a href="#344" id="344">344</a>
+<a href="#345" id="345">345</a>
+<a href="#346" id="346">346</a>
+<a href="#347" id="347">347</a>
+<a href="#348" id="348">348</a>
+<a href="#349" id="349">349</a>
+<a href="#350" id="350">350</a>
+<a href="#351" id="351">351</a>
+<a href="#352" id="352">352</a>
+<a href="#353" id="353">353</a>
+<a href="#354" id="354">354</a>
+<a href="#355" id="355">355</a>
+<a href="#356" id="356">356</a>
+<a href="#357" id="357">357</a>
+<a href="#358" id="358">358</a>
+<a href="#359" id="359">359</a>
+<a href="#360" id="360">360</a>
+<a href="#361" id="361">361</a>
+<a href="#362" id="362">362</a>
+<a href="#363" id="363">363</a>
+<a href="#364" id="364">364</a>
+<a href="#365" id="365">365</a>
+<a href="#366" id="366">366</a>
+<a href="#367" id="367">367</a>
+<a href="#368" id="368">368</a>
+<a href="#369" id="369">369</a>
+<a href="#370" id="370">370</a>
+<a href="#371" id="371">371</a>
+<a href="#372" id="372">372</a>
+<a href="#373" id="373">373</a>
+<a href="#374" id="374">374</a>
+<a href="#375" id="375">375</a>
+<a href="#376" id="376">376</a>
+<a href="#377" id="377">377</a>
+<a href="#378" id="378">378</a>
+<a href="#379" id="379">379</a>
+<a href="#380" id="380">380</a>
+<a href="#381" id="381">381</a>
+<a href="#382" id="382">382</a>
+<a href="#383" id="383">383</a>
+<a href="#384" id="384">384</a>
+<a href="#385" id="385">385</a>
+<a href="#386" id="386">386</a>
+<a href="#387" id="387">387</a>
+<a href="#388" id="388">388</a>
+<a href="#389" id="389">389</a>
+<a href="#390" id="390">390</a>
+<a href="#391" id="391">391</a>
+<a href="#392" id="392">392</a>
+<a href="#393" id="393">393</a>
+<a href="#394" id="394">394</a>
+<a href="#395" id="395">395</a>
+<a href="#396" id="396">396</a>
+<a href="#397" id="397">397</a>
+<a href="#398" id="398">398</a>
+<a href="#399" id="399">399</a>
+<a href="#400" id="400">400</a>
+<a href="#401" id="401">401</a>
+<a href="#402" id="402">402</a>
+<a href="#403" id="403">403</a>
+<a href="#404" id="404">404</a>
+<a href="#405" id="405">405</a>
+<a href="#406" id="406">406</a>
+<a href="#407" id="407">407</a>
+<a href="#408" id="408">408</a>
+<a href="#409" id="409">409</a>
+<a href="#410" id="410">410</a>
+<a href="#411" id="411">411</a>
+<a href="#412" id="412">412</a>
+<a href="#413" id="413">413</a>
+<a href="#414" id="414">414</a>
+<a href="#415" id="415">415</a>
+<a href="#416" id="416">416</a>
+<a href="#417" id="417">417</a>
+<a href="#418" id="418">418</a>
+<a href="#419" id="419">419</a>
+<a href="#420" id="420">420</a>
+<a href="#421" id="421">421</a>
+<a href="#422" id="422">422</a>
+<a href="#423" id="423">423</a>
+<a href="#424" id="424">424</a>
+<a href="#425" id="425">425</a>
+<a href="#426" id="426">426</a>
+<a href="#427" id="427">427</a>
+<a href="#428" id="428">428</a>
+<a href="#429" id="429">429</a>
+<a href="#430" id="430">430</a>
+<a href="#431" id="431">431</a>
+<a href="#432" id="432">432</a>
+<a href="#433" id="433">433</a>
+<a href="#434" id="434">434</a></pre></div><pre class="rust"><code><span class="doccomment">//! Input utils and wrappers
 
-</span><span class="kw">use </span><span class="kw">crate</span>::result::<span class="kw-2">*</span>;
+</span><span class="kw">use </span>rc::ResultInvalidControllerId;
+
+<span class="kw">use </span><span class="kw">crate</span>::ipc::sf;
+<span class="kw">use </span><span class="kw">crate</span>::result::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::service;
+<span class="kw">use </span><span class="kw">crate</span>::service::applet;
+<span class="kw">use </span><span class="kw">crate</span>::service::applet::AppletResourceUserId;
 <span class="kw">use </span><span class="kw">crate</span>::service::hid;
 <span class="kw">use </span><span class="kw">crate</span>::service::hid::shmem;
+<span class="kw">use </span><span class="kw">crate</span>::service::hid::AppletResource;
+<span class="kw">use </span><span class="kw">crate</span>::service::hid::HidServer;
 <span class="kw">use </span><span class="kw">crate</span>::service::hid::IAppletResource;
 <span class="kw">use </span><span class="kw">crate</span>::service::hid::IHidServer;
-<span class="kw">use </span><span class="kw">crate</span>::ipc::sf;
 <span class="kw">use </span><span class="kw">crate</span>::svc;
-<span class="kw">use </span><span class="kw">crate</span>::mem;
 <span class="kw">use </span><span class="kw">crate</span>::version;
 <span class="kw">use </span><span class="kw">crate</span>::vmem;
-<span class="kw">use </span><span class="kw">crate</span>::service;
 
 <span class="kw">pub mod </span>rc;
 
@@ -344,7 +458,7 @@
     <span class="kw">match </span>npad_id {
         hid::NpadIdType::Handheld =&gt; <span class="number">8</span>,
         hid::NpadIdType::Other =&gt; <span class="number">9</span>,
-        <span class="kw">_ </span>=&gt; npad_id <span class="kw">as </span>usize <span class="comment">// (No1...8 -&gt; 0...7)
+        <span class="kw">_ </span>=&gt; npad_id <span class="kw">as </span>usize, <span class="comment">// (No1...8 -&gt; 0...7)
     </span>}
 }
 
@@ -352,24 +466,36 @@
     (<span class="macro-nonterminal">$shmem_ptr</span>:expr, <span class="macro-nonterminal">$npad_id_idx</span>:expr, <span class="macro-nonterminal">$shmem_npad_lifo_type</span>:ident) =&gt; {{
         <span class="kw">let </span>cur_ver = version::get_version();
         <span class="kw">if </span>hid::shmem::SharedMemoryFormatV1::VERSION_INTERVAL.contains(cur_ver) {
-            <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="macro-nonterminal">$shmem_ptr </span><span class="kw">as </span><span class="kw-2">*const </span>hid::shmem::SharedMemoryFormatV1)).npad.entries[<span class="macro-nonterminal">$npad_id_idx</span>].<span class="macro-nonterminal">$shmem_npad_lifo_type
-        </span>}
-        <span class="kw">else if </span>hid::shmem::SharedMemoryFormatV2::VERSION_INTERVAL.contains(cur_ver) {
-            <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="macro-nonterminal">$shmem_ptr </span><span class="kw">as </span><span class="kw-2">*const </span>hid::shmem::SharedMemoryFormatV2)).npad.entries[<span class="macro-nonterminal">$npad_id_idx</span>].<span class="macro-nonterminal">$shmem_npad_lifo_type
-        </span>}
-        <span class="kw">else if </span>hid::shmem::SharedMemoryFormatV3::VERSION_INTERVAL.contains(cur_ver) {
-            <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="macro-nonterminal">$shmem_ptr </span><span class="kw">as </span><span class="kw-2">*const </span>hid::shmem::SharedMemoryFormatV3)).npad.entries[<span class="macro-nonterminal">$npad_id_idx</span>].<span class="macro-nonterminal">$shmem_npad_lifo_type
-        </span>} 
-        <span class="kw">else if </span>hid::shmem::SharedMemoryFormatV4::VERSION_INTERVAL.contains(cur_ver) {
-            <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="macro-nonterminal">$shmem_ptr </span><span class="kw">as </span><span class="kw-2">*const </span>hid::shmem::SharedMemoryFormatV4)).npad.entries[<span class="macro-nonterminal">$npad_id_idx</span>].<span class="macro-nonterminal">$shmem_npad_lifo_type
-        </span>}
-        <span class="kw">else if </span>hid::shmem::SharedMemoryFormatV5::VERSION_INTERVAL.contains(cur_ver) {
-            <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="macro-nonterminal">$shmem_ptr </span><span class="kw">as </span><span class="kw-2">*const </span>hid::shmem::SharedMemoryFormatV5)).npad.entries[<span class="macro-nonterminal">$npad_id_idx</span>].<span class="macro-nonterminal">$shmem_npad_lifo_type
-        </span>}
-        <span class="kw">else if </span>hid::shmem::SharedMemoryFormatV6::VERSION_INTERVAL.contains(cur_ver) {
-            <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="macro-nonterminal">$shmem_ptr </span><span class="kw">as </span><span class="kw-2">*const </span>hid::shmem::SharedMemoryFormatV6)).npad.entries[<span class="macro-nonterminal">$npad_id_idx</span>].<span class="macro-nonterminal">$shmem_npad_lifo_type
-        </span>}
-        <span class="kw">else </span>{
+            <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="macro-nonterminal">$shmem_ptr </span><span class="kw">as </span><span class="kw-2">*const </span>hid::shmem::SharedMemoryFormatV1))
+                .npad
+                .entries[<span class="macro-nonterminal">$npad_id_idx</span>]
+                .<span class="macro-nonterminal">$shmem_npad_lifo_type
+        </span>} <span class="kw">else if </span>hid::shmem::SharedMemoryFormatV2::VERSION_INTERVAL.contains(cur_ver) {
+            <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="macro-nonterminal">$shmem_ptr </span><span class="kw">as </span><span class="kw-2">*const </span>hid::shmem::SharedMemoryFormatV2))
+                .npad
+                .entries[<span class="macro-nonterminal">$npad_id_idx</span>]
+                .<span class="macro-nonterminal">$shmem_npad_lifo_type
+        </span>} <span class="kw">else if </span>hid::shmem::SharedMemoryFormatV3::VERSION_INTERVAL.contains(cur_ver) {
+            <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="macro-nonterminal">$shmem_ptr </span><span class="kw">as </span><span class="kw-2">*const </span>hid::shmem::SharedMemoryFormatV3))
+                .npad
+                .entries[<span class="macro-nonterminal">$npad_id_idx</span>]
+                .<span class="macro-nonterminal">$shmem_npad_lifo_type
+        </span>} <span class="kw">else if </span>hid::shmem::SharedMemoryFormatV4::VERSION_INTERVAL.contains(cur_ver) {
+            <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="macro-nonterminal">$shmem_ptr </span><span class="kw">as </span><span class="kw-2">*const </span>hid::shmem::SharedMemoryFormatV4))
+                .npad
+                .entries[<span class="macro-nonterminal">$npad_id_idx</span>]
+                .<span class="macro-nonterminal">$shmem_npad_lifo_type
+        </span>} <span class="kw">else if </span>hid::shmem::SharedMemoryFormatV5::VERSION_INTERVAL.contains(cur_ver) {
+            <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="macro-nonterminal">$shmem_ptr </span><span class="kw">as </span><span class="kw-2">*const </span>hid::shmem::SharedMemoryFormatV5))
+                .npad
+                .entries[<span class="macro-nonterminal">$npad_id_idx</span>]
+                .<span class="macro-nonterminal">$shmem_npad_lifo_type
+        </span>} <span class="kw">else if </span>hid::shmem::SharedMemoryFormatV6::VERSION_INTERVAL.contains(cur_ver) {
+            <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="macro-nonterminal">$shmem_ptr </span><span class="kw">as </span><span class="kw-2">*const </span>hid::shmem::SharedMemoryFormatV6))
+                .npad
+                .entries[<span class="macro-nonterminal">$npad_id_idx</span>]
+                .<span class="macro-nonterminal">$shmem_npad_lifo_type
+        </span>} <span class="kw">else </span>{
             <span class="comment">// TODO: result?
             </span><span class="macro">panic!</span>(<span class="string">"Unexpected version mismatch"</span>);
         }
@@ -377,91 +503,133 @@
 }
 
 <span class="macro">macro_rules!</span> get_state_one_tag {
-    (<span class="macro-nonterminal">$shmem_ptr</span>:expr, <span class="macro-nonterminal">$npad_id_idx</span>:expr, <span class="macro-nonterminal">$style_tag</span>:expr, <span class="macro-nonterminal">$state_field</span>:ident) =&gt; { <span class="kw">unsafe </span>{
-        <span class="kw">if </span><span class="macro-nonterminal">$style_tag</span>.contains(hid::NpadStyleTag::FullKey()) {
-            <span class="macro">get_shmem_npad_entry_ring_lifo!</span>(<span class="macro-nonterminal">$shmem_ptr</span>, <span class="macro-nonterminal">$npad_id_idx</span>, full_key_lifo).get_tail_item().state.<span class="macro-nonterminal">$state_field
-        </span>}
-        <span class="kw">else if </span><span class="macro-nonterminal">$style_tag</span>.contains(hid::NpadStyleTag::Handheld()) {
-            <span class="macro">get_shmem_npad_entry_ring_lifo!</span>(<span class="macro-nonterminal">$shmem_ptr</span>, <span class="macro-nonterminal">$npad_id_idx</span>, handheld_lifo).get_tail_item().state.<span class="macro-nonterminal">$state_field
-        </span>}
-        <span class="kw">else if </span><span class="macro-nonterminal">$style_tag</span>.contains(hid::NpadStyleTag::JoyDual()) {
-            <span class="macro">get_shmem_npad_entry_ring_lifo!</span>(<span class="macro-nonterminal">$shmem_ptr</span>, <span class="macro-nonterminal">$npad_id_idx</span>, joy_dual_lifo).get_tail_item().state.<span class="macro-nonterminal">$state_field
-        </span>}
-        <span class="kw">else if </span><span class="macro-nonterminal">$style_tag</span>.contains(hid::NpadStyleTag::JoyLeft()) {
-            <span class="macro">get_shmem_npad_entry_ring_lifo!</span>(<span class="macro-nonterminal">$shmem_ptr</span>, <span class="macro-nonterminal">$npad_id_idx</span>, joy_left_lifo).get_tail_item().state.<span class="macro-nonterminal">$state_field
-        </span>}
-        <span class="kw">else if </span><span class="macro-nonterminal">$style_tag</span>.contains(hid::NpadStyleTag::JoyRight()) {
-            <span class="macro">get_shmem_npad_entry_ring_lifo!</span>(<span class="macro-nonterminal">$shmem_ptr</span>, <span class="macro-nonterminal">$npad_id_idx</span>, joy_right_lifo).get_tail_item().state.<span class="macro-nonterminal">$state_field
-        </span>}
-        <span class="kw">else if </span><span class="macro-nonterminal">$style_tag</span>.contains(hid::NpadStyleTag::System()) || <span class="macro-nonterminal">$style_tag</span>.contains(hid::NpadStyleTag::SystemExt()) {
-            <span class="macro">get_shmem_npad_entry_ring_lifo!</span>(<span class="macro-nonterminal">$shmem_ptr</span>, <span class="macro-nonterminal">$npad_id_idx</span>, system_ext_lifo).get_tail_item().state.<span class="macro-nonterminal">$state_field
-        </span>}
-        <span class="kw">else </span>{
-            Default::default()
+    (<span class="macro-nonterminal">$shmem_ptr</span>:expr, <span class="macro-nonterminal">$npad_id_idx</span>:expr, <span class="macro-nonterminal">$style_tag</span>:expr, <span class="macro-nonterminal">$state_field</span>:ident) =&gt; {
+        <span class="kw">unsafe </span>{
+            <span class="kw">if </span><span class="macro-nonterminal">$style_tag</span>.contains(hid::NpadStyleTag::FullKey()) {
+                <span class="macro">get_shmem_npad_entry_ring_lifo!</span>(<span class="macro-nonterminal">$shmem_ptr</span>, <span class="macro-nonterminal">$npad_id_idx</span>, full_key_lifo)
+                    .get_tail_item()
+                    .state
+                    .<span class="macro-nonterminal">$state_field
+            </span>} <span class="kw">else if </span><span class="macro-nonterminal">$style_tag</span>.contains(hid::NpadStyleTag::Handheld()) {
+                <span class="macro">get_shmem_npad_entry_ring_lifo!</span>(<span class="macro-nonterminal">$shmem_ptr</span>, <span class="macro-nonterminal">$npad_id_idx</span>, handheld_lifo)
+                    .get_tail_item()
+                    .state
+                    .<span class="macro-nonterminal">$state_field
+            </span>} <span class="kw">else if </span><span class="macro-nonterminal">$style_tag</span>.contains(hid::NpadStyleTag::JoyDual()) {
+                <span class="macro">get_shmem_npad_entry_ring_lifo!</span>(<span class="macro-nonterminal">$shmem_ptr</span>, <span class="macro-nonterminal">$npad_id_idx</span>, joy_dual_lifo)
+                    .get_tail_item()
+                    .state
+                    .<span class="macro-nonterminal">$state_field
+            </span>} <span class="kw">else if </span><span class="macro-nonterminal">$style_tag</span>.contains(hid::NpadStyleTag::JoyLeft()) {
+                <span class="macro">get_shmem_npad_entry_ring_lifo!</span>(<span class="macro-nonterminal">$shmem_ptr</span>, <span class="macro-nonterminal">$npad_id_idx</span>, joy_left_lifo)
+                    .get_tail_item()
+                    .state
+                    .<span class="macro-nonterminal">$state_field
+            </span>} <span class="kw">else if </span><span class="macro-nonterminal">$style_tag</span>.contains(hid::NpadStyleTag::JoyRight()) {
+                <span class="macro">get_shmem_npad_entry_ring_lifo!</span>(<span class="macro-nonterminal">$shmem_ptr</span>, <span class="macro-nonterminal">$npad_id_idx</span>, joy_right_lifo)
+                    .get_tail_item()
+                    .state
+                    .<span class="macro-nonterminal">$state_field
+            </span>} <span class="kw">else if </span><span class="macro-nonterminal">$style_tag</span>.contains(hid::NpadStyleTag::System())
+                || <span class="macro-nonterminal">$style_tag</span>.contains(hid::NpadStyleTag::SystemExt())
+            {
+                <span class="macro">get_shmem_npad_entry_ring_lifo!</span>(<span class="macro-nonterminal">$shmem_ptr</span>, <span class="macro-nonterminal">$npad_id_idx</span>, system_ext_lifo)
+                    .get_tail_item()
+                    .state
+                    .<span class="macro-nonterminal">$state_field
+            </span>} <span class="kw">else </span>{
+                Default::default()
+            }
         }
-    }};
+    };
 }
 
 <span class="macro">macro_rules!</span> get_state_multi_tag {
-    (<span class="macro-nonterminal">$shmem_ptr</span>:expr, <span class="macro-nonterminal">$npad_id_idx</span>:expr, <span class="macro-nonterminal">$style_tag</span>:expr, <span class="macro-nonterminal">$state_type</span>:ty, <span class="macro-nonterminal">$state_field</span>:ident) =&gt; { <span class="kw">unsafe </span>{
-        <span class="kw">let </span><span class="kw-2">mut </span>state: <span class="macro-nonterminal">$state_type </span>= Default::default();
-        <span class="kw">if </span><span class="macro-nonterminal">$style_tag</span>.contains(hid::NpadStyleTag::FullKey()) {
-            state |= <span class="macro">get_shmem_npad_entry_ring_lifo!</span>(<span class="macro-nonterminal">$shmem_ptr</span>, <span class="macro-nonterminal">$npad_id_idx</span>, full_key_lifo).get_tail_item().state.<span class="macro-nonterminal">$state_field</span>;
+    (<span class="macro-nonterminal">$shmem_ptr</span>:expr, <span class="macro-nonterminal">$npad_id_idx</span>:expr, <span class="macro-nonterminal">$style_tag</span>:expr, <span class="macro-nonterminal">$state_type</span>:ty, <span class="macro-nonterminal">$state_field</span>:ident) =&gt; {
+        <span class="kw">unsafe </span>{
+            <span class="kw">let </span><span class="kw-2">mut </span>state: <span class="macro-nonterminal">$state_type </span>= Default::default();
+            <span class="kw">if </span><span class="macro-nonterminal">$style_tag</span>.contains(hid::NpadStyleTag::FullKey()) {
+                state |= <span class="macro">get_shmem_npad_entry_ring_lifo!</span>(<span class="macro-nonterminal">$shmem_ptr</span>, <span class="macro-nonterminal">$npad_id_idx</span>, full_key_lifo)
+                    .get_tail_item()
+                    .state
+                    .<span class="macro-nonterminal">$state_field</span>;
+            }
+            <span class="kw">if </span><span class="macro-nonterminal">$style_tag</span>.contains(hid::NpadStyleTag::Handheld()) {
+                state |= <span class="macro">get_shmem_npad_entry_ring_lifo!</span>(<span class="macro-nonterminal">$shmem_ptr</span>, <span class="macro-nonterminal">$npad_id_idx</span>, handheld_lifo)
+                    .get_tail_item()
+                    .state
+                    .<span class="macro-nonterminal">$state_field</span>;
+            }
+            <span class="kw">if </span><span class="macro-nonterminal">$style_tag</span>.contains(hid::NpadStyleTag::JoyDual()) {
+                state |= <span class="macro">get_shmem_npad_entry_ring_lifo!</span>(<span class="macro-nonterminal">$shmem_ptr</span>, <span class="macro-nonterminal">$npad_id_idx</span>, joy_dual_lifo)
+                    .get_tail_item()
+                    .state
+                    .<span class="macro-nonterminal">$state_field</span>;
+            }
+            <span class="kw">if </span><span class="macro-nonterminal">$style_tag</span>.contains(hid::NpadStyleTag::JoyLeft()) {
+                state |= <span class="macro">get_shmem_npad_entry_ring_lifo!</span>(<span class="macro-nonterminal">$shmem_ptr</span>, <span class="macro-nonterminal">$npad_id_idx</span>, joy_left_lifo)
+                    .get_tail_item()
+                    .state
+                    .<span class="macro-nonterminal">$state_field</span>;
+            }
+            <span class="kw">if </span><span class="macro-nonterminal">$style_tag</span>.contains(hid::NpadStyleTag::JoyRight()) {
+                state |= <span class="macro">get_shmem_npad_entry_ring_lifo!</span>(<span class="macro-nonterminal">$shmem_ptr</span>, <span class="macro-nonterminal">$npad_id_idx</span>, joy_right_lifo)
+                    .get_tail_item()
+                    .state
+                    .<span class="macro-nonterminal">$state_field</span>;
+            }
+            <span class="kw">if </span><span class="macro-nonterminal">$style_tag</span>.contains(hid::NpadStyleTag::System())
+                || <span class="macro-nonterminal">$style_tag</span>.contains(hid::NpadStyleTag::SystemExt())
+            {
+                state |= <span class="macro">get_shmem_npad_entry_ring_lifo!</span>(<span class="macro-nonterminal">$shmem_ptr</span>, <span class="macro-nonterminal">$npad_id_idx</span>, system_ext_lifo)
+                    .get_tail_item()
+                    .state
+                    .<span class="macro-nonterminal">$state_field</span>;
+            }
+            state
         }
-        <span class="kw">if </span><span class="macro-nonterminal">$style_tag</span>.contains(hid::NpadStyleTag::Handheld()) {
-            state |= <span class="macro">get_shmem_npad_entry_ring_lifo!</span>(<span class="macro-nonterminal">$shmem_ptr</span>, <span class="macro-nonterminal">$npad_id_idx</span>, handheld_lifo).get_tail_item().state.<span class="macro-nonterminal">$state_field</span>;
-        }
-        <span class="kw">if </span><span class="macro-nonterminal">$style_tag</span>.contains(hid::NpadStyleTag::JoyDual()) {
-            state |= <span class="macro">get_shmem_npad_entry_ring_lifo!</span>(<span class="macro-nonterminal">$shmem_ptr</span>, <span class="macro-nonterminal">$npad_id_idx</span>, joy_dual_lifo).get_tail_item().state.<span class="macro-nonterminal">$state_field</span>;
-        }
-        <span class="kw">if </span><span class="macro-nonterminal">$style_tag</span>.contains(hid::NpadStyleTag::JoyLeft()) {
-            state |= <span class="macro">get_shmem_npad_entry_ring_lifo!</span>(<span class="macro-nonterminal">$shmem_ptr</span>, <span class="macro-nonterminal">$npad_id_idx</span>, joy_left_lifo).get_tail_item().state.<span class="macro-nonterminal">$state_field</span>;
-        }
-        <span class="kw">if </span><span class="macro-nonterminal">$style_tag</span>.contains(hid::NpadStyleTag::JoyRight()) {
-            state |= <span class="macro">get_shmem_npad_entry_ring_lifo!</span>(<span class="macro-nonterminal">$shmem_ptr</span>, <span class="macro-nonterminal">$npad_id_idx</span>, joy_right_lifo).get_tail_item().state.<span class="macro-nonterminal">$state_field</span>;
-        }
-        <span class="kw">if </span><span class="macro-nonterminal">$style_tag</span>.contains(hid::NpadStyleTag::System()) || <span class="macro-nonterminal">$style_tag</span>.contains(hid::NpadStyleTag::SystemExt()) {
-            state |= <span class="macro">get_shmem_npad_entry_ring_lifo!</span>(<span class="macro-nonterminal">$shmem_ptr</span>, <span class="macro-nonterminal">$npad_id_idx</span>, system_ext_lifo).get_tail_item().state.<span class="macro-nonterminal">$state_field</span>;
-        }
-        state
-    }};
+    };
 }
 
 <span class="doccomment">/// Represents a console controller type
-/// 
+///
 /// It's essentially a wrapper type over HID shared-memory to simplify input detection
 </span><span class="kw">pub struct </span>Player {
     npad_id: hid::NpadIdType,
     npad_id_idx: usize,
     supported_style_tags: hid::NpadStyleTag,
     shmem_ptr: <span class="kw-2">*const </span>u8,
-    prev_buttons: hid::NpadButton
+    prev_buttons: hid::NpadButton,
 }
 
 <span class="kw">impl </span>Player {
     <span class="doccomment">/// Creates a [`Player`] from shared-memory information
-    /// 
+    ///
     /// If using a [`Context`], look for [`Context::get_player`] instead (for simplicity)
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `npad_id`: The [`NpadIdType`][`hid::NpadIdType`] of the desired controller
     /// * `supported_style_tags`: The [`NpadStyleTag`][`hid::NpadStyleTag`] flags which will be used by the [`Player`] to scan for input, etc.
     /// * `shmem_ptr`: The address of HID shared-memory
-    </span><span class="kw">pub fn </span>new(npad_id: hid::NpadIdType, supported_style_tags: hid::NpadStyleTag, shmem_ptr: <span class="kw-2">*const </span>u8) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub fn </span>new(
+        npad_id: hid::NpadIdType,
+        supported_style_tags: hid::NpadStyleTag,
+        shmem_ptr: <span class="kw-2">*const </span>u8,
+    ) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             npad_id,
             npad_id_idx: get_npad_id_shmem_entry_index(npad_id),
             supported_style_tags,
             shmem_ptr,
-            prev_buttons: Default::default()
+            prev_buttons: Default::default(),
         }
     }
 
     <span class="doccomment">/// Gets the [`NpadAttribute`][`hid::NpadAttribute`]s for a certain [`NpadStyleTag`][`hid::NpadStyleTag`]
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `style_tag`: Must be a [`NpadStyleTag`][`hid::NpadStyleTag`] with a single flag set (otherwise only one will take effect and the rest will be ignored)
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>get_style_tag_attributes(<span class="kw-2">&amp;</span><span class="self">self</span>, style_tag: hid::NpadStyleTag) -&gt; hid::NpadAttribute {
@@ -469,9 +637,9 @@
     }
 
     <span class="doccomment">/// Gets the [`NpadButton`][`hid::NpadButton`]s for a certain [`NpadStyleTag`][`hid::NpadStyleTag`]
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `style_tag`: Must be a [`NpadStyleTag`][`hid::NpadStyleTag`] with a single flag set (otherwise only one will take effect and the rest will be ignored)
     </span><span class="kw">pub fn </span>get_style_tag_buttons(<span class="kw-2">&amp;mut </span><span class="self">self</span>, style_tag: hid::NpadStyleTag) -&gt; hid::NpadButton {
         <span class="kw">let </span>cur_buttons = <span class="macro">get_state_one_tag!</span>(<span class="self">self</span>.shmem_ptr, <span class="self">self</span>.npad_id_idx, style_tag, buttons);
@@ -480,11 +648,11 @@
     }
 
     <span class="doccomment">/// Gets the down [`NpadButton`][`hid::NpadButton`]s for a certain [`NpadStyleTag`][`hid::NpadStyleTag`]
-    /// 
+    ///
     /// This is similar to `get_style_tag_buttons` but this only gets the buttons once after they're down/pressed
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `style_tag`: Must be a [`NpadStyleTag`][`hid::NpadStyleTag`] with a single flag set (otherwise only one will take effect and the rest will be ignored)
     </span><span class="kw">pub fn </span>get_style_tag_buttons_down(<span class="kw-2">&amp;mut </span><span class="self">self</span>, style_tag: hid::NpadStyleTag) -&gt; hid::NpadButton {
         <span class="kw">let </span>prev_buttons = <span class="self">self</span>.prev_buttons;
@@ -493,11 +661,11 @@
     }
 
     <span class="doccomment">/// Gets the up [`NpadButton`][`hid::NpadButton`]s for a certain [`NpadStyleTag`][`hid::NpadStyleTag`]
-    /// 
+    ///
     /// This is similar to `get_style_tag_buttons` but this only gets the buttons once after they're up/released
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `style_tag`: Must be a [`NpadStyleTag`][`hid::NpadStyleTag`] with a single flag set (otherwise only one will take effect and the rest will be ignored)
     </span><span class="kw">pub fn </span>get_style_tag_buttons_up(<span class="kw-2">&amp;mut </span><span class="self">self</span>, style_tag: hid::NpadStyleTag) -&gt; hid::NpadButton {
         <span class="kw">let </span>prev_buttons = <span class="self">self</span>.prev_buttons;
@@ -506,16 +674,22 @@
     }
 
     <span class="doccomment">/// Gets the [`NpadButton`][`hid::NpadButton`]s for all of the supported [`NpadStyleTag`][`hid::NpadStyleTag`]s, combining all of them
-    /// 
+    ///
     /// This is like combining the result of `get_style_tag_buttons` with all the supported [`NpadStyleTag`][`hid::NpadStyleTag`] flags
     </span><span class="kw">pub fn </span>get_buttons(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; hid::NpadButton {
-        <span class="kw">let </span>cur_buttons = <span class="macro">get_state_multi_tag!</span>(<span class="self">self</span>.shmem_ptr, <span class="self">self</span>.npad_id_idx, <span class="self">self</span>.supported_style_tags, hid::NpadButton, buttons);
+        <span class="kw">let </span>cur_buttons = <span class="macro">get_state_multi_tag!</span>(
+            <span class="self">self</span>.shmem_ptr,
+            <span class="self">self</span>.npad_id_idx,
+            <span class="self">self</span>.supported_style_tags,
+            hid::NpadButton,
+            buttons
+        );
         <span class="self">self</span>.prev_buttons = cur_buttons;
         cur_buttons
     }
 
     <span class="doccomment">/// Gets the down [`NpadButton`][`hid::NpadButton`]s for all of the supported [`NpadStyleTag`][`hid::NpadStyleTag`]s, combining all of them
-    /// 
+    ///
     /// This is similar to `get_buttons` but this only gets the buttons once after they're down/pressed
     </span><span class="kw">pub fn </span>get_buttons_down(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; hid::NpadButton {
         <span class="kw">let </span>prev_buttons = <span class="self">self</span>.prev_buttons;
@@ -524,7 +698,7 @@
     }
 
     <span class="doccomment">/// Gets the up [`NpadButton`][`hid::NpadButton`]s for all of the supported [`NpadStyleTag`][`hid::NpadStyleTag`]s, combining all of them
-    /// 
+    ///
     /// This is similar to `get_buttons` but this only gets the buttons once after they're up/released
     </span><span class="kw">pub fn </span>get_buttons_up(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; hid::NpadButton {
         <span class="kw">let </span>prev_buttons = <span class="self">self</span>.prev_buttons;
@@ -548,49 +722,98 @@
 <span class="doccomment">/// Represents a simple type for dealing with input handling
 </span><span class="attr">#[allow(dead_code)]
 </span><span class="kw">pub struct </span>Context {
-    hid_service: mem::Shared&lt;<span class="kw">dyn </span>IHidServer&gt;,
-    applet_resource: mem::Shared&lt;<span class="kw">dyn </span>IAppletResource&gt;,
+    hid_service: HidServer,
+    applet_resource: AppletResource,
     supported_style_tags: hid::NpadStyleTag,
     shmem_handle: svc::Handle,
-    shmem_ptr: <span class="kw-2">*const </span>u8
+    shmem_ptr: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>u8,
 }
 
 <span class="kw">impl </span>Context {
     <span class="doccomment">/// Creates a [`Context`] from supported input values
-    /// 
+    ///
     /// The supported values are essentially used to enable supported controllers/controller configs via [`hid`] commands, and for opening [`Player`] types
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `supported_style_tags`: Supported [`NpadStyleTag`][`hid::NpadStyleTag`] flags
     /// * `supported_npad_ids`: Supported [`NpadIdType`][`hid::NpadIdType`] values
-    </span><span class="kw">pub fn </span>new(supported_style_tags: hid::NpadStyleTag, supported_npad_ids: <span class="kw-2">&amp;</span>[hid::NpadIdType]) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">let </span>hid_srv = service::new_service_object::&lt;hid::HidServer&gt;()<span class="question-mark">?</span>;
-        <span class="kw">let </span>applet_res = hid_srv.get().create_applet_resource(sf::ProcessId::new())<span class="question-mark">?</span>;
-        
-        <span class="kw">let </span>shmem_handle = applet_res.get().get_shared_memory_handle()<span class="question-mark">?</span>;
-        <span class="kw">let </span>shmem_address = vmem::allocate(shmem::SHMEM_SIZE)<span class="question-mark">?</span>;
-        svc::map_shared_memory(shmem_handle.handle, shmem_address, shmem::SHMEM_SIZE, svc::MemoryPermission::Read())<span class="question-mark">?</span>;
+    </span><span class="kw">pub fn </span>new(supported_style_tags: hid::NpadStyleTag, <span class="kw-2">mut </span>player_count: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="macro">result_return_if!</span>(
+            player_count == <span class="number">0 </span>|| player_count &gt; <span class="number">8</span>,
+            ResultInvalidControllerId
+        );
 
-        hid_srv.get().activate_npad(sf::ProcessId::new())<span class="question-mark">?</span>;
-        hid_srv.get().set_supported_npad_style_set(sf::ProcessId::new(), supported_style_tags)<span class="question-mark">?</span>;
-        hid_srv.get().set_supported_npad_id_type(sf::ProcessId::new(), sf::Buffer::from_array(supported_npad_ids))<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>players: [hid::NpadIdType; <span class="number">9</span>] = [hid::NpadIdType::No1; <span class="number">9</span>];
+
+        <span class="kw">for </span>player_id <span class="kw">in </span><span class="number">0</span>..player_count {
+            <span class="comment">// corresponding to values No1..No7
+            </span>players[player_id] = <span class="kw">unsafe </span>{ core::mem::transmute(player_id <span class="kw">as </span>u32) }
+        }
+
+        <span class="kw">if </span>supported_style_tags.contains(hid::NpadStyleTag::Handheld())
+            || supported_style_tags.contains(hid::NpadStyleTag::HandheldLark())
+        {
+            <span class="comment">// allow for 8 controller players plus the handheld controllers still working
+            </span>players[player_count] = hid::NpadIdType::Handheld;
+            player_count += <span class="number">1</span>;
+        }
+
+        <span class="kw">let </span>aruid = AppletResourceUserId::new(applet::GLOBAL_ARUID.load(core::sync::atomic::Ordering::Relaxed));
+        <span class="kw">let </span>players = sf::Buffer::from_array(<span class="kw-2">&amp;</span>players[..player_count]);
+
+        <span class="kw">let </span><span class="kw-2">mut </span>hid_srv = service::new_service_object::&lt;hid::HidServer&gt;()<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>applet_res = hid_srv.create_applet_resource(aruid.clone())<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>shmem_handle = applet_res.get_shared_memory_handle()<span class="question-mark">?</span>;
+        <span class="kw">let </span>shmem_address = vmem::allocate(shmem::SHMEM_SIZE)<span class="question-mark">?</span>;
+        <span class="kw">unsafe </span>{
+            svc::map_shared_memory(
+                shmem_handle.handle,
+                shmem_address,
+                shmem::SHMEM_SIZE,
+                svc::MemoryPermission::Read(),
+            )<span class="question-mark">?
+        </span>};
+
+        
+        
+        <span class="self">Self</span>::activate_npad(<span class="kw-2">&amp;mut </span>hid_srv, aruid.clone())<span class="question-mark">?</span>;
+        hid_srv.set_supported_npad_style_set(supported_style_tags, aruid.clone())<span class="question-mark">?</span>;
+        hid_srv.set_supported_npad_id_type(aruid.clone(), players)<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>_styles = hid_srv.get_supported_npad_style_set(aruid);
 
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             hid_service: hid_srv,
             applet_resource: applet_res,
             supported_style_tags,
             shmem_handle: shmem_handle.handle,
-            shmem_ptr: shmem_address <span class="kw">as </span><span class="kw-2">*const </span>u8
+            shmem_ptr: <span class="kw">unsafe </span>{shmem_address.as_ref().unwrap()},
         })
     }
 
+    <span class="kw">fn </span>activate_npad(hid_srv: <span class="kw-2">&amp;mut </span>HidServer, aruid: AppletResourceUserId) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>current_version = version::get_version();
+        <span class="kw">if </span>current_version &lt; version::Version::new(<span class="number">5</span>, <span class="number">0</span>, <span class="number">0</span>) {
+            hid_srv.activate_npad(aruid)
+        } <span class="kw">else </span>{
+            <span class="kw">let </span>revision = <span class="kw">match </span>current_version.major {
+                <span class="number">0</span>..<span class="number">6 </span>=&gt; <span class="number">1</span>,
+                <span class="number">6</span>..<span class="number">8 </span>=&gt; <span class="number">2</span>,
+                <span class="number">8</span>..<span class="number">18 </span>=&gt; <span class="number">3</span>,
+                <span class="number">18</span>.. =&gt; <span class="number">5
+            </span>};
+            hid_srv.activate_npad_with_revision(revision, aruid)
+        }
+    }
+
     <span class="doccomment">/// Opens a [`Player`] type for the specified [`NpadIdType`][`hid::NpadIdType`]
-    /// 
+    ///
     /// This simplifies creating a [`Player`] type, since this context contains the supported [`NpadStyleTag`][`hid::NpadStyleTag`] values and the mapped shared-memory address
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     ///  `npad_id`: The [`NpadIdType`][`hid::NpadIdType`] to use
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>get_player(<span class="kw-2">&amp;</span><span class="self">self</span>, npad_id: hid::NpadIdType) -&gt; Player {
@@ -598,35 +821,30 @@
     }
 
     <span class="doccomment">/// Gets the current [`TouchState`][`hid::TouchState`] values for the console touch-screen, returning the number of states present/set
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `touch_states`: Array of [`TouchState`][`hid::TouchState`] values to get filled, the array doesn't have to be bigger than `17` items
     </span><span class="kw">pub fn </span>get_touches(<span class="kw-2">&amp;mut </span><span class="self">self</span>, touch_states: <span class="kw-2">&amp;mut </span>[hid::TouchState]) -&gt; usize {
         <span class="kw">unsafe </span>{
             <span class="kw">let </span>cur_ver = version::get_version();
-            <span class="kw">let </span>touch_screen_shmem = <span class="kw">if </span>hid::shmem::SharedMemoryFormatV1::VERSION_INTERVAL.contains(cur_ver) {
-                <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="self">self</span>.shmem_ptr <span class="kw">as </span><span class="kw-2">*const </span>hid::shmem::SharedMemoryFormatV1)).touch_screen
-            }
-            <span class="kw">else if </span>hid::shmem::SharedMemoryFormatV2::VERSION_INTERVAL.contains(cur_ver) {
-                <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="self">self</span>.shmem_ptr <span class="kw">as </span><span class="kw-2">*const </span>hid::shmem::SharedMemoryFormatV2)).touch_screen
-            }
-            <span class="kw">else if </span>hid::shmem::SharedMemoryFormatV3::VERSION_INTERVAL.contains(cur_ver) {
-                <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="self">self</span>.shmem_ptr <span class="kw">as </span><span class="kw-2">*const </span>hid::shmem::SharedMemoryFormatV3)).touch_screen
-            } 
-            <span class="kw">else if </span>hid::shmem::SharedMemoryFormatV4::VERSION_INTERVAL.contains(cur_ver) {
-                <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="self">self</span>.shmem_ptr <span class="kw">as </span><span class="kw-2">*const </span>hid::shmem::SharedMemoryFormatV4)).touch_screen
-            }
-            <span class="kw">else if </span>hid::shmem::SharedMemoryFormatV5::VERSION_INTERVAL.contains(cur_ver) {
-                <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="self">self</span>.shmem_ptr <span class="kw">as </span><span class="kw-2">*const </span>hid::shmem::SharedMemoryFormatV5)).touch_screen
-            }
-            <span class="kw">else if </span>hid::shmem::SharedMemoryFormatV6::VERSION_INTERVAL.contains(cur_ver) {
-                <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="self">self</span>.shmem_ptr <span class="kw">as </span><span class="kw-2">*const </span>hid::shmem::SharedMemoryFormatV6)).touch_screen
-            }
-            <span class="kw">else </span>{
-                <span class="comment">// TODO: result?
-                </span><span class="macro">panic!</span>(<span class="string">"Unexpected version mismatch"</span>);
-            };
+            <span class="kw">let </span>touch_screen_shmem =
+                <span class="kw">if </span>hid::shmem::SharedMemoryFormatV1::VERSION_INTERVAL.contains(cur_ver) {
+                    <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="self">self</span>.shmem_ptr <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_ as </span><span class="kw-2">*const </span>hid::shmem::SharedMemoryFormatV1)).touch_screen
+                } <span class="kw">else if </span>hid::shmem::SharedMemoryFormatV2::VERSION_INTERVAL.contains(cur_ver) {
+                    <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="self">self</span>.shmem_ptr <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_ as </span><span class="kw-2">*const </span>hid::shmem::SharedMemoryFormatV2)).touch_screen
+                } <span class="kw">else if </span>hid::shmem::SharedMemoryFormatV3::VERSION_INTERVAL.contains(cur_ver) {
+                    <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="self">self</span>.shmem_ptr <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_ as </span><span class="kw-2">*const </span>hid::shmem::SharedMemoryFormatV3)).touch_screen
+                } <span class="kw">else if </span>hid::shmem::SharedMemoryFormatV4::VERSION_INTERVAL.contains(cur_ver) {
+                    <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="self">self</span>.shmem_ptr <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_ as </span><span class="kw-2">*const </span>hid::shmem::SharedMemoryFormatV4)).touch_screen
+                } <span class="kw">else if </span>hid::shmem::SharedMemoryFormatV5::VERSION_INTERVAL.contains(cur_ver) {
+                    <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="self">self</span>.shmem_ptr <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_ as </span><span class="kw-2">*const </span>hid::shmem::SharedMemoryFormatV5)).touch_screen
+                } <span class="kw">else if </span>hid::shmem::SharedMemoryFormatV6::VERSION_INTERVAL.contains(cur_ver) {
+                    <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="self">self</span>.shmem_ptr <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_ as </span><span class="kw-2">*const </span>hid::shmem::SharedMemoryFormatV6)).touch_screen
+                } <span class="kw">else </span>{
+                    <span class="comment">// TODO: result?
+                    </span><span class="macro">panic!</span>(<span class="string">"Unexpected version mismatch"</span>);
+                };
 
             <span class="kw">let </span>screen_state = touch_screen_shmem.lifo.get_tail_item().state;
             <span class="kw">let </span>min_count = touch_states.len().min(screen_state.count <span class="kw">as </span>usize);
@@ -641,8 +859,11 @@
 <span class="kw">impl </span>Drop <span class="kw">for </span>Context {
     <span class="doccomment">/// Destroys the [`Context`], unmapping the shared-memory and closing it, and also closing its [`IHidServer`] session
     </span><span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">let _ </span>= <span class="self">self</span>.hid_service.get().deactivate_npad(sf::ProcessId::new());
-        <span class="kw">let _ </span>= svc::unmap_shared_memory(<span class="self">self</span>.shmem_handle, <span class="self">self</span>.shmem_ptr <span class="kw">as </span><span class="kw-2">*mut </span>u8, shmem::SHMEM_SIZE);
+        <span class="kw">let _ </span>= <span class="self">self</span>.hid_service.deactivate_npad(AppletResourceUserId::new(<span class="number">0</span>));
+        <span class="kw">let _ </span>= <span class="kw">unsafe </span>{
+            svc::unmap_shared_memory(<span class="self">self</span>.shmem_handle, <span class="self">self</span>.shmem_ptr, shmem::SHMEM_SIZE)
+        };
         <span class="kw">let _ </span>= svc::close_handle(<span class="self">self</span>.shmem_handle);
     }
-}</code></pre></div></section></main></body></html>
+}
+</code></pre></div></section></main></body></html>

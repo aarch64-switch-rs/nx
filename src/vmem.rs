@@ -54,36 +54,15 @@ impl VirtualRegion {
 
 }
 
-pub enum VirtualRegionType {
-    Stack,
-    Heap,
-    LegacyAlias
-}
-
 /// The standard memory regions for NX processes
-pub(crate) struct StandardRegions {
+pub struct StandardRegions {
     stack: VirtualRegion,
     heap: VirtualRegion,
     legacy_alias: VirtualRegion,
     global_address_space: VirtualRegion,
 }
 
-/*
-impl StandardRegions {
-    pub(crate) const fn is_valid(&self, region: VirtualRegion) -> bool {
-        self.global_address_space.contains(region)
-    }
-
-    pub(crate) const fn is_valid_for_reservation(&self, region: VirtualRegion) -> bool {
-        self.global_address_space.contains(region) // the region will be in valid memory
-        && !self.stack.overlaps(region) // the region won't be in the memory space reserved for stacks
-        && !self.heap.overlaps(region) // the region won't be in the memory space reserved for heaps
-        && !self.legacy_alias.overlaps(region) // the region won't be in the legacy alias region
-    }
-} */
-
 static STANDARD_VMEM_REGIONS: generic_once_cell::OnceCell<crate::sync::sys::mutex::Mutex, StandardRegions> = generic_once_cell::OnceCell::new();
-//static mut STANDARD_VMEM_REGIONS: StandardRegions = StandardRegions::null();
 static NEXT_FREE_PTR: AtomicPtr<u8> = AtomicPtr::new(null_mut());
 
 

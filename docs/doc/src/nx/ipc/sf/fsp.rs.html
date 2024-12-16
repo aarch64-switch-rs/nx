@@ -1,6 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/ipc/sf/fsp.rs`."><title>fsp.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0-nightly (c9f8f3438 2024-03-27)" data-channel="nightly" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
-            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../../nx/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/ipc/sf/fsp.rs`."><title>fsp.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-42caa33d.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.85.0-nightly (a47555110 2024-11-22)" data-channel="nightly" data-search-js="search-92e6798f.js" data-settings-js="settings-0f613d39.js" ><script src="../../../../static.files/storage-59e33391.js"></script><script defer src="../../../../static.files/src-script-56102188.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">nx/ipc/sf/</div>fsp.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -159,13 +158,18 @@
 <a href="#157" id="157">157</a>
 <a href="#158" id="158">158</a>
 <a href="#159" id="159">159</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::result::<span class="kw-2">*</span>;
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a>
+<a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::result::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::ipc::sf;
-<span class="kw">use </span><span class="kw">crate</span>::mem;
 <span class="kw">use </span><span class="kw">crate</span>::util;
 <span class="kw">use </span><span class="kw">crate</span>::version;
 
 <span class="kw">pub mod </span>rc;
+
+<span class="kw">use </span>nx_derive::{Request, Response};
 
 <span class="macro">define_bit_enum!</span> {
     FileOpenMode (u32) {
@@ -204,7 +208,7 @@
     }
 }
 
-<span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+<span class="attr">#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 </span><span class="kw">pub enum </span>DirectoryEntryType {
     <span class="attr">#[default]
@@ -212,9 +216,9 @@
     File = <span class="number">1
 </span>}
 
-<span class="kw">pub type </span>Path = util::CString&lt;<span class="number">0x301</span>&gt;;
+<span class="kw">pub type </span>Path = util::ArrayString&lt;<span class="number">0x301</span>&gt;;
 
-<span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+<span class="attr">#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>DirectoryEntry {
     <span class="kw">pub </span>name: Path,
@@ -226,7 +230,7 @@
 }
 <span class="macro">const_assert!</span>(core::mem::size_of::&lt;DirectoryEntry&gt;() == <span class="number">0x310</span>);
 
-<span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+<span class="attr">#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>FileTimeStampRaw {
     <span class="kw">pub </span>create: i64,
@@ -237,7 +241,7 @@
 }
 <span class="macro">const_assert!</span>(core::mem::size_of::&lt;FileTimeStampRaw&gt;() == <span class="number">0x20</span>);
 
-<span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+<span class="attr">#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
 </span><span class="kw">pub enum </span>QueryId {
     SetConcatenationFileAttribute = <span class="number">0</span>,
@@ -246,7 +250,7 @@
     QueryUnpreparedFileInformation = <span class="number">3
 </span>}
 
-<span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+<span class="attr">#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>FileQueryRangeInfo {
     <span class="kw">pub </span>aes_ctr_key_type: u32,
@@ -256,7 +260,7 @@
 }
 <span class="macro">const_assert!</span>(core::mem::size_of::&lt;FileQueryRangeInfo&gt;() == <span class="number">0x40</span>);
 
-<span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+<span class="attr">#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
 </span><span class="kw">pub enum </span>OperationId {
     FillZero = <span class="number">0</span>,
@@ -269,51 +273,55 @@
     ReadLazyLoadFileForciblyForDebug = <span class="number">10001
 </span>}
 
+<span class="macro">ipc_sf_define_default_interface_client!</span>(File);
 <span class="macro">ipc_sf_define_interface_trait!</span> {
-    <span class="kw">trait </span>IFile {
-        read [<span class="number">0</span>, version::VersionInterval::all()]: (option: FileReadOption, offset: usize, size: usize, out_buf: sf::OutNonSecureMapAliasBuffer&lt;u8&gt;) =&gt; (read_size: usize);
-        write [<span class="number">1</span>, version::VersionInterval::all()]: (option: FileWriteOption, offset: usize, size: usize, buf: sf::InNonSecureMapAliasBuffer&lt;u8&gt;) =&gt; ();
-        flush [<span class="number">2</span>, version::VersionInterval::all()]: () =&gt; ();
-        set_size [<span class="number">3</span>, version::VersionInterval::all()]: (size: usize) =&gt; ();
-        get_size [<span class="number">4</span>, version::VersionInterval::all()]: () =&gt; (size: usize);
-        operate_range [<span class="number">5</span>, version::VersionInterval::from(version::Version::new(<span class="number">4</span>,<span class="number">0</span>,<span class="number">0</span>))]: (operation_id: OperationId, offset: usize, size: usize) =&gt; (info: FileQueryRangeInfo);
-        operate_range_with_buffer [<span class="number">6</span>, version::VersionInterval::from(version::Version::new(<span class="number">12</span>,<span class="number">0</span>,<span class="number">0</span>))]: (operation_id: OperationId, offset: usize, size: usize, in_buf: sf::InNonSecureMapAliasBuffer&lt;u8&gt;, out_buf: sf::OutNonSecureMapAliasBuffer&lt;u8&gt;) =&gt; ();
+	<span class="kw">trait </span>File {
+        read [<span class="number">0</span>, version::VersionInterval::all(), <span class="kw-2">mut</span>]: (option: FileReadOption, offset: usize, size: usize, out_buf: sf::OutNonSecureMapAliasBuffer&lt;u8&gt;) =&gt;  (read_size: usize) (read_size: usize);
+        write [<span class="number">1</span>, version::VersionInterval::all(), <span class="kw-2">mut</span>]: (option: FileWriteOption, offset: usize, size: usize, buf: sf::InNonSecureMapAliasBuffer&lt;u8&gt;) =&gt;  () ();
+        flush [<span class="number">2</span>, version::VersionInterval::all(), <span class="kw-2">mut</span>]: () =&gt; () ();
+        set_size [<span class="number">3</span>, version::VersionInterval::all(), <span class="kw-2">mut</span>]: (size: usize) =&gt;  () ();
+        get_size [<span class="number">4</span>, version::VersionInterval::all(), <span class="kw-2">mut</span>]: () =&gt; (size: usize) (size: usize);
+        operate_range [<span class="number">5</span>, version::VersionInterval::from(version::Version::new(<span class="number">4</span>,<span class="number">0</span>,<span class="number">0</span>)), <span class="kw-2">mut</span>]: (operation_id: OperationId, offset: usize, size: usize) =&gt;  (info: FileQueryRangeInfo) (info: FileQueryRangeInfo);
+        operate_range_with_buffer [<span class="number">6</span>, version::VersionInterval::from(version::Version::new(<span class="number">12</span>,<span class="number">0</span>,<span class="number">0</span>)), <span class="kw-2">mut</span>]: (operation_id: OperationId, offset: usize, size: usize, in_buf: sf::InNonSecureMapAliasBuffer&lt;u8&gt;, out_buf: sf::OutNonSecureMapAliasBuffer&lt;u8&gt;) =&gt;  () ();
     }
 }
 
+<span class="macro">ipc_sf_define_default_interface_client!</span>(Directory);
 <span class="macro">ipc_sf_define_interface_trait!</span> {
-    <span class="kw">trait </span>IDirectory {
-        read [<span class="number">0</span>, version::VersionInterval::all()]: (out_entries: sf::OutMapAliasBuffer&lt;DirectoryEntry&gt;) =&gt; (read_count: u64);
-        get_entry_count [<span class="number">1</span>, version::VersionInterval::all()]: () =&gt; (count: u64);
+	<span class="kw">trait </span>Directory {
+        read [<span class="number">0</span>, version::VersionInterval::all()]: (out_entries: sf::OutMapAliasBuffer&lt;DirectoryEntry&gt;) =&gt;  (read_count: u64) (read_count: u64);
+        get_entry_count [<span class="number">1</span>, version::VersionInterval::all()]: () =&gt; (count: u64) (count: u64);
     }
 }
 
+<span class="macro">ipc_sf_define_default_interface_client!</span>(FileSystem);
 <span class="macro">ipc_sf_define_interface_trait!</span> {
-    <span class="kw">trait </span>IFileSystem {
-        create_file [<span class="number">0</span>, version::VersionInterval::all()]: (attribute: FileAttribute, size: usize, path_buf: sf::InFixedPointerBuffer&lt;Path&gt;) =&gt; ();
-        delete_file [<span class="number">1</span>, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer&lt;Path&gt;) =&gt; ();
-        create_directory [<span class="number">2</span>, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer&lt;Path&gt;) =&gt; ();
-        delete_directory [<span class="number">3</span>, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer&lt;Path&gt;) =&gt; ();
-        delete_directory_recursively [<span class="number">4</span>, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer&lt;Path&gt;) =&gt; ();
-        rename_file [<span class="number">5</span>, version::VersionInterval::all()]: (old_path_buf: sf::InFixedPointerBuffer&lt;Path&gt;, new_path_buf: sf::InFixedPointerBuffer&lt;Path&gt;) =&gt; ();
-        rename_directory [<span class="number">6</span>, version::VersionInterval::all()]: (old_path_buf: sf::InFixedPointerBuffer&lt;Path&gt;, new_path_buf: sf::InFixedPointerBuffer&lt;Path&gt;) =&gt; ();
-        get_entry_type [<span class="number">7</span>, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer&lt;Path&gt;) =&gt; (entry_type: DirectoryEntryType);
-        open_file [<span class="number">8</span>, version::VersionInterval::all()]: (mode: FileOpenMode, path_buf: sf::InFixedPointerBuffer&lt;Path&gt;) =&gt; (file: mem::Shared&lt;<span class="kw">dyn </span>IFile&gt;);
-        open_directory [<span class="number">9</span>, version::VersionInterval::all()]: (mode: DirectoryOpenMode, path_buf: sf::InFixedPointerBuffer&lt;Path&gt;) =&gt; (dir: mem::Shared&lt;<span class="kw">dyn </span>IDirectory&gt;);
-        commit [<span class="number">10</span>, version::VersionInterval::all()]: () =&gt; ();
-        get_free_space_size [<span class="number">11</span>, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer&lt;Path&gt;) =&gt; (size: usize);
-        get_total_space_size [<span class="number">12</span>, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer&lt;Path&gt;) =&gt; (size: usize);
-        clean_directory_recursively [<span class="number">13</span>, version::VersionInterval::from(version::Version::new(<span class="number">3</span>,<span class="number">0</span>,<span class="number">0</span>))]: (path_buf: sf::InFixedPointerBuffer&lt;Path&gt;) =&gt; ();
-        get_file_time_stamp_raw [<span class="number">14</span>, version::VersionInterval::from(version::Version::new(<span class="number">3</span>,<span class="number">0</span>,<span class="number">0</span>))]: (path_buf: sf::InFixedPointerBuffer&lt;Path&gt;) =&gt; (time_stamp: FileTimeStampRaw);
-        query_entry [<span class="number">15</span>, version::VersionInterval::from(version::Version::new(<span class="number">4</span>,<span class="number">0</span>,<span class="number">0</span>))]: (path_buf: sf::InFixedPointerBuffer&lt;Path&gt;, query_id: QueryId, in_buf: sf::InNonSecureMapAliasBuffer&lt;u8&gt;, out_buf: sf::OutNonSecureMapAliasBuffer&lt;u8&gt;) =&gt; ();
+	<span class="kw">trait </span>FileSystem {
+        create_file [<span class="number">0</span>, version::VersionInterval::all()]: (attribute: FileAttribute, size: usize, path_buf: sf::InFixedPointerBuffer&lt;Path&gt;) =&gt;  () ();
+        delete_file [<span class="number">1</span>, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer&lt;Path&gt;) =&gt;  () ();
+        create_directory [<span class="number">2</span>, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer&lt;Path&gt;) =&gt;  () ();
+        delete_directory [<span class="number">3</span>, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer&lt;Path&gt;) =&gt;  () ();
+        delete_directory_recursively [<span class="number">4</span>, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer&lt;Path&gt;) =&gt;  () ();
+        rename_file [<span class="number">5</span>, version::VersionInterval::all()]: (old_path_buf: sf::InFixedPointerBuffer&lt;Path&gt;, new_path_buf: sf::InFixedPointerBuffer&lt;Path&gt;) =&gt;  () ();
+        rename_directory [<span class="number">6</span>, version::VersionInterval::all()]: (old_path_buf: sf::InFixedPointerBuffer&lt;Path&gt;, new_path_buf: sf::InFixedPointerBuffer&lt;Path&gt;) =&gt;  () ();
+        get_entry_type [<span class="number">7</span>, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer&lt;Path&gt;) =&gt;  (entry_type: DirectoryEntryType) (entry_type: DirectoryEntryType);
+        open_file [<span class="number">8</span>, version::VersionInterval::all()]: (mode: FileOpenMode, path_buf: sf::InFixedPointerBuffer&lt;Path&gt;) =&gt;  (file: File) (file: <span class="macro">session_type!</span>(File));
+        open_directory [<span class="number">9</span>, version::VersionInterval::all()]: (mode: DirectoryOpenMode, path_buf: sf::InFixedPointerBuffer&lt;Path&gt;) =&gt;  (dir: Directory) (dir: <span class="macro">session_type!</span>(Directory));
+        commit [<span class="number">10</span>, version::VersionInterval::all()]: () =&gt; () ();
+        get_free_space_size [<span class="number">11</span>, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer&lt;Path&gt;) =&gt;  (size: usize) (size: usize);
+        get_total_space_size [<span class="number">12</span>, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer&lt;Path&gt;) =&gt;  (size: usize) (size: usize);
+        clean_directory_recursively [<span class="number">13</span>, version::VersionInterval::from(version::Version::new(<span class="number">3</span>,<span class="number">0</span>,<span class="number">0</span>))]: (path_buf: sf::InFixedPointerBuffer&lt;Path&gt;) =&gt;  () ();
+        get_file_time_stamp_raw [<span class="number">14</span>, version::VersionInterval::from(version::Version::new(<span class="number">3</span>,<span class="number">0</span>,<span class="number">0</span>))]: (path_buf: sf::InFixedPointerBuffer&lt;Path&gt;) =&gt;  (time_stamp: FileTimeStampRaw) (time_stamp: FileTimeStampRaw);
+        query_entry [<span class="number">15</span>, version::VersionInterval::from(version::Version::new(<span class="number">4</span>,<span class="number">0</span>,<span class="number">0</span>))]: (path_buf: sf::InFixedPointerBuffer&lt;Path&gt;, query_id: QueryId, in_buf: sf::InNonSecureMapAliasBuffer&lt;u8&gt;, out_buf: sf::OutNonSecureMapAliasBuffer&lt;u8&gt;) =&gt;  () ();
     }
 }
 
+<span class="macro">ipc_sf_define_default_interface_client!</span>(FileSystemProxy);
 <span class="macro">ipc_sf_define_interface_trait!</span> {
-    <span class="kw">trait </span>IFileSystemProxy {
-        set_current_process [<span class="number">1</span>, version::VersionInterval::all()]: (process_id: sf::ProcessId) =&gt; ();
-        open_sd_card_filesystem [<span class="number">18</span>, version::VersionInterval::all()]: () =&gt; (sd_filesystem: mem::Shared&lt;<span class="kw">dyn </span>IFileSystem&gt;);
-        output_access_log_to_sd_card [<span class="number">1006</span>, version::VersionInterval::all()]: (log_buf: sf::InMapAliasBuffer&lt;u8&gt;) =&gt; ();
+	<span class="kw">trait </span>FileSystemProxy {
+        set_current_process [<span class="number">1</span>, version::VersionInterval::all()]: (process_id: sf::ProcessId) =&gt;  () ();
+        open_sd_card_filesystem [<span class="number">18</span>, version::VersionInterval::all()]: () =&gt; (sd_filesystem: FileSystem) (sd_filesystem: <span class="macro">session_type!</span>(FileSystem));
+        output_access_log_to_sd_card [<span class="number">1006</span>, version::VersionInterval::all()]: (log_buf: sf::InMapAliasBuffer&lt;u8&gt;) =&gt;  () ();
     }
 }
 

@@ -62,40 +62,59 @@ pub fn new_service_object<T: IService>() -> Result<T> {
     Ok(object)
 }
 
+/// "psm" service definitions.
 pub mod psm;
 
+/// "fsp-srv" service definitions.
 pub mod fsp;
 
+/// "lm" service definitions.
 pub mod lm;
 
+/// "vi:*" service definitions.
 pub mod vi;
 
+/// "nvdrv" and "nvdrv:*" service definitions.
 pub mod nv;
 
+/// "dispdrv" service definitions.
 pub mod dispdrv;
 
+/// "fatal:u" service definitions.
 pub mod fatal;
 
+/// "hid" service definitions.
 pub mod hid;
 
+/// "appletAE" service definitions.
 pub mod applet;
 
+/// "psc:m" service definitions.
 pub mod psc;
 
+/// "pm:*" service definitions.
 pub mod pm;
 
+/// "set:sys" service definitions.
 pub mod set;
 
+/// "mii:e" service definitions.
 pub mod mii;
 
+/// "csrng" service definitions.
 pub mod spl;
 
+/// "usb:hs" service definitions.
 pub mod usb;
 
+/// "ldr:shel" service definitions.
 pub mod ldr;
 
+/// "nfp:*" service definitions.
 pub mod nfp;
 
+/// "ncm" service definitions.
 pub mod ncm;
 
+/// "lr" service definitions.
 pub mod lr;

@@ -2,116 +2,116 @@
 
 use core::arch::asm;
 
-/// Represents a CPU register value (`W`, `X` or `R` value depending on the context/arch)
+/// Represents a CPU register value (`W`, `X` or `R` value depending on the context/arch).
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct CpuRegister {
-    /// The register value
+    /// The register value.
     pub reg: u64
 }
 
 impl CpuRegister {
-    /// Gets the [`CpuRegister`] as an `X` value
+    /// Gets the [`CpuRegister`] as an `X` value.
     #[inline]
     pub const fn get_x(&self) -> u64 {
         self.reg
     }
 
-    /// Sets the [`CpuRegister`] from an `X` value
+    /// Sets the [`CpuRegister`] from an `X` value.
     /// 
-    /// # Arguments
+    /// # Arguments:
     /// 
-    /// * `x`: The value to set
+    /// * `x`: The value to set.
     #[inline]
     pub fn set_x(&mut self, x: u64) {
         self.reg = x;
     }
 
-    /// Gets the [`CpuRegister`] as an `W` value
+    /// Gets the [`CpuRegister`] as an `W` value.
     #[inline]
     pub const fn get_w(&self) -> u32 {
         self.reg as u32
     }
 
-    /// Sets the [`CpuRegister`] from an `W` value
+    /// Sets the [`CpuRegister`] from an `W` value.
     /// 
-    /// # Arguments
+    /// # Arguments:
     /// 
-    /// * `w`: The value to set
+    /// * `w`: The value to set.
     #[inline]
     pub fn set_w(&mut self, w: u32) {
         self.reg = w as u64;
     }
 
-    /// Gets the [`CpuRegister`] as an `R` value
+    /// Gets the [`CpuRegister`] as an `R` value.
     #[inline]
     pub const fn get_r(&self) -> u32 {
         self.reg as u32
     }
 
-    /// Sets the [`CpuRegister`] from an `R` value
+    /// Sets the [`CpuRegister`] from an `R` value.
     /// 
-    /// # Arguments
+    /// # Arguments:
     /// 
-    /// * `r`: The value to set
+    /// * `r`: The value to set.
     #[inline]
     pub fn set_r(&mut self, r: u32) {
         self.reg = r as u64;
     }
 }
 
-/// Represents a FPU register value (`V`, `D` or `S` value depending on the context/arch)
+/// Represents a FPU register value (`V`, `D` or `S` value depending on the context/arch).
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct FpuRegister {
-    /// The register value
+    /// The register value.
     pub reg: u128
 }
 
 impl FpuRegister {
-    /// Gets the [`FpuRegister`] as an `V` value
+    /// Gets the [`FpuRegister`] as an `V` value.
     #[inline]
     pub const fn get_v(&self) -> u128 {
         self.reg
     }
 
-    /// Sets the [`FpuRegister`] from an `V` value
+    /// Sets the [`FpuRegister`] from an `V` value.
     /// 
-    /// # Arguments
+    /// # Arguments:
     /// 
-    /// * `v`: The value to set
+    /// * `v`: The value to set.
     #[inline]
     pub fn set_v(&mut self, v: u128) {
         self.reg = v;
     }
 
-    /// Gets the [`FpuRegister`] as an `D` value
+    /// Gets the [`FpuRegister`] as an `D` value.
     #[inline]
     pub const fn get_d(&self) -> f64 {
         self.reg as f64
     }
 
-    /// Sets the [`FpuRegister`] from an `D` value
+    /// Sets the [`FpuRegister`] from an `D` value.
     /// 
-    /// # Arguments
+    /// # Arguments:
     /// 
-    /// * `d`: The value to set
+    /// * `d`: The value to set.
     #[inline]
     pub fn set_d(&mut self, d: f64) {
         self.reg = d as u128;
     }
 
-    /// Gets the [`FpuRegister`] as an `S` value
+    /// Gets the [`FpuRegister`] as an `S` value.
     #[inline]
     pub const fn get_s(&self) -> f32 {
         self.reg as f32
     }
 
-    /// Sets the [`FpuRegister`] from an `S` value
+    /// Sets the [`FpuRegister`] from an `S` value.
     /// 
-    /// # Arguments
+    /// # Arguments:
     /// 
-    /// * `s`: The value to set
+    /// * `s`: The value to set.
     #[inline]
     pub fn set_s(&mut self, s: f32) {
         self.reg = s as u128;
@@ -119,7 +119,7 @@ impl FpuRegister {
 }
 
 define_bit_enum! {
-    /// Represents flags of different register kinds/groups
+    /// Represents flags of different register kinds/groups.
     RegisterGroup (u32) {
         CpuGprs = bit!(0),
         CpuSprs = bit!(1),
@@ -128,39 +128,40 @@ define_bit_enum! {
     }
 }
 
-/// Represents a thread context usable with [`svc`][`crate::svc`]s
+/// Represents a thread context usable with [`svc`][`crate::svc`]s.
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct ThreadContext {
-    /// The general-purpose CPU registers
+    /// The general-purpose CPU registers.
     pub gpu_gprs: [CpuRegister; 29],
-    /// The FP register
+    /// The FP register.
     pub fp: u64,
-    /// The LR register
+    /// The LR register.
     pub lr: u64,
-    /// The SP register
+    /// The SP register.
     pub sp: u64,
-    /// The PC register
+    /// The PC register.
     pub pc: CpuRegister,
-    /// The PSR value
+    /// The PSR value.
     pub psr: u32,
-    /// The general-purpose FPU registers
+    /// The general-purpose FPU registers.
     pub fpu_gprs: [FpuRegister; 32],
-    /// The FPCR value
+    /// The FPCR value.
     pub fpcr: u32,
-    /// The FPSR value
+    /// The FPSR value.
     pub fpsr: u32,
-    /// The TPIDR value
+    /// The TPIDR value.
     pub tpidr: u64
 }
 
-/// Flushes memory cache at a certain memory location
+/// Flushes memory cache at a certain memory location.
 /// 
-/// # Argument
+/// # Arguments:
 /// 
-/// * `address`: Memory address
-/// * `size`: Memory size
-///   SAFETY: `address` must be valid pointer.
+/// * `address`: Memory address.
+/// * `size`: Memory size.
+/// 
+/// SAFETY: `address` must be valid pointer.
 #[inline(always)]
 pub unsafe fn cache_flush(address: *mut u8, size: usize) {
     extern "C" {
@@ -172,7 +173,7 @@ pub unsafe fn cache_flush(address: *mut u8, size: usize) {
     }
 }
 
-/// Gets the system tick
+/// Gets the system tick.
 #[inline(always)]
 pub fn get_system_tick() -> u64 {
     let system_tick: u64;
@@ -185,7 +186,7 @@ pub fn get_system_tick() -> u64 {
     system_tick
 }
 
-/// Gets the system tick frequency
+/// Gets the system tick frequency.
 #[inline(always)]
 pub fn get_system_tick_frequency() -> u64 {
     let system_tick_freq: u64;
@@ -198,21 +199,21 @@ pub fn get_system_tick_frequency() -> u64 {
     system_tick_freq
 }
 
-/// Converts ticks to nanoseconds
+/// Converts ticks to nanoseconds.
 /// 
-/// # Arguments
+/// # Arguments:
 /// 
-/// * `ticks`: Ticks to convert
+/// * `ticks`: Ticks to convert.
 #[inline]
 pub const fn ticks_to_nanoseconds(ticks: u64) -> u64 {
     (ticks * 625) / 12
 }
 
-/// Converts nanoseconds to ticks
+/// Converts nanoseconds to ticks.
 /// 
-/// # Arguments
+/// # Arguments:
 /// 
-/// * `ns`: Nanoseconds to convert
+/// * `ns`: Nanoseconds to convert.
 #[inline]
 pub const fn nanoseconds_to_ticks(ns: u64) -> u64 {
     (ns * 12) / 625

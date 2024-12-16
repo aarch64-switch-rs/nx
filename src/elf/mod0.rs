@@ -1,12 +1,8 @@
 //! MOD0 format utils
 
-use zeroize::Zeroize;
-
-use crate::result::*;
-
-/// Represents the `MOD0` start layout
-/// 
-/// These are the contents prececing the actual header
+/// Represents the `MOD0` start layout, whicha are the first 8 bytes of the binary in memory.
+/// These are usually right before the actual header in official binaries, but they dont have
+/// to be and we store it (the actual header) in `.rodata`.
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct ModuleStart {
@@ -16,81 +12,105 @@ pub struct ModuleStart {
     pub magic_offset: u32,
 }
 
-/// Represents the `MOD0` header structure
+/// Represents the `MOD0` header structure.
+/// Although we know from the official linker script that all the offsets will be positive,
+/// the offsets have been made signed so that consumers can bring their own linker scripts
+/// (e.g. emuiibo) and we won't break functionality if they reorder sections.
+/// 
+/// All members have been made private as this should only ever be instantiated using 
+/// [`Header::from_text_start_addr`], with data populated by the linker.
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct Header {
     /// The magic, whose expected value is [`MAGIC`][`Header::MAGIC`]
-    pub magic: u32,
+    magic: u32,
     /// The dynamic offset
-    pub dynamic: u32,
+    dynamic: i32,
     /// The BSS start offset
-    pub bss_start: u32,
+    bss_start: i32,
     /// The BSS end offset
-    pub bss_end: u32,
+    bss_end: i32,
     /// The eh_frame_hdr start offset
-    pub eh_frame_hdr_start: u32,
+    eh_frame_hdr_start: i32,
     /// The eh_frame_hdr end offset
-    pub eh_frame_hdr_end: u32,
+    eh_frame_hdr_end: i32,
     /// The offset to runtime-generated module object
-    pub module_object: u32,
+    module_object: i32,
 }
 
 impl Header {
     /// The header magic value (`MOD0`)
     pub const MAGIC: u32 = u32::from_le_bytes(*b"MOD0");
-}
 
-/// Finds the [`Dyn`][`super::Dyn`] reference from a base code address
-/// 
-/// # Arguments
-/// 
-/// * `base_address`: The base address
-#[inline]
-pub unsafe fn find_start_dyn_address(base_address: *const u8) -> Result<*const u8> {
-    let module_start = base_address as *const ModuleStart;
-    let mod_offset = (*module_start).magic_offset as isize;
-    let module = base_address.offset(mod_offset) as *const Header;
-    result_return_unless!((*module).magic == Header::MAGIC, super::rc::ResultInvalidModuleMagic);
+    /// Gets the header embedded at the slot `.text.jmp+4`.
+    /// Since this is a hard requirement of the switch runtime,
+    /// an invalid MOD0 header offset or invalid header magic value panics.
+    ///
+    /// # Arguments:
+    ///
+    /// * `text_base`: The start of the `.text.jmp` section.
+    ///
+    /// SAFETY: The pointer `text_base` must be a valid pointer to the start of the `.text` section.
+    #[inline]
+    pub fn from_text_start_addr(text_base: *mut u8) -> &'static mut Self {
+        let mod0_ref = unsafe {
+            let module_start = (text_base as *const ModuleStart)
+                .as_ref()
+                .expect("Invalid base `.text` pointer. Address is null or improperly aligned");
 
-    let dyn_offset = mod_offset + (*module).dynamic as isize;
-    let start_dyn = base_address.offset(dyn_offset);
-    Ok(start_dyn)
-}
+            // Get the Mod0 offset that is written at the slot `.text.jmp+4`
+            let mod0_offset = (*module_start).magic_offset as usize;
 
-/// Finds the eh_frame_hdr from a base code address
-/// 
-/// # Arguments
-/// 
-/// * `base_address`: The base address
-#[inline]
-pub unsafe fn find_eh_frame_header(base_address: *mut u8) -> Result<*mut u8> {
-    let module_start = base_address as *const ModuleStart;
-    let mod_offset = (*module_start).magic_offset as isize;
-    let module = base_address.offset(mod_offset) as *const Header;
-    result_return_unless!((*module).magic == Header::MAGIC, super::rc::ResultInvalidModuleMagic);
+            // The mod0_ptr is written into `.rodata`, at the offset `mod0_offset` from the start of `.test.jmp`
+            let mod0_ptr = text_base.add(mod0_offset) as *mut Header;
 
-    let eh_frame_hdr_img_offset = mod_offset + (*module).eh_frame_hdr_start as isize;
-    Ok(base_address.offset(eh_frame_hdr_img_offset))
-}
+            mod0_ptr.as_mut().expect(
+                "Failed to get reference to Mod0 header. Address is null or improperly aligned.",
+            )
+        };
 
-/// zeroes the bss section from a base code address
-/// 
-/// # Arguments
-/// 
-/// * `base_address`: The base address
-#[inline]
-pub unsafe fn zero_bss_section(base_address: *const u8) -> Result<()> {
-    let module_start = base_address as *const ModuleStart;
-    let mod_offset = (*module_start).magic_offset as isize;
-    let module = base_address.offset(mod_offset) as *const Header;
-    result_return_unless!((*module).magic == Header::MAGIC, super::rc::ResultInvalidModuleMagic);
+        assert!(mod0_ref.magic == Header::MAGIC, "Invalid Mod0 magic value.");
 
-    let bss_start_offset = mod_offset + (*module).bss_start as isize;
-    let bss_size = (*module).bss_end.saturating_sub((*module).bss_start) as usize;
-    let bss_start_ptr = base_address.offset(bss_start_offset);
+        mod0_ref
+    }
 
-    core::slice::from_raw_parts_mut(bss_start_ptr as *mut u64, bss_size / size_of::<u64>()).zeroize();
+    /// Gets the start address for the `.dynamic` section
+    /// 
+    /// SAFETY: The reference `&self` must be the copy in `.rodata` created by the linker.
+    pub unsafe fn get_dyn_start(&self) -> *const u8 {
+        // SAFETY: Safe as we are just computing a new pointer, not dereferencing.
+        unsafe { (self as *const Self as *const u8).offset(self.dynamic as isize) }
+    }
 
-    Ok(())
+    /// Gets the start address for the `eh_frame_hdr` section.
+    /// 
+    /// SAFETY: The reference `&self` must be the copy in `.rodata` created by the linker.
+    #[inline]
+    pub fn get_eh_frame_header_start(&self) -> *const u8 {
+        // SAFETY: Safe as we are just computing a new pointer, not dereferencing.
+        unsafe {(self as *const Self as *const u8).offset(self.eh_frame_hdr_start as isize) }
+    }
+
+    /// Zeroes the bss section from a base code address. We have to take an `&mut self` here as computing.
+    /// 
+    /// SAFETY: The reference `&mut self` must be the copy in `.rodata` created by the linker. Additionally,
+    /// The reference to self should have been created using a mutable pointer, to prevent a shared->mut conversion
+    /// which would be immediate UB (as documented in the struct docstring).
+    #[inline]
+    pub unsafe fn zero_bss_section(&mut self) {
+        use zeroize::Zeroize;
+
+        debug_assert!(self.bss_end>=self.bss_start, "Invalid offset range for BSS region. End address is before start address.");
+
+        let module_addr = self as *mut Self as *mut u8;
+        let bss_start = module_addr.offset(self.bss_start as isize);
+        let bss_len = (self.bss_end - self.bss_start) as isize as usize;
+
+        // Use the zeroize library to get bss zeroing with the guarantee that it won'get get elided.
+        unsafe {core::slice::from_raw_parts_mut(bss_start, bss_len)}.zeroize();
+
+        // With a SeqCst fence, we ensure that the bss section is zeroed before we return.
+        // The call to this function now can not be reordered either.
+        core::sync::atomic::compiler_fence(core::sync::atomic::Ordering::SeqCst);
+    }
 }

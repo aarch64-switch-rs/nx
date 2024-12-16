@@ -5,6 +5,7 @@ use service::vi::ISystemDisplayService;
 use super::*;
 use crate::gpu::binder;
 use crate::gpu::ioctl;
+use crate::mem::align_up;
 use crate::svc;
 use crate::ipc::sf;
 use crate::service::nv;
@@ -21,13 +22,13 @@ const MAX_BUFFERS: usize = 8;
 /// Represents a `fn` with a certain layer disposing code
 /// 
 /// Note that different layers (managed layers, stray layers, etc.) are destroyed in different ways
-pub type LayerDestroyFn = fn(vi::LayerId, &mut ApplicationDisplayService) -> Result<()>;
+pub type LayerDestroyFn = fn(vi::LayerId, &mut vi::ApplicationDisplayService) -> Result<()>;
 
 /// Represents a wrapper around layer manipulation
 pub struct Surface {
     binder: binder::Binder,
     nvdrv_srv: mem::Shared<dyn nv::INvDrvServices>,
-    application_display_service: mem::Shared<ApplicationDisplayService>,
+    application_display_service: mem::Shared<vi::ApplicationDisplayService>,
     width: u32,
     height: u32,
     buffer_data: alloc::Buffer<u8>,
@@ -56,9 +57,9 @@ impl Surface {
     /// # Arguments
     /// 
     /// * `binder_handle`: The binder handle to use
-    /// * `nvdrv_srv`: The [`NvDrvServicesService`][`nv::NvDrvServicesService`] object to use
+    /// * `nvdrv_srv`: The [`NvDrvServicesService`][`crate::service::nv::INvDrvServices`] dyn-object to use
     /// * ``
-    pub fn new(binder_handle: i32, nvdrv_srv: mem::Shared<dyn nv::INvDrvServices>, application_display_service: mem::Shared<ApplicationDisplayService>, nvhost_fd: u32, nvmap_fd: u32, nvhostctrl_fd: u32, hos_binder_driver: mem::Shared<dyn dispdrv::IHOSBinderDriver>, buffer_count: u32, display_id: vi::DisplayId, layer_id: vi::LayerId, width: u32, height: u32, color_fmt: ColorFormat, pixel_fmt: PixelFormat, layout: Layout, layer_destroy_fn: LayerDestroyFn) -> Result<Self> {
+    pub fn new(binder_handle: dispdrv::BinderHandle, nvdrv_srv: mem::Shared<dyn nv::INvDrvServices>, application_display_service: mem::Shared<vi::ApplicationDisplayService>, nvhost_fd: u32, nvmap_fd: u32, nvhostctrl_fd: u32, hos_binder_driver: mem::Shared<dyn dispdrv::IHOSBinderDriver>, buffer_count: u32, display_id: vi::DisplayId, layer_id: vi::LayerId, width: u32, height: u32, color_fmt: ColorFormat, pixel_fmt: PixelFormat, layout: Layout, layer_destroy_fn: LayerDestroyFn) -> Result<Self> {
         let mut binder = binder::Binder::new(binder_handle, hos_binder_driver)?;
         binder.increase_refcounts()?;
         let _ = binder.connect(ConnectionApi::Cpu, false)?;
@@ -277,26 +278,31 @@ impl Surface {
 
     /// Gets the surface width
     #[inline]
-    pub fn get_width(&self) -> u32 {
+    pub const fn get_width(&self) -> u32 {
         self.width
     }
 
     /// Gets the surface height
     #[inline]
-    pub fn get_height(&self) -> u32 {
+    pub const fn get_height(&self) -> u32 {
         self.height
     }
 
     /// Gets the surface [`ColorFormat`]
     #[inline]
-    pub fn get_color_format(&self) -> ColorFormat {
+    pub const fn get_color_format(&self) -> ColorFormat {
         self.color_fmt
     }
 
-    /// Computes and gets the surface stride
-    pub fn compute_stride(&self) -> u32 {
-        let bpp = calculate_bpp(self.color_fmt);
-        align_width(bpp, self.width) * bpp
+    /// Computes and gets the surface stride (distance between adjacent rows in pixels, incliuding padding).
+    pub const fn stride(&self) -> u32 {
+        self.pitch() / self.color_fmt.bytes_per_pixel()
+    }
+
+    // Computes the surface pitch (distance between ajacent rows bytes, including padding)
+    #[inline]
+    pub const fn pitch(&self) -> u32 {
+        align_up!(self.width * self.color_fmt.bytes_per_pixel(), 64u32)
     }
 }
 

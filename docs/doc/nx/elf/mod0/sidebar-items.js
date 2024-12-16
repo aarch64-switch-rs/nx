@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["find_start_dyn_address"],"struct":["Header","ModuleStart"]};
+window.SIDEBAR_ITEMS = {"fn":["find_eh_frame_header","find_start_dyn_address","zero_bss_section"],"struct":["Header","ModuleStart"]};

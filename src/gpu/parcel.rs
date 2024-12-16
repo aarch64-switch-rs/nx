@@ -3,6 +3,7 @@
 use crate::result::*;
 use crate::util;
 use crate::mem;
+use crate::service::dispdrv::BinderHandle;
 use core::mem as cmem;
 use core::ptr;
 
@@ -52,6 +53,7 @@ impl ParcelPayload {
     }
 }
 
+/// Carrier for the layer's parameters. Used to receive the layer's binder handle.
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct ParcelData {
@@ -60,10 +62,10 @@ pub struct ParcelData {
     /// Unknown, maybe the process ID
     pub unk_maybe_pid: u32,
     /// Binder handle
-    pub handle: i32,
+    pub handle: BinderHandle,
     /// Unknown, usually zeros
     pub unk_zero: [u8; 0xC],
-    /// NUL-terminated string containing `"dispdrv"`
+    /// NUL-terminated string containing `"dispdrv\0"`
     pub dispdrv_str: util::ArrayString<0x8>,
     /// Unknown, usually zeros
     pub unk_zero_2: [u8; 8],

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["PmModule","PmService"]};
+window.SIDEBAR_ITEMS = {};

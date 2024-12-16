@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["PAGE_ALIGNMENT"],"fn":["allocate","delete","initialize","is_enabled","new","release"],"mod":["rc"],"struct":["Buffer","Layout"],"trait":["Allocator"]};
+window.SIDEBAR_ITEMS = {"constant":["PAGE_ALIGNMENT"],"fn":["initialize","is_enabled"],"mod":["rc"],"struct":["Buffer","Layout"],"trait":["AllocatorEx"]};

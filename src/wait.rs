@@ -82,7 +82,9 @@ impl Drop for SystemEvent {
 
 /// Represents how a waiter operates (essentially, whether it gets automatically cleared after being signaled)
 pub enum WaiterType {
+    /// A simple handle, that doesn't get cleared when the waiter wakes
     Handle,
+    /// A wait handle that has the signal automatically cleared
     HandleWithClear
 }
 

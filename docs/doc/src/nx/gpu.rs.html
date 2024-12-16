@@ -1,6 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/gpu.rs`."><title>gpu.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0-nightly (c9f8f3438 2024-03-27)" data-channel="nightly" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
-            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../nx/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/gpu.rs`."><title>gpu.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-42caa33d.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.85.0-nightly (a47555110 2024-11-22)" data-channel="nightly" data-search-js="search-92e6798f.js" data-settings-js="settings-0f613d39.js" ><script src="../../static.files/storage-59e33391.js"></script><script defer src="../../static.files/src-script-56102188.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">nx/</div>gpu.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1093,12 +1092,58 @@
 <a href="#1091" id="1091">1091</a>
 <a href="#1092" id="1092">1092</a>
 <a href="#1093" id="1093">1093</a>
-</pre></div><pre class="rust"><code><span class="doccomment">//! Graphics and GPU support and utils
+<a href="#1094" id="1094">1094</a>
+<a href="#1095" id="1095">1095</a>
+<a href="#1096" id="1096">1096</a>
+<a href="#1097" id="1097">1097</a>
+<a href="#1098" id="1098">1098</a>
+<a href="#1099" id="1099">1099</a>
+<a href="#1100" id="1100">1100</a>
+<a href="#1101" id="1101">1101</a>
+<a href="#1102" id="1102">1102</a>
+<a href="#1103" id="1103">1103</a>
+<a href="#1104" id="1104">1104</a>
+<a href="#1105" id="1105">1105</a>
+<a href="#1106" id="1106">1106</a>
+<a href="#1107" id="1107">1107</a>
+<a href="#1108" id="1108">1108</a>
+<a href="#1109" id="1109">1109</a>
+<a href="#1110" id="1110">1110</a>
+<a href="#1111" id="1111">1111</a>
+<a href="#1112" id="1112">1112</a>
+<a href="#1113" id="1113">1113</a>
+<a href="#1114" id="1114">1114</a>
+<a href="#1115" id="1115">1115</a>
+<a href="#1116" id="1116">1116</a>
+<a href="#1117" id="1117">1117</a>
+<a href="#1118" id="1118">1118</a>
+<a href="#1119" id="1119">1119</a>
+<a href="#1120" id="1120">1120</a>
+<a href="#1121" id="1121">1121</a>
+<a href="#1122" id="1122">1122</a>
+<a href="#1123" id="1123">1123</a>
+<a href="#1124" id="1124">1124</a>
+<a href="#1125" id="1125">1125</a>
+<a href="#1126" id="1126">1126</a>
+<a href="#1127" id="1127">1127</a>
+<a href="#1128" id="1128">1128</a>
+<a href="#1129" id="1129">1129</a>
+<a href="#1130" id="1130">1130</a>
+<a href="#1131" id="1131">1131</a></pre></div><pre class="rust"><code><span class="doccomment">//! Graphics and GPU support and utils
 
-</span><span class="kw">use </span><span class="kw">crate</span>::result::<span class="kw-2">*</span>;
+</span><span class="kw">use </span>::alloc::sync::Arc;
+
+<span class="kw">use </span><span class="kw">crate</span>::mem::Shared;
+<span class="kw">use </span><span class="kw">crate</span>::result::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::service;
 <span class="kw">use </span><span class="kw">crate</span>::mem;
 <span class="kw">use </span><span class="kw">crate</span>::mem::alloc;
+<span class="kw">use </span><span class="kw">crate</span>::service::vi::ApplicationRootService;
+<span class="kw">use </span><span class="kw">crate</span>::service::vi::IManagerDisplayService;
+<span class="kw">use </span><span class="kw">crate</span>::service::vi::ISystemDisplayService;
+<span class="kw">use </span><span class="kw">crate</span>::service::vi::ManagerDisplayService;
+<span class="kw">use </span><span class="kw">crate</span>::service::vi::ManagerRootService;
+<span class="kw">use </span><span class="kw">crate</span>::service::vi::SystemRootService;
 <span class="kw">use </span><span class="kw">crate</span>::svc;
 <span class="kw">use </span><span class="kw">crate</span>::ipc::sf;
 <span class="kw">use </span><span class="kw">crate</span>::service::nv;
@@ -1110,6 +1155,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::service::vi::IApplicationDisplayService;
 <span class="kw">use </span><span class="kw">crate</span>::service::dispdrv;
 <span class="kw">use </span><span class="kw">crate</span>::service::applet;
+<span class="kw">use </span><span class="kw">crate</span>::svc::MemoryPermission;
 
 <span class="kw">pub mod </span>rc;
 
@@ -1124,6 +1170,7 @@
 <span class="doccomment">/// Represents layout types
 </span><span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u32)]
+#[allow(missing_docs)]
 </span><span class="kw">pub enum </span>Layout {
     <span class="attr">#[default]
     </span>Invalid = <span class="number">0</span>,
@@ -1135,6 +1182,7 @@
 <span class="doccomment">/// Represents display scan format types
 </span><span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u32)]
+#[allow(missing_docs)]
 </span><span class="kw">pub enum </span>DisplayScanFormat {
     <span class="attr">#[default]
     </span>Progressive = <span class="number">0</span>,
@@ -1145,6 +1193,7 @@
 </span><span class="attr">#[allow(non_camel_case_types)]
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u32)]
+#[allow(missing_docs)]
 </span><span class="kw">pub enum </span>Kind {
     <span class="attr">#[default]
     </span>Pitch = <span class="number">0x0</span>,
@@ -1386,6 +1435,7 @@
 </span><span class="attr">#[allow(non_camel_case_types)]
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u64)]
+#[allow(missing_docs)]
 </span><span class="kw">pub enum </span>ColorFormat {
     <span class="attr">#[default]
     </span>Unspecified = <span class="number">0</span>,
@@ -1620,10 +1670,11 @@
     XYZ = <span class="number">0x140A886640
 </span>}
 
-<span class="doccomment">/// Represents supported pixel formats
+<span class="doccomment">/// Represents supported pixel formats. Defined in [AOSP's](https://android.googlesource.com) [graphics-base-v1.0.h](https://android.googlesource.com/platform/system/core/+/8186c6362183e88bc5254af457baa662b20ca1e8/libsystem/include/system/graphics-base-v1.0.h#12)
 </span><span class="attr">#[allow(non_camel_case_types)]
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u32)]
+#[allow(missing_docs)]
 </span><span class="kw">pub enum </span>PixelFormat {
     <span class="attr">#[default]
     </span>Invalid = <span class="number">0</span>,
@@ -1681,19 +1732,26 @@
 </span><span class="kw">pub enum </span>ConnectionApi {
     <span class="attr">#[default]
     </span>Invalid = <span class="number">0</span>,
-    EGL = <span class="number">1</span>,
-    Cpu = <span class="number">2</span>,
-    Media = <span class="number">3</span>,
-    Camera = <span class="number">4
+    <span class="doccomment">/// Buffers will be queued by EGL via eglSwapBuffers after being filled using OpenGL ES.
+    </span>EGL = <span class="number">1</span>,
+    <span class="doccomment">/// Buffers will be queued after being filled using the CPU.
+    </span>Cpu = <span class="number">2</span>,
+    <span class="doccomment">/// Buffers will be queued by Stagefright after being filled by a video decoder.
+    /// The video decoder can either be a software or hardware decoder.
+    </span>Media = <span class="number">3</span>,
+    <span class="doccomment">/// Buffers will be queued by the the camera HAL.
+    </span>Camera = <span class="number">4
 </span>}
 
 <span class="doccomment">/// Represents disconnect modes
 </span><span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u32)]
 </span><span class="kw">pub enum </span>DisconnectMode {
-    <span class="attr">#[default]
+    <span class="doccomment">/// Disconnect only the specified API.
+    </span><span class="attr">#[default]
     </span>Api,
-    AllLocal
+    <span class="doccomment">/// Disconnect any API originally connected from the process calling disconnect.
+    </span>AllLocal
 }
 
 <span class="doccomment">/// Represents a queue buffer output layout
@@ -1855,6 +1913,7 @@
 <span class="doccomment">/// Represents a transform type
 </span><span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u32)]
+#[allow(missing_docs)]
 </span><span class="kw">pub enum </span>Transform {
     <span class="attr">#[default]
     </span>Invalid = <span class="number">0</span>,
@@ -1935,19 +1994,26 @@
 /// 
 /// This can contain the minimum/maximum possible values, or a custom Z value
 </span><span class="kw">pub enum </span>LayerZ {
-    Max,
-    Min,
-    Value(i64)
+    <span class="doccomment">/// Always inserts at the front
+    </span>Max,
+    <span class="doccomment">/// Always inserts at the back
+    </span>Min,
+    <span class="doccomment">/// Inserts with a specified Z value
+    </span>Value(i64)
 }
 
 <span class="doccomment">/// Represents `nvdrv:*` service kinds
 </span><span class="kw">pub enum </span>NvDrvServiceKind {
-    Application,
-    Applet,
-    System
+    <span class="doccomment">/// "nvdrv"
+    </span>Application,
+    <span class="doccomment">/// "nvdrv:a"
+    </span>Applet,
+    <span class="doccomment">/// "nvdrv:s"
+    </span>System
 }
 
 <span class="doccomment">/// Represents `vi:*` service kinds
+</span><span class="attr">#[allow(missing_docs)]
 </span><span class="kw">pub enum </span>ViServiceKind {
     Application,
     System,
@@ -1985,18 +2051,26 @@
     }
 }
 
+<span class="doccomment">/// A holder for our `*RootService` objects, just to keep them alive for the lifetime of the `Context`
+</span><span class="attr">#[allow(missing_docs)]
+</span><span class="kw">enum </span>RootServiceHolder {
+    Application(ApplicationRootService),
+    Manager(ManagerRootService),
+    System(SystemRootService)
+}
+
 <span class="doccomment">/// Represents a graphics context
 </span><span class="attr">#[allow(dead_code)]
 </span><span class="kw">pub struct </span>Context {
-    vi_service: mem::Shared&lt;<span class="kw">dyn </span>sf::IObject&gt;,
+    vi_service: RootServiceHolder,
     nvdrv_service: mem::Shared&lt;<span class="kw">dyn </span>INvDrvServices&gt;,
-    application_display_service: mem::Shared&lt;<span class="kw">dyn </span>IApplicationDisplayService&gt;,
-    hos_binder_driver: mem::Shared&lt;<span class="kw">dyn </span>dispdrv::IHOSBinderDriver&gt;,
+    application_display_service: mem::Shared&lt;vi::ApplicationDisplayService&gt;,
+    hos_binder_driver: mem::Shared&lt;dispdrv::HOSBinderDriver&gt;,
     transfer_mem: alloc::Buffer&lt;u8&gt;,
     transfer_mem_handle: svc::Handle,
-    nvhost_fd: u32,
-    nvmap_fd: u32,
-    nvhostctrl_fd: u32,
+    nvhost_fd: svc::Handle,
+    nvmap_fd: svc::Handle,
+    nvhostctrl_fd: svc::Handle,
 }
 
 <span class="kw">impl </span>Context {
@@ -2010,38 +2084,36 @@
     /// * `vi_kind`: The [`ViServiceKind`]
     /// * `transfer_mem_size`: The transfer memory size to use
     </span><span class="kw">pub fn </span>new(nv_kind: NvDrvServiceKind, vi_kind: ViServiceKind, transfer_mem_size: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
-        <span class="comment">// Note: need to store a reference of the vi-service since it works as a domain, thus closing the original handle leaves all opened interfaces unusable
-        // Storing it as a IObject shared-ptr since different vi services have different base interfaces...
-        </span><span class="kw">let </span>(vi_srv, application_display_srv) = <span class="kw">match </span>vi_kind {
+        <span class="kw">let </span>(vi_srv, application_display_srv) = <span class="kw">match </span>vi_kind {
             ViServiceKind::Manager =&gt; {
                 <span class="kw">let </span>vi_srv = service::new_service_object::&lt;vi::ManagerRootService&gt;()<span class="question-mark">?</span>;
-                <span class="kw">let </span>app_disp_srv: mem::Shared&lt;<span class="kw">dyn </span>IApplicationDisplayService&gt; = vi_srv.get().get_display_service(vi::DisplayServiceMode::Privileged)<span class="question-mark">?</span>;
+                <span class="kw">let </span>app_disp_srv: mem::Shared&lt;vi::ApplicationDisplayService&gt; = mem::Shared::new(vi_srv.get_display_service(vi::DisplayServiceMode::Privileged)<span class="question-mark">?</span>);
 
-                (vi_srv <span class="kw">as </span>mem::Shared&lt;<span class="kw">dyn </span>sf::IObject&gt;, app_disp_srv)
+                (RootServiceHolder::Manager(vi_srv), app_disp_srv)
             },
             ViServiceKind::System =&gt; {
                 <span class="kw">let </span>vi_srv = service::new_service_object::&lt;vi::SystemRootService&gt;()<span class="question-mark">?</span>;
-                <span class="kw">let </span>app_disp_srv: mem::Shared&lt;<span class="kw">dyn </span>IApplicationDisplayService&gt; = vi_srv.get().get_display_service(vi::DisplayServiceMode::Privileged)<span class="question-mark">?</span>;
+                <span class="kw">let </span>app_disp_srv: mem::Shared&lt;vi::ApplicationDisplayService&gt; = mem::Shared::new(vi_srv.get_display_service(vi::DisplayServiceMode::Privileged)<span class="question-mark">?</span>);
 
-                (vi_srv <span class="kw">as </span>mem::Shared&lt;<span class="kw">dyn </span>sf::IObject&gt;, app_disp_srv)
+                (RootServiceHolder::System(vi_srv), app_disp_srv)
             },
             ViServiceKind::Application =&gt; {
                 <span class="kw">let </span>vi_srv = service::new_service_object::&lt;vi::ApplicationRootService&gt;()<span class="question-mark">?</span>;
-                <span class="kw">let </span>app_disp_srv: mem::Shared&lt;<span class="kw">dyn </span>IApplicationDisplayService&gt; = vi_srv.get().get_display_service(vi::DisplayServiceMode::User)<span class="question-mark">?</span>;
+                <span class="kw">let </span>app_disp_srv: mem::Shared&lt;vi::ApplicationDisplayService&gt; = mem::Shared::new(vi_srv.get_display_service(vi::DisplayServiceMode::User)<span class="question-mark">?</span>);
 
-                (vi_srv <span class="kw">as </span>mem::Shared&lt;<span class="kw">dyn </span>sf::IObject&gt;, app_disp_srv)
+                (RootServiceHolder::Application(vi_srv), app_disp_srv)
             }
         };
 
-        <span class="kw">let </span>nvdrv_srv = <span class="kw">match </span>nv_kind {
+        <span class="kw">let </span>nvdrv_srv: Shared&lt;<span class="kw">dyn </span>INvDrvServices&gt; = <span class="kw">match </span>nv_kind {
             NvDrvServiceKind::Application =&gt; {
-                service::new_service_object::&lt;nv::ApplicationNvDrvService&gt;()<span class="question-mark">? </span><span class="kw">as </span>mem::Shared&lt;<span class="kw">dyn </span>INvDrvServices&gt;
+                mem::Shared::new(service::new_service_object::&lt;nv::ApplicationNvDrvService&gt;()<span class="question-mark">?</span>)
             },
             NvDrvServiceKind::Applet =&gt; {
-                service::new_service_object::&lt;nv::AppletNvDrvService&gt;()<span class="question-mark">? </span><span class="kw">as </span>mem::Shared&lt;<span class="kw">dyn </span>INvDrvServices&gt;
+                mem::Shared::new(service::new_service_object::&lt;nv::AppletNvDrvService&gt;()<span class="question-mark">?</span>)
             },
             NvDrvServiceKind::System =&gt; {
-                service::new_service_object::&lt;nv::SystemNvDrvService&gt;()<span class="question-mark">? </span><span class="kw">as </span>mem::Shared&lt;<span class="kw">dyn </span>INvDrvServices&gt;
+                mem::Shared::new(service::new_service_object::&lt;nv::SystemNvDrvService&gt;()<span class="question-mark">?</span>)
             }
         };
 
@@ -2058,20 +2130,20 @@
     /// * `application_display_srv`: The VI [`IApplicationDisplayService`] interface object
     /// * `nvdrv_srv`: The NV [`INvDrvServices`] service object
     /// * `transfer_mem_size`: The transfer memory size to use
-    </span><span class="kw">pub fn </span>from(vi_srv: mem::Shared&lt;<span class="kw">dyn </span>sf::IObject&gt;, application_display_srv: mem::Shared&lt;<span class="kw">dyn </span>IApplicationDisplayService&gt;, nvdrv_srv: mem::Shared&lt;<span class="kw">dyn </span>INvDrvServices&gt;, transfer_mem_size: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+    </span><span class="kw">pub fn </span>from(vi_srv: RootServiceHolder, application_display_srv: mem::Shared&lt;vi::ApplicationDisplayService&gt;, nvdrv_srv: mem::Shared&lt;<span class="kw">dyn </span>INvDrvServices&gt;, transfer_mem_size: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
         <span class="kw">let </span>transfer_mem = alloc::Buffer::new(alloc::PAGE_ALIGNMENT, transfer_mem_size)<span class="question-mark">?</span>;
-        <span class="kw">let </span>transfer_mem_handle = svc::create_transfer_memory(transfer_mem.ptr, transfer_mem_size, svc::MemoryPermission::None())<span class="question-mark">?</span>;
-        nvdrv_srv.get().initialize(transfer_mem_size <span class="kw">as </span>u32, sf::Handle::from(svc::CURRENT_PROCESS_PSEUDO_HANDLE), sf::Handle::from(transfer_mem_handle))<span class="question-mark">?</span>;
+        <span class="kw">let </span>transfer_mem_handle = <span class="kw">unsafe </span>{svc::create_transfer_memory(transfer_mem.ptr, transfer_mem_size, svc::MemoryPermission::None())<span class="question-mark">?</span>};
+        nvdrv_srv.lock().initialize(transfer_mem_size <span class="kw">as </span>u32, sf::Handle::from(svc::CURRENT_PROCESS_PSEUDO_HANDLE), sf::Handle::from(transfer_mem_handle))<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>(nvhost_fd, nvhost_err) = nvdrv_srv.get().open(sf::Buffer::from_array(NVHOST_AS_GPU_PATH.as_bytes()))<span class="question-mark">?</span>;
+        <span class="kw">let </span>(nvhost_fd, nvhost_err) = nvdrv_srv.lock().open(sf::Buffer::from_array(NVHOST_AS_GPU_PATH.as_bytes()))<span class="question-mark">?</span>;
         convert_nv_error_code(nvhost_err)<span class="question-mark">?</span>;
-        <span class="kw">let </span>(nvmap_fd, nvmap_err) = nvdrv_srv.get().open(sf::Buffer::from_array(NVMAP_PATH.as_bytes()))<span class="question-mark">?</span>;
+        <span class="kw">let </span>(nvmap_fd, nvmap_err) = nvdrv_srv.lock().open(sf::Buffer::from_array(NVMAP_PATH.as_bytes()))<span class="question-mark">?</span>;
         convert_nv_error_code(nvmap_err)<span class="question-mark">?</span>;
-        <span class="kw">let </span>(nvhostctrl_fd, nvhostctrl_err) = nvdrv_srv.get().open(sf::Buffer::from_array(NVHOST_CTRL_PATH.as_bytes()))<span class="question-mark">?</span>;
+        <span class="kw">let </span>(nvhostctrl_fd, nvhostctrl_err) = nvdrv_srv.lock().open(sf::Buffer::from_array(NVHOST_CTRL_PATH.as_bytes()))<span class="question-mark">?</span>;
         convert_nv_error_code(nvhostctrl_err)<span class="question-mark">?</span>;
         
-        <span class="kw">let </span>hos_binder_drv = application_display_srv.get().get_relay_service()<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{ vi_service: vi_srv, nvdrv_service: nvdrv_srv, application_display_service: application_display_srv, hos_binder_driver: hos_binder_drv, transfer_mem, transfer_mem_handle, nvhost_fd, nvmap_fd, nvhostctrl_fd })
+        <span class="kw">let </span>hos_binder_drv = application_display_srv.lock().get_relay_service()<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{ vi_service: vi_srv, nvdrv_service: nvdrv_srv, application_display_service: application_display_srv, hos_binder_driver: Shared::new(hos_binder_drv), transfer_mem, transfer_mem_handle, nvhost_fd, nvmap_fd, nvhostctrl_fd })
     }
 
     <span class="doccomment">/// Gets the underlying NV [`INvDrvServices`] service object
@@ -2080,7 +2152,7 @@
     }
 
     <span class="doccomment">/// Gets the underlying [`IApplicationDisplayService`] object
-    </span><span class="kw">pub fn </span>get_application_display_service(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; mem::Shared&lt;<span class="kw">dyn </span>IApplicationDisplayService&gt; {
+    </span><span class="kw">pub fn </span>get_application_display_service(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; mem::Shared&lt;vi::ApplicationDisplayService&gt; {
         <span class="self">self</span>.application_display_service.clone()
     }
 
@@ -2089,13 +2161,12 @@
         <span class="self">self</span>.hos_binder_driver.clone()
     }
 
-    <span class="kw">fn </span>stray_layer_destroy(layer_id: vi::LayerId, application_display_service: mem::Shared&lt;<span class="kw">dyn </span>IApplicationDisplayService&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        application_display_service.get().destroy_stray_layer(layer_id)
+    <span class="kw">fn </span>stray_layer_destroy(layer_id: vi::LayerId, application_display_service: <span class="kw-2">&amp;mut </span>vi::ApplicationDisplayService) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        application_display_service.destroy_stray_layer(layer_id)
     }
 
-    <span class="kw">fn </span>managed_layer_destroy(layer_id: vi::LayerId, application_display_service: mem::Shared&lt;<span class="kw">dyn </span>IApplicationDisplayService&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let </span>manager_display_service = application_display_service.get().get_manager_display_service()<span class="question-mark">?</span>;
-        manager_display_service.get().destroy_managed_layer(layer_id)
+    <span class="kw">fn </span>managed_layer_destroy(layer_id: vi::LayerId, application_display_service: <span class="kw-2">&amp;mut </span>vi::ApplicationDisplayService) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        application_display_service.get_manager_display_service()<span class="question-mark">?</span>.destroy_managed_layer(layer_id)
     }
 
     <span class="kw">fn </span>create_surface_impl(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buffer_count: u32, display_id: vi::DisplayId, layer_id: vi::LayerId, width: u32, height: u32, color_fmt: ColorFormat, pixel_fmt: PixelFormat, layout: Layout, layer_destroy_fn: surface::LayerDestroyFn, native_window: parcel::ParcelPayload) -&gt; <span class="prelude-ty">Result</span>&lt;surface::Surface&gt; {
@@ -2116,28 +2187,28 @@
     /// * `pixel_fmt`: The pixel format to use
     /// * `layout`: The layout type to use
     </span><span class="kw">pub fn </span>create_stray_layer_surface(<span class="kw-2">&amp;mut </span><span class="self">self</span>, display_name: <span class="kw-2">&amp;</span>str, buffer_count: u32, color_fmt: ColorFormat, pixel_fmt: PixelFormat, layout: Layout) -&gt; <span class="prelude-ty">Result</span>&lt;surface::Surface&gt; {
-        <span class="kw">let </span>display_id = <span class="self">self</span>.application_display_service.get().open_display(vi::DisplayName::from_str(display_name))<span class="question-mark">?</span>;
-        <span class="kw">let </span>native_window = parcel::ParcelPayload::new();
-        <span class="kw">let </span>(layer_id, <span class="kw">_</span>) = <span class="self">self</span>.application_display_service.get().create_stray_layer(vi::LayerFlags::Default(), display_id, sf::Buffer::from_other_var(<span class="kw-2">&amp;</span>native_window))<span class="question-mark">?</span>;
+        <span class="kw">let </span>display_id = <span class="self">self</span>.application_display_service.lock().open_display(vi::DisplayName::from_str(display_name))<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>native_window = parcel::ParcelPayload::new();
+        <span class="kw">let </span>(layer_id, <span class="kw">_</span>) = <span class="self">self</span>.application_display_service.lock().create_stray_layer(vi::LayerFlags::Default(), display_id, sf::Buffer::from_other_mut_var(<span class="kw-2">&amp;mut </span>native_window))<span class="question-mark">?</span>;
 
         <span class="self">self</span>.create_surface_impl(buffer_count, display_id, layer_id, SCREEN_WIDTH, SCREEN_HEIGHT, color_fmt, pixel_fmt, layout, <span class="self">Self</span>::stray_layer_destroy, native_window)
     }
 
-    <span class="kw">fn </span>set_layer_z_impl(display_id: vi::DisplayId, layer_id: vi::LayerId, z: LayerZ, system_display_service: mem::Shared&lt;<span class="kw">dyn </span>vi::ISystemDisplayService&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">fn </span>set_layer_z_impl(display_id: vi::DisplayId, layer_id: vi::LayerId, z: LayerZ, system_display_service: <span class="kw-2">&amp;mut </span>vi::SystemDisplayService) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>z_value = <span class="kw">match </span>z {
-            LayerZ::Max =&gt; system_display_service.get().get_z_order_count_max(display_id)<span class="question-mark">?</span>,
-            LayerZ::Min =&gt; system_display_service.get().get_z_order_count_min(display_id)<span class="question-mark">?</span>,
+            LayerZ::Max =&gt; system_display_service.get_z_order_count_max(display_id)<span class="question-mark">?</span>,
+            LayerZ::Min =&gt; system_display_service.get_z_order_count_min(display_id)<span class="question-mark">?</span>,
             LayerZ::Value(z_val) =&gt; z_val
         };
-        system_display_service.get().set_layer_z(layer_id, z_value)
+        system_display_service.set_layer_z(layer_id, z_value)
     }
 
-    <span class="kw">fn </span>set_layer_size_impl(layer_id: vi::LayerId, width: u32, height: u32, system_display_service: mem::Shared&lt;<span class="kw">dyn </span>vi::ISystemDisplayService&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        system_display_service.get().set_layer_size(layer_id, (width <span class="kw">as </span>f32 * SIZE_FACTOR) <span class="kw">as </span>u64, (height <span class="kw">as </span>f32 * SIZE_FACTOR) <span class="kw">as </span>u64)
+    <span class="kw">fn </span>set_layer_size_impl(layer_id: vi::LayerId, width: u32, height: u32, system_display_service: <span class="kw-2">&amp;mut </span>vi::SystemDisplayService) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        system_display_service.set_layer_size(layer_id, (width <span class="kw">as </span>f32 * SIZE_FACTOR) <span class="kw">as </span>u64, (height <span class="kw">as </span>f32 * SIZE_FACTOR) <span class="kw">as </span>u64)
     }
 
-    <span class="kw">fn </span>set_layer_position_impl(layer_id: vi::LayerId, x: f32, y: f32, system_display_service: mem::Shared&lt;<span class="kw">dyn </span>vi::ISystemDisplayService&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        system_display_service.get().set_layer_position(x * SIZE_FACTOR, y * SIZE_FACTOR, layer_id)
+    <span class="kw">fn </span>set_layer_position_impl(layer_id: vi::LayerId, x: f32, y: f32, system_display_service: <span class="kw-2">&amp;mut </span>vi::SystemDisplayService) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        system_display_service.set_layer_position(x * SIZE_FACTOR, y * SIZE_FACTOR, layer_id)
     }
 
     <span class="doccomment">/// Creates a [`Surface`][`surface::Surface`] based on a managed layer
@@ -2160,16 +2231,16 @@
     /// * `layout`: The layout type to use
     </span><span class="kw">pub fn </span>create_managed_layer_surface(<span class="kw-2">&amp;mut </span><span class="self">self</span>, display_name: <span class="kw-2">&amp;</span>str, aruid: applet::AppletResourceUserId, layer_flags: vi::LayerFlags, x: f32, y: f32, width: u32, height: u32, z: LayerZ, buffer_count: u32, color_fmt: ColorFormat, pixel_fmt: PixelFormat, layout: Layout) -&gt; <span class="prelude-ty">Result</span>&lt;surface::Surface&gt; {
         <span class="kw">let </span>display_name_v = vi::DisplayName::from_str(display_name);
-        <span class="kw">let </span>display_id = <span class="self">self</span>.application_display_service.get().open_display(display_name_v)<span class="question-mark">?</span>;
-        <span class="kw">let </span>system_display_service = <span class="self">self</span>.application_display_service.get().get_system_display_service()<span class="question-mark">?</span>;
-        <span class="kw">let </span>manager_display_service = <span class="self">self</span>.application_display_service.get().get_manager_display_service()<span class="question-mark">?</span>;
+        <span class="kw">let </span>display_id = <span class="self">self</span>.application_display_service.lock().open_display(display_name_v)<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>system_display_service = <span class="self">self</span>.application_display_service.lock().get_system_display_service()<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>manager_display_service = <span class="self">self</span>.application_display_service.lock().get_manager_display_service()<span class="question-mark">?</span>;
         <span class="kw">let </span>native_window = parcel::ParcelPayload::new();
 
-        <span class="kw">let </span>layer_id = manager_display_service.get().create_managed_layer(layer_flags, display_id, aruid)<span class="question-mark">?</span>;
-        <span class="self">self</span>.application_display_service.get().open_layer(display_name_v, layer_id, sf::ProcessId::from(aruid), sf::Buffer::from_other_var(<span class="kw-2">&amp;</span>native_window))<span class="question-mark">?</span>;
-        <span class="self">Self</span>::set_layer_position_impl(layer_id, x, y, system_display_service.clone())<span class="question-mark">?</span>;
-        <span class="self">Self</span>::set_layer_size_impl(layer_id, width, height, system_display_service.clone())<span class="question-mark">?</span>;
-        <span class="self">Self</span>::set_layer_z_impl(display_id, layer_id, z, system_display_service)<span class="question-mark">?</span>;
+        <span class="kw">let </span>layer_id = manager_display_service.create_managed_layer(layer_flags, display_id, aruid.aruid)<span class="question-mark">?</span>;
+        <span class="self">self</span>.application_display_service.lock().open_layer(display_name_v, layer_id, aruid, sf::Buffer::from_other_var(<span class="kw-2">&amp;</span>native_window))<span class="question-mark">?</span>;
+        <span class="self">Self</span>::set_layer_position_impl(layer_id, x, y, <span class="kw-2">&amp;mut </span>system_display_service)<span class="question-mark">?</span>;
+        <span class="self">Self</span>::set_layer_size_impl(layer_id, width, height, <span class="kw-2">&amp;mut </span>system_display_service)<span class="question-mark">?</span>;
+        <span class="self">Self</span>::set_layer_z_impl(display_id, layer_id, z, <span class="kw-2">&amp;mut </span>system_display_service)<span class="question-mark">?</span>;
 
         <span class="self">self</span>.create_surface_impl(buffer_count, display_id, layer_id, width, height, color_fmt, pixel_fmt, layout, <span class="self">Self</span>::managed_layer_destroy, native_window)
     }
@@ -2177,12 +2248,15 @@
 
 <span class="kw">impl </span>Drop <span class="kw">for </span>Context {
     <span class="doccomment">/// Destroys the [`Context`], closing everything it opened when it was created
+    </span><span class="attr">#[allow(unused_must_use)]
     </span><span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">let _ </span>= <span class="self">self</span>.nvdrv_service.get().close(<span class="self">self</span>.nvhost_fd);
-        <span class="kw">let _ </span>= <span class="self">self</span>.nvdrv_service.get().close(<span class="self">self</span>.nvmap_fd);
-        <span class="kw">let _ </span>= <span class="self">self</span>.nvdrv_service.get().close(<span class="self">self</span>.nvhostctrl_fd);
-
-        <span class="self">self</span>.transfer_mem.release();
-        <span class="kw">let _ </span>= svc::close_handle(<span class="self">self</span>.transfer_mem_handle);
+        <span class="self">self</span>.nvdrv_service.lock().close(<span class="self">self</span>.nvhost_fd);
+        <span class="self">self</span>.nvdrv_service.lock().close(<span class="self">self</span>.nvmap_fd);
+        <span class="self">self</span>.nvdrv_service.lock().close(<span class="self">self</span>.nvhostctrl_fd);
+        
+        <span class="self">self</span>.nvdrv_service.lock().close(<span class="self">self</span>.transfer_mem_handle);
+        <span class="self">self</span>.nvdrv_service.lock().get_session_mut().close();
+        svc::close_handle(<span class="self">self</span>.transfer_mem_handle).unwrap();
+        mem::wait_for_permission(<span class="self">self</span>.transfer_mem.ptr,  MemoryPermission::Write(), <span class="prelude-val">None</span>);
     }
 }</code></pre></div></section></main></body></html>

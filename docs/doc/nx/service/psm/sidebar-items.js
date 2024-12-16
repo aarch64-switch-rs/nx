@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["PsmServer"]};
+window.SIDEBAR_ITEMS = {};

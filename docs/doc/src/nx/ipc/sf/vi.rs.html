@@ -1,6 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/ipc/sf/vi.rs`."><title>vi.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0-nightly (c9f8f3438 2024-03-27)" data-channel="nightly" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
-            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../../nx/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/ipc/sf/vi.rs`."><title>vi.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-42caa33d.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.85.0-nightly (a47555110 2024-11-22)" data-channel="nightly" data-search-js="search-92e6798f.js" data-settings-js="settings-0f613d39.js" ><script src="../../../../static.files/storage-59e33391.js"></script><script defer src="../../../../static.files/src-script-56102188.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">nx/ipc/sf/</div>vi.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -77,15 +76,40 @@
 <a href="#75" id="75">75</a>
 <a href="#76" id="76">76</a>
 <a href="#77" id="77">77</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::result::<span class="kw-2">*</span>;
+<a href="#78" id="78">78</a>
+<a href="#79" id="79">79</a>
+<a href="#80" id="80">80</a>
+<a href="#81" id="81">81</a>
+<a href="#82" id="82">82</a>
+<a href="#83" id="83">83</a>
+<a href="#84" id="84">84</a>
+<a href="#85" id="85">85</a>
+<a href="#86" id="86">86</a>
+<a href="#87" id="87">87</a>
+<a href="#88" id="88">88</a>
+<a href="#89" id="89">89</a>
+<a href="#90" id="90">90</a>
+<a href="#91" id="91">91</a>
+<a href="#92" id="92">92</a>
+<a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::mem;
+<span class="kw">use </span><span class="kw">crate</span>::result::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::ipc::sf;
-<span class="kw">use </span><span class="kw">crate</span>::mem;
 <span class="kw">use </span><span class="kw">crate</span>::util;
-<span class="kw">use </span><span class="kw">crate</span>::ipc::sf::applet;
-<span class="kw">use </span><span class="kw">crate</span>::ipc::sf::dispdrv;
 <span class="kw">use </span><span class="kw">crate</span>::version;
 
-<span class="kw">pub type </span>DisplayName = util::CString&lt;<span class="number">0x40</span>&gt;;
+<span class="kw">use </span><span class="kw">super</span>::applet::AppletResourceUserId;
+
+<span class="kw">use </span>nx_derive::{Request, Response};
+
+<span class="kw">pub type </span>DisplayName = util::ArrayString&lt;<span class="number">0x40</span>&gt;;
 
 <span class="macro">define_bit_enum!</span> {
     LayerFlags (u32) {
@@ -98,59 +122,81 @@
 
 <span class="kw">pub type </span>LayerId = u64;
 
-<span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+<span class="attr">#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
 </span><span class="kw">pub enum </span>DisplayServiceMode {
     User = <span class="number">0</span>,
     Privileged = <span class="number">1
 </span>}
 
+<span class="attr">#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[repr(u32)]
+</span><span class="kw">pub enum </span>LayerStackId {
+    <span class="attr">#[default]
+    </span>Default,
+    Lcd,
+    Screenshot,
+    Recording,
+    LastFrame,
+    Arbitrary,
+    ApplicationForDebug,
+    Null
+}
+
+
+<span class="macro">ipc_sf_define_default_interface_client!</span>(ManagerDisplayService);
 <span class="macro">ipc_sf_define_interface_trait!</span> {
-    <span class="kw">trait </span>IManagerDisplayService {
-        create_managed_layer [<span class="number">2010</span>, version::VersionInterval::all()]: (flags: LayerFlags, display_id: DisplayId, aruid: applet::AppletResourceUserId) =&gt; (id: LayerId);
-        destroy_managed_layer [<span class="number">2011</span>, version::VersionInterval::all()]: (id: LayerId) =&gt; ();
+	<span class="kw">trait </span>ManagerDisplayService {
+        create_managed_layer [<span class="number">2010</span>, version::VersionInterval::all(), <span class="kw-2">mut</span>]: (flags: LayerFlags, display_id: DisplayId, raw_aruid: u64) =&gt;  (id: LayerId) (id: LayerId);
+        destroy_managed_layer [<span class="number">2011</span>, version::VersionInterval::all()]: (id: LayerId) =&gt;  () ();
+        add_to_layer_stack [<span class="number">6000</span>, version::VersionInterval::all()]: (stack: LayerStackId, layer: LayerId) =&gt;  () ();
     }
 }
 
+<span class="macro">ipc_sf_define_default_interface_client!</span>(SystemDisplayService);
 <span class="macro">ipc_sf_define_interface_trait!</span> {
-    <span class="kw">trait </span>ISystemDisplayService {
-        get_z_order_count_min [<span class="number">1200</span>, version::VersionInterval::all()]: (display_id: DisplayId) =&gt; (z: i64);
-        get_z_order_count_max [<span class="number">1202</span>, version::VersionInterval::all()]: (display_id: DisplayId) =&gt; (z: i64);
-        set_layer_position [<span class="number">2201</span>, version::VersionInterval::all()]: (x: f32, y: f32, id: LayerId) =&gt; ();
-        set_layer_size [<span class="number">2203</span>, version::VersionInterval::all()]: (id: LayerId, width: u64, height: u64) =&gt; ();
-        set_layer_z [<span class="number">2205</span>, version::VersionInterval::all()]: (id: LayerId, z: i64) =&gt; ();
-        set_layer_visibility [<span class="number">2207</span>, version::VersionInterval::all()]: (visible: bool, id: LayerId) =&gt; ();
+	<span class="kw">trait </span>SystemDisplayService {
+        get_z_order_count_min [<span class="number">1200</span>, version::VersionInterval::all()]: (display_id: DisplayId) =&gt;  (z: i64) (z: i64);
+        get_z_order_count_max [<span class="number">1202</span>, version::VersionInterval::all()]: (display_id: DisplayId) =&gt;  (z: i64) (z: i64);
+        set_layer_position [<span class="number">2201</span>, version::VersionInterval::all(), <span class="kw-2">mut</span>]: (x: f32, y: f32, id: LayerId) =&gt;  () ();
+        set_layer_size [<span class="number">2203</span>, version::VersionInterval::all(), <span class="kw-2">mut</span>]: (id: LayerId, width: u64, height: u64) =&gt;  () ();
+        set_layer_z [<span class="number">2205</span>, version::VersionInterval::all(), <span class="kw-2">mut</span>]: (id: LayerId, z: i64) =&gt;  () ();
+        set_layer_visibility [<span class="number">2207</span>, version::VersionInterval::all(), <span class="kw-2">mut</span>]: (visible: bool, id: LayerId) =&gt;  () ();
     }
 }
 
+<span class="macro">ipc_sf_define_default_interface_client!</span>(ApplicationDisplayService);
 <span class="macro">ipc_sf_define_interface_trait!</span> {
-    <span class="kw">trait </span>IApplicationDisplayService {
-        get_relay_service [<span class="number">100</span>, version::VersionInterval::all()]: () =&gt; (relay_service: mem::Shared&lt;<span class="kw">dyn </span>dispdrv::IHOSBinderDriver&gt;);
-        get_system_display_service [<span class="number">101</span>, version::VersionInterval::all()]: () =&gt; (system_display_service: mem::Shared&lt;<span class="kw">dyn </span>ISystemDisplayService&gt;);
-        get_manager_display_service [<span class="number">102</span>, version::VersionInterval::all()]: () =&gt; (manager_display_service: mem::Shared&lt;<span class="kw">dyn </span>IManagerDisplayService&gt;);
-        open_display [<span class="number">1010</span>, version::VersionInterval::all()]: (name: DisplayName) =&gt; (id: DisplayId);
-        close_display [<span class="number">1020</span>, version::VersionInterval::all()]: (id: DisplayId) =&gt; ();
-        open_layer [<span class="number">2020</span>, version::VersionInterval::all()]: (name: DisplayName, id: LayerId, aruid: sf::ProcessId, out_native_window: sf::OutMapAliasBuffer&lt;u8&gt;) =&gt; (native_window_size: usize);
-        create_stray_layer [<span class="number">2030</span>, version::VersionInterval::all()]: (flags: LayerFlags, display_id: DisplayId, out_native_window: sf::OutMapAliasBuffer&lt;u8&gt;) =&gt; (id: LayerId, native_window_size: usize);
-        destroy_stray_layer [<span class="number">2031</span>, version::VersionInterval::all()]: (id: LayerId) =&gt; ();
-        get_display_vsync_event [<span class="number">5202</span>, version::VersionInterval::all()]: (id: DisplayId) =&gt; (event_handle: sf::CopyHandle);
+	<span class="kw">trait </span>ApplicationDisplayService {
+        get_relay_service [<span class="number">100</span>, version::VersionInterval::all()]: () =&gt; (relay_service: sf::dispdrv::HOSBinderDriver) (relay_service: sf::dispdrv::HOSBinderDriver);
+        get_system_display_service [<span class="number">101</span>, version::VersionInterval::all()]: () =&gt; (system_display_service: SystemDisplayService) (system_display_service: <span class="macro">session_type!</span>(SystemDisplayService));
+        get_manager_display_service [<span class="number">102</span>, version::VersionInterval::all()]: () =&gt; (manager_display_service: ManagerDisplayService) (manager_display_service: <span class="macro">session_type!</span>(ManagerDisplayService));
+        open_display [<span class="number">1010</span>, version::VersionInterval::all(), <span class="kw-2">mut</span>]: (name: DisplayName) =&gt;  (id: DisplayId) (id: DisplayId);
+        close_display [<span class="number">1020</span>, version::VersionInterval::all(), <span class="kw-2">mut</span>]: (id: DisplayId) =&gt;  () ();
+        open_layer [<span class="number">2020</span>, version::VersionInterval::all(), <span class="kw-2">mut</span>]: (name: DisplayName, id: LayerId, aruid: AppletResourceUserId, out_native_window: sf::OutMapAliasBuffer&lt;u8&gt;) =&gt;  (native_window_size: usize) (native_window_size: usize);
+        create_stray_layer [<span class="number">2030</span>, version::VersionInterval::all(), <span class="kw-2">mut</span>]: (flags: LayerFlags, display_id: DisplayId, out_native_window: sf::OutMapAliasBuffer&lt;u8&gt;) =&gt;  (id: LayerId, native_window_size: usize) (id: LayerId, native_window_size: usize);
+        destroy_stray_layer [<span class="number">2031</span>, version::VersionInterval::all(), <span class="kw-2">mut</span>]: (id: LayerId) =&gt;  () ();
+        get_display_vsync_event [<span class="number">5202</span>, version::VersionInterval::all()]: (id: DisplayId) =&gt;  (event_handle: sf::CopyHandle) (event_handle: sf::CopyHandle);
     }
 }
 
+<span class="macro">ipc_sf_define_default_interface_client!</span>(ApplicationRootService);
 <span class="macro">ipc_sf_define_interface_trait!</span> {
-    <span class="kw">trait </span>IApplicationRootService {
-        get_display_service [<span class="number">0</span>, version::VersionInterval::all()]: (mode: DisplayServiceMode) =&gt; (display_service: mem::Shared&lt;<span class="kw">dyn </span>IApplicationDisplayService&gt;);
+	<span class="kw">trait </span>ApplicationRootService {
+        get_display_service [<span class="number">0</span>, version::VersionInterval::all()]: (mode: DisplayServiceMode) =&gt;  (display_service: ApplicationDisplayService) (display_service: <span class="macro">session_type!</span>(ApplicationDisplayService));
     }
 }
 
+<span class="macro">ipc_sf_define_default_interface_client!</span>(SystemRootService);
 <span class="macro">ipc_sf_define_interface_trait!</span> {
-    <span class="kw">trait </span>ISystemRootService {
-        get_display_service [<span class="number">1</span>, version::VersionInterval::all()]: (mode: DisplayServiceMode) =&gt; (display_service: mem::Shared&lt;<span class="kw">dyn </span>IApplicationDisplayService&gt;);
+	<span class="kw">trait </span>SystemRootService {
+        get_display_service [<span class="number">1</span>, version::VersionInterval::all()]: (mode: DisplayServiceMode) =&gt;  (display_service: ApplicationDisplayService) (display_service: <span class="macro">session_type!</span>(ApplicationDisplayService));
     }
 }
 
+<span class="macro">ipc_sf_define_default_interface_client!</span>(ManagerRootService);
 <span class="macro">ipc_sf_define_interface_trait!</span> {
-    <span class="kw">trait </span>IManagerRootService {
-        get_display_service [<span class="number">2</span>, version::VersionInterval::all()]: (mode: DisplayServiceMode) =&gt; (display_service: mem::Shared&lt;<span class="kw">dyn </span>IApplicationDisplayService&gt;);
+	<span class="kw">trait </span>ManagerRootService {
+        get_display_service [<span class="number">2</span>, version::VersionInterval::all()]: (mode: DisplayServiceMode) =&gt;  (display_service: ApplicationDisplayService) (display_service: <span class="macro">session_type!</span>(ApplicationDisplayService));
     }
 }</code></pre></div></section></main></body></html>

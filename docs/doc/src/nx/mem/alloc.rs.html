@@ -1,6 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/mem/alloc.rs`."><title>alloc.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0-nightly (c9f8f3438 2024-03-27)" data-channel="nightly" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
-            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../nx/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/mem/alloc.rs`."><title>alloc.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-42caa33d.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.85.0-nightly (a47555110 2024-11-22)" data-channel="nightly" data-search-js="search-92e6798f.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">nx/mem/</div>alloc.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -181,232 +180,102 @@
 <a href="#179" id="179">179</a>
 <a href="#180" id="180">180</a>
 <a href="#181" id="181">181</a>
-<a href="#182" id="182">182</a>
-<a href="#183" id="183">183</a>
-<a href="#184" id="184">184</a>
-<a href="#185" id="185">185</a>
-<a href="#186" id="186">186</a>
-<a href="#187" id="187">187</a>
-<a href="#188" id="188">188</a>
-<a href="#189" id="189">189</a>
-<a href="#190" id="190">190</a>
-<a href="#191" id="191">191</a>
-<a href="#192" id="192">192</a>
-<a href="#193" id="193">193</a>
-<a href="#194" id="194">194</a>
-<a href="#195" id="195">195</a>
-<a href="#196" id="196">196</a>
-<a href="#197" id="197">197</a>
-<a href="#198" id="198">198</a>
-<a href="#199" id="199">199</a>
-<a href="#200" id="200">200</a>
-<a href="#201" id="201">201</a>
-<a href="#202" id="202">202</a>
-<a href="#203" id="203">203</a>
-<a href="#204" id="204">204</a>
-<a href="#205" id="205">205</a>
-<a href="#206" id="206">206</a>
-<a href="#207" id="207">207</a>
-<a href="#208" id="208">208</a>
-<a href="#209" id="209">209</a>
-<a href="#210" id="210">210</a>
-<a href="#211" id="211">211</a>
-<a href="#212" id="212">212</a>
-<a href="#213" id="213">213</a>
-<a href="#214" id="214">214</a>
-<a href="#215" id="215">215</a>
-<a href="#216" id="216">216</a>
-<a href="#217" id="217">217</a>
-<a href="#218" id="218">218</a>
-<a href="#219" id="219">219</a>
-<a href="#220" id="220">220</a>
-<a href="#221" id="221">221</a>
-<a href="#222" id="222">222</a>
-<a href="#223" id="223">223</a>
-<a href="#224" id="224">224</a>
-<a href="#225" id="225">225</a>
-<a href="#226" id="226">226</a>
-<a href="#227" id="227">227</a>
-<a href="#228" id="228">228</a>
-<a href="#229" id="229">229</a>
-<a href="#230" id="230">230</a>
-<a href="#231" id="231">231</a>
-<a href="#232" id="232">232</a>
-<a href="#233" id="233">233</a>
-<a href="#234" id="234">234</a>
-<a href="#235" id="235">235</a>
-</pre></div><pre class="rust"><code><span class="doccomment">//! Allocator implementation and definitions
+<a href="#182" id="182">182</a></pre></div><pre class="rust"><code><span class="doccomment">//! Allocator implementation and definitions
 
 </span><span class="kw">use </span><span class="kw">crate</span>::result::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::util::PointerAndSize;
-<span class="kw">use </span><span class="kw">crate</span>::sync;
-<span class="kw">use </span>core::ptr;
 <span class="kw">use </span>core::mem;
+<span class="kw">use </span>core::mem::ManuallyDrop;
+<span class="kw">use </span>core::ptr;
+<span class="kw">use </span>core::ptr::NonNull;
 
 <span class="kw">extern crate </span>alloc;
-<span class="kw">use </span>alloc::alloc::GlobalAlloc;
+<span class="kw">use </span>alloc::alloc::Allocator;
+
+<span class="kw">use </span>alloc::alloc::Global;
 <span class="kw">pub use </span>alloc::alloc::Layout;
 
 <span class="kw">pub const </span>PAGE_ALIGNMENT: usize = <span class="number">0x1000</span>;
 
 <span class="kw">pub mod </span>rc;
 
-<span class="comment">// TODO: be able to change the global allocator?
+<span class="kw">use </span>alloc::alloc::AllocError;
 
-</span><span class="doccomment">/// Represents a heap allocator for this library
-</span><span class="kw">pub trait </span>Allocator {
-    <span class="doccomment">/// Allocates memory
-    /// 
-    /// # Arguments
-    /// 
-    /// * `layout`: The memory layout
-    </span><span class="kw">fn </span>allocate(<span class="kw-2">&amp;mut </span><span class="self">self</span>, layout: Layout) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">*mut </span>u8&gt;;
-
-    <span class="doccomment">/// Releases memory
-    /// 
-    /// # Arguments
-    /// 
-    /// * `addr`: The memory address
-    /// * `layout`: The memory layout
-    </span><span class="kw">fn </span>release(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: <span class="kw-2">*mut </span>u8, layout: Layout);
-
-    <span class="doccomment">/// Allocates a new heap value
-    </span><span class="kw">fn </span>new&lt;T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">*mut </span>T&gt; {
-        <span class="kw">let </span>layout = Layout::new::&lt;T&gt;();
-        <span class="self">self</span>.allocate(layout).map(|ptr| ptr <span class="kw">as </span><span class="kw-2">*mut </span>T)
-    }
-
-    <span class="doccomment">/// Releases a heap value
-    /// 
-    /// The value must have been created using [`Allocator::new`]
-    /// 
-    /// # Arguments
-    /// 
-    /// * `t`: Heap value address
-    </span><span class="kw">fn </span>delete&lt;T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, t: <span class="kw-2">*mut </span>T) {
-        <span class="kw">let </span>layout = Layout::new::&lt;T&gt;();
-        <span class="self">self</span>.release(t <span class="kw">as </span><span class="kw-2">*mut </span>u8, layout);
+<span class="kw">impl </span>From&lt;AllocError&gt; <span class="kw">for </span>ResultCode {
+    <span class="kw">fn </span>from(_value: AllocError) -&gt; <span class="self">Self </span>{
+        ResultCode::new(rc::ResultOutOfMemory::get_value())
     }
 }
 
-<span class="kw">extern crate </span>linked_list_allocator;
-<span class="kw">use </span>linked_list_allocator::Heap <span class="kw">as </span>LinkedListAllocator;
+<span class="comment">// TODO: be able to change the global allocator?
 
-<span class="kw">impl </span>Allocator <span class="kw">for </span>LinkedListAllocator {
-    <span class="kw">fn </span>allocate(<span class="kw-2">&amp;mut </span><span class="self">self</span>, layout: Layout) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">*mut </span>u8&gt; {
-        <span class="kw">match </span><span class="self">self</span>.allocate_first_fit(layout) {
-            <span class="prelude-val">Ok</span>(non_null_addr) =&gt; <span class="prelude-val">Ok</span>(non_null_addr.as_ptr()),
+</span><span class="doccomment">/// Represents a heap allocator for this library
+/// # SAFETY: As with the regular Allocator trait, the `delete` function can only be called on pointers produced by the same implementation's `new`
+</span><span class="kw">pub unsafe trait </span>AllocatorEx: Allocator {
+    <span class="doccomment">/// Allocates a new heap value
+    </span><span class="attr">#[allow(clippy::new_ret_no_self)]
+    #[allow(clippy::wrong_self_convention)]
+    </span><span class="kw">fn </span>new&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;NonNull&lt;T&gt;&gt; {
+        <span class="kw">let </span>layout = Layout::new::&lt;T&gt;();
+        <span class="kw">match </span><span class="self">self</span>.allocate(layout) {
+            <span class="prelude-val">Ok</span>(allocation) =&gt; <span class="prelude-val">Ok</span>(allocation.cast()),
             <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; rc::ResultOutOfMemory::make_err()
         }
     }
 
-    <span class="kw">fn </span>release(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: <span class="kw-2">*mut </span>u8, layout: Layout) {
-        <span class="kw">if </span>!addr.is_null() {
-            <span class="kw">unsafe </span>{
-                <span class="self">self</span>.deallocate(ptr::NonNull::new_unchecked(addr), layout);
-            }
-        }
+    <span class="doccomment">/// Releases a heap value
+    ///
+    /// The value must have been created using [`AllocatorEx::new`]
+    ///
+    /// # Arguments
+    ///
+    /// * `t`: Heap value address
+    </span><span class="kw">fn </span>delete&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, t: <span class="kw-2">*mut </span>T) {
+        <span class="kw">let </span>layout = Layout::new::&lt;T&gt;();
+        <span class="kw">unsafe </span>{ <span class="self">self</span>.deallocate(NonNull::new_unchecked(t.cast()), layout) };
     }
 }
 
-<span class="kw">unsafe impl</span>&lt;A: Allocator&gt; GlobalAlloc <span class="kw">for </span>sync::Locked&lt;A&gt; {
-    <span class="kw">unsafe fn </span>alloc(<span class="kw-2">&amp;</span><span class="self">self</span>, layout: Layout) -&gt; <span class="kw-2">*mut </span>u8 {
-        <span class="self">self</span>.get().allocate(layout).unwrap()
-    }
-
-    <span class="kw">unsafe fn </span>dealloc(<span class="kw-2">&amp;</span><span class="self">self</span>, addr: <span class="kw-2">*mut </span>u8, layout: Layout) {
-        <span class="self">self</span>.get().release(addr, layout);
-    }
-}
+<span class="kw">unsafe impl </span>AllocatorEx <span class="kw">for </span>Global {}
 
 <span class="attr">#[global_allocator]
-</span><span class="kw">static </span><span class="kw-2">mut </span>G_ALLOCATOR_HOLDER: sync::Locked&lt;LinkedListAllocator&gt; = sync::Locked::new(<span class="bool-val">false</span>, LinkedListAllocator::empty());
-<span class="kw">static </span><span class="kw-2">mut </span>G_ALLOCATOR_ENABLED: bool = <span class="bool-val">false</span>;
+</span><span class="kw">static </span>GLOBAL_ALLOCATOR: linked_list_allocator::LockedHeap =
+    linked_list_allocator::LockedHeap::empty();
 
-<span class="doccomment">/// Initializes the global allocator with the given address and size
-/// 
+<span class="doccomment">/// Initializes the global allocator with the given address and size.
+/// Returns a bool to indicate if the memory was consumed by the allocator
+///
 /// # Arguments
-/// 
+///
 /// * `heap`: The heap address and size
-</span><span class="kw">pub fn </span>initialize(heap: PointerAndSize) {
+</span><span class="kw">pub fn </span>initialize(heap: PointerAndSize) -&gt; bool {
     <span class="kw">unsafe </span>{
-        G_ALLOCATOR_HOLDER.get().init(heap.address <span class="kw">as </span>usize, heap.size);
-        G_ALLOCATOR_ENABLED = <span class="bool-val">true</span>;
-    }
-}
+        GLOBAL_ALLOCATOR
+            .lock()
+            .init(heap.address, heap.size)
+    };
+    <span class="bool-val">false
+</span>}
 
-<span class="comment">/*
-pub(crate) fn set_enabled(enabled: bool) {
-    unsafe {
-        G_ALLOCATOR_ENABLED = enabled;
-    }
-}
-*/
 
-</span><span class="doccomment">/// Gets whether heap allocations are enabled
-/// 
+<span class="doccomment">/// Gets whether heap allocations are enabled
+///
 /// The library may internally disable them in exceptional cases: for instance, to avoid exception handlers to allocate heap memory if the exception cause is actually an OOM situation
 </span><span class="kw">pub fn </span>is_enabled() -&gt; bool {
-    <span class="kw">unsafe </span>{
-        G_ALLOCATOR_ENABLED
-    }
-}
-
-<span class="doccomment">/// Allocates heap memory using the global allocator
-/// 
-/// # Arguments
-/// 
-/// * `align`: The memory alignment
-/// * `size`: The memory size
-</span><span class="kw">pub fn </span>allocate(align: usize, size: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">*mut </span>u8&gt; {
-    <span class="kw">unsafe </span>{
-        <span class="kw">let </span>layout = Layout::from_size_align_unchecked(size, align);
-        G_ALLOCATOR_HOLDER.get().allocate(layout)
-    }
-}
-
-<span class="doccomment">/// Releases allocated memory
-/// 
-/// # Arguments
-/// 
-/// * `addr`: The memory address
-/// * `align`: The memory alignment
-/// * `size`: The memory size
-</span><span class="kw">pub fn </span>release(addr: <span class="kw-2">*mut </span>u8, align: usize, size: usize) {
-    <span class="kw">unsafe </span>{
-        <span class="kw">let </span>layout = Layout::from_size_align_unchecked(size, align);
-        G_ALLOCATOR_HOLDER.get().release(addr, layout);
-    }
-}
-
-<span class="doccomment">/// Creates a new heap value using the global allocator
-</span><span class="kw">pub fn </span>new&lt;T&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">*mut </span>T&gt; {
-    <span class="kw">unsafe </span>{
-        G_ALLOCATOR_HOLDER.get().new::&lt;T&gt;()
-    }
-}
-
-<span class="doccomment">/// Deletes a heap value
-/// 
-/// The value must have been created using the global allocator
-/// 
-/// # Arguments
-/// 
-/// * `t`: The heap value
-</span><span class="kw">pub fn </span>delete&lt;T&gt;(t: <span class="kw-2">*mut </span>T) {
-    <span class="kw">unsafe </span>{
-        G_ALLOCATOR_HOLDER.get().delete(t);
-    }
-}
+    <span class="kw">let </span>alloc_guard = GLOBAL_ALLOCATOR.lock();
+    alloc_guard.size() != <span class="number">0
+</span>}
 
 <span class="doccomment">/// Represents a wrapped and manually managed heap value
-/// 
+///
 /// Note that a [`Buffer`] is able to hold both a single value or an array of values of the provided type
-</span><span class="kw">pub struct </span>Buffer&lt;T&gt; {
+</span><span class="kw">pub struct </span>Buffer&lt;T, A: Allocator = Global&gt; {
     <span class="doccomment">/// The actual heap value
     </span><span class="kw">pub </span>ptr: <span class="kw-2">*mut </span>T,
     <span class="doccomment">/// The memory's layout
-    </span><span class="kw">pub </span>layout: Layout
+    </span><span class="kw">pub </span>layout: Layout,
+    <span class="doccomment">/// The allocator used to request the buffer
+    </span>allocator: A,
 }
 
 <span class="kw">impl</span>&lt;T&gt; Buffer&lt;T&gt; {
@@ -415,8 +284,9 @@ pub(crate) fn set_enabled(enabled: bool) {
     </span><span class="kw">pub const fn </span>empty() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             ptr: ptr::null_mut(),
-            layout: Layout::new::&lt;u8&gt;() <span class="comment">// Dummy value
-        </span>}
+            layout: Layout::new::&lt;u8&gt;(), <span class="comment">// Dummy value
+            </span>allocator: Global,
+        }
     }
 
     <span class="doccomment">/// Gets whether this [`Buffer`] is valid
@@ -426,47 +296,70 @@ pub(crate) fn set_enabled(enabled: bool) {
     }
 
     <span class="doccomment">/// Creates a new [`Buffer`] using the global allocator
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `align`: The align to use
     /// * `count`: The count of values to allocate
     </span><span class="kw">pub fn </span>new(align: usize, count: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">let </span>size = count * mem::size_of::&lt;T&gt;();
-        <span class="kw">let </span>ptr = allocate(align, size)<span class="question-mark">? </span><span class="kw">as </span><span class="kw-2">*mut </span>T;
+        <span class="kw">let </span>layout = Layout::from_size_align(count * mem::size_of::&lt;T&gt;(), align)
+            .map_err(|<span class="kw">_</span>| ResultCode::new(rc::ResultLayoutError::get_value()))<span class="question-mark">?</span>;
+        <span class="kw">let </span>allocator = Global;
+        <span class="kw">let </span>ptr = allocator.allocate(layout)<span class="question-mark">?</span>.as_ptr().cast();
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             ptr,
-            layout: <span class="kw">unsafe </span>{
-                Layout::from_size_align_unchecked(size, align)
-            }
+            layout,
+            allocator,
         })
     }
 
-    <span class="doccomment">/// Creates a new [`Buffer`] using a given allocator
-    /// 
-    /// # Arguments
-    /// 
-    /// * `align`: The align to use
-    /// * `count`: The count of values to allocate
-    /// * `allocator`: The allocator
-    </span><span class="kw">pub fn </span>new_alloc&lt;A: Allocator&gt;(align: usize, count: usize, allocator: <span class="kw-2">&amp;mut </span>A) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">let </span>size = count * mem::size_of::&lt;T&gt;();
-        <span class="kw">let </span>layout = <span class="kw">unsafe </span>{
-            Layout::from_size_align_unchecked(size, align)
-        };
-        <span class="kw">let </span>ptr = allocator.allocate(layout)<span class="question-mark">? </span><span class="kw">as </span><span class="kw-2">*mut </span>T;
-
-        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
-            ptr,
-            layout
-        })
+    <span class="kw">pub fn </span>into_raw(value: <span class="self">Self</span>) -&gt; <span class="kw-2">*mut </span>[T] {
+        <span class="kw">let </span>no_drop = ManuallyDrop::new(value);
+        core::ptr::slice_from_raw_parts_mut(no_drop.ptr, no_drop.layout.size() / mem::size_of::&lt;T&gt;())
     }
 
     <span class="doccomment">/// Releases the [`Buffer`]
-    /// 
+    ///
     /// The [`Buffer`] becomes invalid after this
     </span><span class="kw">pub fn </span>release(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        release(<span class="self">self</span>.ptr <span class="kw">as </span><span class="kw-2">*mut </span>u8, <span class="self">self</span>.layout.align(), <span class="self">self</span>.layout.size());
-        <span class="kw-2">*</span><span class="self">self </span>= <span class="self">Self</span>::empty();
+        <span class="kw">if </span><span class="self">self</span>.is_valid() {
+            <span class="kw">unsafe </span>{
+                <span class="self">self</span>.allocator.deallocate(NonNull::new_unchecked(<span class="self">self</span>.ptr.cast()), <span class="self">self</span>.layout);
+            }
+            <span class="self">self</span>.ptr = core::ptr::null_mut();
+        }
+        
     }
-}</code></pre></div></section></main></body></html>
+}
+
+<span class="kw">impl</span>&lt;T, A: Allocator&gt; Buffer&lt;T, A&gt; {
+    <span class="doccomment">/// Creates a new [`Buffer`] using a given allocator
+    ///
+    /// # Arguments
+    ///
+    /// * `align`: The align to use
+    /// * `count`: The count of values to allocate
+    /// * `allocator`: The allocator to use
+    </span><span class="kw">pub fn </span>new_in(align: usize, count: usize, allocator: A) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">let </span>layout = Layout::from_size_align(count * mem::size_of::&lt;T&gt;(), align)
+            .map_err(|<span class="kw">_</span>| ResultCode::new(rc::ResultLayoutError::get_value()))<span class="question-mark">?</span>;
+        <span class="kw">let </span>ptr = allocator.allocate(layout)<span class="question-mark">?</span>.as_ptr().cast();
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            ptr,
+            layout,
+            allocator,
+        })
+    }
+}
+
+<span class="kw">impl</span>&lt;T, A: Allocator&gt; Drop <span class="kw">for </span>Buffer&lt;T, A&gt; {
+    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">if </span>!<span class="self">self</span>.ptr.is_null() {
+            <span class="kw">unsafe </span>{
+                <span class="self">self</span>.allocator
+                    .deallocate(NonNull::new_unchecked(<span class="self">self</span>.ptr.cast()), <span class="self">self</span>.layout);
+            }
+        }
+    }
+}
+</code></pre></div></section></main></body></html>

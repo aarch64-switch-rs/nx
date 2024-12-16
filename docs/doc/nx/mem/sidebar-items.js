@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["align_down","align_up","flush_data_cache"],"mod":["alloc"],"struct":["Shared"]};
+window.SIDEBAR_ITEMS = {"fn":["align_down","align_up","flush_data_cache","wait_for_permission"],"mod":["alloc"],"struct":["Shared"]};

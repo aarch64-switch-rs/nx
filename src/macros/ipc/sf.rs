@@ -27,10 +27,12 @@ macro_rules! ipc_sf_define_interface_trait {
         }
     ) => {
         paste::paste! {
-            pub trait [<I$intf>]: $crate::ipc::client::IClientObject {
+            /// The IPC server trait for the [`<I $intf Server>`] trait. All methods are provided and overriding the implementations is not recommended.
+            pub trait [<I$intf>]: $crate::ipc::client::IClientObject + Sync {
                 $(
                     #[allow(unused_parens)]
                     #[allow(clippy::too_many_arguments)]
+                    #[allow(missing_docs)]
                     fn $name(& $($noalias)? self, $( $in_param_name: $in_param_type ),* ) -> $crate::result::Result<( $( $client_out_param_type ),* )> {
                         let mut ctx = $crate::ipc::CommandContext::new_client(self.get_session().object_info);
 
@@ -61,15 +63,18 @@ macro_rules! ipc_sf_define_interface_trait {
                 )*
             }
 
-            pub trait [<I $intf Server>]: $crate::ipc::server::ISessionObject {
+            /// The IPC server trait for the [`<I $intf Server>`] trait. The methods not provided must all be implemented, but overriding the IPC wrappers is not recommended.
+            pub trait [<I $intf Server>]: $crate::ipc::server::ISessionObject + Sync {
                 $(
                     #[allow(unused_parens)]
                     #[allow(clippy::too_many_arguments)]
+                    #[allow(missing_docs)]
                     fn $name(&mut self, $( $in_param_name: $in_param_type ),* ) -> $crate::result::Result<( $( $server_out_param_type ),* )>;
 
                     #[allow(unused_assignments)]
                     #[allow(unused_parens)]
                     #[allow(unused_mut)]
+                    #[doc(hidden)]
                     fn [<sf_server_impl_ $name>](&mut self, protocol: $crate::ipc::CommandProtocol, mut ctx: &mut $crate::ipc::server::ServerContext) -> $crate::result::Result<()> {
                         ctx.raw_data_walker = $crate::ipc::DataWalker::new(ctx.ctx.in_params.data_offset);
                         $( let $in_param_name = <$in_param_type as $crate::ipc::server::RequestCommandParameter<_>>::after_request_read(&mut ctx)?; )*
@@ -96,6 +101,8 @@ macro_rules! ipc_sf_define_interface_trait {
                     }
                 )*
 
+                /// The dynamic dispatch function that calls into the IPC server functions. This should only be called from the [`$crate::ipc::server::ServerManager`] and not from client code.
+                /// Examples for implementing [`ISessionObject`][`$crate::ipc::server::ISessionObject`] or [`IMitmServerOject`][`$crate::ipc::server::IMitmServerObject`] can be found in the [`nx`] crate.  
                 fn try_handle_request_by_id(&mut self, req_id: u32, protocol: $crate::ipc::CommandProtocol, ctx: &mut $crate::ipc::server::ServerContext) -> Option<$crate::result::Result<()>> {
                     let version = $crate::version::get_version();
                     match req_id {

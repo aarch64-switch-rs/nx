@@ -112,13 +112,13 @@ pub enum OperationId {
 ipc_sf_define_default_interface_client!(File);
 ipc_sf_define_interface_trait! {
 	trait File {
-        read [0, version::VersionInterval::all()]: (option: FileReadOption, offset: usize, size: usize, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) =>  (read_size: usize) (read_size: usize);
-        write [1, version::VersionInterval::all()]: (option: FileWriteOption, offset: usize, size: usize, buf: sf::InNonSecureMapAliasBuffer<u8>) =>  () ();
-        flush [2, version::VersionInterval::all()]: () => () ();
-        set_size [3, version::VersionInterval::all()]: (size: usize) =>  () ();
-        get_size [4, version::VersionInterval::all()]: () => (size: usize) (size: usize);
-        operate_range [5, version::VersionInterval::from(version::Version::new(4,0,0))]: (operation_id: OperationId, offset: usize, size: usize) =>  (info: FileQueryRangeInfo) (info: FileQueryRangeInfo);
-        operate_range_with_buffer [6, version::VersionInterval::from(version::Version::new(12,0,0))]: (operation_id: OperationId, offset: usize, size: usize, in_buf: sf::InNonSecureMapAliasBuffer<u8>, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) =>  () ();
+        read [0, version::VersionInterval::all(), mut]: (option: FileReadOption, offset: usize, size: usize, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) =>  (read_size: usize) (read_size: usize);
+        write [1, version::VersionInterval::all(), mut]: (option: FileWriteOption, offset: usize, size: usize, buf: sf::InNonSecureMapAliasBuffer<u8>) =>  () ();
+        flush [2, version::VersionInterval::all(), mut]: () => () ();
+        set_size [3, version::VersionInterval::all(), mut]: (size: usize) =>  () ();
+        get_size [4, version::VersionInterval::all(), mut]: () => (size: usize) (size: usize);
+        operate_range [5, version::VersionInterval::from(version::Version::new(4,0,0)), mut]: (operation_id: OperationId, offset: usize, size: usize) =>  (info: FileQueryRangeInfo) (info: FileQueryRangeInfo);
+        operate_range_with_buffer [6, version::VersionInterval::from(version::Version::new(12,0,0)), mut]: (operation_id: OperationId, offset: usize, size: usize, in_buf: sf::InNonSecureMapAliasBuffer<u8>, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) =>  () ();
     }
 }
 

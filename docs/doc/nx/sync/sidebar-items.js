@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["Locked","Mutex","ScopedLock"]};
+window.SIDEBAR_ITEMS = {"mod":["sys"],"struct":["Mutex","MutexGuard","ReadGuard","RwLock","ScopedLock","WriteGuard"]};

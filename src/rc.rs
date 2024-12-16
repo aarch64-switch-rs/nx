@@ -25,7 +25,7 @@
 //! * `1400`: crypto
 
 pub const RESULT_MODULE: u32 = 430;
-
+/// Result submodule for the base `rc` module.
 pub const RESULT_SUBMODULE: u32 = 0;
 
 result_define_subgroup!(RESULT_MODULE, RESULT_SUBMODULE => {

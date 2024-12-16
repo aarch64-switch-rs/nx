@@ -1,6 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/ipc/server.rs`."><title>server.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0-nightly (c9f8f3438 2024-03-27)" data-channel="nightly" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
-            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../nx/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/ipc/server.rs`."><title>server.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-42caa33d.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.85.0-nightly (a47555110 2024-11-22)" data-channel="nightly" data-search-js="search-92e6798f.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">nx/ipc/</div>server.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -817,14 +816,23 @@
 <a href="#815" id="815">815</a>
 <a href="#816" id="816">816</a>
 <a href="#817" id="817">817</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::result::<span class="kw-2">*</span>;
+<a href="#818" id="818">818</a>
+<a href="#819" id="819">819</a>
+<a href="#820" id="820">820</a>
+<a href="#821" id="821">821</a>
+<a href="#822" id="822">822</a>
+<a href="#823" id="823">823</a>
+<a href="#824" id="824">824</a>
+<a href="#825" id="825">825</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::result::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::sync::Mutex;
 <span class="kw">use </span><span class="kw">crate</span>::wait;
-<span class="kw">use </span><span class="kw">crate</span>::ipc::sf::IObject;
-<span class="kw">use </span><span class="kw">crate</span>::ipc::sf::hipc::IHipcManager;
-<span class="kw">use </span><span class="kw">crate</span>::ipc::sf::hipc::IMitmQueryService;
 <span class="kw">use </span><span class="kw">crate</span>::mem;
 <span class="kw">use super</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span>alloc::sync::Arc;
 <span class="kw">use </span>alloc::vec::Vec;
+<span class="kw">use </span>sf::hipc::IHipcManager;
+<span class="kw">use </span>sf::hipc::IMitmQueryServiceServer;
+<span class="kw">use </span>sf::sm::IUserInterface;
 
 <span class="attr">#[cfg(feature = <span class="string">"services"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::service;
@@ -834,56 +842,34 @@
 <span class="attr">#[cfg(feature = <span class="string">"services"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::service::sm;
 
-<span class="attr">#[cfg(feature = <span class="string">"services"</span>)]
-</span><span class="kw">use </span><span class="kw">crate</span>::service::sm::IUserInterface;
-
 <span class="kw">pub mod </span>rc;
 
 <span class="comment">// TODO: TIPC support, implement remaining control commands
 
 </span><span class="kw">const </span>MAX_COUNT: usize = wait::MAX_OBJECT_COUNT <span class="kw">as </span>usize;
 
-<span class="kw">pub struct </span>ServerContext&lt;<span class="lifetime">'a</span>&gt; {
-    <span class="kw">pub </span>ctx: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>CommandContext,
+<span class="kw">pub struct </span>ServerContext&lt;<span class="lifetime">'ctx</span>&gt; {
+    <span class="kw">pub </span>ctx: <span class="kw-2">&amp;</span><span class="lifetime">'ctx </span><span class="kw-2">mut </span>CommandContext,
     <span class="kw">pub </span>raw_data_walker: DataWalker,
     <span class="kw">pub </span>domain_table: <span class="prelude-ty">Option</span>&lt;mem::Shared&lt;DomainTable&gt;&gt;,
-    <span class="kw">pub </span>new_sessions: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>Vec&lt;ServerHolder&gt;
+    <span class="kw">pub </span>new_sessions: <span class="kw-2">&amp;</span><span class="lifetime">'ctx </span><span class="kw-2">mut </span>Vec&lt;ServerHolder&gt;
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; ServerContext&lt;<span class="lifetime">'a</span>&gt; {
-    <span class="kw">pub const fn </span>new(ctx: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>CommandContext, raw_data_walker: DataWalker, domain_table: <span class="prelude-ty">Option</span>&lt;mem::Shared&lt;DomainTable&gt;&gt;, new_sessions: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>Vec&lt;ServerHolder&gt;) -&gt; <span class="self">Self </span>{
+<span class="kw">impl</span>&lt;<span class="lifetime">'ctx</span>&gt; ServerContext&lt;<span class="lifetime">'ctx</span>&gt; {
+    <span class="kw">pub const fn </span>new(ctx: <span class="kw-2">&amp;</span><span class="lifetime">'ctx </span><span class="kw-2">mut </span>CommandContext, raw_data_walker: DataWalker, domain_table: <span class="prelude-ty">Option</span>&lt;mem::Shared&lt;DomainTable&gt;&gt;, new_sessions: <span class="kw-2">&amp;</span><span class="lifetime">'ctx </span><span class="kw-2">mut </span>Vec&lt;ServerHolder&gt;) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{ ctx, raw_data_walker, domain_table, new_sessions }
     }
 }
-
-<span class="kw">pub type </span>CommandFn = <span class="kw">fn</span>(<span class="kw-2">&amp;mut </span><span class="kw">dyn </span>IObject, CommandProtocol, <span class="kw-2">&amp;mut </span>ServerContext) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
-<span class="kw">pub type </span>CommandSpecificFn&lt;T&gt; = <span class="kw">fn</span>(<span class="kw-2">&amp;mut </span>T, CommandProtocol, <span class="kw-2">&amp;mut </span>ServerContext) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
 
 <span class="kw">pub trait </span>RequestCommandParameter&lt;O&gt; {
     <span class="kw">fn </span>after_request_read(ctx: <span class="kw-2">&amp;mut </span>ServerContext) -&gt; <span class="prelude-ty">Result</span>&lt;O&gt;;
 }
 
+
 <span class="kw">pub trait </span>ResponseCommandParameter {
-    <span class="kw">fn </span>before_response_write(var: <span class="kw-2">&amp;</span><span class="self">Self</span>, ctx: <span class="kw-2">&amp;mut </span>ServerContext) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
-    <span class="kw">fn </span>after_response_write(var: <span class="kw-2">&amp;</span><span class="self">Self</span>, ctx: <span class="kw-2">&amp;mut </span>ServerContext) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
-}
-
-<span class="kw">impl</span>&lt;T: Copy&gt; RequestCommandParameter&lt;T&gt; <span class="kw">for </span>T {
-    default <span class="kw">fn </span>after_request_read(ctx: <span class="kw-2">&amp;mut </span>ServerContext) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
-        <span class="prelude-val">Ok</span>(ctx.raw_data_walker.advance_get())
-    }
-}
-
-<span class="kw">impl</span>&lt;T: Copy&gt; ResponseCommandParameter <span class="kw">for </span>T {
-    default <span class="kw">fn </span>before_response_write(_raw: <span class="kw-2">&amp;</span><span class="self">Self</span>, ctx: <span class="kw-2">&amp;mut </span>ServerContext) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        ctx.raw_data_walker.advance::&lt;<span class="self">Self</span>&gt;();
-        <span class="prelude-val">Ok</span>(())
-    }
-
-    default <span class="kw">fn </span>after_response_write(raw: <span class="kw-2">&amp;</span><span class="self">Self</span>, ctx: <span class="kw-2">&amp;mut </span>ServerContext) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        ctx.raw_data_walker.advance_set(<span class="kw-2">*</span>raw);
-        <span class="prelude-val">Ok</span>(())
-    }
+    <span class="kw">type </span>CarryState: <span class="lifetime">'static</span>;
+    <span class="kw">fn </span>before_response_write(var: <span class="kw-2">&amp;</span><span class="self">Self</span>, ctx: <span class="kw-2">&amp;mut </span>ServerContext) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::CarryState&gt;;
+    <span class="kw">fn </span>after_response_write(var: <span class="self">Self</span>, carry_state: <span class="self">Self</span>::CarryState, ctx: <span class="kw-2">&amp;mut </span>ServerContext) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
 }
 
 <span class="kw">impl</span>&lt;<span class="kw">const </span>A: BufferAttribute, T&gt; RequestCommandParameter&lt;sf::Buffer&lt;A, T&gt;&gt; <span class="kw">for </span>sf::Buffer&lt;A, T&gt; {
@@ -910,11 +896,13 @@
 }
 
 <span class="kw">impl</span>&lt;<span class="kw">const </span>M: HandleMode&gt; ResponseCommandParameter <span class="kw">for </span>sf::Handle&lt;M&gt; {
+    <span class="kw">type </span>CarryState = ();
+
     <span class="kw">fn </span>before_response_write(handle: <span class="kw-2">&amp;</span><span class="self">Self</span>, ctx: <span class="kw-2">&amp;mut </span>ServerContext) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         ctx.ctx.out_params.push_handle(handle.clone())
     }
 
-    <span class="kw">fn </span>after_response_write(_handle: <span class="kw-2">&amp;</span><span class="self">Self</span>, _ctx: <span class="kw-2">&amp;mut </span>ServerContext) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">fn </span>after_response_write(_handle: <span class="self">Self</span>, _carry_state: (), _ctx: <span class="kw-2">&amp;mut </span>ServerContext) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="prelude-val">Ok</span>(())
     }
 }
@@ -922,8 +910,10 @@
 <span class="kw">impl </span>RequestCommandParameter&lt;sf::ProcessId&gt; <span class="kw">for </span>sf::ProcessId {
     <span class="kw">fn </span>after_request_read(ctx: <span class="kw-2">&amp;mut </span>ServerContext) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
         <span class="kw">if </span>ctx.ctx.in_params.send_process_id {
-            <span class="comment">// TODO: is this really how process ID works? (is the in raw u64 just placeholder data, is it always present...?)
-            </span><span class="kw">let _ </span>= ctx.raw_data_walker.advance_get::&lt;u64&gt;();
+            <span class="kw">if </span>ctx.ctx.object_info.uses_cmif_protocol() {
+                <span class="kw">let _ </span>= ctx.raw_data_walker.advance_get::&lt;u64&gt;();
+            }
+
             <span class="prelude-val">Ok</span>(sf::ProcessId::from(ctx.ctx.in_params.process_id)) 
         }
         <span class="kw">else </span>{
@@ -934,37 +924,65 @@
 
 <span class="kw">impl </span>!ResponseCommandParameter <span class="kw">for </span>sf::ProcessId {}
 
-<span class="kw">impl</span>&lt;S: sf::IObject + <span class="question-mark">?</span>Sized&gt; RequestCommandParameter&lt;mem::Shared&lt;S&gt;&gt; <span class="kw">for </span>mem::Shared&lt;S&gt; {
+<span class="kw">impl </span>RequestCommandParameter&lt;sf::AppletResourceUserId&gt; <span class="kw">for </span>sf::AppletResourceUserId {
+    <span class="kw">fn </span>after_request_read(ctx: <span class="kw-2">&amp;mut </span>ServerContext) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="macro">result_return_unless!</span>(ctx.ctx.object_info.uses_cmif_protocol(), sf::hipc::rc::ResultUnsupportedOperation);
+
+        <span class="kw">if </span>ctx.ctx.in_params.send_process_id {
+            <span class="prelude-val">Ok</span>(sf::AppletResourceUserId::from(ctx.ctx.in_params.process_id, ctx.raw_data_walker.advance_get::&lt;u64&gt;())) 
+        }
+        <span class="kw">else </span>{
+            sf::hipc::rc::ResultUnsupportedOperation::make_err()
+        }
+    }
+}
+
+<span class="kw">impl </span>!ResponseCommandParameter <span class="kw">for </span>sf::AppletResourceUserId {}
+
+
+<span class="kw">impl</span>&lt;S: <span class="kw">super</span>::client::IClientObject&gt; RequestCommandParameter&lt;S&gt; <span class="kw">for </span>Arc&lt;Mutex&lt;S&gt;&gt; {
+    default <span class="kw">fn </span>after_request_read(_ctx: <span class="kw-2">&amp;mut </span>ServerContext) -&gt; <span class="prelude-ty">Result</span>&lt;S&gt; {
+        <span class="comment">// TODO: implement this (added this placeholder impl for interfaces to actually be valid)
+        </span>sf::hipc::rc::ResultUnsupportedOperation::make_err()
+    }
+}
+
+<span class="kw">impl</span>&lt;S: <span class="kw">super</span>::client::IClientObject + <span class="question-mark">?</span>Sized&gt; RequestCommandParameter&lt;mem::Shared&lt;S&gt;&gt; <span class="kw">for </span>mem::Shared&lt;S&gt; {
     <span class="kw">fn </span>after_request_read(_ctx: <span class="kw-2">&amp;mut </span>ServerContext) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
         <span class="comment">// TODO: implement this (added this placeholder impl for interfaces to actually be valid)
         </span>sf::hipc::rc::ResultUnsupportedOperation::make_err()
     }
 }
 
-<span class="kw">impl</span>&lt;S: sf::IObject + <span class="question-mark">?</span>Sized&gt; ResponseCommandParameter <span class="kw">for </span>mem::Shared&lt;S&gt; {
-    <span class="kw">fn </span>before_response_write(session: <span class="kw-2">&amp;</span><span class="self">Self</span>, ctx: <span class="kw-2">&amp;mut </span>ServerContext) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let </span>session_copy = <span class="kw">unsafe </span>{ session.clone().to::&lt;<span class="kw">dyn </span>ISessionObject&gt;() };
+
+<span class="kw">impl</span>&lt;S: ISessionObject + <span class="lifetime">'static</span>&gt; ResponseCommandParameter <span class="kw">for </span>S {
+    <span class="kw">type </span>CarryState = u32;
+    <span class="kw">fn </span>before_response_write(_session: <span class="kw-2">&amp;</span><span class="self">Self</span>, ctx: <span class="kw-2">&amp;mut </span>ServerContext) -&gt; <span class="prelude-ty">Result</span>&lt;u32&gt; {
         <span class="kw">if </span>ctx.ctx.object_info.is_domain() {
-            <span class="kw">let </span>domain_table = ctx.domain_table.clone().ok_or(rc::ResultDomainNotFound::make())<span class="question-mark">?</span>;
-            <span class="kw">let </span>domain_object_id = domain_table.get().allocate_id()<span class="question-mark">?</span>;
+            <span class="kw">let </span>domain_object_id = ctx.domain_table.as_mut().ok_or(rc::ResultDomainNotFound::make())<span class="question-mark">?</span>.lock().allocate_id()<span class="question-mark">?</span>;
             ctx.ctx.out_params.push_domain_object(domain_object_id)<span class="question-mark">?</span>;
-            domain_table.get().domains.push(ServerHolder::new_domain_session(<span class="number">0</span>, domain_object_id, session_copy));
-            <span class="prelude-val">Ok</span>(())
+            <span class="prelude-val">Ok</span>(domain_object_id)
         }
         <span class="kw">else </span>{
             <span class="kw">let </span>(server_handle, client_handle) = svc::create_session(<span class="bool-val">false</span>, <span class="number">0</span>)<span class="question-mark">?</span>;
             ctx.ctx.out_params.push_handle(sf::MoveHandle::from(client_handle))<span class="question-mark">?</span>;
-            ctx.new_sessions.push(ServerHolder::new_session(server_handle, session_copy));
-            <span class="prelude-val">Ok</span>(())
+            <span class="prelude-val">Ok</span>(server_handle)
         }
     }
 
-    <span class="kw">fn </span>after_response_write(_session: <span class="kw-2">&amp;</span><span class="self">Self</span>, _ctx: <span class="kw-2">&amp;mut </span>ServerContext) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">fn </span>after_response_write(session: <span class="self">Self</span>, carry_state: u32, ctx: <span class="kw-2">&amp;mut </span>ServerContext) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">if </span>ctx.ctx.object_info.is_domain() {
+            ctx.domain_table.as_mut().ok_or(rc::ResultDomainNotFound::make())<span class="question-mark">?</span>.lock().domains.push(ServerHolder::new_domain_session(<span class="number">0</span>, carry_state, mem::Shared::new(session)))
+        } <span class="kw">else </span>{
+            ctx.new_sessions.push(ServerHolder::new_session(carry_state, mem::Shared::new(session)));
+        }
         <span class="prelude-val">Ok</span>(())
     }
 }
 
-<span class="kw">pub trait </span>ISessionObject: sf::IObject {}
+<span class="kw">pub trait </span>ISessionObject {
+    <span class="kw">fn </span>try_handle_request_by_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>, req_id: u32, protocol: CommandProtocol, server_ctx: <span class="kw-2">&amp;mut </span>ServerContext) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="prelude-ty">Result</span>&lt;()&gt;&gt;;
+}
 
 <span class="kw">pub trait </span>IServerObject: ISessionObject {
     <span class="kw">fn </span>new() -&gt; <span class="self">Self </span><span class="kw">where </span><span class="self">Self</span>: Sized;
@@ -993,7 +1011,8 @@
     Session
 }
 
-<span class="kw">pub struct </span>DomainTable {
+<span class="attr">#[derive(Default)]
+</span><span class="kw">pub struct </span>DomainTable {
     <span class="kw">pub </span>table: Vec&lt;cmif::DomainObjectId&gt;,
     <span class="kw">pub </span>domains: Vec&lt;ServerHolder&gt;,
 }
@@ -1074,9 +1093,9 @@
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{ server: <span class="prelude-val">Some</span>((new_fn)()), info: ObjectInfo::from_handle(handle), new_server_fn: <span class="self">self</span>.new_server_fn, new_mitm_server_fn: <span class="self">self</span>.new_mitm_server_fn, handle_type: WaitHandleType::Session, mitm_forward_info: ObjectInfo::new(), is_mitm_service: <span class="self">self</span>.is_mitm_service, service_name: sm::ServiceName::empty(), domain_table: <span class="prelude-val">None </span>})
     }
 
-    <span class="kw">pub fn </span>make_new_mitm_session(<span class="kw-2">&amp;</span><span class="self">self</span>, handle: svc::Handle, forward_handle: svc::Handle, info: sm::mitm::MitmProcessInfo) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+    <span class="kw">pub fn </span>make_new_mitm_session(<span class="kw-2">&amp;</span><span class="self">self</span>, handle: svc::Handle, forward_handle: svc::Handle, info: sm::mitm::MitmProcessInfo, service_name: sm::ServiceName) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
         <span class="kw">let </span>new_mitm_fn = <span class="self">self</span>.get_new_mitm_server_fn()<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{ server: <span class="prelude-val">Some</span>((new_mitm_fn)(info)), info: ObjectInfo::from_handle(handle), new_server_fn: <span class="self">self</span>.new_server_fn, new_mitm_server_fn: <span class="self">self</span>.new_mitm_server_fn, handle_type: WaitHandleType::Session, mitm_forward_info: ObjectInfo::from_handle(forward_handle), is_mitm_service: <span class="self">self</span>.is_mitm_service, service_name: sm::ServiceName::empty(), domain_table: <span class="prelude-val">None </span>})
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{ server: <span class="prelude-val">Some</span>((new_mitm_fn)(info)), info: ObjectInfo::from_handle(handle), new_server_fn: <span class="self">self</span>.new_server_fn, new_mitm_server_fn: <span class="self">self</span>.new_mitm_server_fn, handle_type: WaitHandleType::Session, mitm_forward_info: ObjectInfo::from_handle(forward_handle), is_mitm_service: <span class="self">self</span>.is_mitm_service, service_name, domain_table: <span class="prelude-val">None </span>})
     }
 
     <span class="kw">pub fn </span>clone_self(<span class="kw-2">&amp;</span><span class="self">self</span>, handle: svc::Handle, forward_handle: svc::Handle) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
@@ -1113,9 +1132,9 @@
             <span class="bool-val">true </span>=&gt; {
                 <span class="kw">let </span>forward_object_id = <span class="self">self</span>.mitm_forward_info.convert_current_object_to_domain()<span class="question-mark">?</span>;
                 <span class="self">self</span>.mitm_forward_info.domain_object_id = forward_object_id;
-                dom_table.get().allocate_specific_id(forward_object_id)<span class="question-mark">?
+                dom_table.lock().allocate_specific_id(forward_object_id)<span class="question-mark">?
             </span>},
-            <span class="bool-val">false </span>=&gt; dom_table.get().allocate_id()<span class="question-mark">?
+            <span class="bool-val">false </span>=&gt; dom_table.lock().allocate_id()<span class="question-mark">?
         </span>};
 
         <span class="self">self</span>.info.domain_object_id = domain_object_id;
@@ -1126,12 +1145,17 @@
         <span class="kw">if </span>!<span class="self">self</span>.service_name.is_empty() {
             <span class="attr">#[cfg(feature = <span class="string">"services"</span>)]
             </span>{
-                <span class="kw">let </span>sm = service::new_named_port_object::&lt;sm::UserInterface&gt;()<span class="question-mark">?</span>;
-                <span class="kw">match </span><span class="self">self</span>.is_mitm_service {
-                    <span class="bool-val">true </span>=&gt; sm.get().atmosphere_uninstall_mitm(<span class="self">self</span>.service_name)<span class="question-mark">?</span>,
-                    <span class="bool-val">false </span>=&gt; sm.get().unregister_service(<span class="self">self</span>.service_name)<span class="question-mark">?
-                </span>};
-                sm.get().detach_client(sf::ProcessId::new())<span class="question-mark">?</span>;
+                <span class="kw">let </span><span class="kw-2">mut </span>sm = service::new_named_port_object::&lt;sm::UserInterface&gt;()<span class="question-mark">?</span>;
+                <span class="kw">match </span>(<span class="self">self</span>.is_mitm_service, <span class="self">self</span>.handle_type) {
+                    (<span class="bool-val">true</span>, WaitHandleType::Server) =&gt; {
+                        <span class="macro">debug_assert!</span>(<span class="self">self</span>.info.owns_handle, <span class="string">"MitM server objects should always own their handles."</span>);
+                        sm.atmosphere_uninstall_mitm(<span class="self">self</span>.service_name)<span class="question-mark">?</span>;
+                        sf::Session::from(<span class="self">self</span>.mitm_forward_info).close();
+                    },
+                    (<span class="bool-val">false</span>, <span class="kw">_</span>) =&gt; sm.unregister_service(<span class="self">self</span>.service_name)<span class="question-mark">?</span>,
+                    <span class="kw">_ </span>=&gt; {}
+                };
+                sm.detach_client(sf::ProcessId::new())<span class="question-mark">?</span>;
             }
         }
 
@@ -1139,7 +1163,6 @@
         </span><span class="kw">if </span><span class="self">self</span>.info.owns_handle {
             svc::close_handle(<span class="self">self</span>.info.handle)<span class="question-mark">?</span>;
         }
-        sf::Session::from(<span class="self">self</span>.mitm_forward_info).close();
         <span class="prelude-val">Ok</span>(())
     }
 }
@@ -1154,8 +1177,7 @@
     server_holder: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>ServerHolder,
     pointer_buf_size: usize,
     <span class="kw">pub </span>cloned_object_server_handle: svc::Handle,
-    <span class="kw">pub </span>cloned_object_forward_handle: svc::Handle,
-    dummy_session: sf::Session
+    <span class="kw">pub </span>cloned_object_forward_handle: svc::Handle
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; HipcManager&lt;<span class="lifetime">'a</span>&gt; {
@@ -1164,8 +1186,7 @@
             server_holder,
             pointer_buf_size,
             cloned_object_server_handle: svc::INVALID_HANDLE,
-            cloned_object_forward_handle: svc::INVALID_HANDLE,
-            dummy_session: sf::Session::new()
+            cloned_object_forward_handle: svc::INVALID_HANDLE
         }
     }
 
@@ -1175,14 +1196,6 @@
 
     <span class="kw">pub fn </span>clone_object(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;ServerHolder&gt; {
         <span class="self">self</span>.server_holder.clone_self(<span class="self">self</span>.cloned_object_server_handle, <span class="self">self</span>.cloned_object_forward_handle)
-    }
-}
-
-<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; sf::IObject <span class="kw">for </span>HipcManager&lt;<span class="lifetime">'a</span>&gt; {
-    <span class="macro">ipc_sf_object_impl_default_command_metadata!</span>();
-
-    <span class="kw">fn </span>get_session(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>sf::Session {
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>.dummy_session
     }
 }
 
@@ -1220,37 +1233,45 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; ISessionObject <span class="kw">for </span>HipcManager&lt;<span class="lifetime">'a</span>&gt; {}
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; ISessionObject <span class="kw">for </span>HipcManager&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">fn </span>try_handle_request_by_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>, req_id: u32, protocol: CommandProtocol, server_ctx: <span class="kw-2">&amp;mut </span>ServerContext) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="prelude-ty">Result</span>&lt;()&gt;&gt; {
+        &lt;<span class="self">Self </span><span class="kw">as </span>IHipcManager&gt;::try_handle_request_by_id(<span class="self">self</span>, req_id, protocol, server_ctx)
+    }
+}
 
 <span class="kw">pub struct </span>MitmQueryService&lt;S: IMitmService&gt; {
-    phantom: core::marker::PhantomData&lt;S&gt;,
-    dummy_session: sf::Session
+    _phantom: core::marker::PhantomData&lt;S&gt;
 }
+
+<span class="doccomment">/// This is safe as we're only calling associated functions and not trait methods.
+</span><span class="kw">unsafe impl</span>&lt;S: IMitmService&gt; Sync <span class="kw">for </span>MitmQueryService&lt;S&gt; {}
 
 <span class="kw">impl</span>&lt;S: IMitmService&gt; MitmQueryService&lt;S&gt; {
     <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            phantom: core::marker::PhantomData,
-            dummy_session: sf::Session::new()
+            _phantom: core::marker::PhantomData,
         }
     }
 }
 
-<span class="kw">impl</span>&lt;S: IMitmService&gt; sf::IObject <span class="kw">for </span>MitmQueryService&lt;S&gt; {
-    <span class="macro">ipc_sf_object_impl_default_command_metadata!</span>();
-
-    <span class="kw">fn </span>get_session(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>sf::Session {
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>.dummy_session
+<span class="kw">impl</span>&lt;S: IMitmService&gt; Default <span class="kw">for </span>MitmQueryService&lt;S&gt; {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::new()
     }
 }
 
-<span class="kw">impl</span>&lt;S: IMitmService&gt; IMitmQueryService <span class="kw">for </span>MitmQueryService&lt;S&gt; {
+
+<span class="kw">impl</span>&lt;S: IMitmService&gt; IMitmQueryServiceServer <span class="kw">for </span>MitmQueryService&lt;S&gt; {
     <span class="kw">fn </span>should_mitm(<span class="kw-2">&amp;mut </span><span class="self">self</span>, info: sm::mitm::MitmProcessInfo) -&gt; <span class="prelude-ty">Result</span>&lt;bool&gt; {
         <span class="prelude-val">Ok</span>(S::should_mitm(info))
     }
 }
 
-<span class="kw">impl</span>&lt;S: IMitmService&gt; ISessionObject <span class="kw">for </span>MitmQueryService&lt;S&gt; {}
+<span class="kw">impl</span>&lt;S: IMitmService&gt; ISessionObject <span class="kw">for </span>MitmQueryService&lt;S&gt; {
+    <span class="kw">fn </span>try_handle_request_by_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>, req_id: u32, protocol: CommandProtocol, server_ctx: <span class="kw-2">&amp;mut </span>ServerContext) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="prelude-ty">Result</span>&lt;()&gt;&gt; {
+        &lt;<span class="self">Self </span><span class="kw">as </span>IMitmQueryServiceServer&gt;::try_handle_request_by_id(<span class="self">self</span>, req_id, protocol, server_ctx)
+    }
+}
 
 <span class="kw">pub trait </span>INamedPort: IServerObject {
     <span class="kw">fn </span>get_port_name() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str;
@@ -1290,8 +1311,7 @@
                 handles_index += <span class="number">1</span>;
             }
         }
-
-        <span class="kw">unsafe </span>{ core::slice::from_raw_parts(<span class="self">self</span>.wait_handles.as_ptr(), handles_index) }
+        <span class="kw-2">&amp;</span><span class="self">self</span>.wait_handles[..handles_index]
     }
 
     <span class="attr">#[inline(always)]
@@ -1315,19 +1335,18 @@
                     <span class="kw">let </span>target_server = <span class="kw">match </span>is_domain {
                         <span class="bool-val">true </span>=&gt; <span class="kw">match </span>ctx.object_info.owns_handle {
                             <span class="bool-val">true </span>=&gt; server_holder.server.clone().ok_or(rc::ResultSignaledServerNotFound::make())<span class="question-mark">?</span>,
-                            <span class="bool-val">false </span>=&gt; domain_table.ok_or(rc::ResultDomainNotFound::make())<span class="question-mark">?</span>.get().find_domain(ctx.object_info.domain_object_id)<span class="question-mark">?
+                            <span class="bool-val">false </span>=&gt; domain_table.ok_or(rc::ResultDomainNotFound::make())<span class="question-mark">?</span>.lock().find_domain(ctx.object_info.domain_object_id)<span class="question-mark">?
                         </span>},
                         <span class="bool-val">false </span>=&gt; server_holder.server.clone().ok_or(rc::ResultSignaledServerNotFound::make())<span class="question-mark">?
                     </span>};
                     <span class="comment">// Nothing done on success here, as if the command succeeds it will automatically respond by itself.
                     </span><span class="kw">let </span><span class="kw-2">mut </span>command_found = <span class="bool-val">false</span>;
-                    <span class="kw">let </span>command_table = target_server.get().get_command_metadata_table();
-                    <span class="kw">for </span>command <span class="kw">in </span><span class="kw-2">&amp;</span>command_table {
-                        <span class="kw">if </span>command.matches(rq_id) {
+                    {
+                        <span class="kw">let </span>protocol = ctx.object_info.protocol;
+                        <span class="kw">let </span><span class="kw-2">mut </span>server_ctx = ServerContext::new(ctx, DataWalker::empty(), domain_table_clone.clone(), <span class="kw-2">&amp;mut </span>new_sessions);
+                        <span class="kw">if let </span><span class="prelude-val">Some</span>(result) = target_server.lock().try_handle_request_by_id(rq_id, protocol, <span class="kw-2">&amp;mut </span>server_ctx) {
                             command_found = <span class="bool-val">true</span>;
-                            <span class="kw">let </span>protocol = ctx.object_info.protocol;
-                            <span class="kw">let </span><span class="kw-2">mut </span>server_ctx = ServerContext::new(ctx, DataWalker::empty(), domain_table_clone.clone(), <span class="kw-2">&amp;mut </span>new_sessions);
-                            <span class="kw">if let </span><span class="prelude-val">Err</span>(rc) = target_server.get().call_self_server_command(command.command_fn, protocol, <span class="kw-2">&amp;mut </span>server_ctx) {
+                            <span class="kw">if let </span><span class="prelude-val">Err</span>(rc) = result {
                                 <span class="kw">if </span>server_holder.is_mitm_service &amp;&amp; sm::mitm::rc::ResultShouldForwardToSession::matches(rc) {
                                     <span class="kw">if let </span><span class="prelude-val">Err</span>(rc) = send_to_forward_handle() {
                                         cmif::server::write_request_command_response_on_msg_buffer(ctx, rc, command_type);
@@ -1369,7 +1388,7 @@
             cmif::DomainCommandType::SendMessage =&gt; do_handle_request()<span class="question-mark">?</span>,
             cmif::DomainCommandType::Close =&gt; {
                 <span class="kw">if </span>!ctx.object_info.owns_handle {
-                    domain_table_clone.ok_or(rc::ResultDomainNotFound::make())<span class="question-mark">?</span>.get().deallocate_domain(ctx.object_info.domain_object_id);
+                    domain_table_clone.ok_or(rc::ResultDomainNotFound::make())<span class="question-mark">?</span>.lock().deallocate_domain(ctx.object_info.domain_object_id);
                 }
                 <span class="kw">else </span>{
                     <span class="comment">// TODO: Abort? Error?
@@ -1391,14 +1410,12 @@
                 <span class="kw">let </span><span class="kw-2">mut </span>hipc_manager = HipcManager::new(server_holder, P);
                 <span class="comment">// Nothing done on success here, as if the command succeeds it will automatically respond by itself.
                 </span><span class="kw">let </span><span class="kw-2">mut </span>command_found = <span class="bool-val">false</span>;
-                <span class="kw">let </span>command_table = hipc_manager.get_command_metadata_table();
-                <span class="kw">for </span>command <span class="kw">in </span><span class="kw-2">&amp;</span>command_table {
-                    <span class="kw">if </span>command.matches(rq_id) {
+                {
+                    <span class="kw">let </span><span class="kw-2">mut </span>unused_new_sessions: Vec&lt;ServerHolder&gt; = Vec::new();
+                    <span class="kw">let </span><span class="kw-2">mut </span>server_ctx = ServerContext::new(ctx, DataWalker::empty(), <span class="prelude-val">None</span>, <span class="kw-2">&amp;mut </span>unused_new_sessions);
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(result) = &lt;HipcManager <span class="kw">as </span>ISessionObject&gt;::try_handle_request_by_id(<span class="kw-2">&amp;mut </span>hipc_manager, rq_id, CommandProtocol::Cmif, <span class="kw-2">&amp;mut </span>server_ctx) {
                         command_found = <span class="bool-val">true</span>;
-                        <span class="kw">let </span><span class="kw-2">mut </span>unused_new_sessions: Vec&lt;ServerHolder&gt; = Vec::new();
-                        <span class="kw">let </span><span class="kw-2">mut </span>server_ctx = ServerContext::new(ctx, DataWalker::empty(), <span class="prelude-val">None</span>, <span class="kw-2">&amp;mut </span>unused_new_sessions);
-
-                        <span class="kw">if let </span><span class="prelude-val">Err</span>(rc) = hipc_manager.call_self_server_command(command.command_fn, CommandProtocol::Cmif, <span class="kw-2">&amp;mut </span>server_ctx) {
+                        <span class="kw">if let </span><span class="prelude-val">Err</span>(rc) = result {
                             cmif::server::write_control_command_response_on_msg_buffer(ctx, rc, command_type);
                         }
                     }
@@ -1444,17 +1461,14 @@
                             cmif::client::write_command_on_msg_buffer(<span class="kw-2">&amp;mut </span>tmp_ctx, cmif::CommandType::Invalid, <span class="number">0</span>);
                         }
 
-                        <span class="kw">match </span>svc::reply_and_receive(<span class="kw-2">&amp;</span>handle, <span class="number">1</span>, <span class="number">0</span>, -<span class="number">1</span>) {
-                            <span class="prelude-val">Err</span>(rc) =&gt; {
-                                <span class="kw">if </span>svc::rc::ResultSessionClosed::matches(rc) {
-                                    should_close_session = <span class="bool-val">true</span>;
-                                    <span class="kw">break</span>;
-                                }
-                                <span class="kw">else </span>{
-                                    <span class="kw">return </span><span class="prelude-val">Err</span>(rc);
-                                }
-                            },
-                            <span class="kw">_ </span>=&gt; {}
+                        <span class="kw">if let </span><span class="prelude-val">Err</span>(rc) = <span class="kw">unsafe </span>{svc::reply_and_receive(<span class="kw-2">&amp;</span>handle, <span class="number">1</span>, <span class="number">0</span>, -<span class="number">1</span>)} {
+                            <span class="kw">if </span>svc::rc::ResultSessionClosed::matches(rc) {
+                                should_close_session = <span class="bool-val">true</span>;
+                                <span class="kw">break</span>;
+                            }
+                            <span class="kw">else </span>{
+                                <span class="kw">return </span><span class="prelude-val">Err</span>(rc);
+                            }
                         };
 
                         <span class="kw">unsafe </span>{ core::ptr::copy(get_msg_buffer(), ipc_buf_backup.as_mut_ptr(), ipc_buf_backup.len()) };
@@ -1499,10 +1513,10 @@
                         <span class="kw">if </span>server_holder.is_mitm_service {
                             <span class="attr">#[cfg(feature = <span class="string">"services"</span>)]
                             </span>{
-                                <span class="kw">let </span>sm = service::new_named_port_object::&lt;sm::UserInterface&gt;()<span class="question-mark">?</span>;
-                                <span class="kw">let </span>(info, session_handle) = sm.get().atmosphere_acknowledge_mitm_session(server_holder.service_name)<span class="question-mark">?</span>;
-                                new_sessions.push(server_holder.make_new_mitm_session(new_handle, session_handle.handle, info)<span class="question-mark">?</span>);
-                                sm.get().detach_client(sf::ProcessId::new())<span class="question-mark">?</span>;
+                                <span class="kw">let </span><span class="kw-2">mut </span>sm = service::new_named_port_object::&lt;sm::UserInterface&gt;()<span class="question-mark">?</span>;
+                                <span class="kw">let </span>(info, session_handle) = sm.atmosphere_acknowledge_mitm_session(server_holder.service_name)<span class="question-mark">?</span>;
+                                new_sessions.push(server_holder.make_new_mitm_session(new_handle, session_handle.handle, info, server_holder.service_name)<span class="question-mark">?</span>);
+                                sm.detach_client(sf::ProcessId::new())<span class="question-mark">?</span>;
                             }
                         }
                         <span class="kw">else </span>{
@@ -1516,7 +1530,7 @@
         }
 
         <span class="kw">let </span>reply_impl = || -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-            <span class="kw">match </span>svc::reply_and_receive(<span class="kw-2">&amp;</span>handle, <span class="number">0</span>, handle, <span class="number">0</span>) {
+            <span class="kw">match unsafe </span>{svc::reply_and_receive(<span class="kw-2">&amp;</span>handle, <span class="number">0</span>, handle, <span class="number">0</span>)} {
                 <span class="prelude-val">Err</span>(rc) =&gt; {
                     <span class="kw">if </span>svc::rc::ResultTimedOut::matches(rc) || svc::rc::ResultSessionClosed::matches(rc) {
                         <span class="prelude-val">Ok</span>(())
@@ -1576,10 +1590,10 @@
     </span><span class="kw">pub fn </span>register_service_server&lt;S: IService + <span class="lifetime">'static</span>&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>service_name = S::get_name();
         
-        <span class="kw">let </span>sm = service::new_named_port_object::&lt;sm::UserInterface&gt;()<span class="question-mark">?</span>;
-        <span class="kw">let </span>service_handle = sm.get().register_service(service_name, <span class="bool-val">false</span>, S::get_max_sesssions())<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>sm = service::new_named_port_object::&lt;sm::UserInterface&gt;()<span class="question-mark">?</span>;
+        <span class="kw">let </span>service_handle = sm.register_service(service_name, <span class="bool-val">false</span>, S::get_max_sesssions())<span class="question-mark">?</span>;
         <span class="self">self</span>.register_server::&lt;S&gt;(service_handle.handle, service_name);
-        sm.get().detach_client(sf::ProcessId::new())<span class="question-mark">?</span>;
+        sm.detach_client(sf::ProcessId::new(),)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
     
@@ -1587,21 +1601,21 @@
     </span><span class="kw">pub fn </span>register_mitm_service_server&lt;S: IMitmService + <span class="lifetime">'static</span>&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>service_name = S::get_name();
 
-        <span class="kw">let </span>sm = service::new_named_port_object::&lt;sm::UserInterface&gt;()<span class="question-mark">?</span>;
-        <span class="kw">let </span>(mitm_handle, query_handle) = sm.get().atmosphere_install_mitm(service_name)<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>sm = service::new_named_port_object::&lt;sm::UserInterface&gt;()<span class="question-mark">?</span>;
+        <span class="kw">let </span>(mitm_handle, query_handle) = sm.atmosphere_install_mitm(service_name)<span class="question-mark">?</span>;
 
         <span class="self">self</span>.register_mitm_server::&lt;S&gt;(mitm_handle.handle, service_name);
 
         <span class="kw">let </span>mitm_query_srv = mem::Shared::new(MitmQueryService::&lt;S&gt;::new());
         <span class="self">self</span>.register_session(query_handle.handle, mitm_query_srv);
 
-        sm.get().atmosphere_clear_future_mitm(service_name)<span class="question-mark">?</span>;
-        sm.get().detach_client(sf::ProcessId::new())<span class="question-mark">?</span>;
+        sm.atmosphere_clear_future_mitm(service_name)<span class="question-mark">?</span>;
+        sm.detach_client(sf::ProcessId::new())<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">pub fn </span>register_named_port_server&lt;S: INamedPort + <span class="lifetime">'static</span>&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let </span>port_handle = svc::manage_named_port(S::get_port_name().as_ptr(), S::get_max_sesssions())<span class="question-mark">?</span>;
+        <span class="kw">let </span>port_handle = <span class="kw">unsafe </span>{svc::manage_named_port(S::get_port_name().as_ptr(), S::get_max_sesssions())<span class="question-mark">?</span>};
 
         <span class="self">self</span>.register_server::&lt;S&gt;(port_handle, sm::ServiceName::empty());
         <span class="prelude-val">Ok</span>(())
@@ -1609,7 +1623,7 @@
 
     <span class="kw">pub fn </span>process(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>handles = <span class="self">self</span>.prepare_wait_handles();
-        <span class="kw">let </span>index = wait::wait_handles(handles, -<span class="number">1</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>index = wait::wait_handles(handles, <span class="number">100_000</span>)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>signaled_handle = <span class="self">self</span>.wait_handles[index];
         <span class="self">self</span>.process_signaled_handle(signaled_handle)<span class="question-mark">?</span>;
@@ -1619,15 +1633,15 @@
 
     <span class="kw">pub fn </span>loop_process(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">loop </span>{
-            <span class="kw">match </span><span class="self">self</span>.process() {
-                <span class="prelude-val">Err</span>(rc) =&gt; {
-                    <span class="comment">// TODO: handle results properly here
-                    </span><span class="kw">if </span>svc::rc::ResultCancelled::matches(rc) {
-                        <span class="kw">break</span>;
-                    }
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(rc);
-                },
-                <span class="kw">_ </span>=&gt; {}
+            <span class="kw">if let </span><span class="prelude-val">Err</span>(rc) = <span class="self">self</span>.process() {
+                <span class="kw">if </span>svc::rc::ResultTimedOut::matches(rc) {
+                    <span class="kw">continue</span>;
+                }
+                <span class="comment">// TODO: handle results properly here
+                </span><span class="kw">if </span>svc::rc::ResultCancelled::matches(rc) {
+                    <span class="kw">break</span>;
+                }
+                <span class="kw">return </span><span class="prelude-val">Err</span>(rc);
             }
         }
 

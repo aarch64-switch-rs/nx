@@ -1,6 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/ipc/sf.rs`."><title>sf.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0-nightly (c9f8f3438 2024-03-27)" data-channel="nightly" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
-            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../nx/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/ipc/sf.rs`."><title>sf.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-42caa33d.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.85.0-nightly (a47555110 2024-11-22)" data-channel="nightly" data-search-js="search-92e6798f.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">nx/ipc/</div>sf.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -359,26 +358,154 @@
 <a href="#357" id="357">357</a>
 <a href="#358" id="358">358</a>
 <a href="#359" id="359">359</a>
-</pre></div><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
-<span class="kw">use </span><span class="kw">crate</span>::version;
-<span class="kw">use </span>alloc::vec::Vec;
-<span class="kw">use </span>alloc::string::String;
+<a href="#360" id="360">360</a>
+<a href="#361" id="361">361</a>
+<a href="#362" id="362">362</a>
+<a href="#363" id="363">363</a>
+<a href="#364" id="364">364</a>
+<a href="#365" id="365">365</a>
+<a href="#366" id="366">366</a>
+<a href="#367" id="367">367</a>
+<a href="#368" id="368">368</a>
+<a href="#369" id="369">369</a>
+<a href="#370" id="370">370</a>
+<a href="#371" id="371">371</a>
+<a href="#372" id="372">372</a>
+<a href="#373" id="373">373</a>
+<a href="#374" id="374">374</a>
+<a href="#375" id="375">375</a>
+<a href="#376" id="376">376</a>
+<a href="#377" id="377">377</a>
+<a href="#378" id="378">378</a>
+<a href="#379" id="379">379</a>
+<a href="#380" id="380">380</a>
+<a href="#381" id="381">381</a>
+<a href="#382" id="382">382</a>
+<a href="#383" id="383">383</a>
+<a href="#384" id="384">384</a>
+<a href="#385" id="385">385</a>
+<a href="#386" id="386">386</a>
+<a href="#387" id="387">387</a>
+<a href="#388" id="388">388</a>
+<a href="#389" id="389">389</a>
+<a href="#390" id="390">390</a>
+<a href="#391" id="391">391</a>
+<a href="#392" id="392">392</a>
+<a href="#393" id="393">393</a>
+<a href="#394" id="394">394</a>
+<a href="#395" id="395">395</a>
+<a href="#396" id="396">396</a>
+<a href="#397" id="397">397</a>
+<a href="#398" id="398">398</a>
+<a href="#399" id="399">399</a>
+<a href="#400" id="400">400</a>
+<a href="#401" id="401">401</a>
+<a href="#402" id="402">402</a>
+<a href="#403" id="403">403</a>
+<a href="#404" id="404">404</a>
+<a href="#405" id="405">405</a>
+<a href="#406" id="406">406</a>
+<a href="#407" id="407">407</a>
+<a href="#408" id="408">408</a>
+<a href="#409" id="409">409</a>
+<a href="#410" id="410">410</a>
+<a href="#411" id="411">411</a>
+<a href="#412" id="412">412</a>
+<a href="#413" id="413">413</a>
+<a href="#414" id="414">414</a>
+<a href="#415" id="415">415</a>
+<a href="#416" id="416">416</a>
+<a href="#417" id="417">417</a>
+<a href="#418" id="418">418</a>
+<a href="#419" id="419">419</a>
+<a href="#420" id="420">420</a>
+<a href="#421" id="421">421</a>
+<a href="#422" id="422">422</a>
+<a href="#423" id="423">423</a>
+<a href="#424" id="424">424</a>
+<a href="#425" id="425">425</a>
+<a href="#426" id="426">426</a>
+<a href="#427" id="427">427</a>
+<a href="#428" id="428">428</a>
+<a href="#429" id="429">429</a>
+<a href="#430" id="430">430</a>
+<a href="#431" id="431">431</a>
+<a href="#432" id="432">432</a>
+<a href="#433" id="433">433</a>
+<a href="#434" id="434">434</a>
+<a href="#435" id="435">435</a>
+<a href="#436" id="436">436</a>
+<a href="#437" id="437">437</a>
+<a href="#438" id="438">438</a>
+<a href="#439" id="439">439</a>
+<a href="#440" id="440">440</a>
+<a href="#441" id="441">441</a>
+<a href="#442" id="442">442</a>
+<a href="#443" id="443">443</a>
+<a href="#444" id="444">444</a>
+<a href="#445" id="445">445</a>
+<a href="#446" id="446">446</a>
+<a href="#447" id="447">447</a>
+<a href="#448" id="448">448</a>
+<a href="#449" id="449">449</a>
+<a href="#450" id="450">450</a>
+<a href="#451" id="451">451</a>
+<a href="#452" id="452">452</a>
+<a href="#453" id="453">453</a>
+<a href="#454" id="454">454</a>
+<a href="#455" id="455">455</a>
+<a href="#456" id="456">456</a>
+<a href="#457" id="457">457</a>
+<a href="#458" id="458">458</a>
+<a href="#459" id="459">459</a>
+<a href="#460" id="460">460</a>
+<a href="#461" id="461">461</a>
+<a href="#462" id="462">462</a>
+<a href="#463" id="463">463</a>
+<a href="#464" id="464">464</a>
+<a href="#465" id="465">465</a>
+<a href="#466" id="466">466</a>
+<a href="#467" id="467">467</a>
+<a href="#468" id="468">468</a>
+<a href="#469" id="469">469</a>
+<a href="#470" id="470">470</a>
+<a href="#471" id="471">471</a>
+<a href="#472" id="472">472</a>
+<a href="#473" id="473">473</a>
+<a href="#474" id="474">474</a>
+<a href="#475" id="475">475</a>
+<a href="#476" id="476">476</a>
+<a href="#477" id="477">477</a>
+<a href="#478" id="478">478</a>
+<a href="#479" id="479">479</a>
+<a href="#480" id="480">480</a>
+<a href="#481" id="481">481</a>
+<a href="#482" id="482">482</a>
+<a href="#483" id="483">483</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::util;
+<span class="kw">use </span>alloc::{string::String, vec::Vec};
+
+<span class="kw">pub use </span>nx_derive::{Request, Response};
 
 <span class="kw">pub struct </span>Buffer&lt;<span class="kw">const </span>A: BufferAttribute, T&gt; {
     buf: <span class="kw-2">*mut </span>T,
-    count: usize
+    count: usize,
 }
 
 <span class="kw">impl</span>&lt;<span class="kw">const </span>A: BufferAttribute, T&gt; Buffer&lt;A, T&gt; {
     <span class="kw">pub const fn </span>get_expected_size() -&gt; usize {
-        mem::size_of::&lt;T&gt;()
+        <span class="comment">// Calculate align-padded size of each element in the buffer (in case a type has a larger alignment than its size)
+        </span>util::const_usize_max(
+            mem::size_of::&lt;T&gt;(),
+            mem::align_of::&lt;T&gt;()
+        )
     }
 
     <span class="kw">pub const fn </span>empty() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             buf: ptr::null_mut(),
-            count: <span class="number">0
-        </span>}
+            count: <span class="number">0</span>,
+        }
     }
 
     <span class="comment">// TODO: ensure that sizeof(T) is a multiple of size
@@ -386,22 +513,19 @@
     </span><span class="kw">pub const fn </span>new(addr: <span class="kw-2">*mut </span>u8, size: usize) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             buf: addr <span class="kw">as </span><span class="kw-2">*mut </span>T,
-            count: size / <span class="self">Self</span>::get_expected_size()
+            count: size / <span class="self">Self</span>::get_expected_size(),
         }
     }
-    
+
     <span class="kw">pub const fn </span>from_ptr(buf: <span class="kw-2">*const </span>T, count: usize) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             buf: buf <span class="kw">as </span><span class="kw-2">*mut </span>T,
-            count
+            count,
         }
     }
 
     <span class="kw">pub const fn </span>from_mut_ptr(buf: <span class="kw-2">*mut </span>T, count: usize) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            buf,
-            count
-        }
+        <span class="self">Self </span>{ buf, count }
     }
 
     <span class="kw">pub const fn </span>from_var(var: <span class="kw-2">&amp;</span>T) -&gt; <span class="self">Self </span>{
@@ -415,11 +539,17 @@
     <span class="comment">// TODO: ensure sizeof(T) is a multiple of sizeof(U)
 
     </span><span class="kw">pub const fn </span>from_other_var&lt;U&gt;(var: <span class="kw-2">&amp;</span>U) -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>::from_ptr(var <span class="kw">as </span><span class="kw-2">*const </span>U <span class="kw">as </span><span class="kw-2">*const </span>T, mem::size_of::&lt;U&gt;() / <span class="self">Self</span>::get_expected_size())
+        <span class="self">Self</span>::from_ptr(
+            var <span class="kw">as </span><span class="kw-2">*const </span>U <span class="kw">as </span><span class="kw-2">*const </span>T,
+            mem::size_of::&lt;U&gt;() / <span class="self">Self</span>::get_expected_size(),
+        )
     }
 
     <span class="kw">pub const fn </span>from_other_mut_var&lt;U&gt;(var: <span class="kw-2">&amp;mut </span>U) -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>::from_mut_ptr(var <span class="kw">as </span><span class="kw-2">*mut </span>U <span class="kw">as </span><span class="kw-2">*mut </span>T, mem::size_of::&lt;U&gt;() / <span class="self">Self</span>::get_expected_size())
+        <span class="self">Self</span>::from_mut_ptr(
+            var <span class="kw">as </span><span class="kw-2">*mut </span>U <span class="kw">as </span><span class="kw-2">*mut </span>T,
+            mem::size_of::&lt;U&gt;() / <span class="self">Self</span>::get_expected_size(),
+        )
     }
 
     <span class="kw">pub const fn </span>from_array(arr: <span class="kw-2">&amp;</span>[T]) -&gt; <span class="self">Self </span>{
@@ -447,15 +577,11 @@
     }
 
     <span class="kw">pub const fn </span>get_var(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>T {
-        <span class="kw">unsafe </span>{
-            <span class="kw-2">&amp;*</span>(<span class="self">self</span>.buf <span class="kw">as </span><span class="kw-2">*const </span>T)
-        }
+        <span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>(<span class="self">self</span>.buf <span class="kw">as </span><span class="kw-2">*const </span>T) }
     }
 
-    <span class="kw">pub fn </span>get_mut_var(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>T {
-        <span class="kw">unsafe </span>{
-            <span class="kw-2">&amp;mut *</span><span class="self">self</span>.buf
-        }
+    <span class="kw">pub fn </span>get_mut_var(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>T {
+        <span class="kw">unsafe </span>{ <span class="kw-2">&amp;mut *</span><span class="self">self</span>.buf }
     }
 
     <span class="kw">pub fn </span>set_var(<span class="kw-2">&amp;mut </span><span class="self">self</span>, t: T) {
@@ -463,17 +589,27 @@
             <span class="kw-2">*</span><span class="self">self</span>.buf = t;
         }
     }
-
-    <span class="kw">pub fn </span>get_slice(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[T] {
-        <span class="kw">unsafe </span>{
-            core::slice::from_raw_parts(<span class="self">self</span>.buf <span class="kw">as </span><span class="kw-2">*const </span>T, <span class="self">self</span>.count)
+    
+    <span class="kw">pub fn </span>get_maybe_unaligned(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;T&gt; {
+        <span class="macro">assert!</span>(!<span class="self">self</span>.buf.is_null());
+        <span class="kw">let </span><span class="kw-2">mut </span>out = Vec::with_capacity(<span class="self">self</span>.count);
+        <span class="kw">for </span>index <span class="kw">in </span><span class="number">0</span>..<span class="self">self</span>.count {
+            <span class="comment">// SAFETY: we have already asserted on non-null `self.buf`
+            </span>out.push(<span class="kw">unsafe </span>{core::ptr::read_unaligned(<span class="self">self</span>.buf.add(index))});
         }
+
+        out
     }
 
-    <span class="kw">pub fn </span>get_mut_slice(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>[T] {
-        <span class="kw">unsafe </span>{
-            core::slice::from_raw_parts_mut(<span class="self">self</span>.buf, <span class="self">self</span>.count)
-        }
+    <span class="doccomment">/// Unfortunately this doesn't seem to have an alignment guarantee as the clients may ignore it (e.g. TOTK)
+    </span><span class="attr">#[deprecated]
+    </span><span class="kw">pub unsafe fn </span>get_slice(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[T] {
+        <span class="kw">unsafe </span>{ core::slice::from_raw_parts(<span class="self">self</span>.buf <span class="kw">as </span><span class="kw-2">*const </span>T, <span class="self">self</span>.count) }
+    }
+
+    <span class="attr">#[deprecated]
+    </span><span class="kw">pub unsafe fn </span>get_mut_slice(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>[T] {
+        <span class="kw">unsafe </span>{ core::slice::from_raw_parts_mut(<span class="self">self</span>.buf, <span class="self">self</span>.count) }
     }
 }
 
@@ -495,26 +631,80 @@
     <span class="kw">pub fn </span>set_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>, string: String) {
         <span class="kw">unsafe </span>{
             <span class="comment">// First memset to zero so that it will be a valid nul-terminated string
-            </span>core::ptr::write_bytes(<span class="self">self</span>.buf <span class="kw">as </span><span class="kw-2">*mut </span>u8, <span class="number">0</span>, <span class="self">self</span>.count);
-            core::ptr::copy(string.as_ptr(), <span class="self">self</span>.buf <span class="kw">as </span><span class="kw-2">*mut </span>u8, core::cmp::min(<span class="self">self</span>.count - <span class="number">1</span>, string.len()));
+            </span>core::ptr::write_bytes(<span class="self">self</span>.buf, <span class="number">0</span>, <span class="self">self</span>.count);
+            core::ptr::copy(
+                string.as_ptr(),
+                <span class="self">self</span>.buf,
+                core::cmp::min(<span class="self">self</span>.count - <span class="number">1</span>, string.len()),
+            );
         }
     }
 }
 
-<span class="kw">pub type </span>InMapAliasBuffer&lt;T&gt; = Buffer&lt;{<span class="macro">bit_group!</span>{ BufferAttribute [In, MapAlias] }}, T&gt;;
-<span class="kw">pub type </span>OutMapAliasBuffer&lt;T&gt; = Buffer&lt;{<span class="macro">bit_group!</span>{ BufferAttribute [Out, MapAlias] }}, T&gt;;
-<span class="kw">pub type </span>InNonSecureMapAliasBuffer&lt;T&gt; = Buffer&lt;{<span class="macro">bit_group!</span>{ BufferAttribute [In, MapAlias, MapTransferAllowsNonSecure] }}, T&gt;;
-<span class="kw">pub type </span>OutNonSecureMapAliasBuffer&lt;T&gt; = Buffer&lt;{<span class="macro">bit_group!</span>{ BufferAttribute [Out, MapAlias, MapTransferAllowsNonSecure] }}, T&gt;;
-<span class="kw">pub type </span>InAutoSelectBuffer&lt;T&gt; = Buffer&lt;{<span class="macro">bit_group!</span>{ BufferAttribute [In, AutoSelect] }}, T&gt;;
-<span class="kw">pub type </span>OutAutoSelectBuffer&lt;T&gt; = Buffer&lt;{<span class="macro">bit_group!</span>{ BufferAttribute [Out, AutoSelect] }}, T&gt;;
-<span class="kw">pub type </span>InPointerBuffer&lt;T&gt; = Buffer&lt;{<span class="macro">bit_group!</span>{ BufferAttribute [In, Pointer] }}, T&gt;;
-<span class="kw">pub type </span>OutPointerBuffer&lt;T&gt; = Buffer&lt;{<span class="macro">bit_group!</span>{ BufferAttribute [Out, Pointer] }}, T&gt;;
-<span class="kw">pub type </span>InFixedPointerBuffer&lt;T&gt; = Buffer&lt;{<span class="macro">bit_group!</span>{ BufferAttribute [In, Pointer, FixedSize] }}, T&gt;;
-<span class="kw">pub type </span>OutFixedPointerBuffer&lt;T&gt; = Buffer&lt;{<span class="macro">bit_group!</span>{ BufferAttribute [Out, Pointer, FixedSize] }}, T&gt;;
+<span class="kw">pub type </span>InMapAliasBuffer&lt;T&gt; = Buffer&lt;
+    {
+        <span class="macro">bit_group!</span> { BufferAttribute [In, MapAlias] }
+    },
+    T,
+&gt;;
+<span class="kw">pub type </span>OutMapAliasBuffer&lt;T&gt; = Buffer&lt;
+    {
+        <span class="macro">bit_group!</span> { BufferAttribute [Out, MapAlias] }
+    },
+    T,
+&gt;;
+<span class="kw">pub type </span>InNonSecureMapAliasBuffer&lt;T&gt; = Buffer&lt;
+    {
+        <span class="macro">bit_group!</span> { BufferAttribute [In, MapAlias, MapTransferAllowsNonSecure] }
+    },
+    T,
+&gt;;
+<span class="kw">pub type </span>OutNonSecureMapAliasBuffer&lt;T&gt; = Buffer&lt;
+    {
+        <span class="macro">bit_group!</span> { BufferAttribute [Out, MapAlias, MapTransferAllowsNonSecure] }
+    },
+    T,
+&gt;;
+<span class="kw">pub type </span>InAutoSelectBuffer&lt;T&gt; = Buffer&lt;
+    {
+        <span class="macro">bit_group!</span> { BufferAttribute [In, AutoSelect] }
+    },
+    T,
+&gt;;
+<span class="kw">pub type </span>OutAutoSelectBuffer&lt;T&gt; = Buffer&lt;
+    {
+        <span class="macro">bit_group!</span> { BufferAttribute [Out, AutoSelect] }
+    },
+    T,
+&gt;;
+<span class="kw">pub type </span>InPointerBuffer&lt;T&gt; = Buffer&lt;
+    {
+        <span class="macro">bit_group!</span> { BufferAttribute [In, Pointer] }
+    },
+    T,
+&gt;;
+<span class="kw">pub type </span>OutPointerBuffer&lt;T&gt; = Buffer&lt;
+    {
+        <span class="macro">bit_group!</span> { BufferAttribute [Out, Pointer] }
+    },
+    T,
+&gt;;
+<span class="kw">pub type </span>InFixedPointerBuffer&lt;T&gt; = Buffer&lt;
+    {
+        <span class="macro">bit_group!</span> { BufferAttribute [In, Pointer, FixedSize] }
+    },
+    T,
+&gt;;
+<span class="kw">pub type </span>OutFixedPointerBuffer&lt;T&gt; = Buffer&lt;
+    {
+        <span class="macro">bit_group!</span> { BufferAttribute [Out, Pointer, FixedSize] }
+    },
+    T,
+&gt;;
 
 <span class="attr">#[derive(Clone)]
 </span><span class="kw">pub struct </span>Handle&lt;<span class="kw">const </span>M: HandleMode&gt; {
-    <span class="kw">pub </span>handle: svc::Handle
+    <span class="kw">pub </span>handle: svc::Handle,
 }
 
 <span class="kw">impl</span>&lt;<span class="kw">const </span>M: HandleMode&gt; Handle&lt;M&gt; {
@@ -523,12 +713,13 @@
     }
 }
 
-<span class="kw">pub type </span>CopyHandle = Handle&lt;{HandleMode::Copy}&gt;;
-<span class="kw">pub type </span>MoveHandle = Handle&lt;{HandleMode::Move}&gt;;
+<span class="kw">pub type </span>CopyHandle = Handle&lt;{ HandleMode::Copy }&gt;;
+<span class="kw">pub type </span>MoveHandle = Handle&lt;{ HandleMode::Move }&gt;;
 
-<span class="attr">#[derive(Clone)]
+
+<span class="attr">#[derive(Clone, Default)]
 </span><span class="kw">pub struct </span>ProcessId {
-    <span class="kw">pub </span>process_id: u64
+    <span class="kw">pub </span>process_id: u64,
 }
 
 <span class="kw">impl </span>ProcessId {
@@ -536,8 +727,37 @@
         <span class="self">Self </span>{ process_id }
     }
 
-    <span class="kw">pub const fn </span>new() -&gt; ProcessId {
-        <span class="self">Self</span>::from(<span class="number">0</span>)
+    <span class="kw">pub const fn </span>new() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ process_id: <span class="number">0 </span>}
+    }
+}
+
+<span class="doccomment">/// AppletResourceUserIds are restricted to the values of zero, or the process' PID.
+/// When they are sent over an IPC interface, they also trigger the sending of a PID descriptor in the HIPC request,
+/// so there is an additional field for the PID. This field is filled in by the kernel during a request, and is read
+/// out of the headers in the same way as the `ProcessId`[`ProcessId`] above.
+/// 
+/// This allows the crate to just send the `AppletResourceUserId` object when the IPC interface is expecting this value
+/// and the `send_pid` flag. This also allows us to have a `ProcessId` type that creates it's own pid placeholder in CMIF
+/// IPC requests.
+</span><span class="attr">#[derive(Clone, Default)]
+</span><span class="kw">pub struct </span>AppletResourceUserId {
+    <span class="kw">pub </span>process_id: u64,
+    <span class="kw">pub </span>aruid: u64
+}
+
+<span class="kw">impl </span>AppletResourceUserId {
+    <span class="kw">pub const fn </span>from(process_id: u64, aruid: u64) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ process_id, aruid }
+    }
+
+    <span class="attr">#[cfg(feature = <span class="string">"services"</span>)]
+    </span><span class="kw">pub fn </span>from_global() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{process_id: <span class="number">0</span>, aruid: nx::service::applet::GLOBAL_ARUID.load(core::sync::atomic::Ordering::SeqCst)}
+    }
+
+    <span class="kw">pub const fn </span>new(aruid: u64) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ process_id: <span class="number">0</span>, aruid }
     }
 }
 
@@ -547,20 +767,16 @@
 #[repr(C)]
 </span><span class="kw">pub union </span>EnumAsPrimitiveType&lt;E: Copy + Clone, T: Copy + Clone&gt; {
     val: T,
-    enum_val: E
+    enum_val: E,
 }
 
 <span class="kw">impl</span>&lt;E: Copy + Clone, T: Copy + Clone&gt; EnumAsPrimitiveType&lt;E, T&gt; {
     <span class="kw">pub fn </span>from(enum_val: E) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            enum_val
-        }
+        <span class="self">Self </span>{ enum_val }
     }
 
     <span class="kw">pub fn </span>from_val(val: T) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            val
-        }
+        <span class="self">Self </span>{ val }
     }
 
     <span class="kw">pub fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; E {
@@ -580,19 +796,78 @@
     }
 }
 
-<span class="kw">pub struct </span>Session {
-    <span class="kw">pub </span>object_info: ObjectInfo
+<span class="kw">impl</span>&lt;E: Copy + Clone, T: Copy + Clone&gt; server::RequestCommandParameter&lt;EnumAsPrimitiveType&lt;E, T&gt;&gt;
+    <span class="kw">for </span>EnumAsPrimitiveType&lt;E, T&gt;
+{
+    <span class="kw">fn </span>after_request_read(ctx: <span class="kw-2">&amp;mut </span>server::ServerContext) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="prelude-val">Ok</span>(ctx.raw_data_walker.advance_get())
+    }
+}
+
+<span class="kw">impl</span>&lt;E: Copy + Clone, T: Copy + Clone&gt; server::ResponseCommandParameter
+    <span class="kw">for </span>EnumAsPrimitiveType&lt;E, T&gt;
+{
+    <span class="kw">type </span>CarryState = ();
+    <span class="kw">fn </span>before_response_write(_raw: <span class="kw-2">&amp;</span><span class="self">Self</span>, ctx: <span class="kw-2">&amp;mut </span>server::ServerContext) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        ctx.raw_data_walker.advance::&lt;<span class="self">Self</span>&gt;();
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">fn </span>after_response_write(raw: <span class="self">Self</span>, _carry_state: (), ctx: <span class="kw-2">&amp;mut </span>server::ServerContext) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        ctx.raw_data_walker.advance_set(raw);
+        <span class="prelude-val">Ok</span>(())
+    }
+}
+
+<span class="kw">impl</span>&lt;E: Copy + Clone, T: Copy + Clone&gt; client::RequestCommandParameter
+    <span class="kw">for </span>EnumAsPrimitiveType&lt;E, T&gt;
+{
+    <span class="kw">fn </span>before_request_write(
+        _raw: <span class="kw-2">&amp;</span><span class="self">Self</span>,
+        walker: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::ipc::DataWalker,
+        _ctx: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::ipc::CommandContext,
+    ) -&gt; <span class="kw">crate</span>::result::Result&lt;()&gt; {
+        walker.advance::&lt;<span class="self">Self</span>&gt;();
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">fn </span>before_send_sync_request(
+        raw: <span class="kw-2">&amp;</span><span class="self">Self</span>,
+        walker: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::ipc::DataWalker,
+        _ctx: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::ipc::CommandContext,
+    ) -&gt; <span class="kw">crate</span>::result::Result&lt;()&gt; {
+        walker.advance_set(<span class="kw-2">*</span>raw);
+        <span class="prelude-val">Ok</span>(())
+    }
+}
+
+<span class="kw">impl</span>&lt;E: Copy + Clone, T: Copy + Clone&gt; client::ResponseCommandParameter&lt;EnumAsPrimitiveType&lt;E, T&gt;&gt;
+    <span class="kw">for </span>EnumAsPrimitiveType&lt;E, T&gt;
+{
+    <span class="kw">fn </span>after_response_read(
+        walker: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::ipc::DataWalker,
+        _ctx: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::ipc::CommandContext,
+    ) -&gt; <span class="kw">crate</span>::result::Result&lt;<span class="self">Self</span>&gt; {
+        <span class="prelude-val">Ok</span>(walker.advance_get())
+    }
+}
+
+<span class="attr">#[derive(Default)]
+</span><span class="kw">pub struct </span>Session {
+    <span class="kw">pub </span>object_info: ObjectInfo,
 }
 
 <span class="kw">impl </span>Session {
-    <span class="kw">pub const fn </span>new() -&gt; <span class="self">Self  </span>{
-        <span class="self">Self </span>{ object_info: ObjectInfo::new() }
+    <span class="kw">pub const fn </span>new() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            object_info: ObjectInfo::new(),
+        }
     }
 
     <span class="kw">pub const fn </span>from(object_info: ObjectInfo) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{ object_info }
     }
-    
+
     <span class="kw">pub const fn </span>from_handle(handle: svc::Handle) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::from(ObjectInfo::from_handle(handle))
     }
@@ -614,15 +889,22 @@
         <span class="kw">if </span><span class="self">self</span>.object_info.is_valid() {
             <span class="kw">if </span><span class="self">self</span>.object_info.is_domain() {
                 <span class="kw">let </span><span class="kw-2">mut </span>ctx = CommandContext::new_client(<span class="self">self</span>.object_info);
-                cmif::client::write_request_command_on_msg_buffer(<span class="kw-2">&amp;mut </span>ctx, <span class="prelude-val">None</span>, cmif::DomainCommandType::Close);
+                cmif::client::write_request_command_on_msg_buffer(
+                    <span class="kw-2">&amp;mut </span>ctx,
+                    <span class="prelude-val">None</span>,
+                    cmif::DomainCommandType::Close,
+                );
                 <span class="kw">let _ </span>= svc::send_sync_request(<span class="self">self</span>.object_info.handle);
-            }
-            <span class="kw">else if </span><span class="self">self</span>.object_info.owns_handle {
+            } <span class="kw">else if </span><span class="self">self</span>.object_info.owns_handle {
                 <span class="kw">let </span><span class="kw-2">mut </span>ctx = CommandContext::new_client(<span class="self">self</span>.object_info);
-                
+
                 <span class="kw">match </span><span class="self">self</span>.object_info.protocol {
-                    CommandProtocol::Cmif =&gt; cmif::client::write_close_command_on_msg_buffer(<span class="kw-2">&amp;mut </span>ctx),
-                    CommandProtocol::Tipc =&gt; tipc::client::write_close_command_on_msg_buffer(<span class="kw-2">&amp;mut </span>ctx)
+                    CommandProtocol::Cmif =&gt; {
+                        cmif::client::write_close_command_on_msg_buffer(<span class="kw-2">&amp;mut </span>ctx)
+                    }
+                    CommandProtocol::Tipc =&gt; {
+                        tipc::client::write_close_command_on_msg_buffer(<span class="kw-2">&amp;mut </span>ctx)
+                    }
                 };
 
                 <span class="kw">let _ </span>= svc::send_sync_request(<span class="self">self</span>.object_info.handle);
@@ -638,46 +920,6 @@
 <span class="kw">impl </span>Drop <span class="kw">for </span>Session {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="self">self</span>.close();
-    }
-}
-
-<span class="kw">pub struct </span>CommandMetadata {
-    <span class="kw">pub </span>rq_id: u32,
-    <span class="kw">pub </span>command_fn: server::CommandFn,
-    <span class="kw">pub </span>ver_intv: version::VersionInterval
-}
-
-<span class="kw">pub type </span>CommandMetadataTable = Vec&lt;CommandMetadata&gt;;
-
-<span class="kw">impl </span>CommandMetadata {
-    <span class="kw">pub const fn </span>new(rq_id: u32, command_fn: server::CommandFn, ver_intv: version::VersionInterval) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            rq_id,
-            command_fn,
-            ver_intv
-        }
-    }
-
-    <span class="kw">pub fn </span>matches(<span class="kw-2">&amp;</span><span class="self">self</span>, rq_id: u32) -&gt; bool {
-        <span class="kw">let </span>cur_ver = version::get_version();
-        (<span class="self">self</span>.rq_id == rq_id) &amp;&amp; <span class="self">self</span>.ver_intv.contains(cur_ver)
-    }
-}
-
-<span class="comment">// This trait is analogous to N's nn::sf::IServiceObject type - the base trait for any kind of IPC interface
-// IClientObject / {IService, INamedPort} (on client module) and ISessionObject / {IServerObject, IMitmServerObject} (on server module) are superior types for specific kind of objects
-
-// TODO: make use of the command metadata on client side too (for instance for checking if the command is valid on the current system version, etc.)
-// TODO: think of a proper way to migrate call_self_server_command / command_fn stuff to server and avoid it being on every single IObject?
-
-</span><span class="kw">pub trait </span>IObject {
-    <span class="kw">fn </span>get_session(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>Session;
-
-    <span class="kw">fn </span>get_command_metadata_table(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; CommandMetadataTable;
-
-    <span class="kw">fn </span>call_self_server_command(<span class="kw-2">&amp;mut </span><span class="self">self</span>, command_fn: server::CommandFn, protocol: CommandProtocol, ctx: <span class="kw-2">&amp;mut </span>server::ServerContext) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let </span>self_fn: server::CommandSpecificFn&lt;<span class="self">Self</span>&gt; = <span class="kw">unsafe </span>{ core::mem::transmute(command_fn) };
-        (self_fn)(<span class="self">self</span>, protocol, ctx)
     }
 }
 
@@ -717,4 +959,9 @@
 
 <span class="kw">pub mod </span>usb;
 
-<span class="kw">pub mod </span>ldr;</code></pre></div></section></main></body></html>
+<span class="kw">pub mod </span>ldr;
+
+<span class="kw">pub mod </span>ncm;
+
+<span class="kw">pub mod </span>lr;
+</code></pre></div></section></main></body></html>

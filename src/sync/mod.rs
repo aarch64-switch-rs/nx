@@ -51,7 +51,7 @@ impl<T> Mutex<T> {
     pub fn is_locked(&self) -> bool {
         self.raw_lock.is_locked()
     }
-    /// Creates a new [`Locked`] with a value
+    /// Creates a new [`RwLock`] with a value
     /// 
     /// # Arguments
     /// 
@@ -150,7 +150,7 @@ pub struct RwLock<T: ?Sized> {
 }
 
 impl<T> RwLock<T> {
-    /// Creates a new [`Locked`] with a value
+    /// Creates a new [`RwLock`] with a value
     /// 
     /// # Arguments
     /// 

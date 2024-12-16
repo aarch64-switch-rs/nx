@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["ShellInterface"]};
+window.SIDEBAR_ITEMS = {};

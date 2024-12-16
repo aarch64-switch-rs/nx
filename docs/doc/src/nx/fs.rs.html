@@ -1,6 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/fs.rs`."><title>fs.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0-nightly (c9f8f3438 2024-03-27)" data-channel="nightly" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
-            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../nx/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/fs.rs`."><title>fs.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-42caa33d.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.85.0-nightly (a47555110 2024-11-22)" data-channel="nightly" data-search-js="search-92e6798f.js" data-settings-js="settings-0f613d39.js" ><script src="../../static.files/storage-59e33391.js"></script><script defer src="../../static.files/src-script-56102188.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">nx/</div>fs.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1038,360 +1037,309 @@
 <a href="#1036" id="1036">1036</a>
 <a href="#1037" id="1037">1037</a>
 <a href="#1038" id="1038">1038</a>
-<a href="#1039" id="1039">1039</a>
-<a href="#1040" id="1040">1040</a>
-<a href="#1041" id="1041">1041</a>
-<a href="#1042" id="1042">1042</a>
-<a href="#1043" id="1043">1043</a>
-<a href="#1044" id="1044">1044</a>
-<a href="#1045" id="1045">1045</a>
-<a href="#1046" id="1046">1046</a>
-<a href="#1047" id="1047">1047</a>
-<a href="#1048" id="1048">1048</a>
-<a href="#1049" id="1049">1049</a>
-<a href="#1050" id="1050">1050</a>
-<a href="#1051" id="1051">1051</a>
-<a href="#1052" id="1052">1052</a>
-<a href="#1053" id="1053">1053</a>
-<a href="#1054" id="1054">1054</a>
-<a href="#1055" id="1055">1055</a>
-<a href="#1056" id="1056">1056</a>
-<a href="#1057" id="1057">1057</a>
-<a href="#1058" id="1058">1058</a>
-<a href="#1059" id="1059">1059</a>
-<a href="#1060" id="1060">1060</a>
-<a href="#1061" id="1061">1061</a>
-<a href="#1062" id="1062">1062</a>
-<a href="#1063" id="1063">1063</a>
-<a href="#1064" id="1064">1064</a>
-<a href="#1065" id="1065">1065</a>
-<a href="#1066" id="1066">1066</a>
-<a href="#1067" id="1067">1067</a>
-<a href="#1068" id="1068">1068</a>
-<a href="#1069" id="1069">1069</a>
-<a href="#1070" id="1070">1070</a>
-<a href="#1071" id="1071">1071</a>
-<a href="#1072" id="1072">1072</a>
-<a href="#1073" id="1073">1073</a>
-<a href="#1074" id="1074">1074</a>
-<a href="#1075" id="1075">1075</a>
-<a href="#1076" id="1076">1076</a>
-<a href="#1077" id="1077">1077</a>
-<a href="#1078" id="1078">1078</a>
-<a href="#1079" id="1079">1079</a>
-<a href="#1080" id="1080">1080</a>
-<a href="#1081" id="1081">1081</a>
-<a href="#1082" id="1082">1082</a>
-<a href="#1083" id="1083">1083</a>
-<a href="#1084" id="1084">1084</a>
-<a href="#1085" id="1085">1085</a>
-<a href="#1086" id="1086">1086</a>
-<a href="#1087" id="1087">1087</a>
-<a href="#1088" id="1088">1088</a>
-<a href="#1089" id="1089">1089</a>
-<a href="#1090" id="1090">1090</a>
-<a href="#1091" id="1091">1091</a>
-<a href="#1092" id="1092">1092</a>
-<a href="#1093" id="1093">1093</a>
-<a href="#1094" id="1094">1094</a>
-<a href="#1095" id="1095">1095</a>
-<a href="#1096" id="1096">1096</a>
-<a href="#1097" id="1097">1097</a>
-<a href="#1098" id="1098">1098</a>
-<a href="#1099" id="1099">1099</a>
-<a href="#1100" id="1100">1100</a>
-<a href="#1101" id="1101">1101</a>
-<a href="#1102" id="1102">1102</a>
-<a href="#1103" id="1103">1103</a>
-<a href="#1104" id="1104">1104</a>
-<a href="#1105" id="1105">1105</a>
-<a href="#1106" id="1106">1106</a>
-<a href="#1107" id="1107">1107</a>
-<a href="#1108" id="1108">1108</a>
-<a href="#1109" id="1109">1109</a>
-<a href="#1110" id="1110">1110</a>
-<a href="#1111" id="1111">1111</a>
-<a href="#1112" id="1112">1112</a>
-</pre></div><pre class="rust"><code><span class="doccomment">//! FileSystem support
+<a href="#1039" id="1039">1039</a></pre></div><pre class="rust"><code><span class="doccomment">//! FileSystem support
 
-</span><span class="kw">use </span><span class="kw">crate</span>::result::<span class="kw-2">*</span>;
+
+</span><span class="kw">use </span><span class="kw">crate</span>::ipc::sf::fsp::IDirectory;
+<span class="kw">use </span><span class="kw">crate</span>::ipc::sf::fsp::IFile;
+<span class="kw">use </span><span class="kw">crate</span>::ipc::sf::fsp::IFileSystem;
+<span class="kw">use </span><span class="kw">crate</span>::result::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::mem;
 <span class="kw">use </span><span class="kw">crate</span>::service;
 <span class="kw">use </span><span class="kw">crate</span>::service::fsp;
-<span class="kw">use </span><span class="kw">crate</span>::service::fsp::IFileSystem;
-<span class="kw">use </span><span class="kw">crate</span>::service::fsp::IFile;
-<span class="kw">use </span><span class="kw">crate</span>::service::fsp::IDirectory;
 <span class="kw">use </span><span class="kw">crate</span>::service::fsp::srv::IFileSystemProxy;
 <span class="kw">use </span><span class="kw">crate</span>::sync;
 <span class="kw">use </span><span class="kw">crate</span>::ipc::sf <span class="kw">as </span>ipc_sf;
+<span class="kw">use </span><span class="kw">crate</span>::sync::Mutex;
+<span class="kw">use </span><span class="kw">crate</span>::sync::RwLock;
+<span class="kw">use </span>alloc::sync::Arc;
 <span class="kw">use </span>alloc::vec::Vec;
 <span class="kw">use </span>alloc::string::String;
+<span class="kw">use </span>alloc::boxed::Box;
+<span class="kw">use </span>generic_once_cell::OnceCell;
 <span class="kw">use </span>core::mem <span class="kw">as </span>cmem;
+<span class="kw">use </span>core::ops::DerefMut;
 <span class="kw">use </span>core::ptr;
 
 <span class="kw">pub mod </span>rc;
  
 <span class="comment">// TODO: define this types here and alias them in fsp-srv?
 
-</span><span class="kw">pub type </span>FileReadOption = fsp::FileReadOption;
-<span class="kw">pub type </span>FileWriteOption = fsp::FileWriteOption;
-<span class="kw">pub type </span>DirectoryEntry = fsp::DirectoryEntry;
-<span class="kw">pub type </span>FileAttribute = fsp::FileAttribute;
-<span class="kw">pub type </span>DirectoryEntryType = fsp::DirectoryEntryType;
-<span class="kw">pub type </span>FileOpenMode = fsp::FileOpenMode;
-<span class="kw">pub type </span>DirectoryOpenMode = fsp::DirectoryOpenMode;
-<span class="kw">pub type </span>FileTimeStampRaw = fsp::FileTimeStampRaw;
-<span class="kw">pub type </span>QueryId = fsp::QueryId;
-<span class="kw">pub type </span>OperationId = fsp::OperationId;
-<span class="kw">pub type </span>FileQueryRangeInfo = fsp::FileQueryRangeInfo;
+</span><span class="kw">pub use </span>fsp::fsp_sf::FileReadOption <span class="kw">as </span>FileReadOption;
+<span class="kw">pub use </span>fsp::fsp_sf::FileWriteOption <span class="kw">as </span>FileWriteOption;
+<span class="kw">pub use </span>fsp::fsp_sf::DirectoryEntry <span class="kw">as </span>DirectoryEntry;
+<span class="kw">pub use </span>fsp::fsp_sf::FileAttribute <span class="kw">as </span>FileAttribute;
+<span class="kw">pub use </span>fsp::fsp_sf::DirectoryEntryType <span class="kw">as </span>DirectoryEntryType;
+<span class="kw">pub use </span>fsp::fsp_sf::FileOpenMode <span class="kw">as </span>FileOpenMode;
+<span class="kw">pub use </span>fsp::fsp_sf::DirectoryOpenMode <span class="kw">as </span>DirectoryOpenMode;
+<span class="kw">pub use </span>fsp::fsp_sf::FileTimeStampRaw <span class="kw">as </span>FileTimeStampRaw;
+<span class="kw">pub use </span>fsp::fsp_sf::QueryId <span class="kw">as </span>QueryId;
+<span class="kw">pub use </span>fsp::fsp_sf::OperationId <span class="kw">as </span>OperationId;
+<span class="kw">pub use </span>fsp::fsp_sf::FileQueryRangeInfo <span class="kw">as </span>FileQueryRangeInfo;
 
-<span class="doccomment">/// Represents a file
-</span><span class="kw">pub trait </span>File {
-    <span class="doccomment">/// Reads data from the file, returning the actual read size
+<span class="doccomment">/// Represents a file, abstracted from the IPC client API.
+</span><span class="kw">pub trait </span>File: Sync {
+    <span class="doccomment">/// Reads data from the file, returning the actual read size.
     /// 
-    /// # Arguments
+    /// # Arguments:
     /// 
-    /// * `offset`: The absolute offset
-    /// * `out_buf`: The out data address to fill
-    /// * `out_buf_size`: The size of data to read
-    /// * `option`: [`FileReadOption`] value
-    </span><span class="kw">fn </span>read(<span class="kw-2">&amp;mut </span><span class="self">self</span>, offset: usize, out_buf: <span class="kw-2">*mut </span>u8, out_buf_size: usize, option: FileReadOption) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt;;
+    /// * `offset`: The absolute offset.
+    /// * `out_buf`: The output slice to fill.
+    /// * `option`: [`FileReadOption`] for file reading flags.
+    </span><span class="kw">fn </span>read(<span class="kw-2">&amp;mut </span><span class="self">self</span>, offset: usize, out_buf: <span class="kw-2">&amp;mut </span>[u8], option: FileReadOption) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt;;
 
-    <span class="doccomment">/// Writes data to a file (this one doesn't return the actual written size, thanks N)
+    <span class="doccomment">/// Writes data to a file (this one doesn't return the actual written size, thanks N).
     /// 
-    /// # Arguments
+    /// # Arguments.
     /// 
-    /// * `offset`: The absolute offset
-    /// * `buf`: The data address to write from
-    /// * `buf_size`: The size of data to write
-    /// * `option`: [`FileWriteOption`] value
-    </span><span class="kw">fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, offset: usize, buf: <span class="kw-2">*const </span>u8, buf_size: usize, option: FileWriteOption) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
+    /// * `offset`: The absolute offset.
+    /// * `buf`: The input data to write into the file.
+    /// * `option`: [`FileWriteOption`] value.
+    </span><span class="kw">fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, offset: usize, buf: <span class="kw-2">&amp;</span>[u8], option: FileWriteOption) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
 
-    <span class="doccomment">/// Flushes the file
+    <span class="doccomment">/// Flushes the pending file writes.
     </span><span class="kw">fn </span>flush(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
 
-    <span class="doccomment">/// Sets the file size
+    <span class="doccomment">/// Sets the file size.
     /// 
-    /// This effectively truncates the file
+    /// This effectively truncates the file.
     /// 
-    /// # Arguments
+    /// # Arguments.
     /// 
-    /// * `size`: The new file size
+    /// * `size`: The new file size.
     </span><span class="kw">fn </span>set_size(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: usize) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
 
-    <span class="doccomment">/// Gets the current file size
+    <span class="doccomment">/// Gets the current file size.
     </span><span class="kw">fn </span>get_size(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt;;
 
-    <span class="doccomment">/// Performs a range-operation on the file, returning corresponding result data
+    <span class="doccomment">/// Performs a range-operation on the file, returning corresponding result data.
     /// 
-    /// # Arguments
+    /// # Arguments:
     /// 
-    /// * `operation_id`: [`OperationId`] value
-    /// * `offset`: The absolute offset
-    /// * `size`: The file data size in which to operate
+    /// * `operation_id`: The ID of the file operation to perform on the specified range.
+    /// * `offset`: The absolute offset.
+    /// * `size`: The file data size in which to operate. i.e. we are operating in the range `[offset, offset+size)`.
     </span><span class="kw">fn </span>operate_range(<span class="kw-2">&amp;mut </span><span class="self">self</span>, operation_id: OperationId, offset: usize, size: usize) -&gt; <span class="prelude-ty">Result</span>&lt;FileQueryRangeInfo&gt;;
 
-    <span class="doccomment">/// Performs a range-operation on the file with custom input/output data
+    <span class="doccomment">/// Performs a range-operation on the file with custom input/output data.
     /// 
-    /// # Arguments
+    /// # Arguments:
     /// 
-    /// * `operation_id`: [`OperationId`] value
-    /// * `offset`: The absolute offset
-    /// * `size`: The file data size in which to operate
-    /// * `in_buf`: Input data
-    /// * `in_buf_size`: Input data size
-    /// * `out_buf`: Output data
-    /// * `out_buf_size`: Output data size
-    </span><span class="kw">fn </span>operate_range_with_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, operation_id: OperationId, offset: usize, size: usize, in_buf: <span class="kw-2">*const </span>u8, in_buf_size: usize, out_buf: <span class="kw-2">*mut </span>u8, out_buf_size: usize) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
+    /// * `operation_id`: The ID of the file operation to perform on the specified range.
+    /// * `offset`: The absolute offset.
+    /// * `size`: The file data size in which to operate. i.e. we are operating in the range `[offset, offset+size)`.
+    /// * `in_buf`: Input data buffer.
+    /// * `out_buf`: Output data buffer.
+    </span><span class="kw">fn </span>operate_range_with_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, operation_id: OperationId, offset: usize, size: usize, in_buf: <span class="kw-2">&amp;</span>[u8], out_buf: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
 }
 
-<span class="doccomment">/// Represents a directory
-</span><span class="kw">pub trait </span>Directory {
-    <span class="doccomment">/// Reads existing entries, returning the actual number of read entries
+<span class="doccomment">/// Represents a directory.
+</span><span class="kw">pub trait </span>Directory: Sync {
+    <span class="doccomment">/// Reads existing entries, returning the actual number of read entries.
     /// 
-    /// The max number of entries to read is determined by the output array size and the actually existing entry count
+    /// The max number of entries to read is determined by the output slice size and the actually existing entry count.
     /// 
-    /// # Arguments
+    /// # Arguments:
     /// 
-    /// * `out_entries`: The out [`DirectoryEntry`] array to fill
-    </span><span class="kw">fn </span>read(<span class="kw-2">&amp;mut </span><span class="self">self</span>, out_entries: <span class="kw-2">&amp;mut </span>[DirectoryEntry]) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt;;
+    /// * `out_entries`: The out [`DirectoryEntry`] slice to fill.
+    </span><span class="kw">fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, out_entries: <span class="kw-2">&amp;mut </span>[DirectoryEntry]) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt;;
 
-    <span class="doccomment">/// Gets the [`Directory`]'s entry count
-    </span><span class="kw">fn </span>get_entry_count(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt;;
+    <span class="doccomment">/// Gets the [`Directory`]'s entry count.
+    </span><span class="kw">fn </span>get_entry_count(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt;;
 }
 
-<span class="doccomment">/// Represents a filesystem
-</span><span class="kw">pub trait </span>FileSystem {
-    <span class="doccomment">/// Creates a file
+<span class="doccomment">/// Represents a filesystem.
+</span><span class="kw">pub trait </span>FileSystem: Sync {
+    <span class="doccomment">/// Creates a file.
     /// 
-    /// # Arguments
+    /// # Arguments:
     /// 
-    /// * `path`: The path to use
-    /// * `size`: The initial file size
-    /// * `attribute`: The file attribute
-    </span><span class="kw">fn </span>create_file(<span class="kw-2">&amp;mut </span><span class="self">self</span>, path: String, attribute: FileAttribute, size: usize) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
+    /// * `path`: The file path to create.
+    /// * `size`: The initial file size.
+    /// * `attribute`: The file attribute flags.
+    </span><span class="kw">fn </span>create_file(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, attribute: FileAttribute, size: usize) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
 
-    <span class="doccomment">/// Deletes a file
+    <span class="doccomment">/// Deletes a file.
     /// 
-    /// # Arguments
+    /// # Arguments:
     /// 
-    /// * `path`: The path to use
-    </span><span class="kw">fn </span>delete_file(<span class="kw-2">&amp;mut </span><span class="self">self</span>, path: String) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
+    /// * `path`: The file path to delete.
+    </span><span class="kw">fn </span>remove_file(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
 
-    <span class="doccomment">/// Creates a directory
+    <span class="doccomment">/// Creates a directory.
     /// 
-    /// # Arguments
+    /// # Arguments.
     /// 
-    /// * `path`: The path to use
-    </span><span class="kw">fn </span>create_directory(<span class="kw-2">&amp;mut </span><span class="self">self</span>, path: String) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
+    /// * `path`: The directory path to create.
+    </span><span class="kw">fn </span>create_directory(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
 
-    <span class="doccomment">/// Deletes a directory
+    <span class="doccomment">/// Deletes a directory.
     /// 
-    /// # Arguments
+    /// # Arguments.
     /// 
-    /// * `path`: The path to use
-    </span><span class="kw">fn </span>delete_directory(<span class="kw-2">&amp;mut </span><span class="self">self</span>, path: String) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
+    /// * `path`: The directory path to delete.
+    </span><span class="kw">fn </span>remove_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
 
-    <span class="doccomment">/// Deletes a directory and all its children files/directories
+    <span class="doccomment">/// Deletes a directory and all its children files/directories.
     /// 
-    /// # Arguments
+    /// # Arguments:
     /// 
-    /// * `path`: The path to use
-    </span><span class="kw">fn </span>delete_directory_recursively(<span class="kw-2">&amp;mut </span><span class="self">self</span>, path: String) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
+    /// * `path`: The directory to recursively remove.
+    </span><span class="kw">fn </span>remove_dir_all(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
 
-    <span class="doccomment">/// Renames a file
+    <span class="doccomment">/// Renames a file.
     /// 
-    /// # Arguments
+    /// # Arguments.
     /// 
-    /// * `old_path`: The old path to use
-    /// * `new_path`: The new path to use
-    </span><span class="kw">fn </span>rename_file(<span class="kw-2">&amp;mut </span><span class="self">self</span>, old_path: String, new_path: String) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
+    /// * `old_path`: The current file name/path.
+    /// * `new_path`: The new file name/path.
+    </span><span class="kw">fn </span>rename_file(<span class="kw-2">&amp;</span><span class="self">self</span>, old_path: <span class="kw-2">&amp;</span>str, new_path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
 
-    <span class="doccomment">/// Renames a directory
+    <span class="doccomment">/// Renames a directory.
     /// 
-    /// # Arguments
+    /// # Arguments.
     /// 
-    /// * `old_path`: The old path to use
-    /// * `new_path`: The new path to use
-    </span><span class="kw">fn </span>rename_directory(<span class="kw-2">&amp;mut </span><span class="self">self</span>, old_path: String, new_path: String) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
+    /// * `old_path`: The current directory path.
+    /// * `new_path`: The new directory path.
+    </span><span class="kw">fn </span>rename_directory(<span class="kw-2">&amp;</span><span class="self">self</span>, old_path: <span class="kw-2">&amp;</span>str, new_path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
 
-    <span class="doccomment">/// Gets a path's [`DirectoryEntryType`]
+    <span class="doccomment">/// Gets a path's [`DirectoryEntryType`].
     /// 
-    /// # Arguments
+    /// # Arguments.
     /// 
-    /// * `path`: The path to use
-    </span><span class="kw">fn </span>get_entry_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>, path: String) -&gt; <span class="prelude-ty">Result</span>&lt;DirectoryEntryType&gt;;
+    /// * `path`: The path we are checking the entity type of.
+    </span><span class="kw">fn </span>get_entry_type(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;DirectoryEntryType&gt;;
 
-    <span class="doccomment">/// Opens a [`File`]
+    <span class="doccomment">/// Opens a [`File`].
     /// 
-    /// # Arguments
+    /// # Arguments:
     /// 
-    /// * `path`: The path to use
-    /// * `mode`: The open mode
-    </span><span class="kw">fn </span>open_file(<span class="kw-2">&amp;mut </span><span class="self">self</span>, path: String, mode: FileOpenMode) -&gt; <span class="prelude-ty">Result</span>&lt;mem::Shared&lt;<span class="kw">dyn </span>File&gt;&gt;;
+    /// * `path`: The file path to open.
+    /// * `mode`: The open mode.
+    </span><span class="kw">fn </span>open_file(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, mode: FileOpenMode) -&gt; <span class="prelude-ty">Result</span>&lt;Box&lt;<span class="kw">dyn </span>File&gt;&gt;;
 
-    <span class="doccomment">/// Opens a [`Directory`]
+    <span class="doccomment">/// Opens a [`Directory`].
     /// 
-    /// # Arguments
+    /// # Arguments:
     /// 
-    /// * `path`: The path to use
-    /// * `mode`: The open mode
-    </span><span class="kw">fn </span>open_directory(<span class="kw-2">&amp;mut </span><span class="self">self</span>, path: String, mode: DirectoryOpenMode) -&gt; <span class="prelude-ty">Result</span>&lt;mem::Shared&lt;<span class="kw">dyn </span>Directory&gt;&gt;;
+    /// * `path`: The directory path to open.
+    /// * `mode`: The open mode.
+    </span><span class="kw">fn </span>open_directory(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, mode: DirectoryOpenMode) -&gt; <span class="prelude-ty">Result</span>&lt;Box&lt;<span class="kw">dyn </span>Directory&gt;&gt;;
 
-    <span class="doccomment">/// Commits the filesystem
-    </span><span class="kw">fn </span>commit(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
+    <span class="doccomment">/// Commits the filesystem, flushing pending writes.
+    </span><span class="kw">fn </span>commit(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
 
-    <span class="doccomment">/// Gets the free space size at a given path
+    <span class="doccomment">/// Gets the free space size at a given path.
     /// 
-    /// # Argument
+    /// # Argument.
     /// 
-    /// * `path`: The path to use
-    </span><span class="kw">fn </span>get_free_space_size(<span class="kw-2">&amp;mut </span><span class="self">self</span>, path: String) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt;;
+    /// * `path`: The path to check.
+    </span><span class="kw">fn </span>get_free_space_size(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt;;
 
-    <span class="doccomment">/// Gets the total space size at a given path
+    <span class="doccomment">/// Gets the total space size at a given path.
     /// 
-    /// # Argument
+    /// # Arguments:
     /// 
-    /// * `path`: The path to use
-    </span><span class="kw">fn </span>get_total_space_size(<span class="kw-2">&amp;mut </span><span class="self">self</span>, path: String) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt;;
+    /// * `path`: The path to use.
+    </span><span class="kw">fn </span>get_total_space_size(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt;;
 
-    <span class="doccomment">/// Deletes all the children files/directories inside a directory
+    <span class="doccomment">/// Deletes all the children files/directories inside a directory.
     /// 
-    /// # Arguments
+    /// # Arguments:
     /// 
-    /// * `path`: The path to use
-    </span><span class="kw">fn </span>clean_directory_recursively(<span class="kw-2">&amp;mut </span><span class="self">self</span>, path: String) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
+    /// * `path`: The path to use.
+    </span><span class="kw">fn </span>remove_children_all(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
 
-    <span class="doccomment">/// Gets the [`FileTimeStampRaw`] of a file
+    <span class="doccomment">/// Gets the [`FileTimeStampRaw`] of a file.
     /// 
-    /// # Arguments
+    /// # Arguments:
     /// 
-    /// * `path`: The path to use
-    </span><span class="kw">fn </span>get_file_time_stamp_raw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, path: String) -&gt; <span class="prelude-ty">Result</span>&lt;FileTimeStampRaw&gt;;
+    /// * `path`: The path to use.
+    </span><span class="kw">fn </span>get_file_time_stamp_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;FileTimeStampRaw&gt;;
 
-    <span class="doccomment">/// Queries on a path
+    <span class="doccomment">/// Queries on a path.
     /// 
-    /// # Arguments
+    /// # Arguments:
     /// 
-    /// * `query_id`: The [`QueryId`]
-    /// * `in_buf`: Input data
-    /// * `in_buf_size`: Input data size
-    /// * `out_buf`: Output data
-    /// * `out_buf_size`: Output data size
-    </span><span class="kw">fn </span>query_entry(<span class="kw-2">&amp;mut </span><span class="self">self</span>, path: String, query_id: QueryId, in_buf: <span class="kw-2">*const </span>u8, in_buf_size: usize, out_buf: <span class="kw-2">*mut </span>u8, out_buf_size: usize) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
+    /// * `query_id`: The [`QueryId`].
+    /// * `in_buf`: Input data.
+    /// * `out_buf`: Output data.
+    </span><span class="kw">fn </span>query_entry(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, query_id: QueryId, in_buf: <span class="kw-2">&amp;</span>[u8], out_buf: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
 }
 
-<span class="doccomment">/// Represents a wrapper [`File`] implementation to translate IPC [`IFile`] objects to [`File`] objects
+<span class="doccomment">/// Represents a wrapper [`File`] implementation to translate IPC [`IFile`] objects to [`File`] objects.
 </span><span class="kw">pub struct </span>ProxyFile {
-    file_obj: mem::Shared&lt;<span class="kw">dyn </span>IFile&gt;
+    file_obj: Box&lt;<span class="kw">dyn </span>IFile&gt;
 }
+
+
+<span class="comment">// TODO: Remove. This fixes a problem in emuiibo but this whole construct is probably not needed.
+</span><span class="kw">unsafe impl </span>Sync <span class="kw">for </span>ProxyFile {}
+<span class="kw">unsafe impl </span>Send <span class="kw">for </span>ProxyFile {}
 
 <span class="kw">impl </span>ProxyFile {
-    <span class="doccomment">/// Creates a new [`ProxyFile`] from a [`IFile`] shared object
+    <span class="doccomment">/// Creates a new [`ProxyFile`] from a [`IFile`] shared object.
     /// 
-    /// # Arguments
+    /// # Arguments:
     /// 
-    /// * `file_obj`: The IPC [`IFile`] object to wrap
-    </span><span class="kw">pub fn </span>new(file_obj: mem::Shared&lt;<span class="kw">dyn </span>IFile&gt;) -&gt; <span class="self">Self </span>{
+    /// * `file_obj`: The IPC [`IFile`] implementation to wrap.
+    </span><span class="kw">pub fn </span>new(file: <span class="kw">impl </span>IFile + <span class="lifetime">'static</span>) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            file_obj
+            file_obj: Box::new(file)
         }
     }
 }
 
-<span class="kw">impl </span>File <span class="kw">for </span>ProxyFile {
-    <span class="kw">fn </span>read(<span class="kw-2">&amp;mut </span><span class="self">self</span>, offset: usize, out_buf: <span class="kw-2">*mut </span>u8, out_buf_size: usize, option: FileReadOption) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
-        <span class="self">self</span>.file_obj.get().read(option, offset, out_buf_size, ipc_sf::Buffer::from_mut_ptr(out_buf, out_buf_size))
-    }
-
-    <span class="kw">fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, offset: usize, buf: <span class="kw-2">*const </span>u8, buf_size: usize, option: FileWriteOption) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="self">self</span>.file_obj.get().write(option, offset, buf_size, ipc_sf::Buffer::from_ptr(buf, buf_size))
-    }
-
-    <span class="kw">fn </span>flush(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="self">self</span>.file_obj.get().flush()
-    }
-
-    <span class="kw">fn </span>set_size(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: usize) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="self">self</span>.file_obj.get().set_size(size)
-    }
-
-    <span class="kw">fn </span>get_size(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
-        <span class="self">self</span>.file_obj.get().get_size()
-    }
-
-    <span class="kw">fn </span>operate_range(<span class="kw-2">&amp;mut </span><span class="self">self</span>, operation_id: OperationId, offset: usize, size: usize) -&gt; <span class="prelude-ty">Result</span>&lt;FileQueryRangeInfo&gt; {
-        <span class="self">self</span>.file_obj.get().operate_range(operation_id, offset, size)
-    }
-
-    <span class="kw">fn </span>operate_range_with_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, operation_id: OperationId, offset: usize, size: usize, in_buf: <span class="kw-2">*const </span>u8, in_buf_size: usize, out_buf: <span class="kw-2">*mut </span>u8, out_buf_size: usize) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="self">self</span>.file_obj.get().operate_range_with_buffer(operation_id, offset, size, ipc_sf::Buffer::from_ptr(in_buf, in_buf_size), ipc_sf::Buffer::from_mut_ptr(out_buf, out_buf_size))
+<span class="kw">impl </span>From&lt;Box&lt;<span class="kw">dyn </span>IFile&gt;&gt; <span class="kw">for </span>ProxyFile {
+    <span class="kw">fn </span>from(value: Box&lt;<span class="kw">dyn </span>IFile&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>{file_obj: value}
     }
 }
 
-<span class="doccomment">/// Represents a wrapper [`Directory`] implementation to translate IPC [`IDirectory`] objects to [`Directory`] objects
+<span class="kw">impl </span>File <span class="kw">for </span>ProxyFile {
+    <span class="kw">fn </span>read(<span class="kw-2">&amp;mut </span><span class="self">self</span>, offset: usize, out_buf: <span class="kw-2">&amp;mut</span>[u8], option: FileReadOption) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
+        <span class="self">self</span>.file_obj.read(option, offset, out_buf.len(), ipc_sf::Buffer::from_mut_array(out_buf))
+    }
+
+    <span class="kw">fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, offset: usize, buf: <span class="kw-2">&amp;</span>[u8], option: FileWriteOption) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="self">self</span>.file_obj.write(option, offset, buf.len(), ipc_sf::Buffer::from_array(buf))
+    }
+
+    <span class="kw">fn </span>flush(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="self">self</span>.file_obj.flush()
+    }
+
+    <span class="kw">fn </span>set_size(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: usize) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="self">self</span>.file_obj.set_size(size)
+    }
+
+    <span class="kw">fn </span>get_size(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
+        <span class="self">self</span>.file_obj.get_size()
+    }
+
+    <span class="kw">fn </span>operate_range(<span class="kw-2">&amp;mut </span><span class="self">self</span>, operation_id: OperationId, offset: usize, size: usize) -&gt; <span class="prelude-ty">Result</span>&lt;FileQueryRangeInfo&gt; {
+        <span class="self">self</span>.file_obj.operate_range(operation_id, offset, size)
+    }
+
+    <span class="kw">fn </span>operate_range_with_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, operation_id: OperationId, offset: usize, size: usize, in_buf: <span class="kw-2">&amp;</span>[u8], out_buf: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="self">self</span>.file_obj.operate_range_with_buffer(operation_id, offset, size, ipc_sf::Buffer::from_array(in_buf), ipc_sf::Buffer::from_mut_array(out_buf))
+    }
+}
+
+<span class="doccomment">/// Represents a wrapper [`Directory`] implementation to translate IPC [`IDirectory`] objects to [`Directory`] objects.
+</span><span class="attr">#[derive(Clone)]
 </span><span class="kw">pub struct </span>ProxyDirectory {
-    dir_obj: mem::Shared&lt;<span class="kw">dyn </span>IDirectory&gt;
+    dir_obj: Arc&lt;<span class="kw">dyn </span>IDirectory&gt;
+}
+
+<span class="comment">// TODO: Remove because we don't actually have a guarantee that IDirectory is Sync
+</span><span class="kw">unsafe impl </span>Sync <span class="kw">for </span>ProxyDirectory {}
+<span class="kw">unsafe impl </span>Send <span class="kw">for </span>ProxyDirectory {}
+
+<span class="kw">impl </span>From&lt;Arc&lt;<span class="kw">dyn </span>IDirectory&gt;&gt; <span class="kw">for </span>ProxyDirectory {
+    <span class="kw">fn </span>from(value: Arc&lt;<span class="kw">dyn </span>IDirectory&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ dir_obj: value }
+    }
 }
 
 <span class="kw">impl </span>ProxyDirectory {
@@ -1400,27 +1348,31 @@
     /// # Arguments
     /// 
     /// * `dir_obj`: The IPC [`IDirectory`] object to wrap
-    </span><span class="kw">pub fn </span>new(dir_obj: mem::Shared&lt;<span class="kw">dyn </span>IDirectory&gt;) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub fn </span>new(dir: <span class="kw">impl </span>IDirectory + <span class="lifetime">'static</span>) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            dir_obj
+            dir_obj: Arc::new(dir)
         }
     }
 }
 
 <span class="kw">impl </span>Directory <span class="kw">for </span>ProxyDirectory {
-    <span class="kw">fn </span>read(<span class="kw-2">&amp;mut </span><span class="self">self</span>, out_entries: <span class="kw-2">&amp;mut </span>[DirectoryEntry]) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
-        <span class="self">self</span>.dir_obj.get().read(ipc_sf::Buffer::from_array(out_entries))
+    <span class="kw">fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, out_entries: <span class="kw-2">&amp;mut </span>[DirectoryEntry]) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
+        <span class="self">self</span>.dir_obj.read(ipc_sf::Buffer::from_array(out_entries)).map(|r| r <span class="kw">as </span>usize)
     }
 
-    <span class="kw">fn </span>get_entry_count(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
-        <span class="self">self</span>.dir_obj.get().get_entry_count()
+    <span class="kw">fn </span>get_entry_count(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
+        <span class="self">self</span>.dir_obj.get_entry_count()
     }
 }
 
 <span class="doccomment">/// Represents a wrapper [`FileSystem`] implementation to translate IPC [`IFileSystem`] objects to [`FileSystem`] objects
+</span><span class="attr">#[derive(Clone)]
 </span><span class="kw">pub struct </span>ProxyFileSystem {
-    fs_obj: mem::Shared&lt;<span class="kw">dyn </span>IFileSystem&gt;
+    fs_obj: Arc&lt;<span class="kw">dyn </span>IFileSystem&gt;
 }
+
+<span class="kw">unsafe impl </span>Send <span class="kw">for </span>ProxyFileSystem {}
+<span class="kw">unsafe impl </span>Sync <span class="kw">for </span>ProxyFileSystem {}
 
 <span class="kw">impl </span>ProxyFileSystem {
     <span class="doccomment">/// Creates a new [`ProxyFileSystem`] from a [`IFileSystem`] shared object
@@ -1428,7 +1380,7 @@
     /// # Arguments
     /// 
     /// * `fs_obj`: The IPC [`IFileSystem`] object to wrap
-    </span><span class="kw">pub fn </span>new(fs_obj: mem::Shared&lt;<span class="kw">dyn </span>IFileSystem&gt;) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub fn </span>new(fs_obj: Arc&lt;<span class="kw">dyn </span>IFileSystem&gt;) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             fs_obj
         }
@@ -1436,196 +1388,181 @@
 }
 
 <span class="kw">impl </span>FileSystem <span class="kw">for </span>ProxyFileSystem {
-    <span class="kw">fn </span>create_file(<span class="kw-2">&amp;mut </span><span class="self">self</span>, path: String, attribute: FileAttribute, size: usize) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let </span>sf_path = fsp::Path::from_string(path);
-        <span class="self">self</span>.fs_obj.get().create_file(attribute, size, ipc_sf::Buffer::from_var(<span class="kw-2">&amp;</span>sf_path))
+    <span class="kw">fn </span>create_file(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, attribute: FileAttribute, size: usize) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>sf_path = fsp::fsp_sf::Path::from_str(path);
+        <span class="self">self</span>.fs_obj.create_file(attribute, size, ipc_sf::Buffer::from_var(<span class="kw-2">&amp;</span>sf_path))
     }
 
-    <span class="kw">fn </span>delete_file(<span class="kw-2">&amp;mut </span><span class="self">self</span>, path: String) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let </span>sf_path = fsp::Path::from_string(path);
-        <span class="self">self</span>.fs_obj.get().delete_file(ipc_sf::Buffer::from_var(<span class="kw-2">&amp;</span>sf_path))
+    <span class="kw">fn </span>remove_file(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>sf_path = fsp::fsp_sf::Path::from_str(path);
+        <span class="self">self</span>.fs_obj.delete_file(ipc_sf::Buffer::from_var(<span class="kw-2">&amp;</span>sf_path))
     }
 
-    <span class="kw">fn </span>create_directory(<span class="kw-2">&amp;mut </span><span class="self">self</span>, path: String) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let </span>sf_path = fsp::Path::from_string(path);
-        <span class="self">self</span>.fs_obj.get().create_directory(ipc_sf::Buffer::from_var(<span class="kw-2">&amp;</span>sf_path))
+    <span class="kw">fn </span>create_directory(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>sf_path = fsp::fsp_sf::Path::from_str(path);
+        <span class="self">self</span>.fs_obj.create_directory(ipc_sf::Buffer::from_var(<span class="kw-2">&amp;</span>sf_path))
     }
 
-    <span class="kw">fn </span>delete_directory(<span class="kw-2">&amp;mut </span><span class="self">self</span>, path: String) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let </span>sf_path = fsp::Path::from_string(path);
-        <span class="self">self</span>.fs_obj.get().delete_directory(ipc_sf::Buffer::from_var(<span class="kw-2">&amp;</span>sf_path))
+    <span class="kw">fn </span>remove_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>sf_path = fsp::fsp_sf::Path::from_str(path);
+        <span class="self">self</span>.fs_obj.delete_directory(ipc_sf::Buffer::from_var(<span class="kw-2">&amp;</span>sf_path))
     }
 
-    <span class="kw">fn </span>delete_directory_recursively(<span class="kw-2">&amp;mut </span><span class="self">self</span>, path: String) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let </span>sf_path = fsp::Path::from_string(path);
-        <span class="self">self</span>.fs_obj.get().delete_directory_recursively(ipc_sf::Buffer::from_var(<span class="kw-2">&amp;</span>sf_path))
+    <span class="kw">fn </span>remove_dir_all(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>sf_path = fsp::fsp_sf::Path::from_str(path);
+        <span class="self">self</span>.fs_obj.delete_directory_recursively(ipc_sf::Buffer::from_var(<span class="kw-2">&amp;</span>sf_path))
     }
 
-    <span class="kw">fn </span>get_entry_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>, path: String) -&gt; <span class="prelude-ty">Result</span>&lt;DirectoryEntryType&gt; {
-        <span class="kw">let </span>sf_path = fsp::Path::from_string(path);
-        <span class="self">self</span>.fs_obj.get().get_entry_type(ipc_sf::Buffer::from_var(<span class="kw-2">&amp;</span>sf_path))
+    <span class="kw">fn </span>get_entry_type(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;DirectoryEntryType&gt; {
+        <span class="kw">let </span>sf_path = fsp::fsp_sf::Path::from_str(path);
+        <span class="self">self</span>.fs_obj.get_entry_type(ipc_sf::Buffer::from_var(<span class="kw-2">&amp;</span>sf_path))
     }
 
-    <span class="kw">fn </span>rename_file(<span class="kw-2">&amp;mut </span><span class="self">self</span>, old_path: String, new_path: String) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let </span>sf_old_path = fsp::Path::from_string(old_path);
-        <span class="kw">let </span>sf_new_path = fsp::Path::from_string(new_path);
-        <span class="self">self</span>.fs_obj.get().rename_file(ipc_sf::Buffer::from_var(<span class="kw-2">&amp;</span>sf_old_path), ipc_sf::Buffer::from_var(<span class="kw-2">&amp;</span>sf_new_path))
+    <span class="kw">fn </span>rename_file(<span class="kw-2">&amp;</span><span class="self">self</span>, old_path: <span class="kw-2">&amp;</span>str, new_path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>sf_old_path = fsp::fsp_sf::Path::from_str(old_path);
+        <span class="kw">let </span>sf_new_path = fsp::fsp_sf::Path::from_str(new_path);
+        <span class="self">self</span>.fs_obj.rename_file(ipc_sf::Buffer::from_var(<span class="kw-2">&amp;</span>sf_old_path), ipc_sf::Buffer::from_var(<span class="kw-2">&amp;</span>sf_new_path))
     }
 
-    <span class="kw">fn </span>rename_directory(<span class="kw-2">&amp;mut </span><span class="self">self</span>, old_path: String, new_path: String) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let </span>sf_old_path = fsp::Path::from_string(old_path);
-        <span class="kw">let </span>sf_new_path = fsp::Path::from_string(new_path);
-        <span class="self">self</span>.fs_obj.get().rename_directory(ipc_sf::Buffer::from_var(<span class="kw-2">&amp;</span>sf_old_path), ipc_sf::Buffer::from_var(<span class="kw-2">&amp;</span>sf_new_path))
+    <span class="kw">fn </span>rename_directory(<span class="kw-2">&amp;</span><span class="self">self</span>, old_path: <span class="kw-2">&amp;</span>str, new_path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>sf_old_path = fsp::fsp_sf::Path::from_str(old_path);
+        <span class="kw">let </span>sf_new_path = fsp::fsp_sf::Path::from_str(new_path);
+        <span class="self">self</span>.fs_obj.rename_directory(ipc_sf::Buffer::from_var(<span class="kw-2">&amp;</span>sf_old_path), ipc_sf::Buffer::from_var(<span class="kw-2">&amp;</span>sf_new_path))
     }
 
-    <span class="kw">fn </span>open_file(<span class="kw-2">&amp;mut </span><span class="self">self</span>, path: String, mode: FileOpenMode) -&gt; <span class="prelude-ty">Result</span>&lt;mem::Shared&lt;<span class="kw">dyn </span>File&gt;&gt; {
-        <span class="kw">let </span>sf_path = fsp::Path::from_string(path);
-        <span class="kw">let </span>file_obj = <span class="self">self</span>.fs_obj.get().open_file(mode, ipc_sf::Buffer::from_var(<span class="kw-2">&amp;</span>sf_path))<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(mem::Shared::new(ProxyFile::new(file_obj)))
+    <span class="kw">fn </span>open_file(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, mode: FileOpenMode) -&gt; <span class="prelude-ty">Result</span>&lt;Box&lt;<span class="kw">dyn </span>File&gt;&gt; {
+        <span class="kw">let </span>sf_path = fsp::fsp_sf::Path::from_str(path);
+        <span class="kw">let </span>file_obj = <span class="self">self</span>.fs_obj.open_file(mode, ipc_sf::Buffer::from_var(<span class="kw-2">&amp;</span>sf_path))<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(Box::new(ProxyFile::new(file_obj)))
     }
 
-    <span class="kw">fn </span>open_directory(<span class="kw-2">&amp;mut </span><span class="self">self</span>, path: String, mode: DirectoryOpenMode) -&gt; <span class="prelude-ty">Result</span>&lt;mem::Shared&lt;<span class="kw">dyn </span>Directory&gt;&gt; {
-        <span class="kw">let </span>sf_path = fsp::Path::from_string(path);
-        <span class="kw">let </span>dir_obj = <span class="self">self</span>.fs_obj.get().open_directory(mode, ipc_sf::Buffer::from_var(<span class="kw-2">&amp;</span>sf_path))<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(mem::Shared::new(ProxyDirectory::new(dir_obj)))
+    <span class="kw">fn </span>open_directory(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, mode: DirectoryOpenMode) -&gt; <span class="prelude-ty">Result</span>&lt;Box&lt;<span class="kw">dyn </span>Directory&gt;&gt; {
+        <span class="kw">let </span>sf_path = fsp::fsp_sf::Path::from_str(path);
+        <span class="kw">let </span>dir_obj = <span class="self">self</span>.fs_obj.open_directory(mode, ipc_sf::Buffer::from_var(<span class="kw-2">&amp;</span>sf_path))<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(Box::new(ProxyDirectory::new(dir_obj)))
     }
 
-    <span class="kw">fn </span>commit(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="self">self</span>.fs_obj.get().commit()
+    <span class="kw">fn </span>commit(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="self">self</span>.fs_obj.commit()
     }
 
-    <span class="kw">fn </span>get_free_space_size(<span class="kw-2">&amp;mut </span><span class="self">self</span>, path: String) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
-        <span class="kw">let </span>sf_path = fsp::Path::from_string(path);
-        <span class="self">self</span>.fs_obj.get().get_free_space_size(ipc_sf::Buffer::from_var(<span class="kw-2">&amp;</span>sf_path))
+    <span class="kw">fn </span>get_free_space_size(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
+        <span class="kw">let </span>sf_path = fsp::fsp_sf::Path::from_str(path);
+        <span class="self">self</span>.fs_obj.get_free_space_size(ipc_sf::Buffer::from_var(<span class="kw-2">&amp;</span>sf_path))
     }
 
-    <span class="kw">fn </span>get_total_space_size(<span class="kw-2">&amp;mut </span><span class="self">self</span>, path: String) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
-        <span class="kw">let </span>sf_path = fsp::Path::from_string(path);
-        <span class="self">self</span>.fs_obj.get().get_total_space_size(ipc_sf::Buffer::from_var(<span class="kw-2">&amp;</span>sf_path))
+    <span class="kw">fn </span>get_total_space_size(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
+        <span class="kw">let </span>sf_path = fsp::fsp_sf::Path::from_str(path);
+        <span class="self">self</span>.fs_obj.get_total_space_size(ipc_sf::Buffer::from_var(<span class="kw-2">&amp;</span>sf_path))
     }
 
-    <span class="kw">fn </span>clean_directory_recursively(<span class="kw-2">&amp;mut </span><span class="self">self</span>, path: String) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let </span>sf_path = fsp::Path::from_string(path);
-        <span class="self">self</span>.fs_obj.get().clean_directory_recursively(ipc_sf::Buffer::from_var(<span class="kw-2">&amp;</span>sf_path))
+    <span class="kw">fn </span>remove_children_all(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>sf_path = fsp::fsp_sf::Path::from_str(path);
+        <span class="self">self</span>.fs_obj.clean_directory_recursively(ipc_sf::Buffer::from_var(<span class="kw-2">&amp;</span>sf_path))
     }
 
-    <span class="kw">fn </span>get_file_time_stamp_raw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, path: String) -&gt; <span class="prelude-ty">Result</span>&lt;FileTimeStampRaw&gt; {
-        <span class="kw">let </span>sf_path = fsp::Path::from_string(path);
-        <span class="self">self</span>.fs_obj.get().get_file_time_stamp_raw(ipc_sf::Buffer::from_var(<span class="kw-2">&amp;</span>sf_path))
+    <span class="kw">fn </span>get_file_time_stamp_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;FileTimeStampRaw&gt; {
+        <span class="kw">let </span>sf_path = fsp::fsp_sf::Path::from_str(path);
+        <span class="self">self</span>.fs_obj.get_file_time_stamp_raw(ipc_sf::Buffer::from_var(<span class="kw-2">&amp;</span>sf_path))
     }
 
-    <span class="kw">fn </span>query_entry(<span class="kw-2">&amp;mut </span><span class="self">self</span>, path: String, query_id: QueryId, in_buf: <span class="kw-2">*const </span>u8, in_buf_size: usize, out_buf: <span class="kw-2">*mut </span>u8, out_buf_size: usize) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let </span>sf_path = fsp::Path::from_string(path);
-        <span class="self">self</span>.fs_obj.get().query_entry(ipc_sf::Buffer::from_var(<span class="kw-2">&amp;</span>sf_path), query_id, ipc_sf::Buffer::from_ptr(in_buf, in_buf_size), ipc_sf::Buffer::from_mut_ptr(out_buf, out_buf_size))
+    <span class="kw">fn </span>query_entry(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, query_id: QueryId, in_buf: <span class="kw-2">&amp;</span>[u8], out_buf: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>sf_path = fsp::fsp_sf::Path::from_str(path);
+        <span class="self">self</span>.fs_obj.query_entry(ipc_sf::Buffer::from_var(<span class="kw-2">&amp;</span>sf_path), query_id, ipc_sf::Buffer::from_array(in_buf), ipc_sf::Buffer::from_mut_array(out_buf))
     }
 }
 
-<span class="doccomment">/// Represents an offset kind/relativeness
-</span><span class="kw">pub enum </span>Whence {
-    Start,
-    Current,
-    End
+<span class="doccomment">/// Represents an offset kind/relativeness.
+</span><span class="attr">#[allow(missing_docs)]
+</span><span class="kw">pub enum </span>SeekFrom {
+    Start(usize),
+    Current(isize),
+    End(isize)
 }
 
-<span class="doccomment">/// Represents a wrapper type to simplify file access
+<span class="doccomment">/// Represents a wrapper type to simplify file access, tracking the currently seeked location in the file.
 </span><span class="kw">pub struct </span>FileAccessor {
-    file: mem::Shared&lt;<span class="kw">dyn </span>File&gt;,
+    file: Box&lt;<span class="kw">dyn </span>File&gt;,
     offset: usize
 }
 
+<span class="comment">// we can do this because we never leak the `file` field, which would require us to also require `Send` on the trait `File`
+</span><span class="kw">unsafe impl </span>Sync <span class="kw">for </span>FileAccessor {}
+<span class="kw">unsafe impl </span>Send <span class="kw">for </span>FileAccessor {}
+
+<span class="kw">impl </span>From&lt;Box&lt;<span class="kw">dyn </span>File&gt;&gt; <span class="kw">for </span>FileAccessor {
+    <span class="kw">fn </span>from(value: Box&lt;<span class="kw">dyn </span>File&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ file: value, offset: <span class="number">0 </span>}
+    }
+}
+
 <span class="kw">impl </span>FileAccessor {
-    <span class="doccomment">/// Creates a new [`FileAccessor`] from a given [`File`] shared object
+    <span class="doccomment">/// Creates a new [`FileAccessor`] from a given [`File`] shared object.
     /// 
-    /// # Arguments
+    /// # Arguments.
     /// 
-    /// * `file`: The shared object
-    </span><span class="kw">pub fn </span>new(file: mem::Shared&lt;<span class="kw">dyn </span>File&gt;) -&gt; <span class="self">Self </span>{
+    /// * `file`: The `File` implementor.
+    </span><span class="kw">pub fn </span>new(file: <span class="kw">impl </span>File + <span class="lifetime">'static</span>) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            file,
+            file: Box::new(file),
             offset: <span class="number">0
         </span>}
     }
 
-    <span class="doccomment">/// Gets the underlying [`File`] shared object
-    </span><span class="kw">pub fn </span>get_object(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; mem::Shared&lt;<span class="kw">dyn </span>File&gt; {
-        <span class="self">self</span>.file.clone()
-    }
-
-    <span class="doccomment">/// Gets the file size
+    <span class="doccomment">/// Gets the file size.
     </span><span class="kw">pub fn </span>get_size(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
-        <span class="self">self</span>.file.get().get_size()
+        <span class="self">self</span>.file.get_size()
     }
 
-    <span class="doccomment">/// Seeks in the file to a certain offset
+    <span class="doccomment">/// Seeks in the file to a certain offset.
     /// 
-    /// # Arguments
+    /// # Arguments:
     /// 
-    /// * `offset`: The offset to seek to
-    /// * `whence`: The offset relativeness
-    </span><span class="kw">pub fn </span>seek(<span class="kw-2">&amp;mut </span><span class="self">self</span>, offset: usize, whence: Whence) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">match </span>whence {
-            Whence::Start =&gt; <span class="self">self</span>.offset = offset,
-            Whence::Current =&gt; <span class="self">self</span>.offset += offset,
-            Whence::End =&gt; {
+    /// * `offset`: The offset to seek to.
+    </span><span class="kw">pub fn </span>seek(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pos: SeekFrom) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">match </span>pos {
+            SeekFrom::Start(offset) =&gt; <span class="self">self</span>.offset = offset,
+            SeekFrom::Current(offset) =&gt; <span class="self">self</span>.offset = <span class="self">self</span>.offset.saturating_add_signed(offset),
+            SeekFrom::End(offset)=&gt; {
                 <span class="kw">let </span>size = <span class="self">self</span>.get_size()<span class="question-mark">?</span>;
-                <span class="self">self</span>.offset = size + offset;
+                <span class="self">self</span>.offset = size.saturating_add_signed(offset);
             }
         };
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// Reads data in the given buffer
+    <span class="doccomment">/// Reads data into the given array.
     /// 
+    /// # Arguments:
     /// 
-    /// # Arguments
-    /// 
-    /// * `out_buf`: The output array address
-    /// * `buf_count`: The output type count to read (not size in bytes but item count)
-    </span><span class="kw">pub fn </span>read&lt;T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, out_buf: <span class="kw-2">*mut </span>T, buf_count: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
-        <span class="kw">let </span>read_size = <span class="self">self</span>.file.get().read(<span class="self">self</span>.offset, out_buf <span class="kw">as </span><span class="kw-2">*mut </span>u8, buf_count * cmem::size_of::&lt;T&gt;(), FileReadOption::None())<span class="question-mark">?</span>;
+    /// * `out_arr`: The output array.
+    </span><span class="kw">pub fn </span>read_array&lt;T: Copy&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, out_arr: <span class="kw-2">&amp;mut </span>[T]) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
+        <span class="doccomment">/// SAFETY: This is safe as we're constructing the slice from another valid slice of `T: Copy`.
+        </span><span class="kw">let </span>read_size = <span class="self">self</span>.file.read(<span class="self">self</span>.offset, <span class="kw">unsafe </span>{core::slice::from_raw_parts_mut(out_arr.as_mut_ptr() <span class="kw">as _</span>, out_arr.len() * cmem::size_of::&lt;T&gt;())}, FileReadOption::None())<span class="question-mark">?</span>;
         <span class="self">self</span>.offset += read_size;
         <span class="prelude-val">Ok</span>(read_size)
     }
 
-    <span class="doccomment">/// Reads data in the given array
-    /// 
-    /// # Arguments
-    /// 
-    /// * `out_arr`: The output array
-    </span><span class="kw">pub fn </span>read_array&lt;T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, out_arr: <span class="kw-2">&amp;mut </span>[T]) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
-        <span class="self">self</span>.read(out_arr.as_mut_ptr(), out_arr.len())
-    }
-
-    <span class="doccomment">/// Reads a value
-    </span><span class="kw">pub fn </span>read_val&lt;T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;T&gt; {
+    <span class="doccomment">/// Reads a value.
+    </span><span class="kw">pub fn </span>read_val&lt;T: Copy&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;T&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>t = <span class="kw">unsafe </span>{ cmem::zeroed::&lt;T&gt;() };
-        <span class="self">self</span>.read(<span class="kw-2">&amp;mut </span>t, <span class="number">1</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>read_size = <span class="self">self</span>.file.read(<span class="self">self</span>.offset, <span class="kw">unsafe </span>{core::slice::from_raw_parts_mut(<span class="kw-2">&amp;mut </span>t <span class="kw">as </span><span class="kw-2">*mut </span>T <span class="kw">as _</span>, cmem::size_of::&lt;T&gt;())}, FileReadOption::None())<span class="question-mark">?</span>;
+        <span class="self">self</span>.offset += read_size;
         <span class="prelude-val">Ok</span>(t)
     }
 
     <span class="comment">// TODO (writes): some sort of "flush" flag to not always flush after writing?
 
-    </span><span class="doccomment">/// Writes data from the given buffer
-    /// 
-    /// 
-    /// # Arguments
-    /// 
-    /// * `buf`: The input array address
-    /// * `buf_count`: The input type count to write (not size in bytes but item count)
-    </span><span class="kw">pub fn </span>write&lt;T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buf: <span class="kw-2">*const </span>T, buf_count: usize) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let </span>buf_size = buf_count * cmem::size_of::&lt;T&gt;();
-        <span class="self">self</span>.file.get().write(<span class="self">self</span>.offset, buf <span class="kw">as </span><span class="kw-2">*const </span>u8, buf_size, FileWriteOption::Flush())<span class="question-mark">?</span>;
-        <span class="self">self</span>.offset += buf_size;
-        <span class="prelude-val">Ok</span>(())
-    }
-
-    <span class="doccomment">/// Writes data from the given array
+    </span><span class="doccomment">/// Writes data from the given array
     /// 
     /// # Arguments
     /// 
     /// * `arr`: The input array
-    </span><span class="kw">pub fn </span>write_array&lt;T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, arr: <span class="kw-2">&amp;</span>[T]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="self">self</span>.write(arr.as_ptr(), arr.len())
+    </span><span class="kw">pub fn </span>write_array&lt;T: Copy&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, arr: <span class="kw-2">&amp;</span>[T]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>transmuted: <span class="kw-2">&amp;</span>[u8] = <span class="kw">unsafe </span>{ core::slice::from_raw_parts(arr.as_ptr() <span class="kw">as _</span>, arr.len() * cmem::size_of::&lt;T&gt;())};
+        <span class="self">self</span>.file.write(<span class="self">self</span>.offset, transmuted, FileWriteOption::Flush())<span class="question-mark">?</span>;
+        <span class="self">self</span>.offset += transmuted.len();
+        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="doccomment">/// Writes a value
@@ -1633,14 +1570,26 @@
     /// # Arguments
     /// 
     /// * `t`: The value to write
-    </span><span class="kw">pub fn </span>write_val&lt;T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, t: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="self">self</span>.write(t <span class="kw">as </span><span class="kw-2">*const </span>T, <span class="number">1</span>)
+    </span><span class="kw">pub fn </span>write_val&lt;T: Copy&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, t: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>transmuted = <span class="kw">unsafe </span>{
+            core::slice::from_raw_parts(t <span class="kw">as </span><span class="kw-2">*const </span>T <span class="kw">as </span><span class="kw-2">*const </span>u8, cmem::size_of::&lt;T&gt;())
+        };
+
+        <span class="self">self</span>.file.write(<span class="self">self</span>.offset, transmuted, FileWriteOption::Flush())<span class="question-mark">?</span>;
+        <span class="self">self</span>.offset += transmuted.len();
+        <span class="prelude-val">Ok</span>(())
     }
 }
 
 <span class="doccomment">/// Represents a wrapper type to simplify directory access
 </span><span class="kw">pub struct </span>DirectoryAccessor {
-    dir: mem::Shared&lt;<span class="kw">dyn </span>Directory&gt;
+    dir: Arc&lt;<span class="kw">dyn </span>Directory&gt;
+}
+
+<span class="kw">impl </span>From&lt;Arc&lt;<span class="kw">dyn </span>Directory&gt;&gt; <span class="kw">for </span>DirectoryAccessor {
+    <span class="kw">fn </span>from(value: Arc&lt;<span class="kw">dyn </span>Directory&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ dir: value }
+    }
 }
 
 <span class="kw">impl </span>DirectoryAccessor {
@@ -1649,26 +1598,26 @@
     /// # Arguments
     /// 
     /// * `dir`: The shared object
-    </span><span class="kw">pub fn </span>new(dir: mem::Shared&lt;<span class="kw">dyn </span>Directory&gt;) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ dir }
+    </span><span class="kw">pub fn </span>new(dir: <span class="kw">impl </span>Directory + <span class="lifetime">'static</span>) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ dir: Arc::new(dir) }
     }
 
-    <span class="doccomment">/// Gets the directory entry count
+    <span class="doccomment">/// Gets the directory entry count.
     </span><span class="kw">pub fn </span>get_entry_count(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
-        <span class="self">self</span>.dir.get().get_entry_count()
+        <span class="self">self</span>.dir.get_entry_count()
     }
 
-    <span class="doccomment">/// Gets the underlying [`Directory`] shared object
-    </span><span class="kw">pub fn </span>get_object(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; mem::Shared&lt;<span class="kw">dyn </span>Directory&gt; {
+    <span class="doccomment">/// Gets the underlying [`Directory`] shared object.
+    </span><span class="kw">pub fn </span>get_object(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Arc&lt;<span class="kw">dyn </span>Directory&gt; {
         <span class="self">self</span>.dir.clone()
     }
 
-    <span class="doccomment">/// Tries to read the next entry
+    <span class="doccomment">/// Tries to read the next entry.
     /// 
-    /// Note that if the end is reached this will return `Ok(None)`, the result reflects other possible inner I/O errors
+    /// Note that if the end is reached this will return `Ok(None)`, the result reflects other possible inner I/O errors.
     </span><span class="kw">pub fn </span>read_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;DirectoryEntry&gt;&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>entries: [DirectoryEntry; <span class="number">1</span>] = Default::default();
-        <span class="kw">let </span>read_count = <span class="self">self</span>.dir.get().read(<span class="kw-2">&amp;mut </span>entries)<span class="question-mark">?</span>;
+        <span class="kw">let </span>read_count = <span class="self">self</span>.dir.read(<span class="kw-2">&amp;mut </span>entries)<span class="question-mark">?</span>;
         <span class="kw">if </span>read_count == <span class="number">1 </span>{
             <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(entries[<span class="number">0</span>]))
         }
@@ -1678,108 +1627,33 @@
     }
 }
 
-<span class="kw">enum </span>PathSegmentType {
-    Invalid,
-    Root,
-    Normal
-}
-
-<span class="kw">struct </span>PathSegment {
-    name: String,
-    segment_type: PathSegmentType
-}
-
-<span class="kw">impl </span>PathSegment {
-    <span class="kw">pub const fn </span>from(name: String, segment_type: PathSegmentType) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ name, segment_type }
-    }
-
-    <span class="kw">pub const fn </span>new() -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>::from(String::new(), PathSegmentType::Invalid)
-    }
-}
-
-<span class="kw">type </span>UnpackedPath = Vec&lt;PathSegment&gt;;
-
-<span class="kw">fn </span>unpack_path_impl(path: String) -&gt; UnpackedPath {
-    <span class="kw">let </span><span class="kw-2">mut </span>unpacked_path: UnpackedPath = UnpackedPath::new();
-
-    <span class="kw">for </span>sub_path <span class="kw">in </span>path.split(<span class="string">'/'</span>) {
-        <span class="kw">let </span><span class="kw-2">mut </span>cur_segment = PathSegment::new();
-        <span class="kw">if </span>sub_path.ends_with(<span class="string">':'</span>) {
-            cur_segment.segment_type = PathSegmentType::Root;
-            cur_segment.name = String::from(sub_path);
-            unpacked_path.push(cur_segment);
-        }
-        <span class="kw">else if </span>sub_path == <span class="string">".." </span>{
-            unpacked_path.pop();
-        }
-        <span class="kw">else </span>{
-            cur_segment.segment_type = PathSegmentType::Normal;
-            cur_segment.name = String::from(sub_path);
-            unpacked_path.push(cur_segment);
-        }
-    }
-
-    unpacked_path
-}
-
-<span class="kw">fn </span>unpack_path(path: String) -&gt; <span class="prelude-ty">Result</span>&lt;UnpackedPath&gt; {
-    <span class="kw">let </span>unpacked_path = unpack_path_impl(path);
-    <span class="macro">result_return_if!</span>(unpacked_path.is_empty(), <span class="number">0xBAD</span>);
-    <span class="prelude-val">Ok</span>(unpacked_path)
-}
-
-<span class="kw">fn </span>pack_path(unpacked_path: UnpackedPath, add_root: bool) -&gt; String {
-    <span class="kw">let </span><span class="kw-2">mut </span>path = String::new();
-    <span class="kw">if </span>!add_root {
-        path.push(<span class="string">'/'</span>);
-    }
-    
-    <span class="kw">for </span>path_segment <span class="kw">in </span>unpacked_path {
-        <span class="kw">match </span>path_segment.segment_type {
-            PathSegmentType::Root =&gt; {
-                <span class="kw">if </span>add_root {
-                    path = <span class="macro">format!</span>(<span class="string">"{}{}/"</span>, path, path_segment.name);
-                }
-            },
-            PathSegmentType::Normal =&gt; path = <span class="macro">format!</span>(<span class="string">"{}{}/"</span>, path, path_segment.name),
-            <span class="kw">_ </span>=&gt; {}
-        }
-    }
-    
-    <span class="comment">// Minimum path must be "/"
-    </span><span class="kw">if </span>path.len() &gt; <span class="number">1 </span>{
-        path.pop();
-    }
-
-    path
-}
-
-<span class="kw">struct </span>FileSystemDevice {
-    root_name: PathSegment,
-    fs: mem::Shared&lt;<span class="kw">dyn </span>FileSystem&gt;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>FileSystemDevice {
+    mount_name: String,
+    fs: Arc&lt;<span class="kw">dyn </span>FileSystem&gt;
 }
 
 <span class="kw">impl </span>FileSystemDevice {
-    <span class="kw">pub fn </span>from(root_name: PathSegment, fs: mem::Shared&lt;<span class="kw">dyn </span>FileSystem&gt;) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ root_name, fs }
+    <span class="kw">pub fn </span>new(mount_name: String, fs: Arc&lt;<span class="kw">dyn </span>FileSystem&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ mount_name, fs }
     }
 }
-<span class="kw">static </span><span class="kw-2">mut </span>G_DEVICES: sync::Locked&lt;Vec&lt;FileSystemDevice&gt;&gt; = sync::Locked::new(<span class="bool-val">false</span>, Vec::new());
 
-<span class="kw">fn </span>find_device_by_name(name: <span class="kw-2">&amp;</span>PathSegment) -&gt; <span class="prelude-ty">Result</span>&lt;mem::Shared&lt;<span class="kw">dyn </span>FileSystem&gt;&gt; {
-    <span class="kw">unsafe </span>{
-        <span class="kw">for </span>device <span class="kw">in </span>G_DEVICES.get() {
-            <span class="kw">if </span>device.root_name.name == name.name {
+<span class="kw">unsafe impl </span>Sync <span class="kw">for </span>FileSystemDevice {}
+<span class="kw">unsafe impl </span>Send <span class="kw">for </span>FileSystemDevice {}
+
+<span class="kw">pub </span>(<span class="kw">crate</span>) <span class="kw">static </span>G_DEVICES: RwLock&lt;Vec&lt;FileSystemDevice&gt;&gt; = RwLock::new(Vec::new());
+
+<span class="kw">fn </span>find_device_by_name(name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;<span class="kw">dyn </span>FileSystem&gt;&gt; {
+        <span class="kw">let </span>device_guard = G_DEVICES.read();
+        <span class="kw">for </span>device <span class="kw">in </span>device_guard.iter() {
+            <span class="kw">if </span>device.mount_name.as_str() == name {
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(device.fs.clone());
             }
         }
         rc::ResultDeviceNotFound::make_err()
-    }
 }
 
-<span class="kw">static </span><span class="kw-2">mut </span>G_FSPSRV_SESSION: sync::Locked&lt;<span class="prelude-ty">Option</span>&lt;mem::Shared&lt;<span class="kw">dyn </span>IFileSystemProxy&gt;&gt;&gt; = sync::Locked::new(<span class="bool-val">false</span>, <span class="prelude-val">None</span>);
+<span class="kw">static </span>G_FSPSRV_SESSION: RwLock&lt;<span class="prelude-ty">Option</span>&lt;Arc&lt;fsp::srv::FileSystemProxy&gt;&gt;&gt; = RwLock::new(<span class="prelude-val">None</span>);
 
 <span class="macro">define_bit_enum!</span> {
     <span class="doccomment">/// Represents options for opening files
@@ -1791,47 +1665,44 @@
         Append = <span class="macro">bit!</span>(<span class="number">3</span>)
     }
 }
-
-<span class="doccomment">/// Initializes `fsp-srv` support with a given [`IFileSystemProxy`] shared object
+<span class="comment">/*
+/// Initializes `fsp-srv` support with a given [`IFileSystemProxy`] shared object
 /// 
 /// # Arguments
 /// 
-/// * `session`: The shared object
-</span><span class="kw">pub fn </span>initialize_fspsrv_session_with(session: mem::Shared&lt;<span class="kw">dyn </span>IFileSystemProxy&gt;) {
-    <span class="kw">unsafe </span>{
-        G_FSPSRV_SESSION.set(<span class="prelude-val">Some</span>(session));
-    }
-}
+/// * `session`: The IPC client object
+pub fn initialize_fspsrv_session_with(session: Arc&lt;dyn fsp::srv::IFileSystemProxy&gt;) {
+    let mut guard = G_FSPSRV_SESSION.write();
+    debug_assert!(guard.is_none(), "Double initializing FSP session");
+    *guard = Some(session);
+}*/
 
-<span class="doccomment">/// Initializes `fsp-srv` support instantiating a [`FileSystemProxy`][`fsp::srv::FileSystemProxy`] shared object
+</span><span class="doccomment">/// Initializes `fsp-srv` support instantiating a [`FileSystemProxy`][`fsp::srv::FileSystemProxy`] shared object
 </span><span class="attr">#[inline]
 </span><span class="kw">pub fn </span>initialize_fspsrv_session() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    initialize_fspsrv_session_with(service::new_service_object::&lt;fsp::srv::FileSystemProxy&gt;()<span class="question-mark">?</span>);
+    <span class="kw">let </span><span class="kw-2">mut </span>guard = G_FSPSRV_SESSION.write();
+    <span class="macro">debug_assert!</span>(guard.is_none(), <span class="string">"Double initializing FSP session"</span>);
+    <span class="kw-2">*</span>guard = <span class="prelude-val">Some</span>(Arc::new(service::new_service_object::&lt;fsp::srv::FileSystemProxy&gt;()<span class="question-mark">?</span>));
     <span class="prelude-val">Ok</span>(())
 }
 
 <span class="doccomment">/// Gets whether `fsp-srv` support was initialized
 </span><span class="attr">#[inline]
 </span><span class="kw">pub fn </span>is_fspsrv_session_initialized() -&gt; bool {
-    <span class="kw">unsafe </span>{
-        G_FSPSRV_SESSION.get().is_some()
-    }
+    G_FSPSRV_SESSION.read().is_some()
 }
 
 <span class="doccomment">/// Finalizes `fsp-srv` support
 </span><span class="attr">#[inline]
-</span><span class="kw">pub fn </span>finalize_fspsrv_session() {
-    <span class="kw">unsafe </span>{
-        G_FSPSRV_SESSION.set(<span class="prelude-val">None</span>);
-    }
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>finalize_fspsrv_session() {
+    G_FSPSRV_SESSION.write().take();
 }
 
 <span class="doccomment">/// Gets the global [`IFileSystemProxy`] shared object used for `fsp-srv` support
 </span><span class="attr">#[inline]
-</span><span class="kw">pub fn </span>get_fspsrv_session() -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>mem::Shared&lt;<span class="kw">dyn </span>IFileSystemProxy&gt;&gt; {
-    <span class="kw">unsafe </span>{
-        G_FSPSRV_SESSION.get().as_ref().ok_or(<span class="kw">super</span>::rc::ResultNotInitialized::make())
-    }
+</span><span class="kw">pub fn </span>get_fspsrv_session() -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;fsp::srv::FileSystemProxy&gt;&gt; {
+    G_FSPSRV_SESSION.read().as_ref().map(Clone::clone)
+    .ok_or(<span class="kw">super</span>::rc::ResultNotInitialized::make())
 }
 
 <span class="doccomment">/// Mounts a [`FileSystem`]
@@ -1842,13 +1713,8 @@
 /// 
 /// * `name`: The mount name
 /// * `fs`: The [`FileSystem`] shared object
-</span><span class="kw">pub fn </span>mount(name: <span class="kw-2">&amp;</span>str, fs: mem::Shared&lt;<span class="kw">dyn </span>FileSystem&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    <span class="kw">let </span>root_name = PathSegment::from(<span class="macro">format!</span>(<span class="string">"{}:"</span>, name), PathSegmentType::Root);
-    <span class="kw">unsafe </span>{
-        G_DEVICES.get().push(FileSystemDevice::from(root_name, fs));
-    }
-
-    <span class="prelude-val">Ok</span>(())
+</span><span class="kw">pub fn </span>mount(name: <span class="kw-2">&amp;</span>str, fs: Arc&lt;<span class="kw">dyn </span>FileSystem&gt;) {
+    G_DEVICES.write().push(FileSystemDevice::new(String::from(name), fs));
 }
 
 <span class="comment">//// Mounts an IPC [`IFileSystem`]
@@ -1859,9 +1725,9 @@
 /// 
 /// * `name`: The mount name
 /// * `fs_obj`: The [`IFileSystem`] shared object
-</span><span class="kw">pub fn </span>mount_fsp_filesystem(name: <span class="kw-2">&amp;</span>str, fs_obj: mem::Shared&lt;<span class="kw">dyn </span>IFileSystem&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    <span class="kw">let </span>proxy_fs = mem::Shared::new(ProxyFileSystem::new(fs_obj));
-    mount(name, proxy_fs)
+</span><span class="kw">pub fn </span>mount_fsp_filesystem(name: <span class="kw-2">&amp;</span>str, fs_obj: Arc&lt;<span class="kw">dyn </span>IFileSystem&gt;) {
+    <span class="kw">let </span>proxy_fs = Arc::new(ProxyFileSystem::new(fs_obj));
+    mount(name, proxy_fs);
 }
 
 <span class="doccomment">/// Mounts the system's SD card using `fsp-srv` support
@@ -1870,10 +1736,11 @@
 /// 
 /// # Arguments
 /// 
-/// * `name`: The mount name
+/// * `name`: The name of the mount that we store for the sdcard
 </span><span class="kw">pub fn </span>mount_sd_card(name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    <span class="kw">let </span>sd_fs_obj = get_fspsrv_session()<span class="question-mark">?</span>.get().open_sd_card_filesystem()<span class="question-mark">?</span>;
-    mount_fsp_filesystem(name, sd_fs_obj)
+    <span class="kw">let </span>sd_fs_obj = get_fspsrv_session()<span class="question-mark">?</span>.open_sd_card_filesystem()<span class="question-mark">?</span>;
+    mount_fsp_filesystem(name, Arc::new(sd_fs_obj));
+    <span class="prelude-val">Ok</span>(())
 }
 
 <span class="doccomment">/// Unmounts a mounted filesystem
@@ -1882,19 +1749,14 @@
 /// 
 /// # Arguments
 /// 
-/// * `name`: The mount name
-</span><span class="kw">pub fn </span>unmount(name: <span class="kw-2">&amp;</span>str) {
-    <span class="kw">let </span>root_name = String::from(name);
-    <span class="kw">unsafe </span>{
-        G_DEVICES.get().retain(|dev| dev.root_name.name != root_name);
-    }
+/// * `mount_name`: The mount name
+</span><span class="kw">pub fn </span>unmount(mount_name: <span class="kw-2">&amp;</span>str) {
+    G_DEVICES.write().deref_mut().retain(|dev| dev.mount_name.as_str() != mount_name);
 }
 
 <span class="doccomment">/// Unmounts all filesystems
 </span><span class="kw">pub fn </span>unmount_all() {
-    <span class="kw">unsafe </span>{
-        G_DEVICES.get().clear();
-    }
+    G_DEVICES.write().deref_mut().clear();
 }
 
 <span class="doccomment">/// Returns the [`FileSystem`] corresponding to a given path
@@ -1904,10 +1766,9 @@
 /// # Arguments
 /// 
 /// * `path`: The path to use
-</span><span class="kw">pub fn </span>get_path_filesystem(path: String) -&gt; <span class="prelude-ty">Result</span>&lt;mem::Shared&lt;<span class="kw">dyn </span>FileSystem&gt;&gt; {
-    <span class="kw">let </span>unpacked_path = unpack_path(path)<span class="question-mark">?</span>;
-    <span class="kw">let </span>fs = find_device_by_name(unpacked_path.first().unwrap())<span class="question-mark">?</span>;
-    
+</span><span class="kw">pub fn </span>get_path_filesystem(path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;<span class="kw">dyn </span>FileSystem&gt;&gt; {
+    <span class="kw">let </span>split = path.find(|c| c == <span class="string">':'</span>).ok_or(rc::ResultDeviceNotFound::make())<span class="question-mark">?</span>;
+    <span class="kw">let </span>fs = find_device_by_name(<span class="kw-2">&amp;</span>path[..split])<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(fs)
 }
 
@@ -1918,12 +1779,12 @@
 /// # Arguments
 /// 
 /// * `path`: The path to use
-</span><span class="kw">pub fn </span>format_path(path: String) -&gt; <span class="prelude-ty">Result</span>&lt;(mem::Shared&lt;<span class="kw">dyn </span>FileSystem&gt;, String)&gt; {
-    <span class="kw">let </span>unpacked_path = unpack_path(path)<span class="question-mark">?</span>;
-    <span class="kw">let </span>fs = find_device_by_name(unpacked_path.first().unwrap())<span class="question-mark">?</span>;
-    <span class="kw">let </span>processed_path = pack_path(unpacked_path, <span class="bool-val">false</span>);
+</span><span class="kw">pub fn </span>format_path&lt;<span class="lifetime">'s</span>&gt;(path: <span class="kw-2">&amp;</span><span class="lifetime">'s </span>str) -&gt; <span class="prelude-ty">Result</span>&lt;(Arc&lt;<span class="kw">dyn </span>FileSystem&gt;, <span class="kw-2">&amp;</span><span class="lifetime">'s </span>str)&gt; {
+    <span class="kw">let </span>split = path.find(<span class="string">':'</span>);
+    <span class="kw">let </span>split = split.ok_or(rc::ResultDeviceNotFound::make())<span class="question-mark">?</span>;
+    <span class="kw">let </span>fs = find_device_by_name(<span class="kw-2">&amp;</span>path[..split])<span class="question-mark">?</span>;
     
-    <span class="prelude-val">Ok</span>((fs, processed_path))
+    <span class="prelude-val">Ok</span>((fs, <span class="kw-2">&amp;</span>path[split+<span class="number">1</span>..]))
 }
 
 <span class="doccomment">/// Creates a file
@@ -1933,10 +1794,9 @@
 /// * `path`: The path to use
 /// * `size`: The initial file size, default/IPC behaviour is to fill the file with zeros
 /// * `attribute`: The file attribute, default/IPC behaviour uses this to allow creating "concatenation files" (allowing 32GB+ files in FAT32 filesystems)
-</span><span class="kw">pub fn </span>create_file(path: String, size: usize, attribute: FileAttribute) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+</span><span class="kw">pub fn </span>create_file(path: <span class="kw-2">&amp;</span>str, size: usize, attribute: FileAttribute) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
     <span class="kw">let </span>(fs, processed_path) = format_path(path)<span class="question-mark">?</span>;
-
-    fs.get().create_file(processed_path, attribute, size)
+    fs.create_file(processed_path, attribute, size)
 }
 
 <span class="doccomment">/// Deletes a file
@@ -1944,10 +1804,9 @@
 /// # Arguments
 /// 
 /// * `path`: The path to use
-</span><span class="kw">pub fn </span>delete_file(path: String) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+</span><span class="kw">pub fn </span>remove_file(path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
     <span class="kw">let </span>(fs, processed_path) = format_path(path)<span class="question-mark">?</span>;
-
-    fs.get().delete_file(processed_path)
+    fs.remove_file(processed_path)
 }
 
 <span class="doccomment">/// Creates a directory
@@ -1955,10 +1814,9 @@
 /// # Arguments
 /// 
 /// * `path`: The path to use
-</span><span class="kw">pub fn </span>create_directory(path: String) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+</span><span class="kw">pub fn </span>create_directory(path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
     <span class="kw">let </span>(fs, processed_path) = format_path(path)<span class="question-mark">?</span>;
-
-    fs.get().create_directory(processed_path)
+    fs.create_directory(processed_path)
 }
 
 <span class="doccomment">/// Deletes a directory
@@ -1968,10 +1826,9 @@
 /// # Arguments
 /// 
 /// * `path`: The path to use
-</span><span class="kw">pub fn </span>delete_directory(path: String) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+</span><span class="kw">pub fn </span>remove_dir(path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
     <span class="kw">let </span>(fs, processed_path) = format_path(path)<span class="question-mark">?</span>;
-
-    fs.get().delete_directory(processed_path)
+    fs.remove_dir(processed_path)
 }
 
 <span class="doccomment">/// Deletes a directory and all its children files/directories
@@ -1979,10 +1836,9 @@
 /// # Arguments
 /// 
 /// * `path`: The path to use
-</span><span class="kw">pub fn </span>delete_directory_recursively(path: String) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+</span><span class="kw">pub fn </span>remove_dir_all(path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
     <span class="kw">let </span>(fs, processed_path) = format_path(path)<span class="question-mark">?</span>;
-
-    fs.get().delete_directory_recursively(processed_path)
+    fs.remove_dir(processed_path)
 }
 
 <span class="doccomment">/// Deletes all the children files/directories inside a directory
@@ -1990,10 +1846,9 @@
 /// # Arguments
 /// 
 /// * `path`: The path to use
-</span><span class="kw">pub fn </span>clean_directory_recursively(path: String) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+</span><span class="kw">pub fn </span>remove_children_all(path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
     <span class="kw">let </span>(fs, processed_path) = format_path(path)<span class="question-mark">?</span>;
-
-    fs.get().clean_directory_recursively(processed_path)
+    fs.remove_children_all(processed_path)
 }
 
 <span class="doccomment">/// Gets a path's [`DirectoryEntryType`]
@@ -2003,10 +1858,9 @@
 /// # Arguments
 /// 
 /// * `path`: The path to use
-</span><span class="kw">pub fn </span>get_entry_type(path: String) -&gt; <span class="prelude-ty">Result</span>&lt;DirectoryEntryType&gt; {
+</span><span class="kw">pub fn </span>get_entry_type(path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;DirectoryEntryType&gt; {
     <span class="kw">let </span>(fs, processed_path) = format_path(path)<span class="question-mark">?</span>;
-
-    fs.get().get_entry_type(processed_path)
+    fs.get_entry_type(processed_path)
 }
 
 <span class="doccomment">/// Converts a [`FileOpenOption`] to a [`FileOpenMode`]
@@ -2053,12 +1907,13 @@
 /// 
 /// * `old_path`: The old path to use
 /// * `new_path`: The new path to use
-</span><span class="kw">pub fn </span>rename_file(old_path: String, new_path: String) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+</span><span class="kw">pub fn </span>rename_file(old_path: <span class="kw-2">&amp;</span>str, new_path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
     <span class="kw">let </span>(old_fs, processed_old_path) = format_path(old_path)<span class="question-mark">?</span>;
     <span class="kw">let </span>(new_fs, processed_new_path) = format_path(new_path)<span class="question-mark">?</span>;
-    <span class="macro">result_return_unless!</span>(old_fs == new_fs, rc::ResultNotInSameFileSystem);
+    <span class="macro">result_return_unless!</span>(Arc::&lt;<span class="kw">dyn </span>FileSystem&gt;::ptr_eq(<span class="kw-2">&amp;</span>old_fs, <span class="kw-2">&amp;</span>new_fs), rc::ResultNotInSameFileSystem);
+    
 
-    old_fs.get().rename_file(processed_old_path, processed_new_path)
+    old_fs.rename_file(processed_old_path, processed_new_path)
 }
 
 <span class="doccomment">/// Renames a directory
@@ -2067,12 +1922,12 @@
 /// 
 /// * `old_path`: The old path to use
 /// * `new_path`: The new path to use
-</span><span class="kw">pub fn </span>rename_directory(old_path: String, new_path: String) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+</span><span class="kw">pub fn </span>rename_directory(old_path: <span class="kw-2">&amp;</span>str, new_path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
     <span class="kw">let </span>(old_fs, processed_old_path) = format_path(old_path)<span class="question-mark">?</span>;
     <span class="kw">let </span>(new_fs, processed_new_path) = format_path(new_path)<span class="question-mark">?</span>;
-    <span class="macro">result_return_unless!</span>(old_fs == new_fs, rc::ResultNotInSameFileSystem);
+    <span class="macro">result_return_unless!</span>(Arc::&lt;<span class="kw">dyn </span>FileSystem&gt;::ptr_eq(<span class="kw-2">&amp;</span>old_fs, <span class="kw-2">&amp;</span>new_fs), rc::ResultNotInSameFileSystem);
 
-    old_fs.get().rename_directory(processed_old_path, processed_new_path)
+    old_fs.rename_directory(processed_old_path, processed_new_path)
 }
 
 <span class="doccomment">/// Renames a file/directory
@@ -2085,15 +1940,14 @@
 /// 
 /// * `old_path`: The old path to use
 /// * `new_path`: The new path to use
-</span><span class="kw">pub fn </span>rename(old_path: String, new_path: String) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+</span><span class="kw">pub fn </span>rename(old_path: <span class="kw-2">&amp;</span>str, new_path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
     <span class="kw">let </span>(old_fs, processed_old_path) = format_path(old_path)<span class="question-mark">?</span>;
     <span class="kw">let </span>(new_fs, processed_new_path) = format_path(new_path)<span class="question-mark">?</span>;
-    <span class="macro">result_return_unless!</span>(old_fs == new_fs, rc::ResultNotInSameFileSystem);
+    <span class="macro">result_return_unless!</span>(Arc::&lt;<span class="kw">dyn </span>FileSystem&gt;::ptr_eq(<span class="kw-2">&amp;</span>old_fs, <span class="kw-2">&amp;</span>new_fs), rc::ResultNotInSameFileSystem);
 
-    <span class="kw">let </span>entry_type = old_fs.get().get_entry_type(processed_old_path.clone())<span class="question-mark">?</span>;
-    <span class="kw">match </span>entry_type {
-        DirectoryEntryType::Directory =&gt; old_fs.get().rename_directory(processed_old_path, processed_new_path),
-        DirectoryEntryType::File =&gt; old_fs.get().rename_file(processed_old_path, processed_new_path)
+    <span class="kw">match </span>old_fs.get_entry_type(processed_old_path)<span class="question-mark">? </span>{
+        DirectoryEntryType::Directory =&gt; old_fs.rename_directory(processed_old_path, processed_new_path),
+        DirectoryEntryType::File =&gt; old_fs.rename_file(processed_old_path, processed_new_path)
     }
 }
 
@@ -2103,17 +1957,17 @@
 /// 
 /// * `path`: The path to use
 /// * `option`: The open option
-</span><span class="kw">pub fn </span>open_file(path: String, option: FileOpenOption) -&gt; <span class="prelude-ty">Result</span>&lt;FileAccessor&gt; {
+</span><span class="kw">pub fn </span>open_file(path: <span class="kw-2">&amp;</span>str, option: FileOpenOption) -&gt; <span class="prelude-ty">Result</span>&lt;FileAccessor&gt; {
     <span class="kw">let </span>(fs, processed_path) = format_path(path)<span class="question-mark">?</span>;
 
     <span class="kw">let </span>mode = convert_file_open_option_to_mode(option);
-    <span class="kw">let </span>file = <span class="kw">match </span>fs.get().open_file(processed_path.clone(), mode) {
+    <span class="kw">let </span><span class="kw-2">mut </span>file = <span class="kw">match </span>fs.open_file(processed_path, mode) {
         <span class="prelude-val">Ok</span>(file) =&gt; file,
         <span class="prelude-val">Err</span>(rc) =&gt; {
-            <span class="kw">if </span>fsp::rc::ResultPathNotFound::matches(rc) &amp;&amp; option.contains(FileOpenOption::Create()) {
+            <span class="kw">if </span>fsp::fsp_sf::rc::ResultPathNotFound::matches(rc) &amp;&amp; option.contains(FileOpenOption::Create()) {
                 <span class="comment">// Create the file if it doesn't exist and we were told to do so
-                </span>fs.get().create_file(processed_path.clone(), FileAttribute::None(), <span class="number">0</span>)<span class="question-mark">?</span>;
-                fs.get().open_file(processed_path, mode)<span class="question-mark">?
+                </span>fs.create_file(processed_path, FileAttribute::None(), <span class="number">0</span>)<span class="question-mark">?</span>;
+                fs.open_file(processed_path, mode)<span class="question-mark">?
             </span>}
             <span class="kw">else </span>{
                 <span class="kw">return </span><span class="prelude-val">Err</span>(rc);
@@ -2122,12 +1976,13 @@
     };
 
     <span class="kw">let </span>offset : usize = <span class="kw">match </span>option.contains(FileOpenOption::Append()) {
-        <span class="bool-val">true </span>=&gt; file.get().get_size().unwrap_or(<span class="number">0</span>),
+        <span class="bool-val">true </span>=&gt; file.get_size().unwrap_or(<span class="number">0</span>),
         <span class="bool-val">false </span>=&gt; <span class="number">0
     </span>};
     
-    <span class="kw">let </span><span class="kw-2">mut </span>file_acc = FileAccessor::new(file);
-    file_acc.seek(offset, Whence::Start)<span class="question-mark">?</span>;
+    <span class="comment">// convert the Boxed file to a FileAccessor
+    </span><span class="kw">let </span><span class="kw-2">mut </span>file_acc: FileAccessor = file.into();
+    file_acc.seek(SeekFrom::Start(offset))<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(file_acc)
 }
 
@@ -2137,11 +1992,12 @@
 /// 
 /// * `path`: The path to use
 /// * `mode`: The open mode
-</span><span class="kw">pub fn </span>open_directory(path: String, mode: DirectoryOpenMode) -&gt; <span class="prelude-ty">Result</span>&lt;DirectoryAccessor&gt; {
+</span><span class="kw">pub fn </span>open_directory(path: <span class="kw-2">&amp;</span>str, mode: DirectoryOpenMode) -&gt; <span class="prelude-ty">Result</span>&lt;DirectoryAccessor&gt; {
     <span class="kw">let </span>(fs, processed_path) = format_path(path)<span class="question-mark">?</span>;
 
-    <span class="kw">let </span>dir = fs.get().open_directory(processed_path, mode)<span class="question-mark">?</span>;
-    <span class="prelude-val">Ok</span>(DirectoryAccessor::new(dir))
+    <span class="kw">let </span>dir = fs.open_directory(processed_path, mode)<span class="question-mark">?</span>;
+    <span class="kw">let </span>dir: Arc&lt;<span class="kw">dyn </span>Directory&gt; = dir.into();
+    <span class="prelude-val">Ok</span>(dir.into())
 }
 
 <span class="doccomment">/// Commits on a filesystem
@@ -2151,10 +2007,9 @@
 /// # Argument
 /// 
 /// * `path`: The path to use
-</span><span class="kw">pub fn </span>commit(path: String) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    <span class="kw">let </span>unpacked_path = unpack_path(path)<span class="question-mark">?</span>;
-    <span class="kw">let </span>fs = find_device_by_name(unpacked_path.first().unwrap())<span class="question-mark">?</span>;
-    fs.get().commit()
+</span><span class="kw">pub fn </span>commit(path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">let </span>(fs, <span class="kw">_</span>) = format_path(path)<span class="question-mark">?</span>;
+    fs.commit()
 }
 
 <span class="doccomment">/// Gets the free space size at a given path
@@ -2162,10 +2017,10 @@
 /// # Argument
 /// 
 /// * `path`: The path to use
-</span><span class="kw">pub fn </span>get_free_space_size(path: String) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
+</span><span class="kw">pub fn </span>get_free_space_size(path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
     <span class="kw">let </span>(fs, processed_path) = format_path(path)<span class="question-mark">?</span>;
 
-    fs.get().get_free_space_size(processed_path)
+    fs.get_free_space_size(processed_path)
 }
 
 <span class="doccomment">/// Gets the total space size at a given path
@@ -2173,10 +2028,10 @@
 /// # Argument
 /// 
 /// * `path`: The path to use
-</span><span class="kw">pub fn </span>get_total_space_size(path: String) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
+</span><span class="kw">pub fn </span>get_total_space_size(path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
     <span class="kw">let </span>(fs, processed_path) = format_path(path)<span class="question-mark">?</span>;
 
-    fs.get().get_total_space_size(processed_path)
+    fs.get_total_space_size(processed_path)
 }
 
 <span class="doccomment">/// Gets the [`FileTimeStampRaw`] of a file
@@ -2184,10 +2039,10 @@
 /// # Arguments
 /// 
 /// * `path`: The path to use
-</span><span class="kw">pub fn </span>get_file_time_stamp_raw(path: String) -&gt; <span class="prelude-ty">Result</span>&lt;FileTimeStampRaw&gt; {
+</span><span class="kw">pub fn </span>get_file_time_stamp_raw(path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;FileTimeStampRaw&gt; {
     <span class="kw">let </span>(fs, processed_path) = format_path(path)<span class="question-mark">?</span>;
 
-    fs.get().get_file_time_stamp_raw(processed_path)
+    fs.get_file_time_stamp_raw(processed_path)
 }
 
 <span class="doccomment">/// Queries on a path
@@ -2196,31 +2051,28 @@
 /// 
 /// * `query_id`: The [`QueryId`]
 /// * `in_buf`: Input data
-/// * `in_buf_size`: Input data size
 /// * `out_buf`: Output data
-/// * `out_buf_size`: Output data size
-</span><span class="kw">pub fn </span>query_entry(path: String, query_id: QueryId, in_buf: <span class="kw-2">*const </span>u8, in_buf_size: usize, out_buf: <span class="kw-2">*mut </span>u8, out_buf_size: usize) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+</span><span class="kw">pub fn </span>query_entry(path: <span class="kw-2">&amp;</span>str, query_id: QueryId, in_buf: <span class="kw-2">&amp;</span>[u8], out_buf: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
     <span class="kw">let </span>(fs, processed_path) = format_path(path)<span class="question-mark">?</span>;
 
-    fs.get().query_entry(processed_path, query_id, in_buf, in_buf_size, out_buf, out_buf_size)
+    fs.query_entry(processed_path, query_id, in_buf, out_buf)
 }
 
-<span class="doccomment">/// Sets the "concatenation file" attribute on a file
+<span class="doccomment">/// Sets the "concatenation file" attribute on a file.
 /// 
-/// This essentially is a special case of [`query_entry`] to set an existing file as a "concatenation file"
+/// This essentially is a special case of [`query_entry`] to set an existing file as a "concatenation file".
 /// 
-/// # Arguments
+/// # Arguments:
 /// 
 /// * `path`: The path to use
 </span><span class="attr">#[inline]
-</span><span class="kw">pub fn </span>set_concatenation_file_attribute(path: String) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    query_entry(path, QueryId::SetConcatenationFileAttribute, ptr::null(), <span class="number">0</span>, ptr::null_mut(), <span class="number">0</span>)
+</span><span class="kw">pub fn </span>set_concatenation_file_attribute(path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    query_entry(path, QueryId::SetConcatenationFileAttribute, <span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;mut </span>[])
 }
 
-<span class="kw">pub mod </span>sf;
+<span class="comment">//pub mod subdir;
 
-<span class="kw">pub mod </span>subdir;
 
-<span class="kw">pub mod </span>pfs0;
+//pub mod pfs0;
 
-<span class="kw">pub mod </span>nca;</code></pre></div></section></main></body></html>
+//pub mod nca;</span></code></pre></div></section></main></body></html>

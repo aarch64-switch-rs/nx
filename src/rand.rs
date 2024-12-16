@@ -28,7 +28,7 @@ use crate::service;
 use crate::service::spl::{RandomInterface, IRandomInterface};
 use crate::mem;
 
-/// Represents a pseudo-RNG using [`spl`]'s [`RandomInterface`][`spl::RandomInterface`] interface
+/// Represents a pseudo-RNG using [`spl`][`crate::service::spl`]'s [`RandomInterface`] interface
 #[derive(Clone)]
 pub struct SplCsrngGenerator {
     csrng: mem::Shared<RandomInterface>

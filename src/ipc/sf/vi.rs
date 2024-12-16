@@ -16,6 +16,16 @@ define_bit_enum! {
     }
 }
 
+/// Tells the display service how to scale spawned layers.
+#[derive(Request, Response,  Copy, Clone, Debug, Default)]
+#[repr(u64)]
+pub enum ScalingMode {
+    None = 0,
+    #[default]
+    FitToLayer = 2,
+    PreserveAspectRatio = 4
+}
+
 pub type DisplayId = u64;
 
 pub type LayerId = u64;
@@ -72,6 +82,7 @@ ipc_sf_define_interface_trait! {
         open_display [1010, version::VersionInterval::all(), mut]: (name: DisplayName) =>  (id: DisplayId) (id: DisplayId);
         close_display [1020, version::VersionInterval::all(), mut]: (id: DisplayId) =>  () ();
         open_layer [2020, version::VersionInterval::all(), mut]: (name: DisplayName, id: LayerId, aruid: AppletResourceUserId, out_native_window: sf::OutMapAliasBuffer<u8>) =>  (native_window_size: usize) (native_window_size: usize);
+        set_scaling_mode [2101, version::VersionInterval::all(), mut]: (scaling_mode: ScalingMode, layer_id: LayerId)  => ()  ();
         create_stray_layer [2030, version::VersionInterval::all(), mut]: (flags: LayerFlags, display_id: DisplayId, out_native_window: sf::OutMapAliasBuffer<u8>) =>  (id: LayerId, native_window_size: usize) (id: LayerId, native_window_size: usize);
         destroy_stray_layer [2031, version::VersionInterval::all(), mut]: (id: LayerId) =>  () ();
         get_display_vsync_event [5202, version::VersionInterval::all()]: (id: DisplayId) =>  (event_handle: sf::CopyHandle) (event_handle: sf::CopyHandle);

@@ -1,6 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/util.rs`."><title>util.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0-nightly (c9f8f3438 2024-03-27)" data-channel="nightly" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
-            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../nx/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/util.rs`."><title>util.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-42caa33d.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.85.0-nightly (a47555110 2024-11-22)" data-channel="nightly" data-search-js="search-92e6798f.js" data-settings-js="settings-0f613d39.js" ><script src="../../static.files/storage-59e33391.js"></script><script defer src="../../static.files/src-script-56102188.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">nx/</div>util.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -465,7 +464,97 @@
 <a href="#463" id="463">463</a>
 <a href="#464" id="464">464</a>
 <a href="#465" id="465">465</a>
-</pre></div><pre class="rust"><code><span class="doccomment">//! Common library utilities
+<a href="#466" id="466">466</a>
+<a href="#467" id="467">467</a>
+<a href="#468" id="468">468</a>
+<a href="#469" id="469">469</a>
+<a href="#470" id="470">470</a>
+<a href="#471" id="471">471</a>
+<a href="#472" id="472">472</a>
+<a href="#473" id="473">473</a>
+<a href="#474" id="474">474</a>
+<a href="#475" id="475">475</a>
+<a href="#476" id="476">476</a>
+<a href="#477" id="477">477</a>
+<a href="#478" id="478">478</a>
+<a href="#479" id="479">479</a>
+<a href="#480" id="480">480</a>
+<a href="#481" id="481">481</a>
+<a href="#482" id="482">482</a>
+<a href="#483" id="483">483</a>
+<a href="#484" id="484">484</a>
+<a href="#485" id="485">485</a>
+<a href="#486" id="486">486</a>
+<a href="#487" id="487">487</a>
+<a href="#488" id="488">488</a>
+<a href="#489" id="489">489</a>
+<a href="#490" id="490">490</a>
+<a href="#491" id="491">491</a>
+<a href="#492" id="492">492</a>
+<a href="#493" id="493">493</a>
+<a href="#494" id="494">494</a>
+<a href="#495" id="495">495</a>
+<a href="#496" id="496">496</a>
+<a href="#497" id="497">497</a>
+<a href="#498" id="498">498</a>
+<a href="#499" id="499">499</a>
+<a href="#500" id="500">500</a>
+<a href="#501" id="501">501</a>
+<a href="#502" id="502">502</a>
+<a href="#503" id="503">503</a>
+<a href="#504" id="504">504</a>
+<a href="#505" id="505">505</a>
+<a href="#506" id="506">506</a>
+<a href="#507" id="507">507</a>
+<a href="#508" id="508">508</a>
+<a href="#509" id="509">509</a>
+<a href="#510" id="510">510</a>
+<a href="#511" id="511">511</a>
+<a href="#512" id="512">512</a>
+<a href="#513" id="513">513</a>
+<a href="#514" id="514">514</a>
+<a href="#515" id="515">515</a>
+<a href="#516" id="516">516</a>
+<a href="#517" id="517">517</a>
+<a href="#518" id="518">518</a>
+<a href="#519" id="519">519</a>
+<a href="#520" id="520">520</a>
+<a href="#521" id="521">521</a>
+<a href="#522" id="522">522</a>
+<a href="#523" id="523">523</a>
+<a href="#524" id="524">524</a>
+<a href="#525" id="525">525</a>
+<a href="#526" id="526">526</a>
+<a href="#527" id="527">527</a>
+<a href="#528" id="528">528</a>
+<a href="#529" id="529">529</a>
+<a href="#530" id="530">530</a>
+<a href="#531" id="531">531</a>
+<a href="#532" id="532">532</a>
+<a href="#533" id="533">533</a>
+<a href="#534" id="534">534</a>
+<a href="#535" id="535">535</a>
+<a href="#536" id="536">536</a>
+<a href="#537" id="537">537</a>
+<a href="#538" id="538">538</a>
+<a href="#539" id="539">539</a>
+<a href="#540" id="540">540</a>
+<a href="#541" id="541">541</a>
+<a href="#542" id="542">542</a>
+<a href="#543" id="543">543</a>
+<a href="#544" id="544">544</a>
+<a href="#545" id="545">545</a>
+<a href="#546" id="546">546</a>
+<a href="#547" id="547">547</a>
+<a href="#548" id="548">548</a>
+<a href="#549" id="549">549</a>
+<a href="#550" id="550">550</a>
+<a href="#551" id="551">551</a>
+<a href="#552" id="552">552</a>
+<a href="#553" id="553">553</a>
+<a href="#554" id="554">554</a>
+<a href="#555" id="555">555</a>
+<a href="#556" id="556">556</a></pre></div><pre class="rust"><code><span class="doccomment">//! Common library utilities
 
 </span><span class="kw">use </span><span class="kw">crate</span>::result::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::thread;
@@ -479,10 +568,27 @@
 <span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::panic;
 
+<span class="kw">use </span>nx_derive::{Request, Response};
+
 <span class="kw">pub mod </span>rc;
 
+<span class="attr">#[doc(hidden)]
+</span><span class="kw">pub trait </span>AsInner&lt;Inner: <span class="question-mark">?</span>Sized&gt; {
+    <span class="kw">fn </span>as_inner(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Inner;
+}
+
+<span class="attr">#[doc(hidden)]
+#[allow(dead_code)] </span><span class="comment">// not used on all platforms
+</span><span class="kw">pub trait </span>AsInnerMut&lt;Inner: <span class="question-mark">?</span>Sized&gt; {
+    <span class="kw">fn </span>as_inner_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>Inner;
+}
+
+<span class="attr">#[doc(hidden)]
+</span><span class="kw">pub trait </span>IntoInner&lt;Inner&gt; {
+    <span class="kw">fn </span>into_inner(<span class="self">self</span>) -&gt; Inner;
+}
 <span class="doccomment">/// Represents a 16-byte UUID
-</span><span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+</span><span class="attr">#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>Uuid {
     <span class="doccomment">/// The UUID byte array
@@ -526,9 +632,50 @@
     }
 }
 
-<span class="kw">const fn </span>const_usize_min(a: usize, b: usize) -&gt; usize {
+<span class="doccomment">/// Represents a pair of a pointer and a size
+</span><span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[repr(C)]
+</span><span class="kw">pub struct </span>ConstPointerAndSize {
+    <span class="doccomment">/// The pointer address
+    </span><span class="kw">pub </span>address: <span class="kw-2">*const </span>u8,
+    <span class="doccomment">/// The pointer size
+    </span><span class="kw">pub </span>size: usize
+}
+
+<span class="kw">impl </span>ConstPointerAndSize {
+    <span class="doccomment">/// Creates an empty, thus invalid [`ConstPointerAndSize`] (with a null pointer and size `0`)
+    </span><span class="attr">#[inline]
+    </span><span class="kw">pub const fn </span>empty() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ address: ptr::null(), size: <span class="number">0 </span>}
+    }
+
+    <span class="doccomment">/// Creates a [`ConstPointerAndSize`]
+    /// 
+    /// # Arguments
+    /// 
+    /// * `address`: The address
+    /// * `size`: The size
+    </span><span class="attr">#[inline]
+    </span><span class="kw">pub const fn </span>new(address: <span class="kw-2">*const </span>u8, size: usize) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ address, size }
+    }
+
+    <span class="doccomment">/// Checks whether the [`PointerAndSize`] is valid
+    /// 
+    /// Essentially, this checks that the pointer isn't null and that the size is non-zero
+    </span><span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>is_valid(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        !<span class="self">self</span>.address.is_null() &amp;&amp; (<span class="self">self</span>.size != <span class="number">0</span>)
+    }
+}
+
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const fn </span>const_usize_min(a: usize, b: usize) -&gt; usize {
     <span class="comment">// TODO: const min traits
     </span><span class="kw">if </span>a &gt; b { b } <span class="kw">else </span>{ a }
+}
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const fn </span>const_usize_max(a: usize, b: usize) -&gt; usize {
+    <span class="comment">// TODO: const min traits
+    </span><span class="kw">if </span>a &lt; b { b } <span class="kw">else </span>{ a }
 }
 
 <span class="doccomment">/// Represents a C-like string of a given size (mostly like a C `char[S]` array)
@@ -536,19 +683,57 @@
 /// Note that `char` is 4-bytes in Rust for encoding reasons, thus we must stick to `u8` arrays
 </span><span class="attr">#[derive(Copy, Clone)]
 #[repr(C)]
-</span><span class="kw">pub struct </span>CString&lt;<span class="kw">const </span>S: usize&gt; {
+</span><span class="kw">pub struct </span>ArrayString&lt;<span class="kw">const </span>S: usize&gt; {
     <span class="doccomment">/// The actual array (like `char[S]` in C)
-    </span><span class="kw">pub </span>c_str: [u8; S]
+    </span>c_str: [u8; S]
 }
 
-<span class="kw">impl</span>&lt;<span class="kw">const </span>S: usize&gt; fmt::Debug <span class="kw">for </span>CString&lt;S&gt; {
+<span class="kw">impl</span>&lt;<span class="kw">const </span>S: usize&gt; <span class="kw">crate</span>::ipc::server::RequestCommandParameter&lt;ArrayString&lt;S&gt;&gt; <span class="kw">for </span>ArrayString&lt;S&gt; {
+    <span class="kw">fn </span>after_request_read(ctx: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::ipc::server::ServerContext) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="prelude-val">Ok</span>(ctx.raw_data_walker.advance_get())
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="kw">const </span>S: usize&gt; <span class="kw">crate</span>::ipc::server::ResponseCommandParameter <span class="kw">for </span>ArrayString&lt;S&gt; {
+    <span class="kw">type </span>CarryState = ();
+        <span class="kw">fn </span>before_response_write(_raw: <span class="kw-2">&amp;</span><span class="self">Self</span>, ctx: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::ipc::server::ServerContext) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        ctx.raw_data_walker.advance::&lt;<span class="self">Self</span>&gt;();
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">fn </span>after_response_write(raw: <span class="self">Self</span>, _carry_state: (), ctx: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::ipc::server::ServerContext) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        ctx.raw_data_walker.advance_set(raw);
+        <span class="prelude-val">Ok</span>(())
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="kw">const </span>S: usize&gt; <span class="kw">crate</span>::ipc::client::RequestCommandParameter <span class="kw">for </span>ArrayString&lt;S&gt; {
+    <span class="kw">fn </span>before_request_write(_raw: <span class="kw-2">&amp;</span><span class="self">Self</span>, walker: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::ipc::DataWalker, _ctx: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::ipc::CommandContext) -&gt; <span class="kw">crate</span>::result::Result&lt;()&gt; {
+        walker.advance::&lt;<span class="self">Self</span>&gt;();
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">fn </span>before_send_sync_request(raw: <span class="kw-2">&amp;</span><span class="self">Self</span>, walker: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::ipc::DataWalker, _ctx: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::ipc::CommandContext) -&gt; <span class="kw">crate</span>::result::Result&lt;()&gt; {
+        walker.advance_set(<span class="kw-2">*</span>raw);
+        <span class="prelude-val">Ok</span>(())
+    }
+}
+
+
+<span class="kw">impl</span>&lt;<span class="kw">const </span>S: usize&gt; <span class="kw">crate</span>::ipc::client::ResponseCommandParameter&lt;ArrayString&lt;S&gt;&gt; <span class="kw">for </span>ArrayString&lt;S&gt; {
+    <span class="kw">fn </span>after_response_read(walker: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::ipc::DataWalker, _ctx: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::ipc::CommandContext) -&gt; <span class="kw">crate</span>::result::Result&lt;<span class="self">Self</span>&gt; {
+        <span class="prelude-val">Ok</span>(walker.advance_get())
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="kw">const </span>S: usize&gt; fmt::Debug <span class="kw">for </span>ArrayString&lt;S&gt; {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="kw">let </span>str_data = <span class="self">self</span>.get_str().unwrap_or(<span class="string">"&lt;invalid-str&gt;"</span>);
         <span class="macro">write!</span>(f, <span class="string">"{}"</span>, str_data)
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="kw">const </span>S: usize&gt; PartialEq <span class="kw">for </span>CString&lt;S&gt; {
+<span class="kw">impl</span>&lt;<span class="kw">const </span>S: usize&gt; PartialEq <span class="kw">for </span>ArrayString&lt;S&gt; {
     <span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
         <span class="kw">if let </span><span class="prelude-val">Ok</span>(self_str) = <span class="self">self</span>.get_str() {
             <span class="kw">if let </span><span class="prelude-val">Ok</span>(other_str) = other.get_str() {
@@ -559,21 +744,21 @@
     </span>}
 }
 
-<span class="kw">impl</span>&lt;<span class="kw">const </span>S: usize&gt; Eq <span class="kw">for </span>CString&lt;S&gt; {}
+<span class="kw">impl</span>&lt;<span class="kw">const </span>S: usize&gt; Eq <span class="kw">for </span>ArrayString&lt;S&gt; {}
 
-<span class="kw">impl</span>&lt;<span class="kw">const </span>S: usize&gt; Default <span class="kw">for </span>CString&lt;S&gt; {
+<span class="kw">impl</span>&lt;<span class="kw">const </span>S: usize&gt; Default <span class="kw">for </span>ArrayString&lt;S&gt; {
     <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::new()
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="kw">const </span>S: usize&gt; CString&lt;S&gt; {
-    <span class="doccomment">/// Creates an empty [`CString`]
+<span class="kw">impl</span>&lt;<span class="kw">const </span>S: usize&gt; ArrayString&lt;S&gt; {
+    <span class="doccomment">/// Creates an empty [`ArrayString`]
     </span><span class="kw">pub const fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{ c_str: [<span class="number">0</span>; S] }
     }
 
-    <span class="doccomment">/// Creates a [`CString`] from a given byte array
+    <span class="doccomment">/// Creates a [`ArrayString`] from a given byte array
     /// 
     /// # Arguments
     /// 
@@ -582,22 +767,218 @@
         <span class="self">Self </span>{ c_str: raw_bytes }
     }
 
-    <span class="doccomment">/// Creates a [`CString`] from a given `&amp;str`
+    <span class="doccomment">/// Creates a [`ArrayString`] from a given `&amp;str`
     /// 
-    /// This creates an empty [`CString`] and calls [`CString::set_str`] on it
+    /// This creates an empty [`ArrayString`] and initializes it with the provided string.
+    /// This will copy at max `S - 1` bytes/chars in order to ensure that the string is NUL-terminated.
+    /// This will truncate the string at the first null, so we can unconditionally return and keep it const.
     /// 
     /// # Arguments
     /// 
     /// * `string`: The `&amp;str` to use
-    </span><span class="kw">pub const fn </span>from_str(string: <span class="kw-2">&amp;</span>str) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub const fn </span>from_str_truncate_null(string: <span class="kw-2">&amp;</span>str)  -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>out = <span class="self">Self</span>::new();
+        <span class="kw">let </span>string = string.as_bytes();
+        <span class="kw">let </span>len = const_usize_min(S-<span class="number">1</span>, string.len());
+        <span class="kw">let </span><span class="kw-2">mut </span>offset = <span class="number">0</span>;
+        <span class="comment">// truncate at nuls since we're writing a cstr
+        </span><span class="kw">while </span>offset &lt; len &amp;&amp; string[offset] != <span class="number">0 </span>{
+            out.c_str[offset] = string[offset];
+            offset += <span class="number">1</span>;
+        }
+
+        out
+    }
+
+    <span class="doccomment">/// Creates a [`ArrayString`] from a given `&amp;str`
+    /// 
+    /// This creates an empty [`ArrayString`] and calls [`ArrayString::set_str`] on it
+    /// 
+    /// # Arguments
+    /// 
+    /// * `string`: The `&amp;str` to use
+    </span><span class="kw">pub fn </span>from_str(string: <span class="kw-2">&amp;</span>str) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>cstr = <span class="self">Self</span>::new();
-        cstr.set_str(string);
+        <span class="kw">let _ </span>= cstr.set_str(string);
         cstr
     }
 
-    <span class="doccomment">/// Creates a [`CString`] from a given `String`
+    <span class="doccomment">/// Creates a [`ArrayString`] from a given `String`
     /// 
-    /// This creates an empty [`CString`] and calls [`CString::set_string`] on it
+    /// This creates an empty [`ArrayString`] and calls [`ArrayString::set_string`] on it
+    /// 
+    /// # Arguments
+    /// 
+    /// * `string`: The `String` to use
+    </span><span class="kw">pub fn </span>from_string(string: <span class="kw-2">&amp;</span>String) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>cstr = <span class="self">Self</span>::new();
+        <span class="kw">let _ </span>= cstr.set_string(string);
+        cstr
+    }
+
+    <span class="doccomment">/// Returns the length of the [`ArrayString`]
+    /// 
+    /// This is similar to C's `strlen()` function, thus taking into account the string's NUL-termination
+    </span><span class="kw">pub fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.c_str.iter().position(|byte| <span class="kw-2">*</span>byte == <span class="number">0</span>).expect(<span class="string">"We should always have at least one null as we always make sure to keep the last index null"</span>)
+    }
+
+    <span class="doccomment">/// Returns whether this [`ArrayString`] is empty
+    </span><span class="attr">#[inline(always)]
+    </span><span class="kw">pub fn </span>is_empty(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.len() == <span class="number">0
+    </span>}
+
+    <span class="doccomment">/// Sets a `&amp;str` as the contents of this [`ArrayString`]
+    /// 
+    /// This will copy at max `S - 1` bytes/chars in order to ensure that the string is NUL-terminated
+    /// Returns and error when the string has internal nulls. Truncates the written strings over `S-1` bytes in length.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `string`: The `&amp;str` to set
+    </span><span class="kw">pub fn </span>set_str(<span class="kw-2">&amp;mut </span><span class="self">self</span>, string: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="comment">// we're writing a c-string, so we can't have internal nuls
+        </span><span class="macro">result_return_if!</span>(string.find(<span class="string">'\0'</span>).is_some(), rc::ResultInvalidUtf8Conversion);
+
+        <span class="self">self</span>.c_str = [<span class="number">0</span>;S];
+        <span class="kw">let </span>string = string.as_bytes();
+        <span class="kw">let </span>len = const_usize_min(S-<span class="number">1</span>, string.len());
+        <span class="kw">let </span><span class="kw-2">mut </span>offset = <span class="number">0</span>;
+        <span class="kw">while </span>offset &lt; len {
+            <span class="self">self</span>.c_str[offset] = string[offset];
+            offset += <span class="number">1</span>;
+        }
+
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="doccomment">/// Sets a string as the contents of this [`ArrayString`]
+    /// 
+    /// This will copy at max `S - 1` bytes/chars in order to ensure that the string is NUL-terminated
+    /// 
+    /// # Arguments
+    /// 
+    /// * `string`: The content to set
+    </span><span class="kw">pub fn </span>set_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>, string: <span class="kw-2">&amp;</span>String) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="self">self</span>.set_str(string.as_str())
+    }
+
+    <span class="doccomment">/// Gets a `&amp;str` corresponding to this [`ArrayString`]
+    </span><span class="kw">pub fn </span>get_str(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>str&gt; {
+        core::ffi::CStr::from_bytes_until_nul(<span class="kw-2">&amp;</span><span class="self">self</span>.c_str).expect(<span class="string">"We should never error as we always keep a null at the last index"</span>).to_str().map_err(|<span class="kw">_</span>| rc::ResultInvalidUtf8Conversion::make())
+    }
+
+    <span class="doccomment">/// Gets a `String` corresponding to this [`ArrayString`]
+    </span><span class="kw">pub fn </span>get_string(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
+        <span class="self">self</span>.get_str().map(Into::into)
+    }
+
+    <span class="doccomment">/// Borrows a view into the whole array
+    </span><span class="kw">pub fn </span>as_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8;S] {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.c_str
+    }
+
+    <span class="doccomment">/// Borrows only the initialized bytes (including the null terminator)
+    </span><span class="kw">pub fn </span>as_bytes(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.c_str[..(<span class="self">self</span>.len()+<span class="number">1</span>)]
+    }
+}
+
+<span class="kw">impl</span>&lt;S: AsRef&lt;str&gt;, <span class="kw">const </span>LEN: usize&gt; From&lt;S&gt; <span class="kw">for </span>ArrayString&lt;LEN&gt; {
+    <span class="kw">fn </span>from(value: S) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>reffed_val: <span class="kw-2">&amp;</span>str = value.as_ref();
+        <span class="self">Self</span>::from_str(reffed_val)
+    }
+}
+
+<span class="doccomment">/// Represents a C-like 16-bit string of a given size (mostly like a C `char16_t[S]` array)
+/// 
+/// Note that `char` is 4-bytes in Rust for encoding reasons, thus we must stick to `u16` arrays
+</span><span class="attr">#[derive(Copy, Clone)]
+#[repr(C)]
+</span><span class="kw">pub struct </span>ArrayWideString&lt;<span class="kw">const </span>S: usize&gt; {
+    <span class="doccomment">/// The actual array (like `char16_t[S]` in C)
+    </span>c_wstr: [u16; S]
+}
+
+<span class="kw">impl</span>&lt;<span class="kw">const </span>S: usize&gt; <span class="kw">crate</span>::ipc::server::RequestCommandParameter&lt;ArrayWideString&lt;S&gt;&gt; <span class="kw">for </span>ArrayWideString&lt;S&gt; {
+    <span class="kw">fn </span>after_request_read(ctx: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::ipc::server::ServerContext) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="prelude-val">Ok</span>(ctx.raw_data_walker.advance_get())
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="kw">const </span>S: usize&gt; <span class="kw">crate</span>::ipc::server::ResponseCommandParameter <span class="kw">for </span>ArrayWideString&lt;S&gt; {
+    <span class="kw">type </span>CarryState = ();
+        <span class="kw">fn </span>before_response_write(_raw: <span class="kw-2">&amp;</span><span class="self">Self</span>, ctx: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::ipc::server::ServerContext) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        ctx.raw_data_walker.advance::&lt;<span class="self">Self</span>&gt;();
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">fn </span>after_response_write(raw: <span class="self">Self</span>, _carry_state: (), ctx: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::ipc::server::ServerContext) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        ctx.raw_data_walker.advance_set(raw);
+        <span class="prelude-val">Ok</span>(())
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="kw">const </span>S: usize&gt; <span class="kw">crate</span>::ipc::client::RequestCommandParameter <span class="kw">for </span>ArrayWideString&lt;S&gt; {
+    <span class="kw">fn </span>before_request_write(_raw: <span class="kw-2">&amp;</span><span class="self">Self</span>, walker: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::ipc::DataWalker, _ctx: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::ipc::CommandContext) -&gt; <span class="kw">crate</span>::result::Result&lt;()&gt; {
+        walker.advance::&lt;<span class="self">Self</span>&gt;();
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">fn </span>before_send_sync_request(raw: <span class="kw-2">&amp;</span><span class="self">Self</span>, walker: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::ipc::DataWalker, _ctx: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::ipc::CommandContext) -&gt; <span class="kw">crate</span>::result::Result&lt;()&gt; {
+        walker.advance_set(<span class="kw-2">*</span>raw);
+        <span class="prelude-val">Ok</span>(())
+    }
+}
+
+
+<span class="kw">impl</span>&lt;<span class="kw">const </span>S: usize&gt; <span class="kw">crate</span>::ipc::client::ResponseCommandParameter&lt;ArrayWideString&lt;S&gt;&gt; <span class="kw">for </span>ArrayWideString&lt;S&gt; {
+    <span class="kw">fn </span>after_response_read(walker: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::ipc::DataWalker, _ctx: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::ipc::CommandContext) -&gt; <span class="kw">crate</span>::result::Result&lt;<span class="self">Self</span>&gt; {
+        <span class="prelude-val">Ok</span>(walker.advance_get())
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="kw">const </span>S: usize&gt; fmt::Debug <span class="kw">for </span>ArrayWideString&lt;S&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        <span class="kw">let </span>str_data = <span class="self">self</span>.get_string().unwrap_or(<span class="string">"&lt;invalid-str&gt;"</span>.to_string());
+        <span class="macro">write!</span>(f, <span class="string">"{}"</span>, str_data)
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="kw">const </span>S: usize&gt; PartialEq <span class="kw">for </span>ArrayWideString&lt;S&gt; {
+    <span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
+        <span class="self">self</span>.c_wstr.as_slice().eq(other.c_wstr.as_slice())
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="kw">const </span>S: usize&gt; Eq <span class="kw">for </span>ArrayWideString&lt;S&gt; {}
+
+<span class="kw">impl</span>&lt;<span class="kw">const </span>S: usize&gt; Default <span class="kw">for </span>ArrayWideString&lt;S&gt; {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::new()
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="kw">const </span>S: usize&gt; ArrayWideString&lt;S&gt; {
+    <span class="doccomment">/// Creates an empty [`ArrayWideString`]
+    </span><span class="kw">pub const fn </span>new() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{c_wstr: [<span class="number">0</span>; S] }
+    }
+
+    <span class="doccomment">/// Creates a [`ArrayWideString`] from a given byte array
+    /// 
+    /// # Arguments
+    /// 
+    /// * `raw_bytes`: Byte array to use
+    </span><span class="kw">pub const fn </span>from_raw(raw_bytes: [u16; S]) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{c_wstr: raw_bytes }
+    }
+
+    <span class="doccomment">/// Creates a [`ArrayWideString`] from a given `String`
+    /// 
+    /// This creates an empty [`ArrayWideString`] and calls [`ArrayWideString::set_string`] on it
     /// 
     /// # Arguments
     /// 
@@ -608,252 +989,93 @@
         cstr
     }
 
-    <span class="kw">const fn </span>copy_str_to(string: <span class="kw-2">&amp;</span>str, ptr: <span class="kw-2">*mut </span>u8, ptr_len: usize) {
-        <span class="kw">unsafe </span>{
-            ptr::write_bytes(ptr, <span class="number">0</span>, ptr_len);
-            <span class="kw">if </span>!string.is_empty() {
-                ptr::copy(string.as_ptr(), ptr, const_usize_min(string.len(), ptr_len - <span class="number">1</span>));
-            }
-        }
-    }
-    
-    <span class="kw">fn </span>copy_string_to(string: String, ptr: <span class="kw-2">*mut </span>u8, ptr_len: usize) {
-        <span class="kw">unsafe </span>{
-            ptr::write_bytes(ptr, <span class="number">0</span>, ptr_len);
-            <span class="kw">if </span>!string.is_empty() {
-                ptr::copy(string.as_ptr(), ptr, core::cmp::min(ptr_len - <span class="number">1</span>, string.len()));
-            }
-        }
-    }
-
-    <span class="kw">fn </span>read_str_from(ptr: <span class="kw-2">*const </span>u8, str_len: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str&gt; {
-        <span class="kw">if </span>str_len == <span class="number">0 </span>{
-            <span class="prelude-val">Ok</span>(<span class="string">""</span>)
-        }
-        <span class="kw">else </span>{
-            <span class="kw">unsafe </span>{
-                <span class="kw">match </span>core::str::from_utf8(core::slice::from_raw_parts(ptr, str_len)) {
-                    <span class="prelude-val">Ok</span>(name) =&gt; <span class="prelude-val">Ok</span>(name.trim_end_matches(<span class="string">'\0'</span>)),
-                    <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; rc::ResultInvalidUtf8Conversion::make_err()
-                }
-            }
-        }
-    }
-    
-    <span class="kw">fn </span>read_string_from(ptr: <span class="kw-2">*const </span>u8, str_len: usize) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
-        <span class="prelude-val">Ok</span>(String::from(<span class="self">Self</span>::read_str_from(ptr, str_len)<span class="question-mark">?</span>))
-    }
-
-    <span class="doccomment">/// Returns the length of the [`CString`]
+    <span class="doccomment">/// Returns the length of the [`ArrayWideString`]
     /// 
     /// This is similar to C's `strlen()` function, thus taking into account the string's NUL-termination
     </span><span class="kw">pub fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
-        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..S {
-            <span class="kw">if </span><span class="self">self</span>.c_str[i] == <span class="number">0 </span>{
-                <span class="kw">return </span>i;
-            }
-        }
-
-        S
+        <span class="self">self</span>.c_wstr.iter().position(|word| <span class="kw-2">*</span>word == <span class="number">0</span>).expect(<span class="string">"We will have at least one null as we always keep the last index null"</span>)
     }
 
-    <span class="doccomment">/// Sets a `&amp;str` as the contents of this [`CString`]
-    /// 
-    /// This will copy at max `S - 1` bytes/chars in order to ensure that the string is NUL-terminated
-    /// 
-    /// # Arguments
-    /// 
-    /// * `string`: The `&amp;str` to set
-    </span><span class="kw">pub const fn </span>set_str(<span class="kw-2">&amp;mut </span><span class="self">self</span>, string: <span class="kw-2">&amp;</span>str) {
-        <span class="self">Self</span>::copy_str_to(string, <span class="kw-2">&amp;mut </span><span class="self">self</span>.c_str <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_ as </span><span class="kw-2">*mut </span>u8, S)
-    }
-
-    <span class="doccomment">/// Sets a `String` as the contents of this [`CString`]
-    /// 
-    /// This will copy at max `S - 1` bytes/chars in order to ensure that the string is NUL-terminated
-    /// 
-    /// # Arguments
-    /// 
-    /// * `string`: The `String` to set
-    </span><span class="kw">pub fn </span>set_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>, string: String) {
-        <span class="self">Self</span>::copy_string_to(string, <span class="kw-2">&amp;mut </span><span class="self">self</span>.c_str <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_ as </span><span class="kw-2">*mut </span>u8, S)
-    }
-
-    <span class="doccomment">/// Gets a `&amp;str` corresponding to this [`CString`]
-    </span><span class="kw">pub fn </span>get_str(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str&gt; {
-        <span class="self">Self</span>::read_str_from(<span class="kw-2">&amp;</span><span class="self">self</span>.c_str <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_ as </span><span class="kw-2">*const </span>u8, <span class="self">self</span>.len())
-    }
-
-    <span class="doccomment">/// Gets a `String` corresponding to this [`CString`]
-    </span><span class="kw">pub fn </span>get_string(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
-        <span class="self">Self</span>::read_string_from(<span class="kw-2">&amp;</span><span class="self">self</span>.c_str <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_ as </span><span class="kw-2">*const </span>u8, <span class="self">self</span>.len())
-    }
-}
-
-<span class="doccomment">/// Represents a C-like 16-bit string of a given size (mostly like a C `char16_t[S]` array)
-/// 
-/// Note that `char` is 4-bytes in Rust for encoding reasons, thus we must stick to `u16` arrays
-</span><span class="attr">#[derive(Copy, Clone)]
-#[repr(C)]
-</span><span class="kw">pub struct </span>CString16&lt;<span class="kw">const </span>S: usize&gt; {
-    <span class="doccomment">/// The actual array (like `char16_t[S]` in C)
-    </span><span class="kw">pub </span>c_str: [u16; S]
-}
-
-<span class="kw">impl</span>&lt;<span class="kw">const </span>S: usize&gt; fmt::Debug <span class="kw">for </span>CString16&lt;S&gt; {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
-        <span class="kw">let </span>str_data = <span class="self">self</span>.get_string().unwrap_or(<span class="string">"&lt;invalid-str&gt;"</span>.to_string());
-        <span class="macro">write!</span>(f, <span class="string">"{}"</span>, str_data)
-    }
-}
-
-<span class="kw">impl</span>&lt;<span class="kw">const </span>S: usize&gt; PartialEq <span class="kw">for </span>CString16&lt;S&gt; {
-    <span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
-        <span class="kw">if let </span><span class="prelude-val">Ok</span>(self_str) = <span class="self">self</span>.get_string() {
-            <span class="kw">if let </span><span class="prelude-val">Ok</span>(other_str) = other.get_string() {
-                <span class="kw">return </span>self_str == other_str;
-            }
-        }
-        <span class="bool-val">false
+    <span class="doccomment">/// Returns if this [`ArrayWideString`] is empty
+    </span><span class="attr">#[inline(always)]
+    </span><span class="kw">pub fn </span>is_empty(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.len() == <span class="number">0
     </span>}
-}
 
-<span class="kw">impl</span>&lt;<span class="kw">const </span>S: usize&gt; Eq <span class="kw">for </span>CString16&lt;S&gt; {}
-
-<span class="kw">impl</span>&lt;<span class="kw">const </span>S: usize&gt; Default <span class="kw">for </span>CString16&lt;S&gt; {
-    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>::new()
-    }
-}
-
-<span class="kw">impl</span>&lt;<span class="kw">const </span>S: usize&gt; CString16&lt;S&gt; {
-    <span class="doccomment">/// Creates an empty [`CString16`]
-    </span><span class="kw">pub const fn </span>new() -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ c_str: [<span class="number">0</span>; S] }
-    }
-
-    <span class="doccomment">/// Creates a [`CString16`] from a given byte array
-    /// 
-    /// # Arguments
-    /// 
-    /// * `raw_bytes`: Byte array to use
-    </span><span class="kw">pub const fn </span>from_raw(raw_bytes: [u16; S]) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ c_str: raw_bytes }
-    }
-
-    <span class="doccomment">/// Creates a [`CString16`] from a given `&amp;str`
-    /// 
-    /// This creates an empty [`CString16`] and calls [`CString16::set_str`] on it
-    /// 
-    /// # Arguments
-    /// 
-    /// * `string`: The `&amp;str` to use
-    </span><span class="kw">pub fn </span>from_str(string: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>cstr = <span class="self">Self</span>::new();
-        cstr.set_str(string)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(cstr)
-    }
-
-    <span class="doccomment">/// Creates a [`CString16`] from a given `String`
-    /// 
-    /// This creates an empty [`CString16`] and calls [`CString16::set_string`] on it
-    /// 
-    /// # Arguments
-    /// 
-    /// * `string`: The `String` to use
-    </span><span class="kw">pub fn </span>from_string(string: String) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>cstr = <span class="self">Self</span>::new();
-        cstr.set_string(string)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(cstr)
-    }
-
-    <span class="kw">fn </span>copy_str_to(string: <span class="kw-2">&amp;</span>str, ptr: <span class="kw-2">*mut </span>u16, ptr_len: usize) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>encode_buf: [u16; <span class="number">2</span>] = [<span class="number">0</span>; <span class="number">2</span>];
-        <span class="kw">let </span><span class="kw-2">mut </span>i: isize = <span class="number">0</span>;
-        <span class="kw">unsafe </span>{
-            ptr::write_bytes(ptr, <span class="number">0</span>, ptr_len);
-            <span class="kw">for </span>ch <span class="kw">in </span>string.chars() {
-                <span class="kw">let </span>enc = ch.encode_utf16(<span class="kw-2">&amp;mut </span>encode_buf);
-                <span class="kw-2">*</span>ptr.offset(i) = enc[<span class="number">0</span>];
-
-                i += <span class="number">1</span>;
-                <span class="kw">if </span>i <span class="kw">as </span>usize &gt; (ptr_len - <span class="number">1</span>) {
-                    <span class="kw">break</span>;
-                }
-            }
-        }
-        <span class="prelude-val">Ok</span>(())
-    }
-    
-    <span class="kw">fn </span>read_string_from(ptr: <span class="kw-2">*const </span>u16, str_len: usize) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>string = String::new();
-        <span class="kw">if </span>str_len &gt; <span class="number">0 </span>{
-            <span class="kw">unsafe </span>{
-                <span class="kw">let </span>tmp_slice = core::slice::from_raw_parts(ptr, str_len);
-                <span class="kw">for </span>ch_v <span class="kw">in </span>core::char::decode_utf16(tmp_slice.iter().cloned()) {
-                    <span class="kw">if let </span><span class="prelude-val">Ok</span>(ch) = ch_v {
-                        string.push(ch);
-                    }
-                    <span class="kw">else </span>{
-                        <span class="kw">break</span>;
-                    }
-                }
-            }
-        }
-        <span class="prelude-val">Ok</span>(string)
-    }
-
-    <span class="doccomment">/// Returns the length of the [`CString16`]
-    /// 
-    /// This is similar to C's `strlen()` function, thus taking into account the string's NUL-termination
-    </span><span class="kw">pub fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
-        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..S {
-            <span class="kw">if </span><span class="self">self</span>.c_str[i] == <span class="number">0 </span>{
-                <span class="kw">return </span>i;
-            }
-        }
-
-        S
-    }
-
-    <span class="doccomment">/// Sets a `&amp;str` as the contents of this [`CString16`]
+    <span class="doccomment">/// Sets a `&amp;str` as the contents of this [`ArrayWideString`]
     /// 
     /// This will copy at max `S - 1` bytes/chars in order to ensure that the string is NUL-terminated
     /// 
     /// # Arguments
     /// 
     /// * `string`: The `&amp;str` to set
-    </span><span class="kw">pub fn </span>set_str(<span class="kw-2">&amp;mut </span><span class="self">self</span>, string: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="self">Self</span>::copy_str_to(string, <span class="kw-2">&amp;mut </span><span class="self">self</span>.c_str <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_ as </span><span class="kw-2">*mut </span>u16, S)
+    </span><span class="kw">pub fn </span>set_str(<span class="kw-2">&amp;mut </span><span class="self">self</span>, string: <span class="kw-2">&amp;</span>str) {
+        <span class="kw">let </span><span class="kw-2">mut </span>c_str = <span class="kw-2">&amp;mut </span><span class="self">self</span>.c_wstr[..S-<span class="number">1</span>];
+        <span class="kw">let </span><span class="kw-2">mut </span>char_buf = [<span class="number">0u16</span>;<span class="number">2</span>];
+        <span class="kw">for </span>char <span class="kw">in </span>string.chars() {
+            <span class="kw">let </span>encoded_char = char.encode_utf16(<span class="kw-2">&amp;mut </span>char_buf);
+
+            <span class="comment">// we can't write any u16s if there aren't enough for surrogate pairs
+            // so we bail out early
+            </span><span class="kw">if </span>encoded_char.len() &gt; c_str.len() {
+                <span class="kw">break</span>;
+            }
+            <span class="comment">// a character will always be at least one u16
+            </span>c_str[<span class="number">0</span>] = encoded_char[<span class="number">0</span>].to_be();
+
+            <span class="comment">// check if character required 4-byte encoding
+            </span><span class="kw">if </span>encoded_char.len() == <span class="number">2 </span>{
+                c_str[<span class="number">1</span>] = encoded_char[<span class="number">1</span>].to_be();
+            }
+
+            <span class="comment">// advance the window by the length of the written u16 buffer
+            </span>c_str = <span class="kw-2">&amp;mut </span>c_str[encoded_char.len()..]
+            
+        }
     }
 
-    <span class="doccomment">/// Sets a `String` as the contents of this [`CString16`]
+    <span class="doccomment">/// Sets a `String` as the contents of this [`ArrayWideString`]
     /// 
     /// This will copy at max `S - 1` bytes/chars in order to ensure that the string is NUL-terminated
     /// 
     /// # Arguments
     /// 
     /// * `string`: The `String` to set
-    </span><span class="kw">pub fn </span>set_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>, string: String) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="self">self</span>.set_str(string.as_str())
+    </span><span class="kw">pub fn </span>set_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>, string: <span class="kw">impl </span>AsRef&lt;str&gt;) {
+        <span class="self">self</span>.set_str(string.as_ref())
     }
 
-    <span class="doccomment">/// Gets a `String` corresponding to this [`CString16`]
+    <span class="doccomment">/// Gets a `String` corresponding to this [`ArrayWideString`]
     </span><span class="kw">pub fn </span>get_string(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
-        <span class="self">Self</span>::read_string_from(<span class="kw-2">&amp;</span><span class="self">self</span>.c_str <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_ as </span><span class="kw-2">*const </span>u16, <span class="self">self</span>.len())
+        <span class="comment">// create a clone of the internal buffer
+        </span><span class="kw">let </span><span class="kw-2">mut </span>tmp = <span class="self">self</span>.c_wstr.clone();
+
+        <span class="comment">// convert the u16s from big-endian encoding
+        </span><span class="kw">let _</span>: () = tmp[..<span class="self">self</span>.len()].iter_mut().map(|place| <span class="kw-2">*</span>place = u16::from_be(<span class="kw-2">*</span>place)).collect();
+
+        <span class="comment">// we don't need to use the endian version, since we've already converted from be-encoding
+        </span><span class="kw">let </span>pulled_string = String::from_utf16(<span class="kw-2">&amp;</span>tmp[..<span class="self">self</span>.len()]).map_err(|<span class="kw">_</span>| rc::ResultInvalidUtf16Conversion::make())<span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(pulled_string)
     }
 
-    <span class="doccomment">/// Returns a copy of this [`CString16`] but with all chars byte-swapped
-    /// 
-    /// Essentially, this calls `swap_bytes()` on all the string copy array elements
-    </span><span class="kw">pub fn </span>swap_chars(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span><span class="kw-2">mut </span>self_copy = <span class="kw-2">*</span><span class="self">self</span>;
+    <span class="doccomment">/// Borrows a view into the whole array
+    </span><span class="kw">pub fn </span>as_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u16;S] {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.c_wstr
+    }
 
-        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..S {
-            self_copy.c_str[i] = <span class="self">self</span>.c_str[i].swap_bytes();
-        }
+    <span class="doccomment">/// Borrows only the initialized bytes (including the null terminator)
+    </span><span class="kw">pub fn </span>as_u16s(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u16] {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.c_wstr[..(<span class="self">self</span>.len()+<span class="number">1</span>)]
+    }
+}
 
-        self_copy
+<span class="kw">impl</span>&lt;<span class="kw">const </span>S: usize&gt; core::str::FromStr <span class="kw">for </span>ArrayWideString&lt;S&gt; {
+    <span class="kw">type </span><span class="prelude-val">Err </span>= ResultCode;
+    <span class="kw">fn </span>from_str(s: <span class="kw-2">&amp;</span>str) -&gt; core::result::Result&lt;<span class="self">Self</span>, <span class="self">Self</span>::Err&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>cstr = <span class="self">Self</span>::new();
+        cstr.set_str(s);
+        <span class="prelude-val">Ok</span>(cstr)
     }
 }
 
@@ -862,53 +1084,11 @@
 /// # Arguments
 /// 
 /// * `str_ptr`: The `const char*`-like ptr to use
-</span><span class="kw">pub fn </span>str_ptr_len(str_ptr: <span class="kw-2">*const </span>u8) -&gt; usize {
-    <span class="kw">unsafe </span>{
-        <span class="kw">let </span><span class="kw-2">mut </span>iter_ptr = str_ptr <span class="kw">as </span><span class="kw-2">*mut </span>u8;
-        <span class="kw">while </span>(<span class="kw-2">*</span>iter_ptr) != <span class="number">0 </span>{
-            iter_ptr = iter_ptr.add(<span class="number">1</span>);
-        }
-
-        iter_ptr.offset_from(str_ptr) <span class="kw">as </span>usize
-    }
-}
-
-<span class="doccomment">/// Copies one `&amp;str` into another, and returns the destination `&amp;str`
-/// 
-/// # Arguments
-/// 
-/// * `dst_str`: The destination `&amp;str`
-/// * `src_str`: The source `&amp;str`
-</span><span class="kw">pub fn </span>str_copy&lt;<span class="lifetime">'a</span>&gt;(dst_str: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str, src_str: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str {
-    <span class="kw">let </span>dst_str_len = dst_str.len().min(src_str.len());
-
-    <span class="kw">unsafe </span>{
-        <span class="kw">let </span>dst_buf = dst_str.as_ptr() <span class="kw">as </span><span class="kw-2">*mut </span>u8;
-        <span class="kw">let </span>src_buf = src_str.as_ptr();
-
-        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..dst_str_len <span class="kw">as </span>isize {
-            <span class="kw-2">*</span>dst_buf.offset(i) = <span class="kw-2">*</span>src_buf.offset(i);
-        }
-
-        <span class="kw">let </span>dst_slice = core::slice::from_raw_parts_mut(dst_buf, dst_str_len);
-        core::str::from_utf8_unchecked(dst_slice)
-    }
-}
-
-<span class="doccomment">/// Works like `core::mem::transmute`, but being less restrictive and extremely more unsafe
-/// 
-/// Seriously, use this at your own risk, it is only used in this library in places where it's expected to work
-/// 
-/// # Arguments
-/// 
-/// `t`: Value to get transmuted
-</span><span class="kw">pub unsafe fn </span>raw_transmute&lt;T: Copy, U: Copy&gt;(t: T) -&gt; U {
-    <span class="kw">union </span>RawTransmuteUnion&lt;T: Copy, U: Copy&gt; {
-        t: T,
-        u: U
-    }
-    <span class="kw">let </span>tmp = RawTransmuteUnion::&lt;T, U&gt; { t };
-    tmp.u
+/// # SAFETY: There must be a null byte present in the string, or at some point after the pointer and within valid memory. This function will read infinitely until a null is read or crash occurs.
+</span><span class="kw">pub unsafe fn </span>str_ptr_len(str_ptr: <span class="kw-2">*const </span>u8) -&gt; usize {
+    (<span class="number">0usize</span>..)
+    .find(|<span class="kw-2">&amp;</span>offset| (<span class="kw-2">*</span>str_ptr.add(offset)) == <span class="number">0</span>)
+    .expect(<span class="string">"There will be a null byte (or crash) eventually"</span>)
 }
 
 <span class="doccomment">/// Simplified panic handler using a provided [`Logger`] type, available as a helpful default panic handler
@@ -922,8 +1102,8 @@
 /// * `info`: `PanicInfo` object got from the actual panic handler
 /// * `desired_level`: Desired [`AbortLevel`][`abort::AbortLevel`] to abort with
 </span><span class="kw">pub fn </span>simple_panic_handler&lt;L: Logger&gt;(info: <span class="kw-2">&amp;</span>panic::PanicInfo, desired_level: abort::AbortLevel) -&gt; ! {
-    <span class="kw">let </span>thread_name = <span class="kw">match </span>thread::get_current_thread().name.get_str() {
-        <span class="prelude-val">Ok</span>(name) =&gt; name,
+    <span class="kw">let </span>thread_name = <span class="kw">match unsafe </span>{thread::current().as_ref()}.map(|t|t.name.get_str()) {
+        <span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(name)) =&gt; name,
         <span class="kw">_ </span>=&gt; <span class="string">"&lt;unknown&gt;"</span>,
     };
     <span class="macro">diag_log!</span>(L { log::LogSeverity::Fatal, <span class="bool-val">true </span>} =&gt; <span class="string">"Panic! at thread '{}' -&gt; {}\n"</span>, thread_name, info);

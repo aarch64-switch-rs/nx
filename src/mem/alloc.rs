@@ -43,7 +43,7 @@ pub unsafe trait AllocatorEx: Allocator {
 
     /// Releases a heap value
     ///
-    /// The value must have been created using [`Allocator::new`]
+    /// The value must have been created using [`AllocatorEx::new`]
     ///
     /// # Arguments
     ///

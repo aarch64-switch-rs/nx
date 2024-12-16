@@ -1,6 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/ipc.rs`."><title>ipc.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0-nightly (c9f8f3438 2024-03-27)" data-channel="nightly" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
-            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../nx/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/ipc.rs`."><title>ipc.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-42caa33d.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.85.0-nightly (a47555110 2024-11-22)" data-channel="nightly" data-search-js="search-92e6798f.js" data-settings-js="settings-0f613d39.js" ><script src="../../static.files/storage-59e33391.js"></script><script defer src="../../static.files/src-script-56102188.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">nx/</div>ipc.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -853,13 +852,158 @@
 <a href="#851" id="851">851</a>
 <a href="#852" id="852">852</a>
 <a href="#853" id="853">853</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::result::<span class="kw-2">*</span>;
+<a href="#854" id="854">854</a>
+<a href="#855" id="855">855</a>
+<a href="#856" id="856">856</a>
+<a href="#857" id="857">857</a>
+<a href="#858" id="858">858</a>
+<a href="#859" id="859">859</a>
+<a href="#860" id="860">860</a>
+<a href="#861" id="861">861</a>
+<a href="#862" id="862">862</a>
+<a href="#863" id="863">863</a>
+<a href="#864" id="864">864</a>
+<a href="#865" id="865">865</a>
+<a href="#866" id="866">866</a>
+<a href="#867" id="867">867</a>
+<a href="#868" id="868">868</a>
+<a href="#869" id="869">869</a>
+<a href="#870" id="870">870</a>
+<a href="#871" id="871">871</a>
+<a href="#872" id="872">872</a>
+<a href="#873" id="873">873</a>
+<a href="#874" id="874">874</a>
+<a href="#875" id="875">875</a>
+<a href="#876" id="876">876</a>
+<a href="#877" id="877">877</a>
+<a href="#878" id="878">878</a>
+<a href="#879" id="879">879</a>
+<a href="#880" id="880">880</a>
+<a href="#881" id="881">881</a>
+<a href="#882" id="882">882</a>
+<a href="#883" id="883">883</a>
+<a href="#884" id="884">884</a>
+<a href="#885" id="885">885</a>
+<a href="#886" id="886">886</a>
+<a href="#887" id="887">887</a>
+<a href="#888" id="888">888</a>
+<a href="#889" id="889">889</a>
+<a href="#890" id="890">890</a>
+<a href="#891" id="891">891</a>
+<a href="#892" id="892">892</a>
+<a href="#893" id="893">893</a>
+<a href="#894" id="894">894</a>
+<a href="#895" id="895">895</a>
+<a href="#896" id="896">896</a>
+<a href="#897" id="897">897</a>
+<a href="#898" id="898">898</a>
+<a href="#899" id="899">899</a>
+<a href="#900" id="900">900</a>
+<a href="#901" id="901">901</a>
+<a href="#902" id="902">902</a>
+<a href="#903" id="903">903</a>
+<a href="#904" id="904">904</a>
+<a href="#905" id="905">905</a>
+<a href="#906" id="906">906</a>
+<a href="#907" id="907">907</a>
+<a href="#908" id="908">908</a>
+<a href="#909" id="909">909</a>
+<a href="#910" id="910">910</a>
+<a href="#911" id="911">911</a>
+<a href="#912" id="912">912</a>
+<a href="#913" id="913">913</a>
+<a href="#914" id="914">914</a>
+<a href="#915" id="915">915</a>
+<a href="#916" id="916">916</a>
+<a href="#917" id="917">917</a>
+<a href="#918" id="918">918</a>
+<a href="#919" id="919">919</a>
+<a href="#920" id="920">920</a>
+<a href="#921" id="921">921</a>
+<a href="#922" id="922">922</a>
+<a href="#923" id="923">923</a>
+<a href="#924" id="924">924</a>
+<a href="#925" id="925">925</a>
+<a href="#926" id="926">926</a>
+<a href="#927" id="927">927</a>
+<a href="#928" id="928">928</a>
+<a href="#929" id="929">929</a>
+<a href="#930" id="930">930</a>
+<a href="#931" id="931">931</a>
+<a href="#932" id="932">932</a>
+<a href="#933" id="933">933</a>
+<a href="#934" id="934">934</a>
+<a href="#935" id="935">935</a>
+<a href="#936" id="936">936</a>
+<a href="#937" id="937">937</a>
+<a href="#938" id="938">938</a>
+<a href="#939" id="939">939</a>
+<a href="#940" id="940">940</a>
+<a href="#941" id="941">941</a>
+<a href="#942" id="942">942</a>
+<a href="#943" id="943">943</a>
+<a href="#944" id="944">944</a>
+<a href="#945" id="945">945</a>
+<a href="#946" id="946">946</a>
+<a href="#947" id="947">947</a>
+<a href="#948" id="948">948</a>
+<a href="#949" id="949">949</a>
+<a href="#950" id="950">950</a>
+<a href="#951" id="951">951</a>
+<a href="#952" id="952">952</a>
+<a href="#953" id="953">953</a>
+<a href="#954" id="954">954</a>
+<a href="#955" id="955">955</a>
+<a href="#956" id="956">956</a>
+<a href="#957" id="957">957</a>
+<a href="#958" id="958">958</a>
+<a href="#959" id="959">959</a>
+<a href="#960" id="960">960</a>
+<a href="#961" id="961">961</a>
+<a href="#962" id="962">962</a>
+<a href="#963" id="963">963</a>
+<a href="#964" id="964">964</a>
+<a href="#965" id="965">965</a>
+<a href="#966" id="966">966</a>
+<a href="#967" id="967">967</a>
+<a href="#968" id="968">968</a>
+<a href="#969" id="969">969</a>
+<a href="#970" id="970">970</a>
+<a href="#971" id="971">971</a>
+<a href="#972" id="972">972</a>
+<a href="#973" id="973">973</a>
+<a href="#974" id="974">974</a>
+<a href="#975" id="975">975</a>
+<a href="#976" id="976">976</a>
+<a href="#977" id="977">977</a>
+<a href="#978" id="978">978</a>
+<a href="#979" id="979">979</a>
+<a href="#980" id="980">980</a>
+<a href="#981" id="981">981</a>
+<a href="#982" id="982">982</a>
+<a href="#983" id="983">983</a>
+<a href="#984" id="984">984</a>
+<a href="#985" id="985">985</a>
+<a href="#986" id="986">986</a>
+<a href="#987" id="987">987</a>
+<a href="#988" id="988">988</a>
+<a href="#989" id="989">989</a>
+<a href="#990" id="990">990</a>
+<a href="#991" id="991">991</a>
+<a href="#992" id="992">992</a>
+<a href="#993" id="993">993</a>
+<a href="#994" id="994">994</a>
+<a href="#995" id="995">995</a>
+<a href="#996" id="996">996</a>
+<a href="#997" id="997">997</a>
+<a href="#998" id="998">998</a>
+<a href="#999" id="999">999</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::result::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::svc;
 <span class="kw">use </span><span class="kw">crate</span>::thread;
-<span class="kw">use </span>core::ptr;
-<span class="kw">use </span>core::mem;
-<span class="kw">use </span>core::marker::ConstParamTy;
 <span class="kw">use </span>arrayvec::ArrayVec;
+<span class="kw">use </span>core::marker::ConstParamTy;
+<span class="kw">use </span>core::mem;
+<span class="kw">use </span>core::ptr;
 
 <span class="kw">pub mod </span>rc;
 
@@ -868,7 +1012,7 @@
 </span><span class="kw">pub enum </span>CommandProtocol {
     <span class="attr">#[default]
     </span>Cmif,
-    Tipc
+    Tipc,
 }
 
 <span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -877,20 +1021,38 @@
     <span class="kw">pub </span>handle: svc::Handle,
     <span class="kw">pub </span>domain_object_id: cmif::DomainObjectId,
     <span class="kw">pub </span>owns_handle: bool,
-    <span class="kw">pub </span>protocol: CommandProtocol
+    <span class="kw">pub </span>protocol: CommandProtocol,
 }
 
 <span class="kw">impl </span>ObjectInfo {
     <span class="kw">pub const fn </span>new() -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ handle: <span class="number">0</span>, domain_object_id: <span class="number">0</span>, owns_handle: <span class="bool-val">false</span>, protocol: CommandProtocol::Cmif }
+        <span class="self">Self </span>{
+            handle: <span class="number">0</span>,
+            domain_object_id: <span class="number">0</span>,
+            owns_handle: <span class="bool-val">false</span>,
+            protocol: CommandProtocol::Cmif,
+        }
     }
 
     <span class="kw">pub const fn </span>from_handle(handle: svc::Handle) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ handle, domain_object_id: <span class="number">0</span>, owns_handle: <span class="bool-val">true</span>, protocol: CommandProtocol::Cmif }
+        <span class="self">Self </span>{
+            handle,
+            domain_object_id: <span class="number">0</span>,
+            owns_handle: <span class="bool-val">true</span>,
+            protocol: CommandProtocol::Cmif,
+        }
     }
 
-    <span class="kw">pub const fn </span>from_domain_object_id(parent_handle: svc::Handle, domain_object_id: cmif::DomainObjectId) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ handle: parent_handle, domain_object_id, owns_handle: <span class="bool-val">false</span>, protocol: CommandProtocol::Cmif }
+    <span class="kw">pub const fn </span>from_domain_object_id(
+        parent_handle: svc::Handle,
+        domain_object_id: cmif::DomainObjectId,
+    ) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            handle: parent_handle,
+            domain_object_id,
+            owns_handle: <span class="bool-val">false</span>,
+            protocol: CommandProtocol::Cmif,
+        }
     }
 
     <span class="kw">pub const fn </span>is_valid(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
@@ -901,11 +1063,11 @@
         <span class="self">self</span>.domain_object_id != <span class="number">0
     </span>}
 
-    <span class="kw">pub </span><span class="comment">/* const */ </span><span class="kw">fn </span>uses_cmif_protocol(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+    <span class="kw">pub fn </span>uses_cmif_protocol(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="self">self</span>.protocol == CommandProtocol::Cmif
     }
 
-    <span class="kw">pub </span><span class="comment">/* const */ </span><span class="kw">fn </span>uses_tipc_protocol(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+    <span class="kw">pub fn </span>uses_tipc_protocol(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="self">self</span>.protocol == CommandProtocol::Tipc
     }
 
@@ -935,7 +1097,7 @@
 #[repr(u8)]
 </span><span class="kw">pub enum </span>HandleMode {
     Copy,
-    Move
+    Move,
 }
 
 <span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -944,8 +1106,8 @@
     Normal = <span class="number">0</span>,
     NonSecure = <span class="number">1</span>,
     Invalid = <span class="number">2</span>,
-    NonDevice = <span class="number">3
-</span>}
+    NonDevice = <span class="number">3</span>,
+}
 
 <span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
@@ -957,7 +1119,11 @@
 
 <span class="kw">impl </span>BufferDescriptor {
     <span class="kw">pub const fn </span>empty() -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ size_low: <span class="number">0</span>, address_low: <span class="number">0</span>, bits: <span class="number">0 </span>}
+        <span class="self">Self </span>{
+            size_low: <span class="number">0</span>,
+            address_low: <span class="number">0</span>,
+            bits: <span class="number">0</span>,
+        }
     }
 
     <span class="kw">pub fn </span>new(buffer: <span class="kw-2">*const </span>u8, buffer_size: usize, flags: BufferFlags) -&gt; <span class="self">Self </span>{
@@ -973,13 +1139,19 @@
         <span class="macro">write_bits!</span>(<span class="number">24</span>, <span class="number">27</span>, bits, size_high);
         <span class="macro">write_bits!</span>(<span class="number">28</span>, <span class="number">31</span>, bits, address_mid);
 
-        <span class="self">Self </span>{ size_low, address_low, bits }
+        <span class="self">Self </span>{
+            size_low,
+            address_low,
+            bits,
+        }
     }
 
     <span class="kw">pub const fn </span>get_address(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">*mut </span>u8 {
         <span class="kw">let </span>address_high = <span class="macro">read_bits!</span>(<span class="number">2</span>, <span class="number">23</span>, <span class="self">self</span>.bits);
         <span class="kw">let </span>address_mid = <span class="macro">read_bits!</span>(<span class="number">28</span>, <span class="number">31</span>, <span class="self">self</span>.bits);
-        (<span class="self">self</span>.address_low <span class="kw">as </span>usize | ((address_mid <span class="kw">as </span>usize) &lt;&lt; <span class="number">32</span>) | ((address_high <span class="kw">as </span>usize) &lt;&lt; <span class="number">36</span>)) <span class="kw">as </span><span class="kw-2">*mut </span>u8
+        (<span class="self">self</span>.address_low <span class="kw">as </span>usize
+            | ((address_mid <span class="kw">as </span>usize) &lt;&lt; <span class="number">32</span>)
+            | ((address_high <span class="kw">as </span>usize) &lt;&lt; <span class="number">36</span>)) <span class="kw">as </span><span class="kw-2">*mut </span>u8
     }
 
     <span class="kw">pub const fn </span>get_size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
@@ -997,7 +1169,10 @@
 
 <span class="kw">impl </span>SendStaticDescriptor {
     <span class="kw">pub const fn </span>empty() -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ bits: <span class="number">0</span>, address_low: <span class="number">0 </span>}
+        <span class="self">Self </span>{
+            bits: <span class="number">0</span>,
+            address_low: <span class="number">0</span>,
+        }
     }
 
     <span class="kw">pub fn </span>new(buffer: <span class="kw-2">*const </span>u8, buffer_size: usize, index: u32) -&gt; <span class="self">Self </span>{
@@ -1017,7 +1192,9 @@
     <span class="kw">pub const fn </span>get_address(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">*mut </span>u8 {
         <span class="kw">let </span>address_high = <span class="macro">read_bits!</span>(<span class="number">6</span>, <span class="number">11</span>, <span class="self">self</span>.bits);
         <span class="kw">let </span>address_mid = <span class="macro">read_bits!</span>(<span class="number">12</span>, <span class="number">15</span>, <span class="self">self</span>.bits);
-        (<span class="self">self</span>.address_low <span class="kw">as </span>usize | ((address_mid <span class="kw">as </span>usize) &lt;&lt; <span class="number">32</span>) | ((address_high <span class="kw">as </span>usize) &lt;&lt; <span class="number">36</span>)) <span class="kw">as </span><span class="kw-2">*mut </span>u8
+        (<span class="self">self</span>.address_low <span class="kw">as </span>usize
+            | ((address_mid <span class="kw">as </span>usize) &lt;&lt; <span class="number">32</span>)
+            | ((address_high <span class="kw">as </span>usize) &lt;&lt; <span class="number">36</span>)) <span class="kw">as </span><span class="kw-2">*mut </span>u8
     }
 
     <span class="kw">pub const fn </span>get_size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
@@ -1034,7 +1211,10 @@
 
 <span class="kw">impl </span>ReceiveStaticDescriptor {
     <span class="kw">pub const fn </span>empty() -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ address_low: <span class="number">0</span>, bits: <span class="number">0 </span>}
+        <span class="self">Self </span>{
+            address_low: <span class="number">0</span>,
+            bits: <span class="number">0</span>,
+        }
     }
 
     <span class="kw">pub fn </span>new(buffer: <span class="kw-2">*const </span>u8, buffer_size: usize) -&gt; <span class="self">Self </span>{
@@ -1067,7 +1247,10 @@
 
 <span class="kw">impl </span>CommandHeader {
     <span class="kw">pub const fn </span>empty() -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ bits_1: <span class="number">0</span>, bits_2: <span class="number">0 </span>}
+        <span class="self">Self </span>{
+            bits_1: <span class="number">0</span>,
+            bits_2: <span class="number">0</span>,
+        }
     }
 
     <span class="kw">pub const fn </span>encode_receive_static_type(receive_static_count: u32) -&gt; u32 {
@@ -1086,15 +1269,24 @@
         <span class="kw">if </span>receive_static_type &gt; <span class="number">0 </span>{
             <span class="kw">if </span>receive_static_type == <span class="number">2 </span>{
                 count = <span class="number">0xFF</span>;
-            }
-            <span class="kw">else if </span>receive_static_type &gt; <span class="number">2 </span>{
+            } <span class="kw">else if </span>receive_static_type &gt; <span class="number">2 </span>{
                 count = receive_static_type - <span class="number">2</span>;
             }
         }
         count
     }
 
-    <span class="kw">pub const fn </span>new(command_type: u32, send_static_count: u32, send_buffer_count: u32, receive_buffer_count: u32, exchange_buffer_count: u32, data_word_count: u32, receive_static_count: u32, has_special_header: bool) -&gt; <span class="self">Self </span>{
+    <span class="attr">#[allow(clippy::too_many_arguments)]
+    </span><span class="kw">pub const fn </span>new(
+        command_type: u32,
+        send_static_count: u32,
+        send_buffer_count: u32,
+        receive_buffer_count: u32,
+        exchange_buffer_count: u32,
+        data_word_count: u32,
+        receive_static_count: u32,
+        has_special_header: bool,
+    ) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>bits_1: u32 = <span class="number">0</span>;
         <span class="macro">write_bits!</span>(<span class="number">0</span>, <span class="number">15</span>, bits_1, command_type);
         <span class="macro">write_bits!</span>(<span class="number">16</span>, <span class="number">19</span>, bits_1, send_static_count);
@@ -1104,17 +1296,19 @@
 
         <span class="kw">let </span><span class="kw-2">mut </span>bits_2: u32 = <span class="number">0</span>;
         <span class="macro">write_bits!</span>(<span class="number">0</span>, <span class="number">9</span>, bits_2, data_word_count);
-        <span class="macro">write_bits!</span>(<span class="number">10</span>, <span class="number">13</span>, bits_2, <span class="self">Self</span>::encode_receive_static_type(receive_static_count));
+        <span class="macro">write_bits!</span>(
+            <span class="number">10</span>,
+            <span class="number">13</span>,
+            bits_2,
+            <span class="self">Self</span>::encode_receive_static_type(receive_static_count)
+        );
         <span class="macro">write_bits!</span>(<span class="number">31</span>, <span class="number">31</span>, bits_2, has_special_header <span class="kw">as </span>u32);
 
         <span class="self">Self </span>{ bits_1, bits_2 }
     }
 
     <span class="kw">pub const fn </span>get_command_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
-        <span class="kw">let </span>raw_type = <span class="macro">read_bits!</span>(<span class="number">0</span>, <span class="number">15</span>, <span class="self">self</span>.bits_1);
-        <span class="kw">unsafe </span>{
-            mem::transmute(raw_type)
-        }
+        <span class="macro">read_bits!</span>(<span class="number">0</span>, <span class="number">15</span>, <span class="self">self</span>.bits_1)
     }
 
     <span class="kw">pub const fn </span>get_send_static_count(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
@@ -1157,7 +1351,11 @@
         <span class="self">Self </span>{ bits: <span class="number">0 </span>}
     }
 
-    <span class="kw">pub const fn </span>new(send_process_id: bool, copy_handle_count: u32, move_handle_count: u32) -&gt; <span class="self">Self </span>{
+    <span class="kw">pub const fn </span>new(
+        send_process_id: bool,
+        copy_handle_count: u32,
+        move_handle_count: u32,
+    ) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>bits: u32 = <span class="number">0</span>;
         <span class="macro">write_bits!</span>(<span class="number">0</span>, <span class="number">0</span>, bits, send_process_id <span class="kw">as </span>u32);
         <span class="macro">write_bits!</span>(<span class="number">1</span>, <span class="number">4</span>, bits, copy_handle_count);
@@ -1200,12 +1398,15 @@
 <span class="attr">#[derive(Clone)]
 </span><span class="kw">pub struct </span>DataWalker {
     ptr: <span class="kw-2">*mut </span>u8,
-    cur_offset: isize
+    cur_offset: isize,
 }
 
 <span class="kw">impl </span>DataWalker {
     <span class="kw">pub fn </span>empty() -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ ptr: ptr::null_mut(), cur_offset: <span class="number">0 </span>}
+        <span class="self">Self </span>{
+            ptr: ptr::null_mut(),
+            cur_offset: <span class="number">0</span>,
+        }
     }
 
     <span class="kw">pub fn </span>new(ptr: <span class="kw-2">*mut </span>u8) -&gt; <span class="self">Self </span>{
@@ -1228,7 +1429,10 @@
             <span class="self">self</span>.cur_offset += core::mem::size_of::&lt;T&gt;() <span class="kw">as </span>isize;
 
             <span class="kw">let </span>data_ref = <span class="self">self</span>.ptr.offset(offset) <span class="kw">as </span><span class="kw-2">*const </span>T;
-            data_ref.read_volatile()
+
+            <span class="comment">// even though we have aligned the offsets of the output data, we unfortunately don't know that the raw
+            // data pointer will be aligned for out type, so we need to do an unaligned read (in libnx they just memcpy into the output object)
+            </span>data_ref.read_unaligned()
         }
     }
 
@@ -1241,7 +1445,9 @@
             <span class="self">self</span>.cur_offset += core::mem::size_of::&lt;T&gt;() <span class="kw">as </span>isize;
 
             <span class="kw">let </span>data_ref = <span class="self">self</span>.ptr.offset(offset) <span class="kw">as </span><span class="kw-2">*mut </span>T;
-            data_ref.write_volatile(t);
+            
+            <span class="comment">// As above, we need an unaligned read just incase self.ptr doesn't have sufficiently large alignment
+            </span>data_ref.write_unaligned(t);
         }
     }
 
@@ -1261,28 +1467,41 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>get_msg_buffer() -&gt; <span class="kw-2">*mut </span>u8 {
-    <span class="kw">unsafe </span>{
-        (<span class="kw-2">*</span>thread::get_thread_local_region()).msg_buffer.as_mut_ptr()
-    }
+    <span class="kw">unsafe </span>{ (<span class="kw-2">*</span>thread::get_thread_local_region()).msg_buffer.as_mut_ptr() }
 }
 
 <span class="attr">#[inline(always)]
-</span><span class="kw">pub fn </span>read_array_from_buffer&lt;T: Copy&gt;(buffer: <span class="kw-2">*mut </span>u8, count: u32, array: <span class="kw-2">&amp;mut </span>ArrayVec&lt;[T; MAX_COUNT]&gt;) -&gt; <span class="kw-2">*mut </span>u8 {
-    <span class="kw">unsafe </span>{
-        <span class="kw">let </span>tmp_buffer = buffer <span class="kw">as </span><span class="kw-2">*mut </span>T;
-        array.clear();
-        <span class="kw">let _ </span>= array.try_extend_from_slice(core::slice::from_raw_parts(tmp_buffer, count <span class="kw">as </span>usize));
-        tmp_buffer.offset(count <span class="kw">as </span>isize) <span class="kw">as </span><span class="kw-2">*mut </span>u8
-    }
+</span><span class="kw">pub unsafe fn </span>read_array_from_buffer&lt;T: Copy, <span class="kw">const </span>LEN: usize&gt;(
+    buffer: <span class="kw-2">*mut </span>u8,
+    count: u32,
+    array: <span class="kw-2">&amp;mut </span>ArrayVec&lt;T, LEN&gt;,
+) -&gt; <span class="kw-2">*mut </span>u8 {
+    <span class="comment">//debug_assert!(count &lt;= MAX_COUNT, "Taking too may items from a data buffer");
+    </span><span class="macro">debug_assert!</span>(
+        buffer.is_aligned_to(align_of::&lt;T&gt;()),
+        <span class="string">"Data buffer is not properly aligned"
+    </span>);
+
+    <span class="kw">let </span>tmp_buffer = buffer <span class="kw">as </span><span class="kw-2">*mut </span>T;
+    array.clear();
+    <span class="kw">let _ </span>= array.try_extend_from_slice(core::slice::from_raw_parts(tmp_buffer, count <span class="kw">as </span>usize));
+    tmp_buffer.add(count <span class="kw">as </span>usize) <span class="kw">as </span><span class="kw-2">*mut </span>u8
 }
 
 <span class="attr">#[inline(always)]
-</span><span class="kw">pub fn </span>write_array_to_buffer&lt;T: Copy&gt;(buffer: <span class="kw-2">*mut </span>u8, count: u32, array: <span class="kw-2">&amp;</span>ArrayVec&lt;[T; MAX_COUNT]&gt;) -&gt; <span class="kw-2">*mut </span>u8 {
-    <span class="kw">unsafe </span>{
-        <span class="kw">let </span>tmp_buffer = buffer <span class="kw">as </span><span class="kw-2">*mut </span>T;
-        core::ptr::copy(array.as_ptr(), tmp_buffer, count <span class="kw">as </span>usize);
-        tmp_buffer.offset(count <span class="kw">as </span>isize) <span class="kw">as </span><span class="kw-2">*mut </span>u8
-    }
+</span><span class="kw">pub unsafe fn </span>write_array_to_buffer&lt;T: Copy, <span class="kw">const </span>LEN: usize&gt;(
+    buffer: <span class="kw-2">*mut </span>u8,
+    count: u32,
+    array: <span class="kw-2">&amp;</span>ArrayVec&lt;T, LEN&gt;,
+) -&gt; <span class="kw-2">*mut </span>u8 {
+    <span class="comment">//debug_assert!(count &lt;= MAX_COUNT, "Taking too may items from a data buffer");
+    </span><span class="macro">debug_assert!</span>(
+        buffer.is_aligned_to(align_of::&lt;T&gt;()),
+        <span class="string">"Data buffer is not properly aligned"
+    </span>);
+    <span class="kw">let </span>tmp_buffer = buffer <span class="kw">as </span><span class="kw-2">*mut </span>T;
+    core::ptr::copy(array.as_ptr(), tmp_buffer, count <span class="kw">as </span>usize);
+    tmp_buffer.add(count <span class="kw">as </span>usize) <span class="kw">as </span><span class="kw-2">*mut </span>u8
 }
 
 <span class="attr">#[inline(always)]
@@ -1299,50 +1518,60 @@
     <span class="kw">pub </span>data_offset: <span class="kw-2">*mut </span>u8,
     <span class="kw">pub </span>data_words_offset: <span class="kw-2">*mut </span>u8,
     <span class="kw">pub </span>objects_offset: <span class="kw-2">*mut </span>u8,
-    copy_handles: ArrayVec&lt;[svc::Handle; MAX_COUNT]&gt;,
-    move_handles: ArrayVec&lt;[svc::Handle; MAX_COUNT]&gt;,
-    objects: ArrayVec&lt;[cmif::DomainObjectId; MAX_COUNT]&gt;,
-    out_pointer_sizes: ArrayVec&lt;[u16; MAX_COUNT]&gt;,
+    copy_handles: ArrayVec&lt;svc::Handle, MAX_COUNT&gt;,
+    move_handles: ArrayVec&lt;svc::Handle, MAX_COUNT&gt;,
+    objects: ArrayVec&lt;cmif::DomainObjectId, MAX_COUNT&gt;,
+    out_pointer_sizes: ArrayVec&lt;u16, MAX_COUNT&gt;,
 }
 
 <span class="kw">impl </span>CommandContent {
     <span class="kw">pub fn </span>empty() -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ send_process_id: <span class="bool-val">false</span>, process_id: <span class="number">0</span>, data_size: <span class="number">0</span>, data_offset: ptr::null_mut(), data_words_offset: ptr::null_mut(), objects_offset: ptr::null_mut(), copy_handles: ArrayVec::new(), move_handles: ArrayVec::new(), objects: ArrayVec::new(), out_pointer_sizes: ArrayVec::new() }
+        <span class="self">Self </span>{
+            send_process_id: <span class="bool-val">false</span>,
+            process_id: <span class="number">0</span>,
+            data_size: <span class="number">0</span>,
+            data_offset: ptr::null_mut(),
+            data_words_offset: ptr::null_mut(),
+            objects_offset: ptr::null_mut(),
+            copy_handles: ArrayVec::new(),
+            move_handles: ArrayVec::new(),
+            objects: ArrayVec::new(),
+            out_pointer_sizes: ArrayVec::new(),
+        }
     }
-    
+
     <span class="kw">fn </span>add_copy_handle(<span class="kw-2">&amp;mut </span><span class="self">self</span>, handle: svc::Handle) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">match </span><span class="self">self</span>.copy_handles.try_push(handle) {
             <span class="prelude-val">Ok</span>(()) =&gt; <span class="prelude-val">Ok</span>(()),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; rc::ResultCopyHandlesFull::make_err()
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; rc::ResultCopyHandlesFull::make_err(),
         }
     }
 
     <span class="kw">fn </span>add_move_handle(<span class="kw-2">&amp;mut </span><span class="self">self</span>, handle: svc::Handle) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">match </span><span class="self">self</span>.move_handles.try_push(handle) {
             <span class="prelude-val">Ok</span>(()) =&gt; <span class="prelude-val">Ok</span>(()),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; rc::ResultMoveHandlesFull::make_err()
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; rc::ResultMoveHandlesFull::make_err(),
         }
     }
 
     <span class="kw">pub fn </span>add_handle&lt;<span class="kw">const </span>M: HandleMode&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, handle: sf::Handle&lt;M&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">match </span>M {
             HandleMode::Copy =&gt; <span class="self">self</span>.add_copy_handle(handle.handle),
-            HandleMode::Move =&gt; <span class="self">self</span>.add_move_handle(handle.handle)
+            HandleMode::Move =&gt; <span class="self">self</span>.add_move_handle(handle.handle),
         }
     }
 
     <span class="kw">pub fn </span>add_domain_object(<span class="kw-2">&amp;mut </span><span class="self">self</span>, domain_object_id: cmif::DomainObjectId) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">match </span><span class="self">self</span>.objects.try_push(domain_object_id) {
             <span class="prelude-val">Ok</span>(()) =&gt; <span class="prelude-val">Ok</span>(()),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; rc::ResultDomainObjectsFull::make_err()
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; rc::ResultDomainObjectsFull::make_err(),
         }
     }
 
     <span class="kw">pub fn </span>add_object(<span class="kw-2">&amp;mut </span><span class="self">self</span>, object_info: ObjectInfo) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">if </span>object_info.is_domain() {
             <span class="self">self</span>.add_domain_object(object_info.domain_object_id)
-        }
-        <span class="kw">else </span>{
+        } <span class="kw">else </span>{
             rc::ResultInvalidDomainObject::make_err()
         }
     }
@@ -1350,21 +1579,21 @@
     <span class="kw">fn </span>add_out_pointer_size(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pointer_size: u16) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">match </span><span class="self">self</span>.out_pointer_sizes.try_push(pointer_size) {
             <span class="prelude-val">Ok</span>(()) =&gt; <span class="prelude-val">Ok</span>(()),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; rc::ResultPointerSizesFull::make_err()
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; rc::ResultPointerSizesFull::make_err(),
         }
     }
 
     <span class="kw">pub fn </span>pop_copy_handle(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;svc::Handle&gt; {
         <span class="kw">match </span><span class="self">self</span>.copy_handles.pop_at(<span class="number">0</span>) {
             <span class="prelude-val">Some</span>(handle) =&gt; <span class="prelude-val">Ok</span>(handle),
-            <span class="prelude-val">None </span>=&gt; cmif::rc::ResultInvalidOutObjectCount::make_err()
+            <span class="prelude-val">None </span>=&gt; cmif::rc::ResultInvalidOutObjectCount::make_err(),
         }
     }
 
     <span class="kw">pub fn </span>pop_move_handle(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;svc::Handle&gt; {
         <span class="kw">match </span><span class="self">self</span>.move_handles.pop_at(<span class="number">0</span>) {
             <span class="prelude-val">Some</span>(handle) =&gt; <span class="prelude-val">Ok</span>(handle),
-            <span class="prelude-val">None </span>=&gt; cmif::rc::ResultInvalidOutObjectCount::make_err()
+            <span class="prelude-val">None </span>=&gt; cmif::rc::ResultInvalidOutObjectCount::make_err(),
         }
     }
 
@@ -1379,35 +1608,35 @@
     <span class="kw">fn </span>push_copy_handle(<span class="kw-2">&amp;mut </span><span class="self">self</span>, handle: svc::Handle) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">match </span><span class="self">self</span>.copy_handles.try_push(handle) {
             <span class="prelude-val">Ok</span>(()) =&gt; <span class="prelude-val">Ok</span>(()),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; rc::ResultCopyHandlesFull::make_err()
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; rc::ResultCopyHandlesFull::make_err(),
         }
     }
 
     <span class="kw">fn </span>push_move_handle(<span class="kw-2">&amp;mut </span><span class="self">self</span>, handle: svc::Handle) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">match </span><span class="self">self</span>.move_handles.try_push(handle) {
             <span class="prelude-val">Ok</span>(()) =&gt; <span class="prelude-val">Ok</span>(()),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; rc::ResultMoveHandlesFull::make_err()
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; rc::ResultMoveHandlesFull::make_err(),
         }
     }
 
     <span class="kw">pub fn </span>push_handle&lt;<span class="kw">const </span>M: HandleMode&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, handle: sf::Handle&lt;M&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">match </span>M {
             HandleMode::Copy =&gt; <span class="self">self</span>.push_copy_handle(handle.handle),
-            HandleMode::Move =&gt; <span class="self">self</span>.push_move_handle(handle.handle)
+            HandleMode::Move =&gt; <span class="self">self</span>.push_move_handle(handle.handle),
         }
     }
 
     <span class="kw">pub fn </span>pop_domain_object(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;cmif::DomainObjectId&gt; {
         <span class="kw">match </span><span class="self">self</span>.objects.pop_at(<span class="number">0</span>) {
             <span class="prelude-val">Some</span>(handle) =&gt; <span class="prelude-val">Ok</span>(handle),
-            <span class="prelude-val">None </span>=&gt; cmif::rc::ResultInvalidOutObjectCount::make_err()
+            <span class="prelude-val">None </span>=&gt; cmif::rc::ResultInvalidOutObjectCount::make_err(),
         }
     }
 
     <span class="kw">pub fn </span>push_domain_object(<span class="kw-2">&amp;mut </span><span class="self">self</span>, domain_object_id: cmif::DomainObjectId) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">match </span><span class="self">self</span>.objects.try_push(domain_object_id) {
             <span class="prelude-val">Ok</span>(()) =&gt; <span class="prelude-val">Ok</span>(()),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; rc::ResultDomainObjectsFull::make_err()
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; rc::ResultDomainObjectsFull::make_err(),
         }
     }
 }
@@ -1416,21 +1645,35 @@
     <span class="kw">pub </span>object_info: ObjectInfo,
     <span class="kw">pub </span>in_params: CommandContent,
     <span class="kw">pub </span>out_params: CommandContent,
-    send_statics: ArrayVec&lt;[SendStaticDescriptor; MAX_COUNT]&gt;,
-    receive_statics: ArrayVec&lt;[ReceiveStaticDescriptor; MAX_COUNT]&gt;,
-    send_buffers: ArrayVec&lt;[BufferDescriptor; MAX_COUNT]&gt;,
-    receive_buffers: ArrayVec&lt;[BufferDescriptor; MAX_COUNT]&gt;,
-    exchange_buffers: ArrayVec&lt;[BufferDescriptor; MAX_COUNT]&gt;,
+    send_statics: ArrayVec&lt;SendStaticDescriptor, MAX_COUNT&gt;,
+    receive_statics: ArrayVec&lt;ReceiveStaticDescriptor, MAX_COUNT&gt;,
+    send_buffers: ArrayVec&lt;BufferDescriptor, MAX_COUNT&gt;,
+    receive_buffers: ArrayVec&lt;BufferDescriptor, MAX_COUNT&gt;,
+    exchange_buffers: ArrayVec&lt;BufferDescriptor, MAX_COUNT&gt;,
     pointer_buffer: <span class="kw-2">*mut </span>u8,
     in_pointer_buffer_offset: usize,
     out_pointer_buffer_offset: usize,
     pointer_size_walker: DataWalker,
-    pointer_size_walker_initialized: bool
+    pointer_size_walker_initialized: bool,
 }
 
 <span class="kw">impl </span>CommandContext {
     <span class="kw">pub fn </span>empty() -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ object_info: ObjectInfo::new(), in_params: CommandContent::empty(), out_params: CommandContent::empty(), send_statics: ArrayVec::new(), receive_statics: ArrayVec::new(), send_buffers: ArrayVec::new(), receive_buffers: ArrayVec::new(), exchange_buffers: ArrayVec::new(), pointer_buffer: core::ptr::null_mut(), in_pointer_buffer_offset: <span class="number">0</span>, out_pointer_buffer_offset: <span class="number">0</span>, pointer_size_walker: DataWalker::empty(), pointer_size_walker_initialized: <span class="bool-val">false </span>}
+        <span class="self">Self </span>{
+            object_info: ObjectInfo::new(),
+            in_params: CommandContent::empty(),
+            out_params: CommandContent::empty(),
+            send_statics: ArrayVec::new(),
+            receive_statics: ArrayVec::new(),
+            send_buffers: ArrayVec::new(),
+            receive_buffers: ArrayVec::new(),
+            exchange_buffers: ArrayVec::new(),
+            pointer_buffer: core::ptr::null_mut(),
+            in_pointer_buffer_offset: <span class="number">0</span>,
+            out_pointer_buffer_offset: <span class="number">0</span>,
+            pointer_size_walker: DataWalker::empty(),
+            pointer_size_walker_initialized: <span class="bool-val">false</span>,
+        }
     }
 
     <span class="kw">pub fn </span>new_client(object_info: ObjectInfo) -&gt; <span class="self">Self </span>{
@@ -1442,18 +1685,23 @@
     <span class="kw">fn </span>ensure_pointer_size_walker(<span class="kw-2">&amp;mut </span><span class="self">self</span>, raw_data_walker: <span class="kw-2">&amp;mut </span>DataWalker) {
         <span class="kw">if </span>!<span class="self">self</span>.pointer_size_walker_initialized {
             <span class="kw">if </span><span class="self">self</span>.object_info.uses_cmif_protocol() {
-                <span class="kw">let </span><span class="kw-2">mut </span>data_size = raw_data_walker.get_offset() + DATA_PADDING <span class="kw">as </span>isize + mem::size_of::&lt;cmif::DataHeader&gt;() <span class="kw">as </span>isize;
+                <span class="kw">let </span><span class="kw-2">mut </span>data_size = raw_data_walker.get_offset()
+                    + DATA_PADDING <span class="kw">as </span>isize
+                    + mem::size_of::&lt;cmif::DataHeader&gt;() <span class="kw">as </span>isize;
                 <span class="kw">if </span><span class="self">self</span>.object_info.is_domain() {
-                    data_size += (mem::size_of::&lt;cmif::DomainInDataHeader&gt;() + mem::size_of::&lt;cmif::DomainObjectId&gt;() * <span class="self">self</span>.in_params.objects.len()) <span class="kw">as </span>isize;
+                    data_size += (mem::size_of::&lt;cmif::DomainInDataHeader&gt;()
+                        + mem::size_of::&lt;cmif::DomainObjectId&gt;() * <span class="self">self</span>.in_params.objects.len())
+                        <span class="kw">as </span>isize;
                 }
                 data_size = (data_size + <span class="number">1</span>) &amp; !<span class="number">1</span>;
-                <span class="kw">let </span>out_pointer_sizes_offset = <span class="kw">unsafe </span>{ <span class="self">self</span>.in_params.data_words_offset.offset(data_size) };
+                <span class="kw">let </span>out_pointer_sizes_offset =
+                    <span class="kw">unsafe </span>{ <span class="self">self</span>.in_params.data_words_offset.offset(data_size) };
                 <span class="self">self</span>.pointer_size_walker = DataWalker::new(out_pointer_sizes_offset);
             }
             <span class="self">self</span>.pointer_size_walker_initialized = <span class="bool-val">true</span>;
         }
     }
-    
+
     <span class="kw">pub fn </span>new_server(object_info: ObjectInfo, pointer_buffer: <span class="kw-2">*mut </span>u8) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>ctx = <span class="self">Self</span>::empty();
         ctx.object_info = object_info;
@@ -1464,39 +1712,42 @@
     <span class="kw">fn </span>add_send_static(<span class="kw-2">&amp;mut </span><span class="self">self</span>, send_static: SendStaticDescriptor) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">match </span><span class="self">self</span>.send_statics.try_push(send_static) {
             <span class="prelude-val">Ok</span>(()) =&gt; <span class="prelude-val">Ok</span>(()),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; rc::ResultSendStaticsFull::make_err()
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; rc::ResultSendStaticsFull::make_err(),
         }
     }
 
     <span class="kw">fn </span>add_receive_static(<span class="kw-2">&amp;mut </span><span class="self">self</span>, receive_static: ReceiveStaticDescriptor) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">match </span><span class="self">self</span>.receive_statics.try_push(receive_static) {
             <span class="prelude-val">Ok</span>(()) =&gt; <span class="prelude-val">Ok</span>(()),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; rc::ResultReceiveStaticsFull::make_err()
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; rc::ResultReceiveStaticsFull::make_err(),
         }
     }
 
     <span class="kw">fn </span>add_send_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, send_buffer: BufferDescriptor) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">match </span><span class="self">self</span>.send_buffers.try_push(send_buffer) {
             <span class="prelude-val">Ok</span>(()) =&gt; <span class="prelude-val">Ok</span>(()),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; rc::ResultSendBuffersFull::make_err()
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; rc::ResultSendBuffersFull::make_err(),
         }
     }
 
     <span class="kw">fn </span>add_receive_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, receive_buffer: BufferDescriptor) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">match </span><span class="self">self</span>.receive_buffers.try_push(receive_buffer) {
             <span class="prelude-val">Ok</span>(()) =&gt; <span class="prelude-val">Ok</span>(()),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; rc::ResultReceiveBuffersFull::make_err()
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; rc::ResultReceiveBuffersFull::make_err(),
         }
     }
 
     <span class="kw">fn </span>add_exchange_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, exchange_buffer: BufferDescriptor) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">match </span><span class="self">self</span>.exchange_buffers.try_push(exchange_buffer) {
             <span class="prelude-val">Ok</span>(()) =&gt; <span class="prelude-val">Ok</span>(()),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; rc::ResultExchangeBuffersFull::make_err()
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; rc::ResultExchangeBuffersFull::make_err(),
         }
     }
 
-    <span class="kw">pub fn </span>add_buffer&lt;<span class="kw">const </span>A: BufferAttribute, T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span>sf::Buffer&lt;A, T&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">pub fn </span>add_buffer&lt;<span class="kw">const </span>A: BufferAttribute, T&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        buffer: <span class="kw-2">&amp;</span>sf::Buffer&lt;A, T&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>is_in = A.contains(BufferAttribute::In());
         <span class="kw">let </span>is_out = A.contains(BufferAttribute::Out());
         <span class="kw">let </span>buf_addr = buffer.get_address();
@@ -1516,61 +1767,79 @@
             <span class="kw">if </span>buffer_in_static {
                 <span class="self">self</span>.in_pointer_buffer_offset += buf_size;
             }
-            
+
             <span class="kw">if </span>is_in {
                 <span class="kw">if </span>buffer_in_static {
-                    <span class="self">self</span>.add_send_buffer(BufferDescriptor::new(ptr::null(), <span class="number">0</span>, BufferFlags::Normal))<span class="question-mark">?</span>;
-                    <span class="self">self</span>.add_send_static(SendStaticDescriptor::new(buf_addr, buf_size, <span class="self">self</span>.send_statics.len() <span class="kw">as </span>u32))<span class="question-mark">?</span>;
+                    <span class="self">self</span>.add_send_buffer(BufferDescriptor::new(
+                        ptr::null(),
+                        <span class="number">0</span>,
+                        BufferFlags::Normal,
+                    ))<span class="question-mark">?</span>;
+                    <span class="self">self</span>.add_send_static(SendStaticDescriptor::new(
+                        buf_addr,
+                        buf_size,
+                        <span class="self">self</span>.send_statics.len() <span class="kw">as </span>u32,
+                    ))<span class="question-mark">?</span>;
+                } <span class="kw">else </span>{
+                    <span class="self">self</span>.add_send_buffer(BufferDescriptor::new(
+                        buf_addr,
+                        buf_size,
+                        BufferFlags::Normal,
+                    ))<span class="question-mark">?</span>;
+                    <span class="self">self</span>.add_send_static(SendStaticDescriptor::new(
+                        ptr::null(),
+                        <span class="number">0</span>,
+                        <span class="self">self</span>.send_statics.len() <span class="kw">as </span>u32,
+                    ))<span class="question-mark">?</span>;
                 }
-                <span class="kw">else </span>{
-                    <span class="self">self</span>.add_send_buffer(BufferDescriptor::new(buf_addr, buf_size, BufferFlags::Normal))<span class="question-mark">?</span>;
-                    <span class="self">self</span>.add_send_static(SendStaticDescriptor::new(ptr::null(), <span class="number">0</span>, <span class="self">self</span>.send_statics.len() <span class="kw">as </span>u32))<span class="question-mark">?</span>;
-                }
-            }
-            <span class="kw">else if </span>is_out {
+            } <span class="kw">else if </span>is_out {
                 <span class="kw">if </span>buffer_in_static {
-                    <span class="self">self</span>.add_receive_buffer(BufferDescriptor::new(ptr::null(), <span class="number">0</span>, BufferFlags::Normal))<span class="question-mark">?</span>;
+                    <span class="self">self</span>.add_receive_buffer(BufferDescriptor::new(
+                        ptr::null(),
+                        <span class="number">0</span>,
+                        BufferFlags::Normal,
+                    ))<span class="question-mark">?</span>;
                     <span class="self">self</span>.add_receive_static(ReceiveStaticDescriptor::new(buf_addr, buf_size))<span class="question-mark">?</span>;
                     <span class="self">self</span>.in_params.add_out_pointer_size(buf_size <span class="kw">as </span>u16)<span class="question-mark">?</span>;
-                }
-                <span class="kw">else </span>{
-                    <span class="self">self</span>.add_receive_buffer(BufferDescriptor::new(buf_addr, buf_size, BufferFlags::Normal))<span class="question-mark">?</span>;
+                } <span class="kw">else </span>{
+                    <span class="self">self</span>.add_receive_buffer(BufferDescriptor::new(
+                        buf_addr,
+                        buf_size,
+                        BufferFlags::Normal,
+                    ))<span class="question-mark">?</span>;
                     <span class="self">self</span>.add_receive_static(ReceiveStaticDescriptor::new(ptr::null(), <span class="number">0</span>))<span class="question-mark">?</span>;
                     <span class="self">self</span>.in_params.add_out_pointer_size(<span class="number">0</span>)<span class="question-mark">?</span>;
                 }
             }
-        }
-        <span class="kw">else if </span>A.contains(BufferAttribute::Pointer()) {
+        } <span class="kw">else if </span>A.contains(BufferAttribute::Pointer()) {
             <span class="kw">if </span>is_in {
-                <span class="self">self</span>.add_send_static(SendStaticDescriptor::new(buf_addr, buf_size, <span class="self">self</span>.send_statics.len() <span class="kw">as </span>u32))<span class="question-mark">?</span>;
-            }
-            <span class="kw">else if </span>is_out {
+                <span class="self">self</span>.add_send_static(SendStaticDescriptor::new(
+                    buf_addr,
+                    buf_size,
+                    <span class="self">self</span>.send_statics.len() <span class="kw">as </span>u32,
+                ))<span class="question-mark">?</span>;
+            } <span class="kw">else if </span>is_out {
                 <span class="self">self</span>.add_receive_static(ReceiveStaticDescriptor::new(buf_addr, buf_size))<span class="question-mark">?</span>;
                 <span class="kw">if </span>!A.contains(BufferAttribute::FixedSize()) {
                     <span class="self">self</span>.in_params.add_out_pointer_size(buf_size <span class="kw">as </span>u16)<span class="question-mark">?</span>;
                 }
             }
-        }
-        <span class="kw">else if </span>A.contains(BufferAttribute::MapAlias()) {
+        } <span class="kw">else if </span>A.contains(BufferAttribute::MapAlias()) {
             <span class="kw">let </span><span class="kw-2">mut </span>flags = BufferFlags::Normal;
             <span class="kw">if </span>A.contains(BufferAttribute::MapTransferAllowsNonSecure()) {
                 flags = BufferFlags::NonSecure;
-            }
-            <span class="kw">else if </span>A.contains(BufferAttribute::MapTransferAllowsNonDevice()) {
+            } <span class="kw">else if </span>A.contains(BufferAttribute::MapTransferAllowsNonDevice()) {
                 flags = BufferFlags::NonDevice;
             }
             <span class="kw">let </span>buf_desc = BufferDescriptor::new(buf_addr, buf_size, flags);
             <span class="kw">if </span>is_in &amp;&amp; is_out {
                 <span class="self">self</span>.add_exchange_buffer(buf_desc)<span class="question-mark">?</span>;
-            }
-            <span class="kw">else if </span>is_in {
+            } <span class="kw">else if </span>is_in {
                 <span class="self">self</span>.add_send_buffer(buf_desc)<span class="question-mark">?</span>;
-            }
-            <span class="kw">else if </span>is_out {
+            } <span class="kw">else if </span>is_out {
                 <span class="self">self</span>.add_receive_buffer(buf_desc)<span class="question-mark">?</span>;
             }
-        }
-        <span class="kw">else </span>{
+        } <span class="kw">else </span>{
             <span class="kw">return </span>rc::ResultInvalidBufferAttributes::make_err();
         }
 
@@ -1580,39 +1849,42 @@
     <span class="kw">fn </span>pop_send_static(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;SendStaticDescriptor&gt; {
         <span class="kw">match </span><span class="self">self</span>.send_statics.pop_at(<span class="number">0</span>) {
             <span class="prelude-val">Some</span>(send_static) =&gt; <span class="prelude-val">Ok</span>(send_static),
-            <span class="prelude-val">None </span>=&gt; rc::ResultInvalidSendStaticCount::make_err()
+            <span class="prelude-val">None </span>=&gt; rc::ResultInvalidSendStaticCount::make_err(),
         }
     }
 
     <span class="kw">fn </span>pop_receive_static(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;ReceiveStaticDescriptor&gt; {
         <span class="kw">match </span><span class="self">self</span>.receive_statics.pop_at(<span class="number">0</span>) {
             <span class="prelude-val">Some</span>(receive_static) =&gt; <span class="prelude-val">Ok</span>(receive_static),
-            <span class="prelude-val">None </span>=&gt; rc::ResultInvalidReceiveStaticCount::make_err()
+            <span class="prelude-val">None </span>=&gt; rc::ResultInvalidReceiveStaticCount::make_err(),
         }
     }
 
     <span class="kw">fn </span>pop_send_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;BufferDescriptor&gt; {
         <span class="kw">match </span><span class="self">self</span>.send_buffers.pop_at(<span class="number">0</span>) {
             <span class="prelude-val">Some</span>(send_buffer) =&gt; <span class="prelude-val">Ok</span>(send_buffer),
-            <span class="prelude-val">None </span>=&gt; rc::ResultInvalidSendBufferCount::make_err()
+            <span class="prelude-val">None </span>=&gt; rc::ResultInvalidSendBufferCount::make_err(),
         }
     }
 
     <span class="kw">fn </span>pop_receive_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;BufferDescriptor&gt; {
         <span class="kw">match </span><span class="self">self</span>.receive_buffers.pop_at(<span class="number">0</span>) {
             <span class="prelude-val">Some</span>(receive_buffer) =&gt; <span class="prelude-val">Ok</span>(receive_buffer),
-            <span class="prelude-val">None </span>=&gt; rc::ResultInvalidReceiveBufferCount::make_err()
+            <span class="prelude-val">None </span>=&gt; rc::ResultInvalidReceiveBufferCount::make_err(),
         }
     }
 
     <span class="kw">fn </span>pop_exchange_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;BufferDescriptor&gt; {
         <span class="kw">match </span><span class="self">self</span>.exchange_buffers.pop_at(<span class="number">0</span>) {
             <span class="prelude-val">Some</span>(exchange_buffer) =&gt; <span class="prelude-val">Ok</span>(exchange_buffer),
-            <span class="prelude-val">None </span>=&gt; rc::ResultInvalidExchangeBufferCount::make_err()
+            <span class="prelude-val">None </span>=&gt; rc::ResultInvalidExchangeBufferCount::make_err(),
         }
     }
 
-    <span class="kw">pub fn </span>pop_buffer&lt;<span class="kw">const </span>A: BufferAttribute, T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, raw_data_walker: <span class="kw-2">&amp;mut </span>DataWalker) -&gt; <span class="prelude-ty">Result</span>&lt;sf::Buffer&lt;A, T&gt;&gt; {
+    <span class="kw">pub fn </span>pop_buffer&lt;<span class="kw">const </span>A: BufferAttribute, T&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        raw_data_walker: <span class="kw-2">&amp;mut </span>DataWalker,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;sf::Buffer&lt;A, T&gt;&gt; {
         <span class="kw">let </span>is_in = A.contains(BufferAttribute::In());
         <span class="kw">let </span>is_out = A.contains(BufferAttribute::Out());
 
@@ -1621,34 +1893,46 @@
                 <span class="kw">if let </span><span class="prelude-val">Ok</span>(static_desc) = <span class="self">self</span>.pop_send_static() {
                     <span class="kw">if let </span><span class="prelude-val">Ok</span>(send_desc) = <span class="self">self</span>.pop_send_buffer() {
                         <span class="kw">if </span>!static_desc.get_address().is_null() &amp;&amp; (static_desc.get_size() &gt; <span class="number">0</span>) {
-                            <span class="kw">return </span><span class="prelude-val">Ok</span>(sf::Buffer::new(static_desc.get_address(), static_desc.get_size()));
+                            <span class="kw">return </span><span class="prelude-val">Ok</span>(sf::Buffer::new(
+                                static_desc.get_address(),
+                                static_desc.get_size(),
+                            ));
                         }
                         <span class="kw">if </span>!send_desc.get_address().is_null() &amp;&amp; (send_desc.get_size() &gt; <span class="number">0</span>) {
-                            <span class="kw">return </span><span class="prelude-val">Ok</span>(sf::Buffer::new(send_desc.get_address(), send_desc.get_size()));
+                            <span class="kw">return </span><span class="prelude-val">Ok</span>(sf::Buffer::new(
+                                send_desc.get_address(),
+                                send_desc.get_size(),
+                            ));
                         }
                     }
                 }
-            }
-            <span class="kw">else if </span>is_out {
+            } <span class="kw">else if </span>is_out {
                 <span class="kw">if let </span><span class="prelude-val">Ok</span>(static_desc) = <span class="self">self</span>.pop_receive_static() {
                     <span class="kw">if let </span><span class="prelude-val">Ok</span>(recv_desc) = <span class="self">self</span>.pop_receive_buffer() {
                         <span class="kw">if </span>!static_desc.get_address().is_null() &amp;&amp; (static_desc.get_size() &gt; <span class="number">0</span>) {
-                            <span class="kw">return </span><span class="prelude-val">Ok</span>(sf::Buffer::new(static_desc.get_address(), static_desc.get_size()));
+                            <span class="kw">return </span><span class="prelude-val">Ok</span>(sf::Buffer::new(
+                                static_desc.get_address(),
+                                static_desc.get_size(),
+                            ));
                         }
                         <span class="kw">if </span>!recv_desc.get_address().is_null() &amp;&amp; (recv_desc.get_size() &gt; <span class="number">0</span>) {
-                            <span class="kw">return </span><span class="prelude-val">Ok</span>(sf::Buffer::new(recv_desc.get_address(), recv_desc.get_size()));
+                            <span class="kw">return </span><span class="prelude-val">Ok</span>(sf::Buffer::new(
+                                recv_desc.get_address(),
+                                recv_desc.get_size(),
+                            ));
                         }
                     }
                 }
             }
-        }
-        <span class="kw">else if </span>A.contains(BufferAttribute::Pointer()) {
+        } <span class="kw">else if </span>A.contains(BufferAttribute::Pointer()) {
             <span class="kw">if </span>is_in {
                 <span class="kw">if let </span><span class="prelude-val">Ok</span>(static_desc) = <span class="self">self</span>.pop_send_static() {
-                    <span class="kw">return </span><span class="prelude-val">Ok</span>(sf::Buffer::new(static_desc.get_address(), static_desc.get_size()));
+                    <span class="kw">return </span><span class="prelude-val">Ok</span>(sf::Buffer::new(
+                        static_desc.get_address(),
+                        static_desc.get_size(),
+                    ));
                 }
-            }
-            <span class="kw">else if </span>is_out {
+            } <span class="kw">else if </span>is_out {
                 <span class="kw">let </span>buf_size = <span class="kw">match </span>A.contains(BufferAttribute::FixedSize()) {
                     <span class="bool-val">true </span>=&gt; sf::Buffer::&lt;A, T&gt;::get_expected_size(),
                     <span class="bool-val">false </span>=&gt; {
@@ -1661,21 +1945,27 @@
                 <span class="self">self</span>.out_pointer_buffer_offset += buf_size;
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(sf::Buffer::new(buf, buf_size));
             }
-        }
-        <span class="kw">else if </span>A.contains(BufferAttribute::MapAlias()) {
+        } <span class="kw">else if </span>A.contains(BufferAttribute::MapAlias()) {
             <span class="kw">if </span>is_in &amp;&amp; is_out {
                 <span class="kw">if let </span><span class="prelude-val">Ok</span>(exch_desc) = <span class="self">self</span>.pop_exchange_buffer() {
-                    <span class="kw">return </span><span class="prelude-val">Ok</span>(sf::Buffer::new(exch_desc.get_address(), exch_desc.get_size()));
+                    <span class="kw">return </span><span class="prelude-val">Ok</span>(sf::Buffer::new(
+                        exch_desc.get_address(),
+                        exch_desc.get_size(),
+                    ));
                 }
-            }
-            <span class="kw">else if </span>is_in {
+            } <span class="kw">else if </span>is_in {
                 <span class="kw">if let </span><span class="prelude-val">Ok</span>(send_desc) = <span class="self">self</span>.pop_send_buffer() {
-                    <span class="kw">return </span><span class="prelude-val">Ok</span>(sf::Buffer::new(send_desc.get_address(), send_desc.get_size()));
+                    <span class="kw">return </span><span class="prelude-val">Ok</span>(sf::Buffer::new(
+                        send_desc.get_address(),
+                        send_desc.get_size(),
+                    ));
                 }
-            }
-            <span class="kw">else if </span>is_out {
+            } <span class="kw">else if </span>is_out {
                 <span class="kw">if let </span><span class="prelude-val">Ok</span>(recv_desc) = <span class="self">self</span>.pop_receive_buffer() {
-                    <span class="kw">return </span><span class="prelude-val">Ok</span>(sf::Buffer::new(recv_desc.get_address(), recv_desc.get_size()));
+                    <span class="kw">return </span><span class="prelude-val">Ok</span>(sf::Buffer::new(
+                        recv_desc.get_address(),
+                        recv_desc.get_size(),
+                    ));
                 }
             }
         }
@@ -1684,16 +1974,16 @@
     }
 
     <span class="kw">pub fn </span>pop_object(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;ObjectInfo&gt; {
-        <span class="kw">let </span>object_info: ObjectInfo;
         <span class="kw">if </span><span class="self">self</span>.object_info.is_domain() {
             <span class="kw">let </span>domain_object_id = <span class="self">self</span>.out_params.pop_domain_object()<span class="question-mark">?</span>;
-            object_info = ObjectInfo::from_domain_object_id(<span class="self">self</span>.object_info.handle, domain_object_id);
-        }
-        <span class="kw">else </span>{
+            <span class="prelude-val">Ok</span>(ObjectInfo::from_domain_object_id(
+                <span class="self">self</span>.object_info.handle,
+                domain_object_id,
+            ))
+        } <span class="kw">else </span>{
             <span class="kw">let </span>handle: sf::MoveHandle = <span class="self">self</span>.out_params.pop_handle()<span class="question-mark">?</span>;
-            object_info = ObjectInfo::from_handle(handle.handle);
+            <span class="prelude-val">Ok</span>(ObjectInfo::from_handle(handle.handle))
         }
-        <span class="prelude-val">Ok</span>(object_info)
     }
 }
 
@@ -1705,4 +1995,5 @@
 
 <span class="kw">pub mod </span>tipc;
 
-<span class="kw">pub mod </span>sf;</code></pre></div></section></main></body></html>
+<span class="kw">pub mod </span>sf;
+</code></pre></div></section></main></body></html>

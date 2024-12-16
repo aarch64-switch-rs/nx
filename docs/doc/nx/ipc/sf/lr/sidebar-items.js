@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["LocationResolver","LocationResolverManager","RegisteredLocationResolver"],"trait":["ILocationResolver","ILocationResolverManager","ILocationResolverManagerServer","ILocationResolverServer","IRegisteredLocationResolver","IRegisteredLocationResolverServer"]};

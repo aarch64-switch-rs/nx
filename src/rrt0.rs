@@ -16,7 +16,7 @@
 //! 
 //! On the default entrypoint routine, the internal system version (see [`get_version`][`version::get_version`] and [`set_version`][`version::set_version`]) gets set the following way:
 //! * If the process was launched through HBL, use the "HOS version" value we got from it
-//! * Otherwise (and if using the `services` feature), use settings services ([`SystemSettingsServer`][`crate::service::set::SystemSettingsServer`]) to get it
+//! * Otherwise (and if using the `services` feature), use settings services ([`SystemSettingsServer`][`crate::service::set::ISystemSettingsServer`]) to get it
 //! 
 //! If you wish to define your custom version setup (for instance, in contexts in which you wish to avoid executing the aforementioned setup), you can do so by redefining the `initialize_version` weak fn.
 //! 
@@ -29,7 +29,6 @@
 //! ```
 
 use crate::elf;
-use crate::elf::mod0;
 use crate::result::*;
 use crate::svc;
 use crate::mem::alloc;
@@ -394,13 +393,15 @@ unsafe extern "C" fn __nx_rrt0_entry(arg0: usize, arg1: usize) {
     let aslr_base_address = info.base_address as *mut u8;
 
     // assume that the MOD0 structure is at the start of .text
-    let start_dyn = elf::mod0::find_start_dyn_address(aslr_base_address).unwrap();
-    elf::relocate_with_dyn(aslr_base_address, start_dyn as *const elf::Dyn).unwrap();
+    let mod0 = elf::mod0::Header::from_text_start_addr(aslr_base_address);
+    let start_dyn = mod0.get_dyn_start();
+    elf::relocate_with_dyn(aslr_base_address, start_dyn as *const elf::Dyn);
 
-    mod0::zero_bss_section(aslr_base_address).unwrap();
+    mod0.zero_bss_section();
 
-    EH_FRAME_HDR_SECTION.set(mod0::find_eh_frame_header(aslr_base_address).unwrap());
-    unwinding::custom_eh_frame_finder::set_custom_eh_frame_finder(&EH_FRAME_HDR_SECTION).unwrap();
+    let eh_hdr_ptr_start = mod0.get_eh_frame_header_start();
+    EH_FRAME_HDR_SECTION.set(eh_hdr_ptr_start);
+    let _ = unwinding::custom_eh_frame_finder::set_custom_eh_frame_finder(&EH_FRAME_HDR_SECTION);
 
     // make sure that the writes are complete before there are any accesses
     core::sync::atomic::compiler_fence(core::sync::atomic::Ordering::SeqCst);

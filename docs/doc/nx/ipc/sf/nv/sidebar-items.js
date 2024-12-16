@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["ErrorCode","IoctlId"],"trait":["INvDrvServices"],"type":["Fd"]};
+window.SIDEBAR_ITEMS = {"enum":["ErrorCode","IoctlId"],"struct":["NvDrvServices"],"trait":["INvDrvServices","INvDrvServicesServer"],"type":["Fd"]};

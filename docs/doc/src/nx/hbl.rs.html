@@ -1,6 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/hbl.rs`."><title>hbl.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0-nightly (c9f8f3438 2024-03-27)" data-channel="nightly" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
-            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../nx/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/hbl.rs`."><title>hbl.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-42caa33d.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.85.0-nightly (a47555110 2024-11-22)" data-channel="nightly" data-search-js="search-92e6798f.js" data-settings-js="settings-0f613d39.js" ><script src="../../static.files/storage-59e33391.js"></script><script defer src="../../static.files/src-script-56102188.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">nx/</div>hbl.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -268,13 +267,25 @@
 <a href="#266" id="266">266</a>
 <a href="#267" id="267">267</a>
 <a href="#268" id="268">268</a>
-</pre></div><pre class="rust"><code><span class="doccomment">//! HBL (homebrew loader) ABI support and utils
+<a href="#269" id="269">269</a>
+<a href="#270" id="270">270</a>
+<a href="#271" id="271">271</a>
+<a href="#272" id="272">272</a>
+<a href="#273" id="273">273</a>
+<a href="#274" id="274">274</a></pre></div><pre class="rust"><code><span class="doccomment">//! HBL (homebrew loader) ABI support and utils
 
-</span><span class="kw">use </span><span class="kw">crate</span>::svc::Handle;
-<span class="kw">use </span><span class="kw">crate</span>::svc::INVALID_HANDLE;
-<span class="kw">use </span><span class="kw">crate</span>::version;
-<span class="kw">use </span><span class="kw">crate</span>::util;
+</span><span class="kw">use </span>atomic_enum::atomic_enum;
+<span class="kw">use </span>core::sync::atomic::AtomicU32;
+<span class="kw">use </span>core::sync::atomic::Ordering;
+<span class="kw">use </span>core::sync::atomic::Ordering::Relaxed;
+
 <span class="kw">use </span><span class="kw">crate</span>::result::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::svc::Handle;
+<span class="kw">use </span><span class="kw">crate</span>::svc::INVALID_HANDLE;
+<span class="kw">use </span><span class="kw">crate</span>::sync::Mutex;
+<span class="kw">use </span><span class="kw">crate</span>::sync::RwLock;
+<span class="kw">use </span><span class="kw">crate</span>::util::ArrayString;
+<span class="kw">use </span><span class="kw">crate</span>::version;
 
 <span class="doccomment">/// Represents the entry value keys for a hbl ABI context
 </span><span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -295,8 +306,8 @@
     LastLoadResult = <span class="number">11</span>,
     RandomSeed = <span class="number">14</span>,
     UserIdStorage = <span class="number">15</span>,
-    HosVersion = <span class="number">16
-</span>}
+    HosVersion = <span class="number">16</span>,
+}
 
 <span class="macro">define_bit_enum!</span> {
     <span class="doccomment">/// Represents optional flags for config entries
@@ -322,14 +333,14 @@
     <span class="doccomment">/// The entry flags
     </span><span class="kw">pub </span>flags: AbiConfigEntryFlags,
     <span class="doccomment">/// The entry-specific values
-    </span><span class="kw">pub </span>value: [u64; <span class="number">2</span>]
+    </span><span class="kw">pub </span>value: [u64; <span class="number">2</span>],
 }
 
 <span class="doccomment">/// Represents the hbl-ABI format of the system version
 </span><span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>Version {
-    value: u32
+    value: u32,
 }
 
 <span class="kw">impl </span>Version {
@@ -346,19 +357,21 @@
     }
 
     <span class="doccomment">/// Creates a [`Version`] from a raw value and the magic representing the current OS implementation
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `value`: The raw value
     /// * `os_impl_magic`: The magic value
     </span><span class="attr">#[inline]
     </span><span class="kw">pub const fn </span>new(value: u32, os_impl_magic: u64) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>actual_value = <span class="kw">match </span>os_impl_magic == <span class="self">Self</span>::ATMOSPHERE_OS_IMPL_MAGIC {
             <span class="bool-val">true </span>=&gt; value | <span class="self">Self</span>::IS_ATMOSPHERE_BIT,
-            <span class="bool-val">false </span>=&gt; value
+            <span class="bool-val">false </span>=&gt; value,
         };
 
-        <span class="self">Self </span>{ value: actual_value }
+        <span class="self">Self </span>{
+            value: actual_value,
+        }
     }
 
     <span class="doccomment">/// Gets the major component of the [`Version`]
@@ -392,44 +405,38 @@
     }
 }
 
-<span class="kw">static </span><span class="kw-2">mut </span>G_LAST_LOAD_RESULT: ResultCode = ResultCode::new(<span class="number">0</span>); <span class="comment">// TODO: const result traits for ResultSuccess?
+<span class="kw">static </span>G_LAST_LOAD_RESULT: AtomicU32 = AtomicU32::new(<span class="number">0</span>);
 
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>set_last_load_result(rc: ResultCode) {
-    <span class="kw">unsafe </span>{
-        G_LAST_LOAD_RESULT = rc;
-    }
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>set_last_load_result(rc: ResultCode) {
+        G_LAST_LOAD_RESULT.store(rc.get_value(), Ordering::Release);
 }
 
 <span class="doccomment">/// Gets the last load [`ResultCode`]
-/// 
+///
 /// This value represents the [`ResultCode`] of the last homebrew NRO executed before the current one
-/// 
+///
 /// This value will only be set/useful if the current code is running through HBL
 </span><span class="kw">pub fn </span>get_last_load_result() -&gt; ResultCode {
-    <span class="kw">unsafe </span>{
-        G_LAST_LOAD_RESULT
-    }
+    ResultCode::new(G_LAST_LOAD_RESULT.load(Ordering::Relaxed))
 }
 
-<span class="kw">static </span><span class="kw-2">mut </span>G_PROCESS_HANDLE: Handle = INVALID_HANDLE;
+<span class="kw">static </span>G_PROCESS_HANDLE: AtomicU32 = AtomicU32::new(INVALID_HANDLE);
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>set_process_handle(handle: Handle) {
-    <span class="kw">unsafe </span>{
-        G_PROCESS_HANDLE = handle;
-    }
+        G_PROCESS_HANDLE.store(handle, Ordering::Release);
+
 }
 
 <span class="doccomment">/// Gets the current process handle
-/// 
-/// This value will only be set/useful if the current code is running through HBL 
+///
+/// This value will only be set/useful if the current code is running through HBL
 </span><span class="kw">pub fn </span>get_process_handle() -&gt; Handle {
-    <span class="kw">unsafe </span>{
-        G_PROCESS_HANDLE
-    }
+    G_PROCESS_HANDLE.load(Ordering::Relaxed)
 }
 
-<span class="doccomment">/// Represents the applet types for HBL
-</span><span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+<span class="attr">#[atomic_enum]
+</span><span class="doccomment">/// Represents the applet types for HBL
+</span><span class="attr">#[derive(PartialEq, Eq, Default)]
 #[repr(i32)]
 </span><span class="kw">pub enum </span>AppletType {
     <span class="attr">#[default]
@@ -439,69 +446,58 @@
     SystemApplet = <span class="number">1</span>,
     LibraryApplet = <span class="number">2</span>,
     OverlayApplet = <span class="number">3</span>,
-    SystemApplication = <span class="number">4
-</span>}
+    SystemApplication = <span class="number">4</span>,
+}
 
-<span class="kw">static </span><span class="kw-2">mut </span>G_APPLET_TYPE: AppletType = AppletType::None;
+<span class="kw">static </span>G_APPLET_TYPE: AtomicAppletType = AtomicAppletType::new(AppletType::None);
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>set_applet_type(applet_type: AppletType) {
-    <span class="kw">unsafe </span>{
-        G_APPLET_TYPE = applet_type;
-    }
+    G_APPLET_TYPE.store(applet_type, Relaxed);
 }
 
 <span class="doccomment">/// Gets the current applet type (according to HBL)
-/// 
+///
 /// This value will only be set/useful if the current code is running through HBL
 </span><span class="kw">pub fn </span>get_applet_type() -&gt; AppletType {
-    <span class="kw">unsafe </span>{
-        G_APPLET_TYPE
-    }
+    G_APPLET_TYPE.load(Relaxed)
 }
 
-<span class="kw">static </span><span class="kw-2">mut </span>G_LOADER_INFO: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str = <span class="string">""</span>;
+<span class="kw">static </span>G_LOADER_INFO: RwLock&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str&gt; = RwLock::new(<span class="string">""</span>);
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>set_loader_info(loader_info: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str) {
-    <span class="kw">unsafe </span>{
-        G_LOADER_INFO = loader_info;
-    }
+    <span class="kw-2">*</span>G_LOADER_INFO.write() = loader_info;
 }
 
 <span class="doccomment">/// Gets the loader information string, about HBL
-/// 
+///
 /// This value will only be set/useful if the current code is running through HBL
 </span><span class="kw">pub fn </span>get_loader_info() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
-    <span class="kw">unsafe </span>{
-        G_LOADER_INFO
-    }
+    <span class="kw-2">*</span>G_LOADER_INFO.read()
 }
 
-<span class="kw">static </span><span class="kw-2">mut </span>G_NEXT_LOAD_PATH: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str = <span class="string">""</span>;
-<span class="kw">static </span><span class="kw-2">mut </span>G_NEXT_LOAD_ARGV: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str = <span class="string">""</span>;
+<span class="kw">static </span>G_NEXT_LOAD_PATH: Mutex&lt;<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span><span class="kw-2">mut </span>ArrayString&lt;<span class="number">512</span>&gt;&gt;&gt; = Mutex::new(<span class="prelude-val">None</span>);
+<span class="kw">static </span>G_NEXT_LOAD_ARGV: Mutex&lt;<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span><span class="kw-2">mut </span>ArrayString&lt;<span class="number">2048</span>&gt;&gt;&gt; = Mutex::new(<span class="prelude-val">None</span>);
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>set_next_load_entry_ptr(next_load_path: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, next_load_argv: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str) {
-    <span class="kw">unsafe </span>{
-        G_NEXT_LOAD_PATH = next_load_path;
-        G_NEXT_LOAD_ARGV = next_load_argv;
-    }
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>set_next_load_entry_ptr(
+    next_load_path: <span class="kw-2">&amp;</span><span class="lifetime">'static </span><span class="kw-2">mut </span>ArrayString&lt;<span class="number">512</span>&gt;,
+    next_load_argv: <span class="kw-2">&amp;</span><span class="lifetime">'static </span><span class="kw-2">mut </span>ArrayString&lt;<span class="number">2048</span>&gt;,
+) {
+    <span class="kw-2">*</span>G_NEXT_LOAD_PATH.lock() = <span class="prelude-val">Some</span>(next_load_path);
+    <span class="kw-2">*</span>G_NEXT_LOAD_ARGV.lock() = <span class="prelude-val">Some</span>(next_load_argv);
 }
 
 <span class="doccomment">/// Gets the next load path, AKA the path of the homebrew NRO which will be executed after this one exits
-/// 
+///
 /// This value will only be set/useful if the current code is running through HBL
-</span><span class="kw">pub fn </span>get_next_load_path() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
-    <span class="kw">unsafe </span>{
-        G_NEXT_LOAD_PATH
-    }
+</span><span class="kw">pub fn </span>get_next_load_path() -&gt; <span class="prelude-ty">Option</span>&lt;ArrayString&lt;<span class="number">512</span>&gt;&gt;{
+    G_NEXT_LOAD_PATH.lock().as_ref().map(|s: &amp;&amp;<span class="kw-2">mut </span>ArrayString&lt;<span class="number">512</span>&gt;| (<span class="kw-2">*</span>s).clone())
 }
 
 <span class="doccomment">/// Gets the next load argv, AKA the argv of the homebrew NRO which will be executed after this one exits
-/// 
+///
 /// This value will only be set/useful if the current code is running through HBL
-</span><span class="kw">pub fn </span>get_next_load_argv() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
-    <span class="kw">unsafe </span>{
-        G_NEXT_LOAD_ARGV
-    }
+</span><span class="kw">pub fn </span>get_next_load_argv() -&gt; <span class="prelude-ty">Option</span>&lt;ArrayString&lt;<span class="number">2048</span>&gt;&gt;{
+    G_NEXT_LOAD_ARGV.lock().as_ref().map(|s: &amp;&amp;<span class="kw-2">mut </span>ArrayString&lt;<span class="number">2048</span>&gt;| (<span class="kw-2">*</span>s).clone())
 }
 
 <span class="doccomment">/// Sets the next homebrew NRO (path and argv) to execute after this one exits
@@ -512,27 +508,42 @@
 /// 
 /// * `next_load_path`: NRO path
 /// * `next_load_argv`: NRO argv
-</span><span class="kw">pub fn </span>set_next_load_entry(next_load_path: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, next_load_argv: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str) {
-    <span class="kw">unsafe </span>{
-        <span class="comment">// Note: using this system to copy the strings since we must preserve the string pointers HBL sent us
-        </span>G_NEXT_LOAD_PATH = util::str_copy(G_NEXT_LOAD_PATH, next_load_path);
-        G_NEXT_LOAD_ARGV = util::str_copy(G_NEXT_LOAD_ARGV, next_load_argv);
-    }
+/// 
+/// Returns true if the buffers have been initialized, else false.
+/// 
+</span><span class="kw">pub fn </span>set_next_load_entry(next_load_path: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, next_load_argv: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str) -&gt; <span class="prelude-ty">Result</span>&lt;(bool, bool)&gt; {
+    <span class="prelude-val">Ok</span>((
+        {
+            <span class="kw">let </span><span class="kw-2">mut </span>path_handle = G_NEXT_LOAD_PATH.lock();  
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(buffer) = path_handle.as_mut() {
+                (<span class="kw-2">*</span>buffer).set_str(next_load_path)<span class="question-mark">?</span>;
+                <span class="bool-val">true
+            </span>} <span class="kw">else </span>{
+                <span class="bool-val">false
+            </span>}
+        },
+        {
+            <span class="kw">let </span><span class="kw-2">mut </span>argv_handle = G_NEXT_LOAD_ARGV.lock();
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(buffer) = argv_handle.as_mut() {
+                (<span class="kw-2">*</span>buffer).set_str(next_load_argv)<span class="question-mark">?</span>;
+                <span class="bool-val">true
+            </span>} <span class="kw">else </span>{
+                <span class="bool-val">false
+            </span>}
+        }
+    ))
 }
 
-<span class="kw">static </span><span class="kw-2">mut </span>G_RANDOM_SEED: (u64, u64) = (<span class="number">0</span>, <span class="number">0</span>);
+<span class="kw">static </span>G_RANDOM_SEED: generic_once_cell::OnceCell&lt;<span class="kw">crate</span>::sync::sys::mutex::Mutex, (u64, u64)&gt; = generic_once_cell::OnceCell::new();
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>set_random_seed(seed: (u64, u64)) {
-    <span class="kw">unsafe </span>{
-        G_RANDOM_SEED = seed;
-    }
+    G_RANDOM_SEED.set(seed).expect(<span class="string">"The random seed should only ever be set once"</span>);
 }
 
 <span class="doccomment">/// Gets the random seed values sent by HBL
-/// 
+///
 /// This values will only be set/useful if the current code is running through HBL
 </span><span class="kw">pub fn </span>get_random_seed() -&gt; (u64, u64) {
-    <span class="kw">unsafe </span>{
-        G_RANDOM_SEED
-    }
-}</code></pre></div></section></main></body></html>
+    G_RANDOM_SEED.get().map(Clone::clone).unwrap_or((<span class="number">0u64</span>,<span class="number">0u64</span>))
+}
+</code></pre></div></section></main></body></html>

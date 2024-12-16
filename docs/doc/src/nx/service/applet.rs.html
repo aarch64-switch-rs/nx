@@ -1,6 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/service/applet.rs`."><title>applet.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0-nightly (c9f8f3438 2024-03-27)" data-channel="nightly" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
-            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../nx/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/service/applet.rs`."><title>applet.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-42caa33d.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.85.0-nightly (a47555110 2024-11-22)" data-channel="nightly" data-search-js="search-92e6798f.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">nx/service/</div>applet.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -75,151 +74,68 @@
 <a href="#73" id="73">73</a>
 <a href="#74" id="74">74</a>
 <a href="#75" id="75">75</a>
-<a href="#76" id="76">76</a>
-<a href="#77" id="77">77</a>
-<a href="#78" id="78">78</a>
-<a href="#79" id="79">79</a>
-<a href="#80" id="80">80</a>
-<a href="#81" id="81">81</a>
-<a href="#82" id="82">82</a>
-<a href="#83" id="83">83</a>
-<a href="#84" id="84">84</a>
-<a href="#85" id="85">85</a>
-<a href="#86" id="86">86</a>
-<a href="#87" id="87">87</a>
-<a href="#88" id="88">88</a>
-<a href="#89" id="89">89</a>
-<a href="#90" id="90">90</a>
-<a href="#91" id="91">91</a>
-<a href="#92" id="92">92</a>
-<a href="#93" id="93">93</a>
-<a href="#94" id="94">94</a>
-<a href="#95" id="95">95</a>
-<a href="#96" id="96">96</a>
-<a href="#97" id="97">97</a>
-<a href="#98" id="98">98</a>
-<a href="#99" id="99">99</a>
-<a href="#100" id="100">100</a>
-<a href="#101" id="101">101</a>
-<a href="#102" id="102">102</a>
-<a href="#103" id="103">103</a>
-<a href="#104" id="104">104</a>
-<a href="#105" id="105">105</a>
-<a href="#106" id="106">106</a>
-<a href="#107" id="107">107</a>
-<a href="#108" id="108">108</a>
-<a href="#109" id="109">109</a>
-<a href="#110" id="110">110</a>
-<a href="#111" id="111">111</a>
-<a href="#112" id="112">112</a>
-<a href="#113" id="113">113</a>
-<a href="#114" id="114">114</a>
-<a href="#115" id="115">115</a>
-<a href="#116" id="116">116</a>
-<a href="#117" id="117">117</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::ipc::sf::sm;
-<span class="kw">use </span><span class="kw">crate</span>::result::<span class="kw-2">*</span>;
+<a href="#76" id="76">76</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::sync::atomic::AtomicU64;
+
 <span class="kw">use </span><span class="kw">crate</span>::ipc::sf;
-<span class="kw">use </span><span class="kw">crate</span>::service;
+<span class="kw">use </span><span class="kw">crate</span>::ipc::sf::sm;
 <span class="kw">use </span><span class="kw">crate</span>::mem;
+<span class="kw">use </span><span class="kw">crate</span>::service;
+<span class="kw">use </span><span class="kw">crate</span>::sync;
+<span class="kw">use crate</span>::{result::<span class="kw-2">*</span>, svc};
 
 <span class="kw">pub use </span><span class="kw">crate</span>::ipc::sf::applet::<span class="kw-2">*</span>;
 
-<span class="macro">ipc_client_define_object_default!</span>(StorageAccessor);
 
-<span class="kw">impl </span>IStorageAccessor <span class="kw">for </span>StorageAccessor {
-    <span class="kw">fn </span>get_size(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
-        <span class="macro">ipc_client_send_request_command!</span>([<span class="self">self</span>.session.object_info; <span class="number">0</span>] () =&gt; (size: usize))
-    }
+<span class="kw">use </span>generic_once_cell::OnceCell;
 
-    <span class="kw">fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, offset: usize, buf: sf::InAutoSelectBuffer&lt;u8&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="macro">ipc_client_send_request_command!</span>([<span class="self">self</span>.session.object_info; <span class="number">10</span>] (offset, buf) =&gt; ())
-    }
 
-    <span class="kw">fn </span>read(<span class="kw-2">&amp;mut </span><span class="self">self</span>, offset: usize, buf: sf::OutAutoSelectBuffer&lt;u8&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="macro">ipc_client_send_request_command!</span>([<span class="self">self</span>.session.object_info; <span class="number">11</span>] (offset, buf) =&gt; ())
-    }
+<span class="kw">pub static </span>ALL_SYSTEM_APPLET_PROXY_SERVICE: OnceCell&lt;sync::sys::mutex::Mutex,mem::Shared&lt;AllSystemAppletProxiesService&gt;&gt; = OnceCell::new();
+<span class="kw">pub static </span>LIBRARY_APPLET_PROXY: OnceCell&lt;sync::sys::mutex::Mutex,mem::Shared&lt;LibraryAppletProxy&gt;&gt; = OnceCell::new();
+<span class="kw">pub static </span>WINDOW_CONTROLLER: OnceCell&lt;sync::sys::mutex::Mutex,mem::Shared&lt;WindowController&gt;&gt; = OnceCell::new();
+<span class="kw">pub static </span>GLOBAL_ARUID: AtomicU64 = AtomicU64::new(<span class="number">0</span>);
+
+<span class="attr">#[inline]
+</span><span class="kw">pub fn </span>initialize() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;{
+    <span class="kw">let </span>so = service::new_service_object::&lt;AllSystemAppletProxiesService&gt;();
+    <span class="kw">let _ </span>= ALL_SYSTEM_APPLET_PROXY_SERVICE.set(mem::Shared::new(so<span class="question-mark">?</span>));
+
+    <span class="kw">let </span>applet_attr = AppletAttribute::default();
+    <span class="kw">let </span>applet_proxy  = ALL_SYSTEM_APPLET_PROXY_SERVICE.get().unwrap().lock().open_library_applet_proxy(
+        sf::ProcessId::new(),
+        sf::CopyHandle::from(svc::CURRENT_PROCESS_PSEUDO_HANDLE),
+        sf::InMapAliasBuffer::from_other_var(<span class="kw-2">&amp;</span>applet_attr),
+    );
+    <span class="kw">let _ </span>= LIBRARY_APPLET_PROXY.set(mem::Shared::new(applet_proxy<span class="question-mark">?</span>));
+
+    <span class="kw">let </span>window_controller = LIBRARY_APPLET_PROXY.get().unwrap().lock().get_window_controller();
+    <span class="kw">let _ </span>= WINDOW_CONTROLLER.set(mem::Shared::new(window_controller<span class="question-mark">?</span>));
+
+    <span class="kw">let </span>aruid = WINDOW_CONTROLLER.get().unwrap().lock().get_applet_resource_user_id();
+    GLOBAL_ARUID.store(aruid<span class="question-mark">?</span>, core::sync::atomic::Ordering::Release);
+
+    <span class="prelude-val">Ok</span>(())
 }
 
-<span class="macro">ipc_client_define_object_default!</span>(Storage);
+<span class="doccomment">/// Finalizes library applet support, dropping the shared resources. pub(crate) as it should only run in rrt0.rs
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>finalize() {
 
-<span class="kw">impl </span>IStorage <span class="kw">for </span>Storage {
-    <span class="kw">fn </span>open(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;mem::Shared&lt;<span class="kw">dyn </span>IStorageAccessor&gt;&gt; {
-        <span class="macro">ipc_client_send_request_command!</span>([<span class="self">self</span>.session.object_info; <span class="number">0</span>] () =&gt; (storage_accessor: mem::Shared&lt;StorageAccessor&gt;))
-    }
+    WINDOW_CONTROLLER.get().map(|inner| inner.lock().session.close());
+    LIBRARY_APPLET_PROXY.get().map(|inner| inner.lock().session.close());
+    ALL_SYSTEM_APPLET_PROXY_SERVICE.get().map(|inner| inner.lock().session.close());
 }
 
-<span class="macro">ipc_client_define_object_default!</span>(LibraryAppletAccessor);
-
-<span class="kw">impl </span>ILibraryAppletAccessor <span class="kw">for </span>LibraryAppletAccessor {
-    <span class="kw">fn </span>get_applet_state_changed_event(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;sf::CopyHandle&gt; {
-        <span class="macro">ipc_client_send_request_command!</span>([<span class="self">self</span>.session.object_info; <span class="number">0</span>] () =&gt; (applet_state_changed_event: sf::CopyHandle))
-    }
-
-    <span class="kw">fn </span>start(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="macro">ipc_client_send_request_command!</span>([<span class="self">self</span>.session.object_info; <span class="number">10</span>] () =&gt; ())
-    }
-
-    <span class="kw">fn </span>push_in_data(<span class="kw-2">&amp;mut </span><span class="self">self</span>, storage: mem::Shared&lt;<span class="kw">dyn </span>IStorage&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="macro">ipc_client_send_request_command!</span>([<span class="self">self</span>.session.object_info; <span class="number">100</span>] (storage) =&gt; ())
-    }
-
-    <span class="kw">fn </span>pop_out_data(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;mem::Shared&lt;<span class="kw">dyn </span>IStorage&gt;&gt; {
-        <span class="macro">ipc_client_send_request_command!</span>([<span class="self">self</span>.session.object_info; <span class="number">101</span>] () =&gt; (storage: mem::Shared&lt;Storage&gt;))
-    }
+<span class="kw">pub fn </span>get_window_controller() -&gt; mem::Shared&lt;WindowController&gt; {
+    WINDOW_CONTROLLER.get().unwrap().clone()
 }
 
-<span class="macro">ipc_client_define_object_default!</span>(LibraryAppletCreator);
-
-<span class="kw">impl </span>ILibraryAppletCreator <span class="kw">for </span>LibraryAppletCreator {
-    <span class="kw">fn </span>create_library_applet(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: AppletId, mode: LibraryAppletMode) -&gt; <span class="prelude-ty">Result</span>&lt;mem::Shared&lt;<span class="kw">dyn </span>ILibraryAppletAccessor&gt;&gt; {
-        <span class="macro">ipc_client_send_request_command!</span>([<span class="self">self</span>.session.object_info; <span class="number">0</span>] (id, mode) =&gt; (library_applet_accessor: mem::Shared&lt;LibraryAppletAccessor&gt;))
-    }
-
-    <span class="kw">fn </span>create_storage(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: usize) -&gt; <span class="prelude-ty">Result</span>&lt;mem::Shared&lt;<span class="kw">dyn </span>IStorage&gt;&gt; {
-        <span class="macro">ipc_client_send_request_command!</span>([<span class="self">self</span>.session.object_info; <span class="number">10</span>] (size) =&gt; (storage: mem::Shared&lt;Storage&gt;))
-    }
+<span class="kw">pub fn </span>get_library_applet_proxy() -&gt; mem::Shared&lt;LibraryAppletProxy&gt; {
+    LIBRARY_APPLET_PROXY.get().unwrap().clone()
 }
 
-<span class="macro">ipc_client_define_object_default!</span>(WindowController);
-
-<span class="kw">impl </span>IWindowController <span class="kw">for </span>WindowController {
-    <span class="kw">fn </span>acquire_foreground_rights(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="macro">ipc_client_send_request_command!</span>([<span class="self">self</span>.session.object_info; <span class="number">10</span>] () =&gt; ())
-    }
+<span class="kw">pub fn </span>get_system_proxy_service() -&gt; mem::Shared&lt;AllSystemAppletProxiesService&gt; {
+    ALL_SYSTEM_APPLET_PROXY_SERVICE.get().unwrap().clone()
 }
 
-<span class="macro">ipc_client_define_object_default!</span>(SelfController);
-
-<span class="kw">impl </span>ISelfController <span class="kw">for </span>SelfController {
-    <span class="kw">fn </span>set_screenshot_permission(<span class="kw-2">&amp;mut </span><span class="self">self</span>, permission: ScreenShotPermission) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="macro">ipc_client_send_request_command!</span>([<span class="self">self</span>.session.object_info; <span class="number">10</span>] (permission) =&gt; ())
-    }
-}
-
-<span class="macro">ipc_client_define_object_default!</span>(LibraryAppletProxy);
-
-<span class="kw">impl </span>ILibraryAppletProxy <span class="kw">for </span>LibraryAppletProxy {
-    <span class="kw">fn </span>get_self_controller(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;mem::Shared&lt;<span class="kw">dyn </span>ISelfController&gt;&gt; {
-        <span class="macro">ipc_client_send_request_command!</span>([<span class="self">self</span>.session.object_info; <span class="number">1</span>] () =&gt; (self_controller: mem::Shared&lt;SelfController&gt;))
-    }
-
-    <span class="kw">fn </span>get_window_controller(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;mem::Shared&lt;<span class="kw">dyn </span>IWindowController&gt;&gt; {
-        <span class="macro">ipc_client_send_request_command!</span>([<span class="self">self</span>.session.object_info; <span class="number">2</span>] () =&gt; (window_controller: mem::Shared&lt;WindowController&gt;))
-    }
-
-    <span class="kw">fn </span>get_library_applet_creator(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;mem::Shared&lt;<span class="kw">dyn </span>ILibraryAppletCreator&gt;&gt; {
-        <span class="macro">ipc_client_send_request_command!</span>([<span class="self">self</span>.session.object_info; <span class="number">11</span>] () =&gt; (library_applet_creator: mem::Shared&lt;LibraryAppletCreator&gt;))
-    }
-}
-
-<span class="macro">ipc_client_define_object_default!</span>(AllSystemAppletProxiesService);
-
-<span class="kw">impl </span>IAllSystemAppletProxiesService <span class="kw">for </span>AllSystemAppletProxiesService {
-    <span class="kw">fn </span>open_library_applet_proxy(<span class="kw-2">&amp;mut </span><span class="self">self</span>, process_id: sf::ProcessId, self_process_handle: sf::CopyHandle, applet_attribute: sf::InMapAliasBuffer&lt;AppletAttribute&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;mem::Shared&lt;<span class="kw">dyn </span>ILibraryAppletProxy&gt;&gt; {
-        <span class="macro">ipc_client_send_request_command!</span>([<span class="self">self</span>.session.object_info; <span class="number">201</span>] (process_id, self_process_handle, applet_attribute) =&gt; (library_applet_proxy: mem::Shared&lt;LibraryAppletProxy&gt;))
-    }
-}
 
 <span class="kw">impl </span>service::IService <span class="kw">for </span>AllSystemAppletProxiesService {
     <span class="kw">fn </span>get_name() -&gt; sm::ServiceName {
@@ -233,4 +149,5 @@
     <span class="kw">fn </span>post_initialize(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="prelude-val">Ok</span>(())
     }
-}</code></pre></div></section></main></body></html>
+}
+</code></pre></div></section></main></body></html>

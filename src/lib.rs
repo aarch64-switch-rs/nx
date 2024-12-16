@@ -56,6 +56,8 @@
 #![feature(str_from_utf16_endian)]
 #![macro_use]
 
+#[warn(missing_docs)]
+
 use core::arch::global_asm;
 
 // Required assembly bits (those which essentially cannot/shouldn't be inlined)

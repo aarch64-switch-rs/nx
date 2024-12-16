@@ -418,6 +418,9 @@ pub struct MitmQueryService<S: IMitmService> {
     _phantom: core::marker::PhantomData<S>
 }
 
+/// This is safe as we're only calling associated functions and not trait methods.
+unsafe impl<S: IMitmService> Sync for MitmQueryService<S> {}
+
 impl<S: IMitmService> MitmQueryService<S> {
     pub fn new() -> Self {
         Self {

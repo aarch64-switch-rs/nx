@@ -1,6 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/vmem.rs`."><title>vmem.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0-nightly (c9f8f3438 2024-03-27)" data-channel="nightly" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
-            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../nx/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/vmem.rs`."><title>vmem.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-42caa33d.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.85.0-nightly (a47555110 2024-11-22)" data-channel="nightly" data-search-js="search-92e6798f.js" data-settings-js="settings-0f613d39.js" ><script src="../../static.files/storage-59e33391.js"></script><script defer src="../../static.files/src-script-56102188.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">nx/</div>vmem.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -171,27 +170,37 @@
 <a href="#169" id="169">169</a>
 <a href="#170" id="170">170</a>
 <a href="#171" id="171">171</a>
-</pre></div><pre class="rust"><code><span class="doccomment">//! Virtual memory support
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a></pre></div><pre class="rust"><code><span class="doccomment">//! Virtual memory support
 
-</span><span class="kw">use </span>core::ptr;
+</span><span class="kw">use </span>core::ptr::null_mut;
+<span class="kw">use </span>core::sync::atomic::AtomicPtr;
+
 <span class="kw">use </span><span class="kw">crate</span>::result::<span class="kw-2">*</span>;
-<span class="kw">use </span><span class="kw">crate</span>::sync;
 <span class="kw">use </span><span class="kw">crate</span>::svc;
-<span class="kw">use </span><span class="kw">crate</span>::mem::alloc;
 
-<span class="doccomment">/// Represents a virtual region of memory
-</span><span class="attr">#[derive(Copy, Clone)]
+<span class="doccomment">/// Represents a virtual region of memory, represented as pointer-sized uints. i.e. [start, end)
+</span><span class="attr">#[derive(Copy, Clone, Default)]
 </span><span class="kw">pub struct </span>VirtualRegion {
     <span class="doccomment">/// The start address of the region
     </span><span class="kw">pub </span>start: usize,
-    <span class="doccomment">/// The end address of the region
+    <span class="doccomment">/// The (non inclusive) end address of the region
     </span><span class="kw">pub </span>end: usize
 }
 
 <span class="kw">impl </span>VirtualRegion {
     <span class="doccomment">/// Creates an empty [`VirtualRegion`] with invalid address values
     </span><span class="attr">#[inline]
-    </span><span class="kw">pub const fn </span>new() -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub const fn </span>null() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{ start: <span class="number">0</span>, end: <span class="number">0 </span>}
     }
 
@@ -201,74 +210,80 @@
     ///
     /// * `address` - The address to check
     </span><span class="attr">#[inline]
-    </span><span class="kw">pub const fn </span>contains(<span class="kw-2">&amp;</span><span class="self">self</span>, address: usize) -&gt; bool {
+    </span><span class="kw">pub const fn </span>contains_addr(<span class="kw-2">&amp;</span><span class="self">self</span>, address: usize) -&gt; bool {
         (address &gt;= <span class="self">self</span>.start) &amp;&amp; (address &lt; <span class="self">self</span>.end)
     }
+
+    <span class="doccomment">/// Returns whether the specified region is fully contained in the region
+    ///
+    /// # Arguments
+    ///
+    /// * `other` - The region to check
+    </span><span class="attr">#[inline]
+    </span><span class="kw">pub const fn </span>contains(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="self">Self</span>) -&gt; bool {
+        <span class="self">self</span>.start &lt;= other.start &amp;&amp; <span class="self">self</span>.end &gt;= other.end
+    }
+
+    <span class="doccomment">/// Returns whether the other region overlaps this instance
+    ///
+    /// # Arguments
+    ///
+    /// * `other` - The other region to check
+    </span><span class="attr">#[inline]
+    </span><span class="kw">pub const fn </span>overlaps(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="self">Self</span>) -&gt; bool {
+        !( other.end &lt;= <span class="self">self</span>.start || <span class="self">self</span>.end &lt;= other.start )
+    }
+
 }
 
-<span class="kw">pub enum </span>VirtualRegionType {
-    Stack,
-    Heap,
-    LegacyAlias
+<span class="doccomment">/// The standard memory regions for NX processes
+</span><span class="kw">pub struct </span>StandardRegions {
+    stack: VirtualRegion,
+    heap: VirtualRegion,
+    legacy_alias: VirtualRegion,
+    global_address_space: VirtualRegion,
 }
 
-<span class="kw">static </span><span class="kw-2">mut </span>G_STACK_REGION: VirtualRegion = VirtualRegion::new();
-<span class="kw">static </span><span class="kw-2">mut </span>G_HEAP_REGION: VirtualRegion = VirtualRegion::new();
-<span class="kw">static </span><span class="kw-2">mut </span>G_LEGACY_ALIAS_REGION: VirtualRegion = VirtualRegion::new();
-<span class="kw">static </span><span class="kw-2">mut </span>G_ADDRESS_SPACE: VirtualRegion = VirtualRegion::new();
-<span class="kw">static </span><span class="kw-2">mut </span>G_CURRENT_ADDRESS: usize = <span class="number">0</span>;
-<span class="kw">static </span><span class="kw-2">mut </span>G_LOCK: sync::Mutex = sync::Mutex::new(<span class="bool-val">false</span>);
+<span class="kw">static </span>STANDARD_VMEM_REGIONS: generic_once_cell::OnceCell&lt;<span class="kw">crate</span>::sync::sys::mutex::Mutex, StandardRegions&gt; = generic_once_cell::OnceCell::new();
+<span class="kw">static </span>NEXT_FREE_PTR: AtomicPtr&lt;u8&gt; = AtomicPtr::new(null_mut());
+
 
 <span class="doccomment">/// Gets the current process's address space [`VirtualRegion`]
 /// 
 /// Note that [`initialize()`] must have been called before for the region to be valid (although it's automatically called on [`rrt0`][`crate::rrt0`])
 </span><span class="kw">pub fn </span>get_address_space() -&gt; VirtualRegion {
-    <span class="kw">unsafe </span>{
-        <span class="kw">let _ </span>= sync::ScopedLock::new(<span class="kw-2">&amp;mut *</span><span class="macro">ptr::addr_of_mut!</span>(G_LOCK));
-        G_ADDRESS_SPACE
-    }
+    STANDARD_VMEM_REGIONS.get().unwrap().global_address_space.clone()
 }
 
 <span class="doccomment">/// Gets the current process's stack [`VirtualRegion`]
 /// 
 /// Note that [`initialize()`] must have been called before for the region to be valid (although it's automatically called on [`rrt0`][`crate::rrt0`])
 </span><span class="kw">pub fn </span>get_stack_region() -&gt; VirtualRegion {
-    <span class="kw">unsafe </span>{
-        <span class="kw">let _ </span>= sync::ScopedLock::new(<span class="kw-2">&amp;mut *</span><span class="macro">ptr::addr_of_mut!</span>(G_LOCK));
-        G_STACK_REGION
-    }
+    STANDARD_VMEM_REGIONS.get().unwrap().stack.clone()
 }
 
 <span class="doccomment">/// Gets the current process's heap [`VirtualRegion`]
 /// 
 /// Note that [`initialize()`] must have been called before for the region to be valid (although it's automatically called on [`rrt0`][`crate::rrt0`])
 </span><span class="kw">pub fn </span>get_heap_region() -&gt; VirtualRegion {
-    <span class="kw">unsafe </span>{
-        <span class="kw">let _ </span>= sync::ScopedLock::new(<span class="kw-2">&amp;mut *</span><span class="macro">ptr::addr_of_mut!</span>(G_LOCK));
-        G_HEAP_REGION
-    }
+    STANDARD_VMEM_REGIONS.get().unwrap().heap.clone()
 }
 
 <span class="doccomment">/// Gets the current process's legacy alias [`VirtualRegion`]
 /// 
 /// Note that [`initialize()`] must have been called before for the region to be valid (although it's automatically called on [`rrt0`][`crate::rrt0`])
 </span><span class="kw">pub fn </span>get_legacy_alias_region() -&gt; VirtualRegion {
-    <span class="kw">unsafe </span>{
-        <span class="kw">let _ </span>= sync::ScopedLock::new(<span class="kw-2">&amp;mut *</span><span class="macro">ptr::addr_of_mut!</span>(G_LOCK));
-        G_LEGACY_ALIAS_REGION
-    }
+    STANDARD_VMEM_REGIONS.get().unwrap().legacy_alias.clone()
 }
 
-<span class="kw">fn </span>read_region_info(region: <span class="kw-2">*mut </span>VirtualRegion, address_info_id: svc::InfoId, size_info_id: svc::InfoId) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    <span class="kw">let </span>address = svc::get_info(address_info_id, svc::CURRENT_PROCESS_PSEUDO_HANDLE, <span class="number">0</span>)<span class="question-mark">? </span><span class="kw">as </span>usize;
+<span class="kw">fn </span>read_region_info(address_info_id: svc::InfoId, size_info_id: svc::InfoId) -&gt; <span class="prelude-ty">Result</span>&lt;VirtualRegion&gt; {
+    <span class="kw">let </span>start = svc::get_info(address_info_id, svc::CURRENT_PROCESS_PSEUDO_HANDLE, <span class="number">0</span>)<span class="question-mark">? </span><span class="kw">as </span>usize;
     <span class="kw">let </span>size = svc::get_info(size_info_id, svc::CURRENT_PROCESS_PSEUDO_HANDLE, <span class="number">0</span>)<span class="question-mark">? </span><span class="kw">as </span>usize;
 
-    <span class="kw">unsafe </span>{
-        <span class="comment">// Safety: pointer will never be null here
-        </span>(<span class="kw-2">*</span>region).start = address;
-        (<span class="kw-2">*</span>region).end = address + size;
-    }
-    <span class="prelude-val">Ok</span>(())
+    <span class="prelude-val">Ok</span>(VirtualRegion {
+        start,
+        end: start+size
+    })
 }
 
 <span class="doccomment">/// Initializes virtual memory support
@@ -277,13 +292,17 @@
 /// 
 /// This is automatically called on [`rrt0`][`crate::rrt0`]
 </span><span class="kw">pub fn </span>initialize() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    <span class="kw">unsafe </span>{
-        <span class="kw">let _ </span>= sync::ScopedLock::new(<span class="kw-2">&amp;mut *</span><span class="macro">ptr::addr_of_mut!</span>(G_LOCK));
-        read_region_info(<span class="macro">ptr::addr_of_mut!</span>(G_ADDRESS_SPACE), svc::InfoId::AslrRegionAddress, svc::InfoId::AslrRegionSize)<span class="question-mark">?</span>;
-        read_region_info(<span class="macro">ptr::addr_of_mut!</span>(G_STACK_REGION), svc::InfoId::StackRegionAddress, svc::InfoId::StackRegionSize)<span class="question-mark">?</span>;
-        read_region_info(<span class="macro">ptr::addr_of_mut!</span>(G_HEAP_REGION), svc::InfoId::HeapRegionAddress, svc::InfoId::HeapRegionSize)<span class="question-mark">?</span>;
-        read_region_info(<span class="macro">ptr::addr_of_mut!</span>(G_LEGACY_ALIAS_REGION), svc::InfoId::AliasRegionAddress, svc::InfoId::AliasRegionSize)<span class="question-mark">?</span>;
-    }
+    <span class="kw">use </span>svc::InfoId::<span class="kw-2">*</span>;
+
+    <span class="kw">let _ </span>= STANDARD_VMEM_REGIONS.set(
+        StandardRegions {
+            global_address_space: read_region_info(AslrRegionAddress, AslrRegionSize)<span class="question-mark">?</span>,
+            stack: read_region_info(StackRegionAddress, StackRegionSize)<span class="question-mark">?</span>,
+            heap: read_region_info(HeapRegionAddress, HeapRegionSize)<span class="question-mark">?</span>,
+            legacy_alias: read_region_info(AliasRegionAddress, AliasRegionSize)<span class="question-mark">?
+        </span>}
+    );
+
     <span class="prelude-val">Ok</span>(())
 }
 
@@ -295,50 +314,51 @@
 /// 
 /// * `size`: The size of the virtual memory to allocate
 </span><span class="kw">pub fn </span>allocate(size: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">*mut </span>u8&gt; {
-    <span class="kw">unsafe </span>{
-        <span class="kw">let _ </span>= sync::ScopedLock::new(<span class="kw-2">&amp;mut *</span><span class="macro">ptr::addr_of_mut!</span>(G_LOCK));
+    <span class="kw">use </span>core::sync::atomic::Ordering::<span class="kw-2">*</span>;
 
-        <span class="kw">let </span><span class="kw-2">mut </span>address = G_CURRENT_ADDRESS;
+    <span class="kw">let </span>vmem_regions = STANDARD_VMEM_REGIONS.get().unwrap();
+    <span class="kw">let </span>original_free_ptr = NEXT_FREE_PTR.load(Relaxed);
+    <span class="kw">let </span><span class="kw-2">mut </span>attempt_addr = original_free_ptr <span class="kw">as </span>usize;
 
-        <span class="kw">loop </span>{
-            address += alloc::PAGE_ALIGNMENT;
-
-            <span class="kw">if </span>!G_ADDRESS_SPACE.contains(address) {
-                address = G_ADDRESS_SPACE.start;
-            }
-
-            <span class="kw">let </span>current_address = address + size;
-            <span class="kw">let </span>(memory_info, <span class="kw">_</span>) = svc::query_memory(address <span class="kw">as </span><span class="kw-2">*mut </span>u8)<span class="question-mark">?</span>;
-            <span class="kw">let </span>info_address = memory_info.base_address <span class="kw">as </span>usize + memory_info.size <span class="kw">as </span>usize;
-            <span class="kw">if </span>memory_info.state != svc::MemoryState::Free {
-                address = info_address;
-                <span class="kw">continue</span>;
-            }
-
-            <span class="kw">if </span>current_address &gt; info_address {
-                address = info_address;
-                <span class="kw">continue</span>;
-            }
-
-            <span class="kw">let </span>end = current_address - <span class="number">1</span>;
-
-            <span class="kw">if </span>G_STACK_REGION.contains(address) || G_STACK_REGION.contains(end) {
-                address = G_STACK_REGION.end;
-                <span class="kw">continue</span>;
-            }
-            <span class="kw">if </span>G_HEAP_REGION.contains(address) || G_HEAP_REGION.contains(end) {
-                address = G_HEAP_REGION.end;
-                <span class="kw">continue</span>;
-            }
-            <span class="kw">if </span>G_LEGACY_ALIAS_REGION.contains(address) || G_LEGACY_ALIAS_REGION.contains(end) {
-                address = G_LEGACY_ALIAS_REGION.end;
-                <span class="kw">continue</span>;
-            }
-
-            <span class="kw">break</span>;
+    <span class="kw">loop </span>{
+        <span class="kw">if </span>!vmem_regions.global_address_space.contains_addr(attempt_addr) {
+            attempt_addr = vmem_regions.global_address_space.start;
         }
 
-        G_CURRENT_ADDRESS = address + size;
-        <span class="prelude-val">Ok</span>(address <span class="kw">as </span><span class="kw-2">*mut </span>u8)
+        <span class="kw">let </span>attempt_region = VirtualRegion {start: attempt_addr, end: attempt_addr + size };
+        <span class="kw">if </span>vmem_regions.stack.overlaps(attempt_region) {
+            attempt_addr = vmem_regions.stack.end;
+            <span class="kw">continue
+        </span>}
+
+        <span class="kw">if </span>vmem_regions.heap.overlaps(attempt_region) {
+            attempt_addr = vmem_regions.heap.end;
+            <span class="kw">continue</span>;
+        }
+
+        <span class="kw">if </span>vmem_regions.legacy_alias.overlaps(attempt_region) {
+            attempt_addr = vmem_regions.legacy_alias.end;
+            <span class="kw">continue</span>;
+        }
+
+        <span class="comment">// we have an address that isn't in a predefined region. So now we're going to just check if it's already mapped for something
+        </span><span class="kw">match </span>svc::query_memory(attempt_addr <span class="kw">as </span><span class="kw-2">*mut </span>u8)<span class="question-mark">? </span>{
+            (memory_info, <span class="kw">_</span>) <span class="kw">if </span>memory_info.state == svc::MemoryState::Free =&gt; {
+                <span class="kw">match </span>NEXT_FREE_PTR.compare_exchange(original_free_ptr, attempt_addr <span class="kw">as </span><span class="kw-2">*mut </span>u8, SeqCst, SeqCst) {
+                    <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; {
+                        <span class="kw">return </span><span class="prelude-val">Ok</span>(attempt_addr <span class="kw">as </span><span class="kw-2">*mut </span>u8);
+                    },
+                    <span class="prelude-val">Err</span>(new_attempt_addr) =&gt; {
+                        attempt_addr = new_attempt_addr <span class="kw">as </span>usize;
+                        <span class="kw">continue</span>;
+                    }
+                }
+
+            }
+            (memory_info, <span class="kw">_</span>) =&gt; {
+                attempt_addr = memory_info.base_address + memory_info.size;
+                <span class="kw">continue</span>;
+            }
+        }
     }
 }</code></pre></div></section></main></body></html>

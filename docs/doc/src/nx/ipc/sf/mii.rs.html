@@ -1,6 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/ipc/sf/mii.rs`."><title>mii.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0-nightly (c9f8f3438 2024-03-27)" data-channel="nightly" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
-            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../../nx/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/ipc/sf/mii.rs`."><title>mii.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-42caa33d.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.85.0-nightly (a47555110 2024-11-22)" data-channel="nightly" data-search-js="search-92e6798f.js" data-settings-js="settings-0f613d39.js" ><script src="../../../../static.files/storage-59e33391.js"></script><script defer src="../../../../static.files/src-script-56102188.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">nx/ipc/sf/</div>mii.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1757,9 +1756,8 @@
 <a href="#1755" id="1755">1755</a>
 <a href="#1756" id="1756">1756</a>
 <a href="#1757" id="1757">1757</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::result::<span class="kw-2">*</span>;
+<a href="#1758" id="1758">1758</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::result::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::ipc::sf;
-<span class="kw">use </span><span class="kw">crate</span>::mem;
 <span class="kw">use </span><span class="kw">crate</span>::util;
 <span class="kw">use </span><span class="kw">crate</span>::version;
 
@@ -1769,10 +1767,9 @@
 <span class="attr">#[cfg(feature = <span class="string">"services"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::service::set;
 
-<span class="attr">#[cfg(feature = <span class="string">"services"</span>)]
-</span><span class="kw">use </span><span class="kw">crate</span>::service::set::ISystemSettingsServer;
+<span class="kw">use </span>nx_derive::{Request, Response};
 
-<span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+<span class="attr">#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 </span><span class="kw">pub enum </span>Age {
     Young,
@@ -1782,7 +1779,7 @@
     </span>All
 }
 
-<span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+<span class="attr">#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 </span><span class="kw">pub enum </span>Gender {
     Male,
@@ -1791,7 +1788,7 @@
     </span>All
 }
 
-<span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+<span class="attr">#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 </span><span class="kw">pub enum </span>FaceColor {
     Black,
@@ -1808,7 +1805,7 @@
     }
 }
 
-<span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+<span class="attr">#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u32)]
 </span><span class="kw">pub enum </span>SpecialKeyCode {
     <span class="attr">#[default]
@@ -1818,7 +1815,7 @@
 
 <span class="kw">pub type </span>CreateId = util::Uuid;
 
-<span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+<span class="attr">#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 </span><span class="kw">pub enum </span>HairType {
     <span class="attr">#[default]
@@ -1956,7 +1953,7 @@
     LongFrontTwoBackPonyTails
 }
 
-<span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+<span class="attr">#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 </span><span class="kw">pub enum </span>MoleType {
     <span class="attr">#[default]
@@ -1964,7 +1961,7 @@
     OneDot
 }
 
-<span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+<span class="attr">#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 </span><span class="kw">pub enum </span>HairFlip {
     <span class="attr">#[default]
@@ -1974,7 +1971,7 @@
 
 <span class="kw">pub type </span>CommonColor = u8;
 
-<span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+<span class="attr">#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 </span><span class="kw">pub enum </span>EyeType {
     <span class="attr">#[default]
@@ -2040,7 +2037,7 @@
     WhiteLarge
 }
 
-<span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+<span class="attr">#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 </span><span class="kw">pub enum </span>MouthType {
     <span class="attr">#[default]
@@ -2082,7 +2079,7 @@
     Kiss
 }
 
-<span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+<span class="attr">#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 </span><span class="kw">pub enum </span>FontRegion {
     <span class="attr">#[default]
@@ -2092,7 +2089,7 @@
     Taiwan
 }
 
-<span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+<span class="attr">#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 </span><span class="kw">pub enum </span>FacelineType {
     <span class="attr">#[default]
@@ -2110,7 +2107,7 @@
     AngularSmall
 }
 
-<span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+<span class="attr">#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 </span><span class="kw">pub enum </span>FacelineColor {
     <span class="attr">#[default]
@@ -2126,7 +2123,7 @@
     Espresso
 }
 
-<span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+<span class="attr">#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 </span><span class="kw">pub enum </span>FacelineWrinkle {
     <span class="attr">#[default]
@@ -2144,7 +2141,7 @@
     FoldsCrowsFrown
 }
 
-<span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+<span class="attr">#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 </span><span class="kw">pub enum </span>FacelineMake {
     <span class="attr">#[default]
@@ -2162,7 +2159,7 @@
     StubbleBeard
 }
 
-<span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+<span class="attr">#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 </span><span class="kw">pub enum </span>EyebrowType {
     <span class="attr">#[default]
@@ -2192,7 +2189,7 @@
     <span class="prelude-val">None
 </span>}
 
-<span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+<span class="attr">#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 </span><span class="kw">pub enum </span>NoseType {
     <span class="attr">#[default]
@@ -2216,7 +2213,7 @@
     ArrowLarge
 }
 
-<span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+<span class="attr">#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 </span><span class="kw">pub enum </span>BeardType {
     <span class="attr">#[default]
@@ -2228,7 +2225,7 @@
     Full
 }
 
-<span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+<span class="attr">#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 </span><span class="kw">pub enum </span>MustacheType {
     <span class="attr">#[default]
@@ -2240,7 +2237,7 @@
     Toothbrush
 }
 
-<span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+<span class="attr">#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
 </span><span class="kw">pub enum </span>GlassType {
     <span class="attr">#[default]
@@ -2266,11 +2263,11 @@
     OpaqueAviator
 }
 
-<span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+<span class="attr">#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>CharInfo {
     <span class="kw">pub </span>id: CreateId,
-    <span class="kw">pub </span>name: util::CString16&lt;<span class="number">11</span>&gt;,
+    <span class="kw">pub </span>name: util::ArrayWideString&lt;<span class="number">11</span>&gt;,
     <span class="kw">pub </span>font_region: FontRegion,
     <span class="kw">pub </span>favorite_color: u8,
     <span class="kw">pub </span>gender: Gender,
@@ -2324,7 +2321,7 @@
 }
 <span class="macro">const_assert!</span>(core::mem::size_of::&lt;CharInfo&gt;() == <span class="number">0x58</span>);
 
-<span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+<span class="attr">#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
 </span><span class="kw">pub enum </span>CoreDataElement {
     HairType,
@@ -2378,7 +2375,7 @@
     MoleScale
 }
 
-<span class="attr">#[derive(Copy, Clone)]
+<span class="attr">#[derive(Request, Response, Copy, Clone)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>CoreDataElementInfo {
     <span class="kw">pub </span>byte_offset: u32,
@@ -2787,11 +2784,11 @@
     }
 }
 
-<span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+<span class="attr">#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>CoreData {
     <span class="kw">pub </span>data: [u8; <span class="number">0x1C</span>],
-    <span class="kw">pub </span>name: util::CString16&lt;<span class="number">10</span>&gt;
+    <span class="kw">pub </span>name: util::ArrayWideString&lt;<span class="number">10</span>&gt;
 }
 <span class="macro">const_assert!</span>(core::mem::size_of::&lt;CoreData&gt;() == <span class="number">0x30</span>);
 
@@ -3302,7 +3299,7 @@
     <span class="kw">pub fn </span>from_charinfo(char_info: CharInfo) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>core_data = <span class="self">Self</span>::default();
 
-        core_data.name.set_string(char_info.name.get_string()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+        core_data.name.set_string(char_info.name.get_string()<span class="question-mark">?</span>);
         core_data.set_font_region(char_info.font_region);
         core_data.set_favorite_color(char_info.favorite_color);
         core_data.set_gender(char_info.gender);
@@ -3358,7 +3355,7 @@
     <span class="kw">pub fn </span>to_charinfo(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;CharInfo&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>charinfo: CharInfo = Default::default();
 
-        charinfo.name.set_string(<span class="self">self</span>.name.get_string()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+        charinfo.name.set_string(<span class="self">self</span>.name.get_string()<span class="question-mark">?</span>);
         charinfo.font_region = <span class="self">self</span>.get_font_region();
         charinfo.favorite_color = <span class="self">self</span>.get_favorite_color();
         charinfo.gender = <span class="self">self</span>.get_gender();
@@ -3412,30 +3409,22 @@
     }
 }
 
-<span class="kw">pub fn </span>compute_crc16(data_buf: <span class="kw-2">*const </span>u8, data_size: usize, base_crc: u16, reverse_endianess: bool) -&gt; u16 {
-    <span class="kw">let </span><span class="kw-2">mut </span>temp_crc = base_crc <span class="kw">as </span>u32;
-    
-    <span class="kw">unsafe </span>{
-        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..data_size {
-            <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">8 </span>{
-                <span class="kw">let </span>apply_shift = (temp_crc &amp; <span class="number">0x8000</span>) != <span class="number">0</span>;
-                temp_crc &lt;&lt;= <span class="number">1</span>;
-
-                <span class="kw">if </span>apply_shift {
-                    temp_crc ^= <span class="number">0x1021</span>;
-                    temp_crc &amp;= <span class="number">0xFFFF</span>;
-                }
+<span class="kw">pub fn </span>compute_crc16(buffer: <span class="kw-2">&amp;</span>[u8], base_crc: u16, reverse_endianess: bool) -&gt; u16{
+    <span class="kw">let </span>crc = buffer.iter().copied().map(u16::from).fold(base_crc, |<span class="kw-2">mut </span>crc, val| {
+        <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">8 </span>{
+            <span class="kw">let </span>apply_shift = (crc &amp; <span class="number">0x8000</span>) !=<span class="number">0</span>;
+            crc &lt;&lt;= <span class="number">1</span>;
+            
+            <span class="kw">if </span>apply_shift {
+                crc ^= <span class="number">0x1021</span>;
             }
-
-            temp_crc ^= <span class="kw-2">*</span>data_buf.offset(i <span class="kw">as </span>isize) <span class="kw">as </span>u32;
         }
-    }
+        crc ^ val
+    });
 
-    <span class="kw">let </span>crc = temp_crc <span class="kw">as </span>u16;
     <span class="kw">if </span>reverse_endianess {
         crc.swap_bytes()
-    }
-    <span class="kw">else </span>{
+    } <span class="kw">else </span>{
         crc
     }
 }
@@ -3443,11 +3432,12 @@
 <span class="attr">#[cfg(feature = <span class="string">"services"</span>)]
 #[inline]
 </span><span class="kw">pub fn </span>get_device_id() -&gt; <span class="prelude-ty">Result</span>&lt;CreateId&gt; {
-    <span class="kw">let </span>set_sys: mem::Shared&lt;set::SystemSettingsServer&gt; = service::new_service_object()<span class="question-mark">?</span>;
-    set_sys.get().get_mii_author_id()
+    <span class="kw">use </span><span class="kw">super</span>::set::ISystemSettingsServer;
+
+    service::new_service_object::&lt;set::SystemSettingsServer&gt;()<span class="question-mark">?</span>.get_mii_author_id()
 }
 
-<span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+<span class="attr">#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>StoreData {
     <span class="kw">pub </span>core_data: CoreData,
@@ -3456,6 +3446,13 @@
     <span class="kw">pub </span>device_crc: u16
 }
 <span class="macro">const_assert!</span>(core::mem::size_of::&lt;StoreData&gt;() == <span class="number">0x44</span>);
+
+<span class="doccomment">/// Simple wrapper for interpretting structs as byte slices.
+</span><span class="macro">macro_rules!</span> struct_to_slice {
+    (<span class="macro-nonterminal">$val</span>:expr) =&gt; {
+        <span class="kw">unsafe </span>{core::slice::from_raw_parts(<span class="macro-nonterminal">$val </span><span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_ as </span><span class="kw-2">*const </span>u8, core::mem::size_of_val(<span class="macro-nonterminal">$val</span>))}
+    };
+}
 
 <span class="kw">impl </span>StoreData {
     <span class="attr">#[cfg(feature = <span class="string">"services"</span>)]
@@ -3467,22 +3464,22 @@
             device_crc: <span class="number">0
         </span>};
 
-        store_data.data_crc = compute_crc16(<span class="kw-2">&amp;</span>store_data <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_ as </span><span class="kw-2">*const </span>u8, core::mem::size_of::&lt;StoreData&gt;() - core::mem::size_of::&lt;u16&gt;(), <span class="number">0</span>, <span class="bool-val">true</span>);
+        store_data.data_crc = compute_crc16(<span class="kw-2">&amp;</span><span class="macro">struct_to_slice!</span>(<span class="kw-2">&amp;</span>store_data)[..<span class="macro">core::mem::offset_of!</span>(StoreData, device_crc)], <span class="number">0</span>, <span class="bool-val">true</span>);
 
         <span class="kw">let </span>device_id = get_device_id()<span class="question-mark">?</span>;
-        <span class="kw">let </span>base_device_crc = compute_crc16(<span class="kw-2">&amp;</span>device_id <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_ as </span><span class="kw-2">*const </span>u8, core::mem::size_of::&lt;CreateId&gt;(), <span class="number">0</span>, <span class="bool-val">false</span>);
-        store_data.device_crc = compute_crc16(<span class="kw-2">&amp;</span>store_data <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_ as </span><span class="kw-2">*const </span>u8, core::mem::size_of::&lt;StoreData&gt;(), base_device_crc, <span class="bool-val">true</span>);
+        <span class="kw">let </span>base_device_crc = compute_crc16(<span class="macro">struct_to_slice!</span>(<span class="kw-2">&amp;</span>device_id), <span class="number">0</span>, <span class="bool-val">false</span>);
+        store_data.device_crc = compute_crc16(<span class="macro">struct_to_slice!</span>(<span class="kw-2">&amp;</span>store_data), base_device_crc, <span class="bool-val">true</span>);
 
         <span class="prelude-val">Ok</span>(store_data)
     }
 
     <span class="attr">#[cfg(feature = <span class="string">"services"</span>)]
     </span><span class="kw">pub fn </span>is_valid(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="kw">let </span>new_data_crc = compute_crc16(<span class="kw-2">&amp;</span><span class="self">self </span><span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_ as </span><span class="kw-2">*const </span>u8, core::mem::size_of::&lt;StoreData&gt;() - core::mem::size_of::&lt;u16&gt;(), <span class="number">0</span>, <span class="bool-val">false</span>);
+        <span class="kw">let </span>new_data_crc = compute_crc16(<span class="kw-2">&amp;</span><span class="macro">struct_to_slice!</span>(<span class="self">self</span>)[..<span class="macro">core::mem::offset_of!</span>(StoreData, device_crc)], <span class="number">0</span>, <span class="bool-val">false</span>);
         
         <span class="kw">if let </span><span class="prelude-val">Ok</span>(device_id) = get_device_id() {
-            <span class="kw">let </span>base_new_device_crc = compute_crc16(<span class="kw-2">&amp;</span>device_id <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_ as </span><span class="kw-2">*const </span>u8, core::mem::size_of::&lt;CreateId&gt;(), <span class="number">0</span>, <span class="bool-val">false</span>);
-            <span class="kw">let </span>new_device_crc = compute_crc16(<span class="self">self </span><span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_ as </span><span class="kw-2">*const </span>u8, core::mem::size_of::&lt;StoreData&gt;(), base_new_device_crc, <span class="bool-val">false</span>);
+            <span class="kw">let </span>base_new_device_crc = compute_crc16(<span class="macro">struct_to_slice!</span>(<span class="kw-2">&amp;</span>device_id), <span class="number">0</span>, <span class="bool-val">false</span>);
+            <span class="kw">let </span>new_device_crc = compute_crc16(<span class="macro">struct_to_slice!</span>(<span class="self">self</span>), base_new_device_crc, <span class="bool-val">false</span>);
 
             (new_data_crc == <span class="number">0</span>) &amp;&amp; (new_device_crc == <span class="number">0</span>)
         }
@@ -3499,18 +3496,21 @@
     }
 }
 
+
+<span class="macro">ipc_sf_define_default_interface_client!</span>(DatabaseService);
 <span class="macro">ipc_sf_define_interface_trait!</span> {
-    <span class="kw">trait </span>IDatabaseService {
-        is_updated [<span class="number">0</span>, version::VersionInterval::all()]: (flag: SourceFlag) =&gt; (updated: bool);
-        is_full [<span class="number">1</span>, version::VersionInterval::all()]: () =&gt; (full: bool);
-        get_count [<span class="number">2</span>, version::VersionInterval::all()]: (flag: SourceFlag) =&gt; (count: u32);
-        get_1 [<span class="number">4</span>, version::VersionInterval::all()]: (flag: SourceFlag, out_char_infos: sf::OutMapAliasBuffer&lt;CharInfo&gt;) =&gt; (count: u32);
-        build_random [<span class="number">6</span>, version::VersionInterval::all()]: (age: sf::EnumAsPrimitiveType&lt;Age, u32&gt;, gender: sf::EnumAsPrimitiveType&lt;Gender, u32&gt;, race: sf::EnumAsPrimitiveType&lt;FaceColor, u32&gt;) =&gt; (char_info: CharInfo);
+	<span class="kw">trait </span>DatabaseService {
+        is_updated [<span class="number">0</span>, version::VersionInterval::all()]: (flag: SourceFlag) =&gt;  (updated: bool) (updated: bool);
+        is_full [<span class="number">1</span>, version::VersionInterval::all()]: () =&gt; (full: bool) (full: bool);
+        get_count [<span class="number">2</span>, version::VersionInterval::all()]: (flag: SourceFlag) =&gt;  (count: u32) (count: u32);
+        get_1 [<span class="number">4</span>, version::VersionInterval::all()]: (flag: SourceFlag, out_char_infos: sf::OutMapAliasBuffer&lt;CharInfo&gt;) =&gt;  (count: u32) (count: u32);
+        build_random [<span class="number">6</span>, version::VersionInterval::all()]: (age: sf::EnumAsPrimitiveType&lt;Age, u32&gt;, gender: sf::EnumAsPrimitiveType&lt;Gender, u32&gt;, race: sf::EnumAsPrimitiveType&lt;FaceColor, u32&gt;) =&gt;  (char_info: CharInfo) (char_info: CharInfo);
     }
 }
 
+<span class="macro">ipc_sf_define_default_interface_client!</span>(StaticService);
 <span class="macro">ipc_sf_define_interface_trait!</span> {
-    <span class="kw">trait </span>IStaticService {
-        get_database_service [<span class="number">0</span>, version::VersionInterval::all()]: (key_code: SpecialKeyCode) =&gt; (database_service: mem::Shared&lt;<span class="kw">dyn </span>IDatabaseService&gt;);
+	<span class="kw">trait </span>StaticService {
+        get_database_service [<span class="number">0</span>, version::VersionInterval::all()]: (key_code: SpecialKeyCode) =&gt;  (database_service: DatabaseService) (database_service: <span class="macro">session_type!</span>(DatabaseService));
     }
 }</code></pre></div></section></main></body></html>

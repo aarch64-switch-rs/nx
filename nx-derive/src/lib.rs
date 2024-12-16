@@ -1,14 +1,11 @@
 #![no_std]
 
-//use nx::ipc::client::{RequestCommandParameter, ResponseCommandParameter};
-//use nx::ipc::server::{RequestCommandParameter, ResponseCommandParameter};
-
-
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, DeriveInput};
 
 /// This creates the required trait implementations for the type to be used as an IPC request parameter.
+/// As the type is directly copied into the buffer from an &Self, this will only work on `Copy` types.
 #[proc_macro_derive(Request)]
 pub fn derive_request(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -38,6 +35,7 @@ pub fn derive_request(input: TokenStream) -> TokenStream {
 }
 
 /// This creates the required trait implementations for the type to be used as an IPC response parameter.
+/// As the type is directly copied into the buffer from an &Self, this will only work on `Copy` types.
 #[proc_macro_derive(Response)]
 pub fn derive_response(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);

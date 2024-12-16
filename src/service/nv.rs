@@ -6,8 +6,8 @@ use crate::service;
 
 pub use crate::ipc::sf::nv::*;
 
-// NvDrvService is the base trait for all the different services, since the only difference is their service names
-pub trait NvDrvService: client::IClientObject {}
+/// NvDrvService is the base trait for all the different services, since the only difference is their service names
+pub trait NvDrvService: client::IClientObject + Sync {}
 
 impl<S: NvDrvService> INvDrvServices for S {
     fn open(&self, path: sf::InMapAliasBuffer<u8>) -> Result<(Fd, ErrorCode)> {

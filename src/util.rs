@@ -406,12 +406,12 @@ impl<const S: usize> Default for ArrayWideString<S> {
 }
 
 impl<const S: usize> ArrayWideString<S> {
-    /// Creates an empty [`ArrayString16`]
+    /// Creates an empty [`ArrayWideString`]
     pub const fn new() -> Self {
         Self {c_wstr: [0; S] }
     }
 
-    /// Creates a [`ArrayString16`] from a given byte array
+    /// Creates a [`ArrayWideString`] from a given byte array
     /// 
     /// # Arguments
     /// 
@@ -420,9 +420,9 @@ impl<const S: usize> ArrayWideString<S> {
         Self {c_wstr: raw_bytes }
     }
 
-    /// Creates a [`ArrayString16`] from a given `String`
+    /// Creates a [`ArrayWideString`] from a given `String`
     /// 
-    /// This creates an empty [`ArrayString16`] and calls [`ArrayString16::set_string`] on it
+    /// This creates an empty [`ArrayWideString`] and calls [`ArrayWideString::set_string`] on it
     /// 
     /// # Arguments
     /// 
@@ -433,20 +433,20 @@ impl<const S: usize> ArrayWideString<S> {
         cstr
     }
 
-    /// Returns the length of the [`ArrayString16`]
+    /// Returns the length of the [`ArrayWideString`]
     /// 
     /// This is similar to C's `strlen()` function, thus taking into account the string's NUL-termination
     pub fn len(&self) -> usize {
         self.c_wstr.iter().position(|word| *word == 0).expect("We will have at least one null as we always keep the last index null")
     }
 
-    /// Returns if this [`ArrayString16`] is empty
+    /// Returns if this [`ArrayWideString`] is empty
     #[inline(always)]
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
 
-    /// Sets a `&str` as the contents of this [`ArrayString16`]
+    /// Sets a `&str` as the contents of this [`ArrayWideString`]
     /// 
     /// This will copy at max `S - 1` bytes/chars in order to ensure that the string is NUL-terminated
     /// 
@@ -478,7 +478,7 @@ impl<const S: usize> ArrayWideString<S> {
         }
     }
 
-    /// Sets a `String` as the contents of this [`ArrayString16`]
+    /// Sets a `String` as the contents of this [`ArrayWideString`]
     /// 
     /// This will copy at max `S - 1` bytes/chars in order to ensure that the string is NUL-terminated
     /// 
@@ -489,7 +489,7 @@ impl<const S: usize> ArrayWideString<S> {
         self.set_str(string.as_ref())
     }
 
-    /// Gets a `String` corresponding to this [`ArrayString16`]
+    /// Gets a `String` corresponding to this [`ArrayWideString`]
     pub fn get_string(&self) -> Result<String> {
         // create a clone of the internal buffer
         let mut tmp = self.c_wstr.clone();

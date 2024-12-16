@@ -11,9 +11,11 @@ pub mod rc;
 /// Represents the interface token used for parcel transactions
 pub const INTERFACE_TOKEN: &str = "android.gui.IGraphicBufferProducer";
 
-/// Represents binder error code values
+/// Represents binder error code values.
+/// See: 🤷 TODO: Find where these values come from. They're different than libnx.
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(i32)]
+#[allow(missing_docs)]
 pub enum ErrorCode {
     #[default]
     Success = 0,

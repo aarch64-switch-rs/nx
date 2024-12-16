@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["SystemSettingsServer"]};
+window.SIDEBAR_ITEMS = {};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["AllocFlags","IoctlFd"],"struct":["NvHostCtrlSyncptWait","NvMapAlloc","NvMapCreate","NvMapFromId","NvMapGetId"],"trait":["Ioctl"]};
+window.SIDEBAR_ITEMS = {"enum":["AllocFlags","IoctlFd"],"struct":["NvHostCtrlSyncptWait","NvMapAlloc","NvMapCreate","NvMapFree","NvMapFromId","NvMapGetId"],"trait":["Ioctl"]};

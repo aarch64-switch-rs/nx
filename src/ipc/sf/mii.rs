@@ -1689,6 +1689,7 @@ pub struct StoreData {
 }
 const_assert!(core::mem::size_of::<StoreData>() == 0x44);
 
+/// Simple wrapper for interpretting structs as byte slices.
 macro_rules! struct_to_slice {
     ($val:expr) => {
         unsafe {core::slice::from_raw_parts($val as *const _ as *const u8, core::mem::size_of_val($val))}

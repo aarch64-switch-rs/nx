@@ -9,8 +9,11 @@ use super::*;
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u8)]
 pub enum IoctlFd {
+    /// The ioctl fd for "/dev/nvhost-as-gpu"
     NvHost,
+    /// The ioctl fd for "/dev/nvmap"
     NvMap,
+    /// The ioctl fd for "/dev/nvhost-ctrl"
     NvHostCtrl
 }
 
@@ -71,8 +74,10 @@ impl Ioctl for NvMapFromId {
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u32)]
 pub enum AllocFlags {
+    /// The Nv driver server can only read the mapped data
     #[default]
     ReadOnly = 0,
+    /// The Nv driver server can both read and write to the mapped data area
     ReadWrite = 1
 }
 

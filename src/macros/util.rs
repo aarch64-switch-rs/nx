@@ -1,5 +1,19 @@
 #![macro_use]
 
+/// Implements a [`nx::mem::align_up`]-like macro for an type you want instead of just usizes (terms and conditions apply).
+/// This is intended only for use with primitive numeric types, and it is the callers responsibility to provide type annotations where necessary.
+/// 
+/// # Arguments
+/// 
+/// * `val`: Value to align up.
+/// * `alignment`: Alignment boundary
+#[macro_export]
+macro_rules! align_up {
+    ($val:expr, $alignment:expr) => {
+        (($val) + ($alignment-1)) & !($alignment-1)
+    }
+}
+
 /// Gets a value corresponding to the given bit
 /// 
 /// # Arguments
@@ -50,19 +64,23 @@ macro_rules! define_bit_enum {
         
         #[allow(non_snake_case)]
         impl $name {
+            /// Creates a `$name` from the underlying base type `$base`
             pub const fn from(val: $base) -> Self {
                 Self(val)
             }
             
+            /// Checks if the provided `$name` has all of the set bits in `other` are set in `self`
             pub const fn contains(self, other: Self) -> bool {
-                (self.0 & other.0) != 0
+                (self.0 & other.0) == other.0
             }
 
+            /// Returns the value as the underlying type
             pub const fn get(self) -> $base {
                 self.0
             }
         
             $(
+                /// Returns a `$name` where only the bit for `$entry_name` is set
                 $(#[$b_meta])*
                 pub const fn $entry_name() -> Self {
                     Self($entry_value)

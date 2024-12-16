@@ -1,6 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/xor/.cargo/registry/src/index.crates.io-6f17d22bba15001f/linked_list_allocator-0.9.1/src/lib.rs`."><title>lib.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="linked_list_allocator" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0-nightly (c9f8f3438 2024-03-27)" data-channel="nightly" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
-            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../linked_list_allocator/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/philip/.cargo/registry/src/index.crates.io-6f17d22bba15001f/linked_list_allocator-0.10.5/src/lib.rs`."><title>lib.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-42caa33d.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="linked_list_allocator" data-themes="" data-resource-suffix="" data-rustdoc-version="1.85.0-nightly (a47555110 2024-11-22)" data-channel="nightly" data-search-js="search-92e6798f.js" data-settings-js="settings-0f613d39.js" ><script src="../../static.files/storage-59e33391.js"></script><script defer src="../../static.files/src-script-56102188.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">linked_list_allocator/</div>lib.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -289,14 +288,93 @@
 <a href="#287" id="287">287</a>
 <a href="#288" id="288">288</a>
 <a href="#289" id="289">289</a>
-</pre></div><pre class="rust"><code><span class="attr">#![cfg_attr(feature = <span class="string">"const_mut_refs"</span>, feature(const_mut_refs))]
-#![cfg_attr(
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
+<a href="#309" id="309">309</a>
+<a href="#310" id="310">310</a>
+<a href="#311" id="311">311</a>
+<a href="#312" id="312">312</a>
+<a href="#313" id="313">313</a>
+<a href="#314" id="314">314</a>
+<a href="#315" id="315">315</a>
+<a href="#316" id="316">316</a>
+<a href="#317" id="317">317</a>
+<a href="#318" id="318">318</a>
+<a href="#319" id="319">319</a>
+<a href="#320" id="320">320</a>
+<a href="#321" id="321">321</a>
+<a href="#322" id="322">322</a>
+<a href="#323" id="323">323</a>
+<a href="#324" id="324">324</a>
+<a href="#325" id="325">325</a>
+<a href="#326" id="326">326</a>
+<a href="#327" id="327">327</a>
+<a href="#328" id="328">328</a>
+<a href="#329" id="329">329</a>
+<a href="#330" id="330">330</a>
+<a href="#331" id="331">331</a>
+<a href="#332" id="332">332</a>
+<a href="#333" id="333">333</a>
+<a href="#334" id="334">334</a>
+<a href="#335" id="335">335</a>
+<a href="#336" id="336">336</a>
+<a href="#337" id="337">337</a>
+<a href="#338" id="338">338</a>
+<a href="#339" id="339">339</a>
+<a href="#340" id="340">340</a>
+<a href="#341" id="341">341</a>
+<a href="#342" id="342">342</a>
+<a href="#343" id="343">343</a>
+<a href="#344" id="344">344</a>
+<a href="#345" id="345">345</a>
+<a href="#346" id="346">346</a>
+<a href="#347" id="347">347</a>
+<a href="#348" id="348">348</a>
+<a href="#349" id="349">349</a>
+<a href="#350" id="350">350</a>
+<a href="#351" id="351">351</a>
+<a href="#352" id="352">352</a>
+<a href="#353" id="353">353</a>
+<a href="#354" id="354">354</a>
+<a href="#355" id="355">355</a>
+<a href="#356" id="356">356</a>
+<a href="#357" id="357">357</a>
+<a href="#358" id="358">358</a>
+<a href="#359" id="359">359</a>
+<a href="#360" id="360">360</a>
+<a href="#361" id="361">361</a>
+<a href="#362" id="362">362</a>
+<a href="#363" id="363">363</a>
+<a href="#364" id="364">364</a>
+<a href="#365" id="365">365</a>
+<a href="#366" id="366">366</a>
+<a href="#367" id="367">367</a>
+<a href="#368" id="368">368</a>
+<a href="#369" id="369">369</a>
+<a href="#370" id="370">370</a></pre></div><pre class="rust"><code><span class="attr">#![cfg_attr(
     feature = <span class="string">"alloc_ref"</span>,
     feature(allocator_api, alloc_layout_extra, nonnull_slice_from_raw_parts)
 )]
 #![no_std]
 
-#[cfg(test)]
+#[cfg(any(test, fuzzing))]
 #[macro_use]
 </span><span class="kw">extern crate </span>std;
 
@@ -324,29 +402,30 @@
 
 <span class="doccomment">/// A fixed size heap backed by a linked list of free memory blocks.
 </span><span class="kw">pub struct </span>Heap {
-    bottom: usize,
-    size: usize,
     used: usize,
     holes: HoleList,
 }
 
+<span class="attr">#[cfg(fuzzing)]
+</span><span class="kw">impl </span>Heap {
+    <span class="kw">pub fn </span>debug(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="macro">println!</span>(
+            <span class="string">"bottom: {:?}, top: {:?}, size: {}, pending: {}"</span>,
+            <span class="self">self</span>.bottom(),
+            <span class="self">self</span>.top(),
+            <span class="self">self</span>.size(),
+            <span class="self">self</span>.holes.first.size,
+        );
+        <span class="self">self</span>.holes.debug();
+    }
+}
+
+<span class="kw">unsafe impl </span>Send <span class="kw">for </span>Heap {}
+
 <span class="kw">impl </span>Heap {
     <span class="doccomment">/// Creates an empty heap. All allocate calls will return `None`.
-    </span><span class="attr">#[cfg(not(feature = <span class="string">"const_mut_refs"</span>))]
-    </span><span class="kw">pub fn </span>empty() -&gt; Heap {
-        Heap {
-            bottom: <span class="number">0</span>,
-            size: <span class="number">0</span>,
-            used: <span class="number">0</span>,
-            holes: HoleList::empty(),
-        }
-    }
-
-    <span class="attr">#[cfg(feature = <span class="string">"const_mut_refs"</span>)]
     </span><span class="kw">pub const fn </span>empty() -&gt; Heap {
         Heap {
-            bottom: <span class="number">0</span>,
-            size: <span class="number">0</span>,
             used: <span class="number">0</span>,
             holes: HoleList::empty(),
         }
@@ -354,13 +433,31 @@
 
     <span class="doccomment">/// Initializes an empty heap
     ///
-    /// # Unsafety
+    /// The `heap_bottom` pointer is automatically aligned, so the [`bottom()`][Self::bottom]
+    /// method might return a pointer that is larger than `heap_bottom` after construction.
+    ///
+    /// The given `heap_size` must be large enough to store the required
+    /// metadata, otherwise this function will panic. Depending on the
+    /// alignment of the `hole_addr` pointer, the minimum size is between
+    /// `2 * size_of::&lt;usize&gt;` and `3 * size_of::&lt;usize&gt;`.
+    ///
+    /// The usable size for allocations will be truncated to the nearest
+    /// alignment of `align_of::&lt;usize&gt;`. Any extra bytes left at the end
+    /// will be reclaimed once sufficient additional space is given to
+    /// [`extend`][Heap::extend].
+    ///
+    /// # Safety
     ///
     /// This function must be called at most once and must only be used on an
     /// empty heap.
-    </span><span class="kw">pub unsafe fn </span>init(<span class="kw-2">&amp;mut </span><span class="self">self</span>, heap_bottom: usize, heap_size: usize) {
-        <span class="self">self</span>.bottom = heap_bottom;
-        <span class="self">self</span>.size = heap_size;
+    ///
+    /// The bottom address must be valid and the memory in the
+    /// `[heap_bottom, heap_bottom + heap_size)` range must not be used for anything else.
+    /// This function is unsafe because it can cause undefined behavior if the given address
+    /// is invalid.
+    ///
+    /// The provided memory range must be valid for the `'static` lifetime.
+    </span><span class="kw">pub unsafe fn </span>init(<span class="kw-2">&amp;mut </span><span class="self">self</span>, heap_bottom: <span class="kw-2">*mut </span>u8, heap_size: usize) {
         <span class="self">self</span>.used = <span class="number">0</span>;
         <span class="self">self</span>.holes = HoleList::new(heap_bottom, heap_size);
     }
@@ -372,17 +469,29 @@
     /// program's memory, from a mutable static, or by allocating and leaking such memory from
     /// another allocator.
     ///
-    /// The latter method may be especially useful if the underlying allocator does not perform
+    /// The latter approach may be especially useful if the underlying allocator does not perform
     /// deallocation (e.g. a simple bump allocator). Then the overlaid linked-list-allocator can
     /// provide memory reclamation.
+    ///
+    /// The usable size for allocations will be truncated to the nearest
+    /// alignment of `align_of::&lt;usize&gt;`. Any extra bytes left at the end
+    /// will be reclaimed once sufficient additional space is given to
+    /// [`extend`][Heap::extend].
     ///
     /// # Panics
     ///
     /// This method panics if the heap is already initialized.
+    ///
+    /// It also panics when the length of the given `mem` slice is not large enough to
+    /// store the required metadata. Depending on the alignment of the slice, the minimum
+    /// size is between `2 * size_of::&lt;usize&gt;` and `3 * size_of::&lt;usize&gt;`.
     </span><span class="kw">pub fn </span>init_from_slice(<span class="kw-2">&amp;mut </span><span class="self">self</span>, mem: <span class="kw-2">&amp;</span><span class="lifetime">'static </span><span class="kw-2">mut </span>[MaybeUninit&lt;u8&gt;]) {
-        <span class="macro">assert!</span>(<span class="self">self</span>.bottom == <span class="number">0</span>, <span class="string">"The heap has already been initialized."</span>);
+        <span class="macro">assert!</span>(
+            <span class="self">self</span>.bottom().is_null(),
+            <span class="string">"The heap has already been initialized."
+        </span>);
         <span class="kw">let </span>size = mem.len();
-        <span class="kw">let </span>address = mem.as_ptr() <span class="kw">as </span>usize;
+        <span class="kw">let </span>address = mem.as_mut_ptr().cast();
         <span class="comment">// SAFETY: All initialization requires the bottom address to be valid, which implies it
         // must not be 0. Initially the address is 0. The assertion above ensures that no
         // initialization had been called before.
@@ -391,30 +500,44 @@
         </span><span class="kw">unsafe </span>{ <span class="self">self</span>.init(address, size) }
     }
 
-    <span class="doccomment">/// Creates a new heap with the given `bottom` and `size`. The bottom address must be valid
-    /// and the memory in the `[heap_bottom, heap_bottom + heap_size)` range must not be used for
-    /// anything else. This function is unsafe because it can cause undefined behavior if the
-    /// given address is invalid.
-    </span><span class="kw">pub unsafe fn </span>new(heap_bottom: usize, heap_size: usize) -&gt; Heap {
-        <span class="kw">if </span>heap_size &lt; HoleList::min_size() {
-            <span class="self">Self</span>::empty()
-        } <span class="kw">else </span>{
-            Heap {
-                bottom: heap_bottom,
-                size: heap_size,
-                used: <span class="number">0</span>,
-                holes: HoleList::new(heap_bottom, heap_size),
-            }
+    <span class="doccomment">/// Creates a new heap with the given `bottom` and `size`.
+    ///
+    /// The `heap_bottom` pointer is automatically aligned, so the [`bottom()`][Self::bottom]
+    /// method might return a pointer that is larger than `heap_bottom` after construction.
+    ///
+    /// The given `heap_size` must be large enough to store the required
+    /// metadata, otherwise this function will panic. Depending on the
+    /// alignment of the `hole_addr` pointer, the minimum size is between
+    /// `2 * size_of::&lt;usize&gt;` and `3 * size_of::&lt;usize&gt;`.
+    ///
+    /// The usable size for allocations will be truncated to the nearest
+    /// alignment of `align_of::&lt;usize&gt;`. Any extra bytes left at the end
+    /// will be reclaimed once sufficient additional space is given to
+    /// [`extend`][Heap::extend].
+    ///
+    /// # Safety
+    ///
+    /// The bottom address must be valid and the memory in the
+    /// `[heap_bottom, heap_bottom + heap_size)` range must not be used for anything else.
+    /// This function is unsafe because it can cause undefined behavior if the given address
+    /// is invalid.
+    ///
+    /// The provided memory range must be valid for the `'static` lifetime.
+    </span><span class="kw">pub unsafe fn </span>new(heap_bottom: <span class="kw-2">*mut </span>u8, heap_size: usize) -&gt; Heap {
+        Heap {
+            used: <span class="number">0</span>,
+            holes: HoleList::new(heap_bottom, heap_size),
         }
     }
 
     <span class="doccomment">/// Creates a new heap from a slice of raw memory.
     ///
-    /// This has the same effect as [`init_from_slice`] on an empty heap, but it is combined into a
-    /// single operation that can not panic.
+    /// This is a convenience function that has the same effect as calling
+    /// [`init_from_slice`] on an empty heap. All the requirements of `init_from_slice`
+    /// apply to this function as well.
     </span><span class="kw">pub fn </span>from_slice(mem: <span class="kw-2">&amp;</span><span class="lifetime">'static </span><span class="kw-2">mut </span>[MaybeUninit&lt;u8&gt;]) -&gt; Heap {
         <span class="kw">let </span>size = mem.len();
-        <span class="kw">let </span>address = mem.as_ptr() <span class="kw">as </span>usize;
+        <span class="kw">let </span>address = mem.as_mut_ptr().cast();
         <span class="comment">// SAFETY: The given address and size is valid according to the safety invariants of the
         // mutable reference handed to us by the caller.
         </span><span class="kw">unsafe </span>{ <span class="self">Self</span>::new(address, size) }
@@ -425,6 +548,10 @@
     /// This function scans the list of free memory blocks and uses the first block that is big
     /// enough. The runtime is in O(n) where n is the number of free blocks, but it should be
     /// reasonably fast for small allocations.
+    </span><span class="comment">//
+    // NOTE: We could probably replace this with an `Option` instead of a `Result` in a later
+    // release to remove this clippy warning
+    </span><span class="attr">#[allow(clippy::result_unit_err)]
     </span><span class="kw">pub fn </span>allocate_first_fit(<span class="kw-2">&amp;mut </span><span class="self">self</span>, layout: Layout) -&gt; <span class="prelude-ty">Result</span>&lt;NonNull&lt;u8&gt;, ()&gt; {
         <span class="kw">match </span><span class="self">self</span>.holes.allocate_first_fit(layout) {
             <span class="prelude-val">Ok</span>((ptr, aligned_layout)) =&gt; {
@@ -436,29 +563,44 @@
     }
 
     <span class="doccomment">/// Frees the given allocation. `ptr` must be a pointer returned
-    /// by a call to the `allocate_first_fit` function with identical size and alignment. Undefined
-    /// behavior may occur for invalid arguments, thus this function is unsafe.
+    /// by a call to the `allocate_first_fit` function with identical size and alignment.
     ///
     /// This function walks the list of free memory blocks and inserts the freed block at the
     /// correct place. If the freed block is adjacent to another free block, the blocks are merged
     /// again. This operation is in `O(n)` since the list needs to be sorted by address.
+    ///
+    /// # Safety
+    ///
+    /// `ptr` must be a pointer returned by a call to the [`allocate_first_fit`] function with
+    /// identical layout. Undefined behavior may occur for invalid arguments.
     </span><span class="kw">pub unsafe fn </span>deallocate(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ptr: NonNull&lt;u8&gt;, layout: Layout) {
         <span class="self">self</span>.used -= <span class="self">self</span>.holes.deallocate(ptr, layout).size();
     }
 
     <span class="doccomment">/// Returns the bottom address of the heap.
-    </span><span class="kw">pub fn </span>bottom(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
-        <span class="self">self</span>.bottom
+    ///
+    /// The bottom pointer is automatically aligned, so the returned pointer
+    /// might be larger than the bottom pointer used for initialization.
+    </span><span class="kw">pub fn </span>bottom(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">*mut </span>u8 {
+        <span class="self">self</span>.holes.bottom
     }
 
     <span class="doccomment">/// Returns the size of the heap.
+    ///
+    /// This is the size the heap is using for allocations, not necessarily the
+    /// total amount of bytes given to the heap. To determine the exact memory
+    /// boundaries, use [`bottom`][Self::bottom] and [`top`][Self::top].
     </span><span class="kw">pub fn </span>size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
-        <span class="self">self</span>.size
+        <span class="kw">unsafe </span>{ <span class="self">self</span>.holes.top.offset_from(<span class="self">self</span>.holes.bottom) <span class="kw">as </span>usize }
     }
 
-    <span class="doccomment">/// Return the top address of the heap
-    </span><span class="kw">pub fn </span>top(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
-        <span class="self">self</span>.bottom + <span class="self">self</span>.size
+    <span class="doccomment">/// Return the top address of the heap.
+    ///
+    /// Note: The heap may choose to not use bytes at the end for allocations
+    /// until there is enough room for metadata, but it still retains ownership
+    /// over memory from [`bottom`][Self::bottom] to the address returned.
+    </span><span class="kw">pub fn </span>top(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">*mut </span>u8 {
+        <span class="kw">unsafe </span>{ <span class="self">self</span>.holes.top.add(<span class="self">self</span>.holes.pending_extend <span class="kw">as </span>usize) }
     }
 
     <span class="doccomment">/// Returns the size of the used part of the heap
@@ -468,20 +610,29 @@
 
     <span class="doccomment">/// Returns the size of the free part of the heap
     </span><span class="kw">pub fn </span>free(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
-        <span class="self">self</span>.size - <span class="self">self</span>.used
+        <span class="self">self</span>.size() - <span class="self">self</span>.used
     }
 
-    <span class="doccomment">/// Extends the size of the heap by creating a new hole at the end
+    <span class="doccomment">/// Extends the size of the heap by creating a new hole at the end.
     ///
-    /// # Unsafety
+    /// Small extensions are not guaranteed to grow the usable size of
+    /// the heap. In order to grow the Heap most effectively, extend by
+    /// at least `2 * size_of::&lt;usize&gt;`, keeping the amount a multiple of
+    /// `size_of::&lt;usize&gt;`.
     ///
-    /// The new extended area must be valid
+    /// Calling this method on an uninitialized Heap will panic.
+    ///
+    /// # Safety
+    ///
+    /// The amount of data given in `by` MUST exist directly after the original
+    /// range of data provided when constructing the [Heap]. The additional data
+    /// must have the same lifetime of the original range of data.
+    ///
+    /// Even if this operation doesn't increase the [usable size][`Self::size`]
+    /// by exactly `by` bytes, those bytes are still owned by the Heap for
+    /// later use.
     </span><span class="kw">pub unsafe fn </span>extend(<span class="kw-2">&amp;mut </span><span class="self">self</span>, by: usize) {
-        <span class="kw">let </span>top = <span class="self">self</span>.top();
-        <span class="kw">let </span>layout = Layout::from_size_align(by, <span class="number">1</span>).unwrap();
-        <span class="self">self</span>.holes
-            .deallocate(NonNull::new_unchecked(top <span class="kw">as </span><span class="kw-2">*mut </span>u8), layout);
-        <span class="self">self</span>.size += by;
+        <span class="self">self</span>.holes.extend(by);
     }
 }
 
@@ -509,26 +660,30 @@
 
 <span class="attr">#[cfg(feature = <span class="string">"use_spin"</span>)]
 </span><span class="kw">impl </span>LockedHeap {
-    <span class="doccomment">/// Creates an empty heap. All allocate calls will return `None`.
-    </span><span class="attr">#[cfg(feature = <span class="string">"use_spin_nightly"</span>)]
-    </span><span class="kw">pub const fn </span>empty() -&gt; LockedHeap {
+    <span class="kw">pub const fn </span>empty() -&gt; LockedHeap {
         LockedHeap(Spinlock::new(Heap::empty()))
     }
 
-    <span class="doccomment">/// Creates an empty heap. All allocate calls will return `None`.
-    </span><span class="attr">#[cfg(not(feature = <span class="string">"use_spin_nightly"</span>))]
-    </span><span class="kw">pub fn </span>empty() -&gt; LockedHeap {
-        LockedHeap(Spinlock::new(Heap::empty()))
-    }
-
-    <span class="doccomment">/// Creates a new heap with the given `bottom` and `size`. The bottom address must be valid
-    /// and the memory in the `[heap_bottom, heap_bottom + heap_size)` range must not be used for
-    /// anything else. This function is unsafe because it can cause undefined behavior if the
-    /// given address is invalid.
-    </span><span class="kw">pub unsafe fn </span>new(heap_bottom: usize, heap_size: usize) -&gt; LockedHeap {
+    <span class="doccomment">/// Creates a new heap with the given `bottom` and `size`.
+    ///
+    /// The `heap_bottom` pointer is automatically aligned, so the [`bottom()`][Heap::bottom]
+    /// method might return a pointer that is larger than `heap_bottom` after construction.
+    ///
+    /// The given `heap_size` must be large enough to store the required
+    /// metadata, otherwise this function will panic. Depending on the
+    /// alignment of the `hole_addr` pointer, the minimum size is between
+    /// `2 * size_of::&lt;usize&gt;` and `3 * size_of::&lt;usize&gt;`.
+    ///
+    /// # Safety
+    ///
+    /// The bottom address must be valid and the memory in the
+    /// `[heap_bottom, heap_bottom + heap_size)` range must not be used for anything else.
+    /// This function is unsafe because it can cause undefined behavior if the given address
+    /// is invalid.
+    ///
+    /// The provided memory range must be valid for the `'static` lifetime.
+    </span><span class="kw">pub unsafe fn </span>new(heap_bottom: <span class="kw-2">*mut </span>u8, heap_size: usize) -&gt; LockedHeap {
         LockedHeap(Spinlock::new(Heap {
-            bottom: heap_bottom,
-            size: heap_size,
             used: <span class="number">0</span>,
             holes: HoleList::new(heap_bottom, heap_size),
         }))
@@ -551,7 +706,7 @@
             </span>.lock()
             .allocate_first_fit(layout)
             .ok()
-            .map_or(<span class="number">0 </span><span class="kw">as </span><span class="kw-2">*mut </span>u8, |allocation| allocation.as_ptr())
+            .map_or(core::ptr::null_mut(), |allocation| allocation.as_ptr())
     }
 
     <span class="kw">unsafe fn </span>dealloc(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: <span class="kw-2">*mut </span>u8, layout: Layout) {
@@ -563,19 +718,24 @@
 
 <span class="doccomment">/// Align downwards. Returns the greatest x with alignment `align`
 /// so that x &lt;= addr. The alignment must be a power of 2.
-</span><span class="kw">pub fn </span>align_down(addr: usize, align: usize) -&gt; usize {
+</span><span class="kw">pub fn </span>align_down_size(size: usize, align: usize) -&gt; usize {
     <span class="kw">if </span>align.is_power_of_two() {
-        addr &amp; !(align - <span class="number">1</span>)
+        size &amp; !(align - <span class="number">1</span>)
     } <span class="kw">else if </span>align == <span class="number">0 </span>{
-        addr
+        size
     } <span class="kw">else </span>{
         <span class="macro">panic!</span>(<span class="string">"`align` must be a power of 2"</span>);
     }
 }
 
+<span class="kw">pub fn </span>align_up_size(size: usize, align: usize) -&gt; usize {
+    align_down_size(size + align - <span class="number">1</span>, align)
+}
+
 <span class="doccomment">/// Align upwards. Returns the smallest x with alignment `align`
 /// so that x &gt;= addr. The alignment must be a power of 2.
-</span><span class="kw">pub fn </span>align_up(addr: usize, align: usize) -&gt; usize {
-    align_down(addr + align - <span class="number">1</span>, align)
+</span><span class="kw">pub fn </span>align_up(addr: <span class="kw-2">*mut </span>u8, align: usize) -&gt; <span class="kw-2">*mut </span>u8 {
+    <span class="kw">let </span>offset = addr.align_offset(align);
+    addr.wrapping_add(offset)
 }
 </code></pre></div></section></main></body></html>

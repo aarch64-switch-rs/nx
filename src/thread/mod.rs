@@ -197,7 +197,7 @@ impl Builder {
     /// [`crate::result::Result`] to capture any failure to create the thread at
     /// the OS level.
     ///
-    /// [`crate::result::Result`]: crate::crate::result::Result
+    /// [`crate::result::Result`]: crate::result::Result
     ///
     /// # Panics
     ///
@@ -281,7 +281,7 @@ impl Builder {
     /// handler.join().unwrap();
     /// ```
     ///
-    /// [`crate::result::Result`]: crate::crate::result::Result
+    /// [`Result`]: crate::result::Result
     pub unsafe fn spawn_unchecked<F, T>(self, f: F) -> crate::result::Result<JoinHandle<T>>
     where
         F: FnOnce() -> T,
@@ -401,6 +401,128 @@ impl Builder {
     }
 }
 
+/// Spawns a new thread, returning a [`JoinHandle`] for it.
+///
+/// The join handle provides a [`join`] method that can be used to join the spawned
+/// thread. If the spawned thread panics, [`join`] will return an [`Err`] containing
+/// the argument given to [`panic!`].
+///
+/// If the join handle is dropped, the spawned thread will implicitly be *detached*.
+/// In this case, the spawned thread may no longer be joined.
+/// (It is the responsibility of the program to either eventually join threads it
+/// creates or detach them; otherwise, a resource leak will result.)
+///
+/// This call will create a thread using default parameters of [`Builder`], if you
+/// want to specify the stack size or the name of the thread, use this API
+/// instead.
+///
+/// As you can see in the signature of `spawn` there are two constraints on
+/// both the closure given to `spawn` and its return value, let's explain them:
+///
+/// - The `'static` constraint means that the closure and its return value
+///   must have a lifetime of the whole program execution. The reason for this
+///   is that threads can outlive the lifetime they have been created in.
+///
+///   Indeed if the thread, and by extension its return value, can outlive their
+///   caller, we need to make sure that they will be valid afterwards, and since
+///   we *can't* know when it will return we need to have them valid as long as
+///   possible, that is until the end of the program, hence the `'static`
+///   lifetime.
+/// - The [`Send`] constraint is because the closure will need to be passed
+///   *by value* from the thread where it is spawned to the new thread. Its
+///   return value will need to be passed from the new thread to the thread
+///   where it is `join`ed.
+///   As a reminder, the [`Send`] marker trait expresses that it is safe to be
+///   passed from thread to thread. [`Sync`] expresses that it is safe to have a
+///   reference be passed from thread to thread.
+///
+/// # Panics
+///
+/// Panics if the OS fails to create a thread; use [`Builder::spawn`]
+/// to recover from such errors.
+///
+/// # Examples
+///
+/// Creating a thread.
+///
+/// ```
+/// use nx::thread;
+///
+/// let handler = thread::spawn(|| {
+///     // thread code
+/// });
+///
+/// handler.join().unwrap();
+/// ```
+///
+/// As mentioned in the module documentation, threads are usually made to
+/// communicate using `channels`, here is how it usually looks.
+///
+/// This example also shows how to use `move`, in order to give ownership
+/// of values to a thread.
+///
+/// ```
+/// use nx::thread;
+/// use uchan::channel;
+///
+/// let (tx, rx) = channel();
+///
+/// let sender = thread::spawn(move || {
+///     tx.send("Hello, thread".to_owned())
+///         .expect("Unable to send on channel");
+/// });
+///
+/// let receiver = thread::spawn(move || {
+///     let value = rx.recv().expect("Unable to receive from channel");
+///     println!("{value}");
+/// });
+///
+/// sender.join().expect("The sender thread has panicked");
+/// receiver.join().expect("The receiver thread has panicked");
+/// ```
+///
+/// A thread can also return a value through its [`JoinHandle`], you can use
+/// this to make asynchronous computations (futures might be more appropriate
+/// though).
+///
+/// ```
+/// use nx::thread;
+///
+/// let computation = thread::spawn(|| {
+///     // Some expensive computation.
+///     42
+/// });
+///
+/// let result = computation.join().unwrap();
+/// println!("{result}");
+/// ```
+///
+/// # Notes
+///
+/// This function has the same minimal guarantee regarding "foreign" unwinding operations (e.g.
+/// an exception thrown from C++ code, or a `panic!` in Rust code compiled or linked with a
+/// different runtime) as [`catch_unwind`]; namely, if the thread created with `thread::spawn`
+/// unwinds all the way to the root with such an exception, one of two behaviors are possible,
+/// and it is unspecified which will occur:
+///
+/// * The process aborts.
+/// * The process does not abort, and [`join`] will return a `Result::Err`
+///   containing an opaque type.
+///
+/// [`catch_unwind`]: unwinding::panic::catch_unwind
+/// [`join`]: JoinHandle::join
+/// [`Err`]: crate::result::Result::Err
+pub fn spawn<F, T>(f: F) -> JoinHandle<T>
+where
+    F: FnOnce() -> T,
+    F: Send + 'static,
+    T: Send + 'static,
+{
+    Builder::new().spawn(f).expect("failed to spawn thread")
+}
+
+/// Internal wrapper function that is run as the entrypoint to newly spawned functions.
+#[doc(hidden)]
 unsafe extern "C" fn thread_wrapper(raw_ptr: *mut u8) -> ! {
     // SAFETY: This is fine as it is created with a call to Box::<ThreadArgs>::new()
     let entry_env: Box<ThreadArgs> = Box::from_raw(raw_ptr.cast());
@@ -408,7 +530,7 @@ unsafe extern "C" fn thread_wrapper(raw_ptr: *mut u8) -> ! {
     // SAFETY: The this may actually get mutated by the running thread, so the parent thread *MUST* never read/modify the thread object as it is running
     set_current_thread(&*entry_env.thread.as_ref() as *const _ as _);
 
-    // runs only once and we don't need to handle them as they're handled with catch_unwind in the runner.
+    // runs only once and we don't need to handle panics as they're handled with catch_unwind in the runner.
     // The runner is actually a wrapper of the thread payload that captures the thread environment (e.g. the packet for returning data from the thread)
     (entry_env.runner)();
 
@@ -425,8 +547,6 @@ struct ThreadArgs {
     thread: Pin<Arc<imp::Thread>>
 }
 
-
-
 #[derive(Clone)]
 /// A handle to a thread.
 ///
@@ -436,30 +556,16 @@ struct ThreadArgs {
 /// * By spawning a new thread, e.g., using the [`thread::spawn`][`spawn`]
 ///   function, and calling [`thread`][`JoinHandle::thread`] on the
 ///   [`JoinHandle`].
-/// * By requesting the current thread, using the [`thread::current`] function.
-///
-/// The [`thread::current`] function is available even for threads not spawned
-/// by the APIs of this module.
+/// * By requesting the current thread, using the (private, for now) [`thread::current`][`current`] function.
 ///
 /// There is usually no need to create a `Thread` struct yourself, one
 /// should instead use a function like `spawn` to create new threads, see the
 /// docs of [`Builder`] and [`spawn`] for more details.
-///
-/// [`thread::current`]: current
 pub struct Thread {
     inner: Pin<Arc<Inner>>,
 }
 
 impl Thread {
-    // Used in runtime to construct main thread
-    //pub(crate) fn new_main() -> Thread {
-    //    unsafe { Self::new_named("MainThread") }
-    //}
-
-    //pub(crate) unsafe fn new_named<S: AsRef<str>>(name: S) -> Thread {
-    //    unsafe {Self::new_inner(name.as_ref().into())}
-    //}
-
     pub fn new_remote<S: AsRef<str>>(name: S, handle: svc::Handle) -> Thread {
         Self {
             inner:
@@ -589,11 +695,11 @@ impl Inner {
 /// is the value the thread panicked with;
 /// that is, the argument the `panic!` macro was called with.
 /// Unlike with normal errors, this value doesn't implement
-/// the [`Error`](crate::error::Error) trait.
+/// the [`Error`](core::error::Error) trait.
 ///
 /// Thus, a sensible way to handle a thread panic is to either:
 ///
-/// 1. propagate the panic with [`crate::panic::resume_unwind`]
+/// 1. re-raise the panic with [`unwinding::panic::begin_panic`]
 /// 2. or in case the thread is intended to be a subsystem boundary
 /// that is supposed to isolate system-level failures,
 /// match on the `Err` variant and handle the panic in an appropriate way
@@ -609,20 +715,23 @@ impl Inner {
 ///
 /// fn copy_in_thread() -> thread::Result<()> {
 ///     thread::spawn(|| {
-///         fs::copy("foo.txt", "bar.txt").unwrap();
+///         fs::copy("sdmc://foo.txt", "sdmc://bar.txt").unwrap();
 ///     }).join()
 /// }
 ///
 /// fn main() {
+///     fs::initialize_fspsrv_session();
+///     fs::mount_sd_card("sdmc");
+/// 
 ///     match copy_in_thread() {
 ///         Ok(_) => println!("copy succeeded"),
-///         Err(e) => panic::resume_unwind(e),
+///         Err(e) => unwinding::panic::begin_panic(e),
 ///     }
 /// }
 /// ```
 ///
-/// [`Result`]: crate::result::Result
-/// [`crate::panic::resume_unwind`]: crate::panic::resume_unwind
+/// [`Result`]: core::result::Result
+/// [`begin_panic`]: unwinding::panic::begin_panic
 pub type Result<T> = core::result::Result<T, Box<dyn core::any::Any + Send + 'static>>;
 
 /// This packet is used to communicate the return value between the spawned
@@ -787,7 +896,7 @@ impl<T> JoinHandle<T> {
     /// to [`panic!`].
     ///
     /// [`Err`]: crate::result::Result::Err
-    /// [atomic memory orderings]: crate::sync::atomic
+    /// [atomic memory orderings]: core::sync::atomic
     ///
     /// # Panics
     ///
@@ -824,7 +933,7 @@ impl<T> JoinHandle<T> {
     /// to [`panic!`].
     ///
     /// [`Err`]: crate::result::Result::Err
-    /// [atomic memory orderings]: crate::sync::atomic
+    /// [atomic memory orderings]: core::sync::atomic
     ///
     /// # Panics
     ///

@@ -1,6 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/diag/log/lm.rs`."><title>lm.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0-nightly (c9f8f3438 2024-03-27)" data-channel="nightly" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
-            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../../nx/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/diag/log/lm.rs`."><title>lm.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-42caa33d.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.85.0-nightly (a47555110 2024-11-22)" data-channel="nightly" data-search-js="search-92e6798f.js" data-settings-js="settings-0f613d39.js" ><script src="../../../../static.files/storage-59e33391.js"></script><script defer src="../../../../static.files/src-script-56102188.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">nx/diag/log/</div>lm.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -65,32 +64,25 @@
 <a href="#63" id="63">63</a>
 <a href="#64" id="64">64</a>
 <a href="#65" id="65">65</a>
-<a href="#66" id="66">66</a>
-<a href="#67" id="67">67</a>
-<a href="#68" id="68">68</a>
-<a href="#69" id="69">69</a>
-</pre></div><pre class="rust"><code><span class="doccomment">//! `LogManager` logger implementation
+<a href="#66" id="66">66</a></pre></div><pre class="rust"><code><span class="doccomment">//! `LogManager` logger implementation
 
 </span><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::rrt0;
-<span class="kw">use </span><span class="kw">crate</span>::mem;
 <span class="kw">use </span><span class="kw">crate</span>::ipc::sf;
 <span class="kw">use </span><span class="kw">crate</span>::service;
-<span class="kw">use </span><span class="kw">crate</span>::service::lm;
-<span class="kw">use </span><span class="kw">crate</span>::service::lm::ILogService;
-<span class="kw">use </span><span class="kw">crate</span>::service::lm::ILogger;
+<span class="kw">use </span><span class="kw">crate</span>::service::lm::{<span class="self">self</span>, ILogService, ILogger};
 <span class="kw">use </span><span class="kw">crate</span>::svc;
 
 <span class="doccomment">/// Represents a logger through [`LogService`][`lm::LogService`] services
 </span><span class="kw">pub struct </span>LmLogger {
-    logger: <span class="prelude-ty">Option</span>&lt;mem::Shared&lt;<span class="kw">dyn </span>ILogger&gt;&gt;
+    logger: <span class="prelude-ty">Option</span>&lt;lm::Logger&gt;
 }
 
 <span class="kw">impl </span>Logger <span class="kw">for </span>LmLogger {
     <span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>logger = <span class="kw">match </span>service::new_service_object::&lt;lm::LogService&gt;() {
-            <span class="prelude-val">Ok</span>(log_srv) =&gt; {
-                <span class="kw">match </span>log_srv.get().open_logger(sf::ProcessId::new()) {
+            <span class="prelude-val">Ok</span>(<span class="kw-2">mut </span>log_srv) =&gt; {
+                <span class="kw">match </span>log_srv.open_logger(svc::get_process_id(svc::CURRENT_PROCESS_PSEUDO_HANDLE).unwrap()) {
                     <span class="prelude-val">Ok</span>(logger_obj) =&gt; <span class="prelude-val">Some</span>(logger_obj),
                     <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">None
                 </span>}
@@ -102,15 +94,15 @@
     }
 
     <span class="kw">fn </span>log(<span class="kw-2">&amp;mut </span><span class="self">self</span>, metadata: <span class="kw-2">&amp;</span>LogMetadata) {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(logger_obj) = <span class="kw-2">&amp;</span><span class="self">self</span>.logger {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(logger_obj) = <span class="self">self</span>.logger.as_mut() {
             <span class="kw">let </span><span class="kw-2">mut </span>log_packet = logpacket::LogPacket::new();
 
             <span class="kw">if let </span><span class="prelude-val">Ok</span>(process_id) = svc::get_process_id(svc::CURRENT_PROCESS_PSEUDO_HANDLE) {
                 log_packet.set_process_id(process_id);
             }
 
-            <span class="kw">let </span>cur_thread = thread::get_current_thread();
-            <span class="kw">if let </span><span class="prelude-val">Ok</span>(thread_id) = cur_thread.get_id() {
+            <span class="kw">let </span>cur_thread = <span class="kw">unsafe </span>{thread::current().as_ref().unwrap()};
+            <span class="kw">if let </span><span class="prelude-val">Ok</span>(thread_id) = cur_thread.id() {
                 log_packet.set_thread_id(thread_id);
             }
 
@@ -118,7 +110,7 @@
             log_packet.set_function_name(String::from(metadata.fn_name));
             log_packet.set_line_number(metadata.line_number);
     
-            <span class="kw">let </span>mod_name = <span class="kw">match </span>rrt0::get_module_name().path.get_string() {
+            <span class="kw">let </span>mod_name = <span class="kw">match </span>rrt0::get_module_name().get_name().get_string() {
                 <span class="prelude-val">Ok</span>(name) =&gt; name,
                 <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; String::from(<span class="string">"aarch64-switch-rs (invalid module name)"</span>)
             };
@@ -133,7 +125,7 @@
             log_packet.set_thread_name(String::from(thread_name));
 
             <span class="kw">for </span>packet <span class="kw">in </span>log_packet.encode_packet() {
-                <span class="kw">let _ </span>= logger_obj.get().log(sf::Buffer::from_array(<span class="kw-2">&amp;</span>packet));
+                <span class="kw">let _ </span>= logger_obj.log(sf::Buffer::from_array(<span class="kw-2">&amp;</span>packet));
             }
         }
     }

@@ -8,22 +8,27 @@ include = [
     "nx_derive"
 ]
 
-[lib]
-#proc-macro = true
-
 [dependencies]
 paste = "1.0"
 logpacket = { git = "https://github.com/aarch64-switch-rs/logpacket" }
-linked_list_allocator = { version = "0.10.5", default-features = false, features = [ "const_mut_refs", "alloc_ref", "use_spin" ] }
-arrayvec = { version = "0.7.4", default-features = false, features = [] }
+arrayvec = { version = "0.7.4", default-features = false }
 static_assertions = "1.1.0"
 lock_api = { version = "0.4.12", features = ["nightly"] }
 generic_once_cell = "0.1.1"
 once_cell = { version = "1.19.0", default-features = false, features = ["race"] }
 atomic_enum = "0.3.0"
-zeroize = { version = "1.8.1", features = ["alloc", "aarch64"] }
-unwinding = {version = "0.2.4", default-features = false, features = ["unwinder", "panic", "fde-custom", "personality"]}
-nx-derive ={ path = "nx-derive/"}
+zeroize = { version = "1.8.1", features = ["aarch64"] }
+nx-derive = { path = "nx-derive/" }
+
+[dependencies.unwinding]
+version = "0.2.4"
+default-features = false
+features = ["unwinder", "panic", "fde-custom", "personality"]
+
+[dependencies.linked_list_allocator]
+version = "0.10.5"
+default-features = false
+features = [ "const_mut_refs", "alloc_ref", "use_spin" ]
 
 [features]
 services = []
@@ -37,4 +42,5 @@ rand = ["services"]
 
 [lints.rust]
 internal_features = "allow" # We need this since we're peeking into a Pin while implementing the Threading API.
+#missing_docs = "warn"
 #unsafe_op_in_unsafe_fn = "deny"

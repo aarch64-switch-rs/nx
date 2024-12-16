@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["AllSystemAppletProxiesService","LibraryAppletAccessor","LibraryAppletCreator","LibraryAppletProxy","SelfController","Storage","StorageAccessor","WindowController"]};
+window.SIDEBAR_ITEMS = {"fn":["get_library_applet_proxy","get_system_proxy_service","get_window_controller","initialize"],"static":["ALL_SYSTEM_APPLET_PROXY_SERVICE","GLOBAL_ARUID","LIBRARY_APPLET_PROXY","WINDOW_CONTROLLER"]};

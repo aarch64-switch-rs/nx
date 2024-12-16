@@ -18,6 +18,7 @@ macro_rules! result_define {
         $name:ident: $module:expr, $description:expr
     ) => {
         paste::paste! {
+            #[allow(missing_docs)]
             $(#[$meta])*
             pub struct [<Result $name>];
 
