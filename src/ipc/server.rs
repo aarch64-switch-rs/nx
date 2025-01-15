@@ -7,7 +7,7 @@ use alloc::sync::Arc;
 use alloc::vec::Vec;
 use sf::hipc::IHipcManager;
 use sf::hipc::IMitmQueryServiceServer;
-use crate::ipc::sf::sm::IUserInterface;
+use sf::sm::IUserInterface;
 
 #[cfg(feature = "services")]
 use crate::service;
