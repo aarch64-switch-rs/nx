@@ -217,7 +217,7 @@ impl<'borrow, T: ?Sized> ReadGuard<'borrow, T> {
     }
 }
 
-impl<'borrow, T> core::ops::Deref for ReadGuard<'borrow, T> {
+impl<T> core::ops::Deref for ReadGuard<'_, T> {
     type Target = T;
 
     fn deref(&self) -> &T {
@@ -225,7 +225,7 @@ impl<'borrow, T> core::ops::Deref for ReadGuard<'borrow, T> {
     }
 }
 
-impl<'borrow, T> core::ops::Deref for WriteGuard<'borrow, T> {
+impl<T> core::ops::Deref for WriteGuard<'_, T> {
     type Target = T;
 
     fn deref(&self) -> &T {
@@ -233,7 +233,7 @@ impl<'borrow, T> core::ops::Deref for WriteGuard<'borrow, T> {
     }
 }
 
-impl<'borrow, T> core::ops::DerefMut for WriteGuard<'borrow, T> {
+impl<T> core::ops::DerefMut for WriteGuard<'_, T> {
 
     fn deref_mut(&mut self) -> &mut T {
         unsafe { &mut *self.lock.object_cell.get() }

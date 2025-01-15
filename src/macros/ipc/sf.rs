@@ -76,6 +76,8 @@ macro_rules! ipc_sf_define_interface_trait {
                     #[allow(unused_mut)]
                     #[doc(hidden)]
                     fn [<sf_server_impl_ $name>](&mut self, protocol: $crate::ipc::CommandProtocol, mut ctx: &mut $crate::ipc::server::ServerContext) -> $crate::result::Result<()> {
+                        use $crate::result::ResultBase;
+                        
                         ctx.raw_data_walker = $crate::ipc::DataWalker::new(ctx.ctx.in_params.data_offset);
                         $( let $in_param_name = <$in_param_type as $crate::ipc::server::RequestCommandParameter<_>>::after_request_read(&mut ctx)?; )*
 
@@ -123,7 +125,7 @@ macro_rules! ipc_sf_define_interface_trait {
 macro_rules! session_type {
     ($t:ty) => {
         paste::paste! {
-            impl [<I $t Server>] + 'static + $crate::ipc::server::ISessionObject
+            impl [<I $t Server>] + 'static
         }
     };
 }

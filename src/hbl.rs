@@ -201,8 +201,8 @@ pub fn get_loader_info() -> &'static str {
     *G_LOADER_INFO.read()
 }
 
-static G_NEXT_LOAD_PATH: Mutex<Option<&'static mut ArrayString<512>>> = Mutex::new(None);
-static G_NEXT_LOAD_ARGV: Mutex<Option<&'static mut ArrayString<2048>>> = Mutex::new(None);
+pub static G_NEXT_LOAD_PATH: Mutex<Option<&'static mut ArrayString<512>>> = Mutex::new(None);
+pub static G_NEXT_LOAD_ARGV: Mutex<Option<&'static mut ArrayString<2048>>> = Mutex::new(None);
 
 pub(crate) fn set_next_load_entry_ptr(
     next_load_path: &'static mut ArrayString<512>,

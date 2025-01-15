@@ -161,7 +161,9 @@ pub struct ThreadContext {
 /// * `address`: Memory address.
 /// * `size`: Memory size.
 /// 
-/// SAFETY: `address` must be valid pointer.
+/// # Safety
+///
+/// `address` must be valid pointer.
 #[inline(always)]
 pub unsafe fn cache_flush(address: *mut u8, size: usize) {
     extern "C" {

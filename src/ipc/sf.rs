@@ -118,12 +118,17 @@ impl<const A: BufferAttribute, T> Buffer<A, T> {
         out
     }
 
-    /// Unfortunately this doesn't seem to have an alignment guarantee as the clients may ignore it (e.g. TOTK)
+    /// # Safety
+///
+/// Unfortunately this doesn't seem to have an alignment guarantee as the clients may ignore it (e.g. TOTK). You should use unaligned reads from the raw pointer or manually check the alignment first
     #[deprecated]
     pub unsafe fn get_slice(&self) -> &[T] {
         unsafe { core::slice::from_raw_parts(self.buf as *const T, self.count) }
     }
 
+    /// # Safety
+///
+/// Unfortunately this doesn't seem to have an alignment guarantee as the clients may ignore it (e.g. TOTK). You should use unaligned reads from the raw pointer or manually check the alignment first
     #[deprecated]
     pub unsafe fn get_mut_slice(&mut self) -> &mut [T] {
         unsafe { core::slice::from_raw_parts_mut(self.buf, self.count) }

@@ -814,7 +814,9 @@ pub fn set_debug_thread_context(debug_handle: Handle, thread_context: arm::Threa
     }
 }
 
-/// SAFETY: null pointers are OK here, as we are just querying the memory's information
+/// # Safety
+///
+/// null pointers are OK here, as we are just querying the memory's information
 #[inline(always)]
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub fn query_debug_process_memory(debug_handle: Handle, address: Address) -> Result<(MemoryInfo, PageInfo)> {

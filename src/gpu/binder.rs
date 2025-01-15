@@ -65,7 +65,7 @@ pub fn convert_nv_error_code(err: ErrorCode) -> Result<()> {
 /// Represents a binder object, wrapping transaction functionality
 pub struct Binder {
     handle: dispdrv::BinderHandle,
-    hos_binder_driver: mem::Shared<dyn dispdrv::IHOSBinderDriver>,
+    hos_binder_driver: Shared<dyn dispdrv::IHOSBinderDriver>,
 }
 
 impl Binder {
@@ -76,7 +76,7 @@ impl Binder {
     /// * `handle`: Binder handle to use
     /// * `hos_binder_driver`: [`IHOSBinderDriver`][`dispdrv::IHOSBinderDriver`] object
     #[inline]
-    pub const fn new(handle: dispdrv::BinderHandle, hos_binder_driver: mem::Shared<dyn dispdrv::IHOSBinderDriver>) -> Result<Self> {
+    pub const fn new(handle: dispdrv::BinderHandle, hos_binder_driver: Shared<dyn dispdrv::IHOSBinderDriver>) -> Result<Self> {
         Ok(Self { handle, hos_binder_driver })
     }
 
@@ -111,7 +111,7 @@ impl Binder {
     }
 
     /// Gets this [`Binder`]'s underlying [`IHOSBinderDriver`][`dispdrv::IHOSBinderDriver`] object
-    pub fn get_hos_binder_driver(&mut self) -> mem::Shared<dyn dispdrv::IHOSBinderDriver> {
+    pub fn get_hos_binder_driver(&mut self) -> Shared<dyn dispdrv::IHOSBinderDriver> {
         self.hos_binder_driver.clone()
     }
 

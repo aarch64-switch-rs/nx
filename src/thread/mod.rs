@@ -1077,7 +1077,6 @@ pub mod imp {
     use core::{alloc::{Allocator, Layout}, pin::Pin, ptr::{addr_of, null, null_mut, NonNull}};
 
     use alloc::{alloc::Global, boxed::Box, sync::Arc};
-    use linked_list_allocator::align_up_size;
 
     use crate::{mem::alloc::PAGE_ALIGNMENT, svc, util::ArrayString, wait::wait_handles};
     use super::{thread_wrapper, ThreadArgs, ThreadId, ThreadName, ThreadPriority, ThreadStartCore, ThreadState};
@@ -1207,7 +1206,7 @@ pub mod imp {
         pub (crate) unsafe fn init_pinned(self: &mut Pin<Arc<Self>>, stack_size: usize, main: Box<dyn FnOnce() + Send + 'static>, priority: ThreadPriority, core: ThreadStartCore) -> crate::result::Result<svc::Handle> {
 
             // stack sized up to be a mulitple of a page
-            let aligned_stack_size = align_up_size(stack_size, PAGE_ALIGNMENT);
+            let aligned_stack_size = crate::util::align_up(stack_size, PAGE_ALIGNMENT);
             // layout for stack allocation, we know it's safe because the page alignment constant is a valid alignment
             let stack_layout = unsafe {Layout::from_size_align_unchecked(aligned_stack_size, PAGE_ALIGNMENT)};
             // now we can request memory for the stack
@@ -1365,7 +1364,9 @@ pub(crate) unsafe fn current() -> *mut imp::Thread {
 /// # Arguments
 /// 
 /// * `thread_ref`: The [`Thread`] address to set
-/// # SAFETY: thread_ref must be a valid Thread pointer that will not move until the thread is finished running.
+/// # Safety
+///
+/// thread_ref must be a valid Thread pointer that will not move until the thread is finished running.
 pub unsafe fn set_current_thread(thread_ref: *mut imp::Thread) {
     unsafe {
         (*thread_ref).state = ThreadState::Started;
@@ -1376,6 +1377,16 @@ pub unsafe fn set_current_thread(thread_ref: *mut imp::Thread) {
         (*tlr).nx_thread_vars.handle = (*thread_ref).__nx_thread.handle;
         (*tlr).nx_thread_vars.magic = imp::LibNxThreadVars::MAGIC;
     }
+}
+
+pub fn set_current_thread_name(s: impl AsRef<str>) {
+    // SAFETY - The TLR is set up in rrt0, or in the thread startup code - we can only reach hear when the TLR is initialized
+    unsafe {(*(*get_thread_local_region()).nx_thread_vars.thread_ref).set_name(s);}
+}
+
+pub fn get_current_thread_name() -> String {
+    // SAFETY - The TLR is set up in rrt0, or in the thread startup code - we can only reach hear when the TLR is initialized
+    unsafe {(*(*get_thread_local_region()).nx_thread_vars.thread_ref).name.get_str().unwrap_or("default").to_string()}
 }
 
 /// Sleeps for the given timeout

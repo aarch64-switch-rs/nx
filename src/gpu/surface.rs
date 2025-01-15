@@ -5,7 +5,6 @@ use service::vi::ISystemDisplayService;
 use super::*;
 use crate::gpu::binder;
 use crate::gpu::ioctl;
-use crate::mem::align_up;
 use crate::svc;
 use crate::ipc::sf;
 use crate::service::nv;
@@ -31,6 +30,7 @@ pub struct Surface {
     application_display_service: mem::Shared<vi::ApplicationDisplayService>,
     width: u32,
     height: u32,
+    block_height_config: BlockLinearHeights,
     buffer_data: alloc::Buffer<u8>,
     single_buffer_size: usize,
     buffer_count: u32,
@@ -38,7 +38,6 @@ pub struct Surface {
     graphic_buf: GraphicBuffer,
     color_fmt: ColorFormat,
     pixel_fmt: PixelFormat,
-    layout: Layout,
     display_id: vi::DisplayId,
     layer_id: vi::LayerId,
     layer_destroy_fn: LayerDestroyFn,
@@ -59,13 +58,13 @@ impl Surface {
     /// * `binder_handle`: The binder handle to use
     /// * `nvdrv_srv`: The [`NvDrvServicesService`][`crate::service::nv::INvDrvServices`] dyn-object to use
     /// * ``
-    pub fn new(binder_handle: dispdrv::BinderHandle, nvdrv_srv: mem::Shared<dyn nv::INvDrvServices>, application_display_service: mem::Shared<vi::ApplicationDisplayService>, nvhost_fd: u32, nvmap_fd: u32, nvhostctrl_fd: u32, hos_binder_driver: mem::Shared<dyn dispdrv::IHOSBinderDriver>, buffer_count: u32, display_id: vi::DisplayId, layer_id: vi::LayerId, width: u32, height: u32, color_fmt: ColorFormat, pixel_fmt: PixelFormat, layout: Layout, layer_destroy_fn: LayerDestroyFn) -> Result<Self> {
+    pub fn new(binder_handle: dispdrv::BinderHandle, nvdrv_srv: mem::Shared<dyn nv::INvDrvServices>, application_display_service: mem::Shared<vi::ApplicationDisplayService>, nvhost_fd: u32, nvmap_fd: u32, nvhostctrl_fd: u32, hos_binder_driver: mem::Shared<dyn dispdrv::IHOSBinderDriver>, buffer_count: u32, display_id: vi::DisplayId, layer_id: vi::LayerId, width: u32, height: u32, block_height_config: BlockLinearHeights, color_fmt: ColorFormat, pixel_fmt: PixelFormat, layer_destroy_fn: LayerDestroyFn) -> Result<Self> {
         let mut binder = binder::Binder::new(binder_handle, hos_binder_driver)?;
         binder.increase_refcounts()?;
         let _ = binder.connect(ConnectionApi::Cpu, false)?;
         let vsync_event_handle = application_display_service.lock().get_display_vsync_event(display_id)?;
         let buffer_event_handle = binder.get_native_handle(dispdrv::NativeHandleType::BufferEvent)?;
-        let mut surface = Self { binder, nvdrv_srv, application_display_service, width, height, buffer_data: alloc::Buffer::empty(), single_buffer_size: 0, buffer_count, slot_has_requested: [false; MAX_BUFFERS], graphic_buf: Default::default(), color_fmt, pixel_fmt, layout, display_id, layer_id, layer_destroy_fn, nvhost_fd, nvmap_fd, nvhostctrl_fd, vsync_event_handle: vsync_event_handle.handle, buffer_event_handle: buffer_event_handle.handle };
+        let mut surface = Self { binder, nvdrv_srv, application_display_service, width, height, block_height_config, buffer_data: alloc::Buffer::empty(), single_buffer_size: 0, buffer_count, slot_has_requested: [false; MAX_BUFFERS], graphic_buf: Default::default(), color_fmt, pixel_fmt, display_id, layer_id, layer_destroy_fn, nvhost_fd, nvmap_fd, nvhostctrl_fd, vsync_event_handle: vsync_event_handle.handle, buffer_event_handle: buffer_event_handle.handle };
         surface.initialize()?;
         Ok(surface)
     }
@@ -81,17 +80,20 @@ impl Surface {
         super::convert_nv_error_code(err)
     }
 
+    fn align_height(&self) -> u32 {
+        crate::util::align_up(self.height, self.block_height_config.block_height())
+    }
+    
+    pub fn get_block_linear_config(&self) -> BlockLinearHeights {
+        self.block_height_config
+    }
+
     fn initialize(&mut self) -> Result<()> {
-        let kind = Kind::Generic_16BX2;
-        let scan_fmt = DisplayScanFormat::Progressive;
-        let pid: u32 = 42;
-        let bpp = calculate_bpp(self.color_fmt);
-        let aligned_width = align_width(bpp, self.width);
-        let aligned_width_bytes = aligned_width * bpp;
-        let aligned_height = align_height(self.height);
-        let stride = aligned_width;
-        self.single_buffer_size = (aligned_width_bytes * aligned_height) as usize;
-        let usage = GraphicsAllocatorUsage::HardwareComposer() | GraphicsAllocatorUsage::HardwareRender() | GraphicsAllocatorUsage::HardwareTexture();
+        let bpp = self.color_fmt.bytes_per_pixel();
+        let pitch =  align_up(self.width * bpp, 0x40);
+        let stride = pitch / bpp;
+        let aligned_height = self.align_height();
+        self.single_buffer_size = pitch as usize * aligned_height as usize;
         let buf_size = self.buffer_count as usize * self.single_buffer_size;
 
         self.buffer_data = alloc::Buffer::new(alloc::PAGE_ALIGNMENT, buf_size)?;
@@ -118,17 +120,19 @@ impl Surface {
             svc::set_memory_attribute(self.buffer_data.ptr, buf_size, 8, svc::MemoryAttribute::Uncached())?;
         }
 
+        let usage = GraphicsAllocatorUsage::HardwareComposer() | GraphicsAllocatorUsage::HardwareRender() | GraphicsAllocatorUsage::HardwareTexture();
+        
         self.graphic_buf.header.magic = GraphicBufferHeader::MAGIC;
         self.graphic_buf.header.width = self.width;
         self.graphic_buf.header.height = self.height;
         self.graphic_buf.header.stride = stride;
         self.graphic_buf.header.pixel_format = self.pixel_fmt;
         self.graphic_buf.header.gfx_alloc_usage = usage;
-        self.graphic_buf.header.pid = pid;
+        self.graphic_buf.header.pid = 42;
         self.graphic_buf.header.buffer_size = ((cmem::size_of::<GraphicBuffer>() - cmem::size_of::<GraphicBufferHeader>()) / cmem::size_of::<u32>()) as u32;
         self.graphic_buf.map_id = ioctl_getid.id;
         self.graphic_buf.magic = GraphicBuffer::MAGIC;
-        self.graphic_buf.pid = pid;
+        self.graphic_buf.pid = 42;
         self.graphic_buf.gfx_alloc_usage = usage;
         self.graphic_buf.pixel_format = self.pixel_fmt;
         self.graphic_buf.external_pixel_format = self.pixel_fmt;
@@ -138,12 +142,12 @@ impl Surface {
         self.graphic_buf.planes[0].width = self.width;
         self.graphic_buf.planes[0].height = self.height;
         self.graphic_buf.planes[0].color_format = self.color_fmt;
-        self.graphic_buf.planes[0].layout = self.layout;
-        self.graphic_buf.planes[0].pitch = aligned_width_bytes;
+        self.graphic_buf.planes[0].layout = Layout::BlockLinear;
+        self.graphic_buf.planes[0].pitch = pitch;
         self.graphic_buf.planes[0].map_handle = ioctl_create.handle;
-        self.graphic_buf.planes[0].kind = kind;
-        self.graphic_buf.planes[0].block_height_log2 = BLOCK_HEIGHT_LOG2;
-        self.graphic_buf.planes[0].display_scan_format = scan_fmt;
+        self.graphic_buf.planes[0].kind = Kind::Generic_16BX2;
+        self.graphic_buf.planes[0].block_height_log2 = self.block_height_config.block_height_log2();
+        self.graphic_buf.planes[0].display_scan_format = DisplayScanFormat::Progressive;
         self.graphic_buf.planes[0].size = self.single_buffer_size;
 
         for i in 0..self.buffer_count {
@@ -302,7 +306,7 @@ impl Surface {
     // Computes the surface pitch (distance between ajacent rows bytes, including padding)
     #[inline]
     pub const fn pitch(&self) -> u32 {
-        align_up!(self.width * self.color_fmt.bytes_per_pixel(), 64u32)
+        align_up(self.width * self.color_fmt.bytes_per_pixel(), 64u32)
     }
 }
 

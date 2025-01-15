@@ -28,7 +28,9 @@ impl From<AllocError> for ResultCode {
 // TODO: be able to change the global allocator?
 
 /// Represents a heap allocator for this library
-/// # SAFETY: As with the regular Allocator trait, the `delete` function can only be called on pointers produced by the same implementation's `new`
+/// # Safety
+///
+/// As with the regular Allocator trait, the `delete` function can only be called on pointers produced by the same implementation's `new`
 pub unsafe trait AllocatorEx: Allocator {
     /// Allocates a new heap value
     #[allow(clippy::new_ret_no_self)]

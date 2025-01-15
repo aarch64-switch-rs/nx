@@ -50,7 +50,9 @@ impl Header {
     ///
     /// * `text_base`: The start of the `.text.jmp` section.
     ///
-    /// SAFETY: The pointer `text_base` must be a valid pointer to the start of the `.text` section.
+    /// # Safety
+///
+/// The pointer `text_base` must be a valid pointer to the start of the `.text` section.
     #[inline]
     pub fn from_text_start_addr(text_base: *mut u8) -> &'static mut Self {
         let mod0_ref = unsafe {
@@ -76,7 +78,9 @@ impl Header {
 
     /// Gets the start address for the `.dynamic` section
     /// 
-    /// SAFETY: The reference `&self` must be the copy in `.rodata` created by the linker.
+    /// # Safety
+///
+/// The reference `&self` must be the copy in `.rodata` created by the linker.
     pub unsafe fn get_dyn_start(&self) -> *const u8 {
         // SAFETY: Safe as we are just computing a new pointer, not dereferencing.
         unsafe { (self as *const Self as *const u8).offset(self.dynamic as isize) }
@@ -84,7 +88,9 @@ impl Header {
 
     /// Gets the start address for the `eh_frame_hdr` section.
     /// 
-    /// SAFETY: The reference `&self` must be the copy in `.rodata` created by the linker.
+    /// # Safety
+///
+/// The reference `&self` must be the copy in `.rodata` created by the linker.
     #[inline]
     pub fn get_eh_frame_header_start(&self) -> *const u8 {
         // SAFETY: Safe as we are just computing a new pointer, not dereferencing.
@@ -93,7 +99,9 @@ impl Header {
 
     /// Zeroes the bss section from a base code address. We have to take an `&mut self` here as computing.
     /// 
-    /// SAFETY: The reference `&mut self` must be the copy in `.rodata` created by the linker. Additionally,
+    /// # Safety
+///
+/// The reference `&mut self` must be the copy in `.rodata` created by the linker. Additionally,
     /// The reference to self should have been created using a mutable pointer, to prevent a shared->mut conversion
     /// which would be immediate UB (as documented in the struct docstring).
     #[inline]

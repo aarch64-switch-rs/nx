@@ -75,7 +75,9 @@ impl Mutex {
     }
 
 
-    /// # SAFETY: This can only be called on a mutex that has been locked by the owner/borrower as it will directly overwrite
+    /// # Safety
+///
+/// This can only be called on a mutex that has been locked by the owner/borrower as it will directly overwrite
     /// the value without checking if it was already
     #[inline]
     pub unsafe fn unlock(&self) {

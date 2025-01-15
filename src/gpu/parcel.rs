@@ -2,7 +2,6 @@
 
 use crate::result::*;
 use crate::util;
-use crate::mem;
 use crate::service::dispdrv::BinderHandle;
 use core::mem as cmem;
 use core::ptr;
@@ -111,7 +110,7 @@ impl Parcel {
     /// * `data_size`: Out data size
     #[inline]
     pub fn read_raw(&mut self, out_data: *mut u8, data_size: usize) -> Result<()> {
-        self.read_raw_unaligned(out_data, mem::align_up(data_size, 4))
+        self.read_raw_unaligned(out_data, util::align_up(data_size, 4))
     }
 
     /// Writes raw, unaligned data
@@ -136,7 +135,7 @@ impl Parcel {
     ///
     /// * `data_size`: Out data size
     pub fn write_reserve_raw(&mut self, data_size: usize) -> Result<*mut u8> {
-        let actual_size = mem::align_up(data_size, 4);
+        let actual_size = util::align_up(data_size, 4);
         result_return_if!((self.write_offset + actual_size) > PAYLOAD_SIZE, rc::ResultNotEnoughWriteSpace);
 
         let buf = unsafe { (&mut self.payload.payload as *mut _ as *mut u8).add(self.write_offset) };
@@ -154,7 +153,7 @@ impl Parcel {
     /// * `data_size`: In data size
     #[inline]
     pub fn write_raw(&mut self, data: *const u8, data_size: usize) -> Result<()> {
-        self.write_raw_unaligned(data, mem::align_up(data_size, 4))
+        self.write_raw_unaligned(data, util::align_up(data_size, 4))
     }
 
     /// Writes an unaligned value

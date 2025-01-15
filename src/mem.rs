@@ -17,7 +17,9 @@ pub mod alloc;
 /// 
 /// * `address`: Memory region address
 /// * `size`: Memory region size
-/// # SAFETY: Null pointers are OK as we are just doing cache invalidation, not accessing the pointer.
+/// # Safety
+///
+/// Null pointers are OK as we are just doing cache invalidation, not accessing the pointer.
 #[inline(always)]
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub fn flush_data_cache(address: *mut u8, size: usize) {
@@ -28,30 +30,6 @@ pub fn flush_data_cache(address: *mut u8, size: usize) {
     unsafe {
         __nx_mem_flush_data_cache(address, size);
     }
-}
-
-/// Aligns up a given value with respect to a certain alignment
-/// 
-/// # Arguments
-/// 
-/// * `value`: Value to align
-/// * `align`: Alignment
-#[inline]
-pub const fn align_up(value: usize, align: usize) -> usize {
-    let inv_mask = align - 1;
-    (value + inv_mask) & !inv_mask
-}
-
-/// Aligns down a given value with respect to a certain alignment
-/// 
-/// # Arguments
-/// 
-/// * `value`: Value to align
-/// * `align`: Alignment
-#[inline]
-pub const fn align_down(value: usize, align: usize) -> usize {
-    let inv_mask = align - 1;
-    value & !inv_mask
 }
 
 /// Blocks thread until the memory region specified has the permission passed

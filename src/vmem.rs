@@ -70,28 +70,28 @@ static NEXT_FREE_PTR: AtomicPtr<u8> = AtomicPtr::new(null_mut());
 /// 
 /// Note that [`initialize()`] must have been called before for the region to be valid (although it's automatically called on [`rrt0`][`crate::rrt0`])
 pub fn get_address_space() -> VirtualRegion {
-    STANDARD_VMEM_REGIONS.get().unwrap().global_address_space.clone()
+    STANDARD_VMEM_REGIONS.get().unwrap().global_address_space
 }
 
 /// Gets the current process's stack [`VirtualRegion`]
 /// 
 /// Note that [`initialize()`] must have been called before for the region to be valid (although it's automatically called on [`rrt0`][`crate::rrt0`])
 pub fn get_stack_region() -> VirtualRegion {
-    STANDARD_VMEM_REGIONS.get().unwrap().stack.clone()
+    STANDARD_VMEM_REGIONS.get().unwrap().stack
 }
 
 /// Gets the current process's heap [`VirtualRegion`]
 /// 
 /// Note that [`initialize()`] must have been called before for the region to be valid (although it's automatically called on [`rrt0`][`crate::rrt0`])
 pub fn get_heap_region() -> VirtualRegion {
-    STANDARD_VMEM_REGIONS.get().unwrap().heap.clone()
+    STANDARD_VMEM_REGIONS.get().unwrap().heap
 }
 
 /// Gets the current process's legacy alias [`VirtualRegion`]
 /// 
 /// Note that [`initialize()`] must have been called before for the region to be valid (although it's automatically called on [`rrt0`][`crate::rrt0`])
 pub fn get_legacy_alias_region() -> VirtualRegion {
-    STANDARD_VMEM_REGIONS.get().unwrap().legacy_alias.clone()
+    STANDARD_VMEM_REGIONS.get().unwrap().legacy_alias
 }
 
 fn read_region_info(address_info_id: svc::InfoId, size_info_id: svc::InfoId) -> Result<VirtualRegion> {

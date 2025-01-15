@@ -40,8 +40,8 @@ macro_rules! ipc_sf_define_default_interface_client {
                 }
             }
 
-            unsafe impl Sync for $t {}
-            unsafe impl Send for $t {}
+            unsafe impl ::core::marker::Sync for $t {}
+            unsafe impl ::core::marker::Send for $t {}
 
             impl $crate::ipc::client::RequestCommandParameter for $t {
                 fn before_request_write(session: &Self, _walker: &mut $crate::ipc::DataWalker, ctx: &mut $crate::ipc::CommandContext) -> Result<()> {
@@ -61,6 +61,7 @@ macro_rules! ipc_sf_define_default_interface_client {
             }
             impl $crate::ipc::server::RequestCommandParameter<$t> for $t {
                 fn after_request_read(_ctx: &mut $crate::ipc::server::ServerContext) -> Result<Self> {
+                    use $crate::result::ResultBase;
                     // TODO: determine if we need to do this, since this is a server side operation of a client object?
                     // probably needs to be supported right?
                     $crate::ipc::sf::hipc::rc::ResultUnsupportedOperation::make_err()
@@ -70,12 +71,14 @@ macro_rules! ipc_sf_define_default_interface_client {
             impl $crate::ipc::server::ResponseCommandParameter for $t {
                 type CarryState = ();
                 fn before_response_write(_session: &Self, _ctx: &mut $crate::ipc::server::ServerContext) -> Result<()> {
+                    use $crate::result::ResultBase;
                     // TODO: determine if we need to do this, since this is a server side operation of a client object?
                     // probably needs to be supported right?
                     $crate::ipc::sf::hipc::rc::ResultUnsupportedOperation::make_err()
                 }
             
                 fn after_response_write(_session: Self, _carry_state: (), _ctx: &mut $crate::ipc::server::ServerContext) -> Result<()> {
+                    use $crate::result::ResultBase;
                     // TODO: determine if we need to do this, since this is a server side operation of a client object?
                     // probably needs to be supported right?
                     $crate::ipc::sf::hipc::rc::ResultUnsupportedOperation::make_err()

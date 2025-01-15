@@ -7,7 +7,6 @@ use alloc::sync::Arc;
 use alloc::vec::Vec;
 use sf::hipc::IHipcManager;
 use sf::hipc::IMitmQueryServiceServer;
-use sf::sm::IUserInterface;
 
 #[cfg(feature = "services")]
 use crate::service;
@@ -374,7 +373,7 @@ impl<'a> HipcManager<'a> {
     }
 }
 
-impl<'a> IHipcManager for HipcManager<'a> {
+impl IHipcManager for HipcManager<'_> {
     fn convert_current_object_to_domain(&mut self) -> Result<cmif::DomainObjectId> {
         self.server_holder.convert_to_domain()
     }
@@ -408,7 +407,7 @@ impl<'a> IHipcManager for HipcManager<'a> {
     }
 }
 
-impl<'a> ISessionObject for HipcManager<'a> {
+impl ISessionObject for HipcManager<'_> {
     fn try_handle_request_by_id(&mut self, req_id: u32, protocol: CommandProtocol, server_ctx: &mut ServerContext) -> Option<Result<()>> {
         <Self as IHipcManager>::try_handle_request_by_id(self, req_id, protocol, server_ctx)
     }

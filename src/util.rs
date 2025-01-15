@@ -5,6 +5,7 @@ use crate::thread;
 use crate::diag::abort;
 use crate::diag::log;
 use crate::diag::log::Logger;
+
 use alloc::string::String;
 use alloc::string::ToString;
 use core::str;
@@ -13,6 +14,7 @@ use core::fmt;
 use core::panic;
 
 use nx_derive::{Request, Response};
+
 
 pub mod rc;
 
@@ -31,6 +33,81 @@ pub trait AsInnerMut<Inner: ?Sized> {
 pub trait IntoInner<Inner> {
     fn into_inner(self) -> Inner;
 }
+
+
+#[doc(hidden)]
+#[const_trait]
+pub trait AlignTypes: Copy {
+    fn is_power_of_two(self) -> bool;
+    fn is_zero(self) -> bool;
+    fn sub(self, rhs: Self) -> Self;
+    fn add(self, rhs: Self) -> Self;
+    fn bit_and(self, rhs: Self) -> Self;
+    fn bit_not(self) -> Self;
+    fn rem(self, rhs: Self) -> Self;
+    fn one() -> Self;
+}
+
+macro_rules! impl_align_type {
+    ($t:ty) => {
+        impl const AlignTypes for $t {
+            fn add(self, rhs: Self) -> Self {
+                self + rhs
+            }
+        
+            fn rem(self, rhs: Self) -> Self {
+                self % rhs
+            }
+        
+            fn sub(self, rhs: Self) -> Self {
+                self - rhs
+            }
+
+            fn bit_and(self, rhs: Self) -> Self{
+                self&rhs
+            }
+
+            fn bit_not(self) -> Self {
+                !self
+            }
+
+            fn is_power_of_two(self) -> bool {
+                self.is_power_of_two()
+            }
+            fn is_zero(self) -> bool {
+                self == 0
+            }
+            fn one() -> Self {
+                1
+            }
+        }
+    };
+}
+impl_align_type!(u8);
+impl_align_type!(u16);
+impl_align_type!(u32);
+impl_align_type!(u64);
+impl_align_type!(usize);
+impl_align_type!(u128);
+
+/// Check alignment of unsigned integer type
+pub const fn is_aligned<T: const AlignTypes>(val: T, alignment: T) -> bool {
+    debug_assert!(alignment.is_power_of_two());
+    (val.rem(alignment)).is_zero()
+}
+
+/// Align down unsigned integer type
+pub const fn align_down<T: const AlignTypes>(val: T, alignment: T) -> T {
+    debug_assert!(alignment.is_power_of_two());
+    val.sub(val.rem(alignment))
+}
+/// Align up unsigned integer type
+pub const fn align_up<T: const AlignTypes>(val: T, alignment: T) -> T {
+    debug_assert!(alignment.is_power_of_two());
+    let align = alignment.sub(T::one());
+    val.add(align).bit_and(align.bit_not())
+}
+
 /// Represents a 16-byte UUID
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
@@ -528,7 +605,9 @@ impl<const S: usize> core::str::FromStr for ArrayWideString<S> {
 /// # Arguments
 /// 
 /// * `str_ptr`: The `const char*`-like ptr to use
-/// # SAFETY: There must be a null byte present in the string, or at some point after the pointer and within valid memory. This function will read infinitely until a null is read or crash occurs.
+/// # Safety
+///
+/// There must be a null byte present in the string, or at some point after the pointer and within valid memory. This function will read infinitely until a null is read or crash occurs.
 pub unsafe fn str_ptr_len(str_ptr: *const u8) -> usize {
     (0usize..)
     .find(|&offset| (*str_ptr.add(offset)) == 0)

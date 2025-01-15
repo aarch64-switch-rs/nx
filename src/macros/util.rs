@@ -1,19 +1,5 @@
 #![macro_use]
 
-/// Implements a [`nx::mem::align_up`]-like macro for an type you want instead of just usizes (terms and conditions apply).
-/// This is intended only for use with primitive numeric types, and it is the callers responsibility to provide type annotations where necessary.
-/// 
-/// # Arguments
-/// 
-/// * `val`: Value to align up.
-/// * `alignment`: Alignment boundary
-#[macro_export]
-macro_rules! align_up {
-    ($val:expr, $alignment:expr) => {
-        (($val) + ($alignment-1)) & !($alignment-1)
-    }
-}
-
 /// Gets a value corresponding to the given bit
 /// 
 /// # Arguments

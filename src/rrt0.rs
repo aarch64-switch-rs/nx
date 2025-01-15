@@ -142,7 +142,6 @@ impl ModulePath {
     }
 }
 
-#[no_mangle]
 #[used]
 #[linkage = "weak"]
 #[link_section = ".module_name"]
