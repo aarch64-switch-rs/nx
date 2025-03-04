@@ -19,14 +19,14 @@ pub struct LogMetadata {
     /// The source function name
     pub fn_name: &'static str,
     /// The source line number
-    pub line_number: u32
+    pub line_number: u32,
 }
 
 impl LogMetadata {
     /// Creates a new [`LogMetadata`]
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `severity`: The log severity
     /// * `verbosity`: Whether the log is verbose
     /// * `msg`: The log message
@@ -34,7 +34,14 @@ impl LogMetadata {
     /// * `fn_name`: The source function name
     /// * `line_number`: The source line number
     #[inline]
-    pub const fn new(severity: LogSeverity, verbosity: bool, msg: String, file_name: &'static str, fn_name: &'static str, line_number: u32) -> Self {
+    pub const fn new(
+        severity: LogSeverity,
+        verbosity: bool,
+        msg: String,
+        file_name: &'static str,
+        fn_name: &'static str,
+        line_number: u32,
+    ) -> Self {
         Self {
             severity,
             verbosity,
@@ -51,19 +58,19 @@ pub trait Logger {
     /// Creates a new logging object
     fn new() -> Self;
     /// Logs with the given metadata
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `metadata`: The metadata to log
     fn log(&mut self, metadata: &LogMetadata);
 }
 
 /// Wrapper for logging a single log
-/// 
+///
 /// Essentially creates a [`Logger`] and logs with it
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `metadata`: The metadata to log
 pub fn log_with<L: Logger>(metadata: &LogMetadata) {
     let mut logger = L::new();
@@ -78,11 +85,21 @@ fn format_plain_string_log_impl(metadata: &LogMetadata, log_type: &str) -> Strin
         LogSeverity::Error => "Error",
         LogSeverity::Fatal => "Fatal",
     };
-    let thread_name = match unsafe { thread::current().as_ref().unwrap().name.get_str()} {
+    let thread_name = match unsafe { thread::current().as_ref().unwrap().name.get_str() } {
         Ok(name) => name,
         _ => "<unknown>",
     };
-    format!("[ {} (severity: {}, verbosity: {}) from {} in thread {}, at {}:{} ] {}", log_type, severity_str, metadata.verbosity, metadata.fn_name, thread_name, metadata.file_name, metadata.line_number, metadata.msg)
+    format!(
+        "[ {} (severity: {}, verbosity: {}) from {} in thread {}, at {}:{} ] {}",
+        log_type,
+        severity_str,
+        metadata.verbosity,
+        metadata.fn_name,
+        thread_name,
+        metadata.file_name,
+        metadata.line_number,
+        metadata.msg
+    )
 }
 
 pub mod svc;

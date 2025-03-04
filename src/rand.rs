@@ -1,48 +1,99 @@
 //! Pseudo-RNG support
 
-use crate::result::*;
-use core::mem as cmem;
+use alloc::sync::Arc;
+pub use rand::{Rng, RngCore};
 
 /// Represents a psudo-RNG
-pub trait RandomGenerator {
-    /// Fills the given memory region with random bytes
-    /// 
-    /// # Arguments
-    /// 
-    /// * `buf`: Memory region address
-    /// * `size`: Memory region size
-    fn random_bytes(&mut self, buf: *mut u8, size: usize) -> Result<()>;
-
-    /// Generates a value filled with random contents
-    /// 
-    /// This is, of course, meant to be used with types where filling them with random data will be a valid value
-    fn random<T: Copy + Default>(&mut self) -> Result<T> {
-        let mut t: T = Default::default();
-        self.random_bytes(&mut t as *mut _ as *mut u8, cmem::size_of::<T>())?;
-        Ok(t)
-    }
-}
-
-use crate::ipc::sf;
+use crate::ipc::sf::Buffer;
+use crate::result::*;
 use crate::service;
-use crate::service::spl::{RandomInterface, IRandomInterface};
-use crate::mem;
+use crate::service::spl::{IRandomInterface, RandomInterface};
+use crate::sync::Mutex;
 
-/// Represents a pseudo-RNG using [`spl`][`crate::service::spl`]'s [`RandomInterface`] interface
-#[derive(Clone)]
-pub struct SplCsrngGenerator {
-    csrng: mem::Shared<RandomInterface>
-}
+impl RngCore for RandomInterface {
+    fn next_u32(&mut self) -> u32 {
+        let mut data = [0; 4];
+        self.generate_random_bytes(Buffer::from_mut_array(&mut data))
+            .expect("Generating rand bytes should never fail");
+        u32::from_ne_bytes(data)
+    }
 
-impl SplCsrngGenerator {
-    /// Creates a new [`SplCsrngGenerator`]
-    pub fn new() -> Result<Self> {
-        Ok(Self { csrng: mem::Shared::new(service::new_service_object::<RandomInterface>()?) })
+    fn next_u64(&mut self) -> u64 {
+        let mut data = [0; 8];
+        self.generate_random_bytes(Buffer::from_mut_array(&mut data))
+            .expect("Generating rand bytes should never fail");
+        u64::from_ne_bytes(data)
+    }
+
+    fn fill_bytes(&mut self, dst: &mut [u8]) {
+        self.generate_random_bytes(Buffer::from_mut_array(dst))
+            .expect("Generating rand bytes should never fail");
     }
 }
 
-impl RandomGenerator for SplCsrngGenerator {
-    fn random_bytes(&mut self, buf: *mut u8, size: usize) -> Result<()> {
-        self.csrng.lock().generate_random_bytes(sf::Buffer::from_mut_ptr(buf, size))
+// Global RNG source
+static G_RNG: Mutex<Option<spl::SplCsrngGenerator>> = Mutex::new(None);
+
+pub fn initialize() -> Result<()> {
+    let mut guard = G_RNG.lock();
+    if guard.is_none() {
+        *guard = Some(spl::SplCsrngGenerator::new()?);
+    }
+
+    Ok(())
+}
+
+pub fn finalize() {
+    *G_RNG.lock() = None;
+}
+
+#[inline]
+pub fn get_rng() -> Result<spl::SplCsrngGenerator> {
+    G_RNG
+        .lock()
+        .clone()
+        .ok_or(nx::rc::ResultNotInitialized::make())
+}
+
+mod spl {
+    use super::*;
+
+    /// Represents a pseudo-RNG using [`spl`][`crate::service::spl`]'s [`RandomInterface`] interface
+    #[derive(Clone)]
+    pub struct SplCsrngGenerator {
+        csrng: Arc<RandomInterface>,
+    }
+
+    impl SplCsrngGenerator {
+        /// Creates a new [`SplCsrngGenerator`]
+        pub fn new() -> Result<Self> {
+            Ok(Self {
+                csrng: Arc::new(service::new_service_object::<RandomInterface>()?),
+            })
+        }
+    }
+
+    impl RngCore for SplCsrngGenerator {
+        fn next_u32(&mut self) -> u32 {
+            let mut data = [0; 4];
+            self.csrng
+                .generate_random_bytes(Buffer::from_mut_array(&mut data))
+                .expect("Generating rand bytes should never fail");
+            u32::from_ne_bytes(data)
+        }
+
+        fn next_u64(&mut self) -> u64 {
+            let mut data = [0; 8];
+            self.csrng
+                .generate_random_bytes(Buffer::from_mut_array(&mut data))
+                .expect("Generating rand bytes should never fail");
+            u64::from_ne_bytes(data)
+        }
+
+        fn fill_bytes(&mut self, dst: &mut [u8]) {
+            self.csrng
+                .generate_random_bytes(Buffer::from_mut_array(dst))
+                .expect("Generating rand bytes should never fail");
+        }
     }
 }

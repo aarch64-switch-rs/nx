@@ -7,7 +7,7 @@ pub mod rwlock;
 
 #[inline(always)]
 fn get_current_thread_handle() -> u32 {
-    unsafe {(*thread::get_thread_local_region()).nx_thread_vars.handle}
+    unsafe { (*thread::get_thread_local_region()).nx_thread_vars.handle }
 }
 
 /*

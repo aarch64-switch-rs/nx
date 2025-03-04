@@ -6,15 +6,15 @@ union CpuRegister {
     /// 64-bit AArch64 register view.
     x: u64,
     /// 32-bit AArch64 register view.
-    w: u32, 
+    w: u32,
     /// AArch32 register view.
-    r: u32 
+    r: u32
 }
 
 /// Armv8 NEON register.
 union FpuRegister {
     /// 128-bit vector view.
-    v: u128, 
+    v: u128,
     /// 64-bit double-precision view.
     d: f64,
     /// 32-bit single-precision view.
@@ -52,11 +52,13 @@ struct ExceptionContext {
 unsafe extern "C" fn __nx_exception_handler(_ctx: *mut ExceptionContext) -> ! {
     // TODO: user exception handler?
     svc::return_from_exception(svc::rc::ResultNotHandled::make());
-} 
+}
 */
 
 #[no_mangle]
-pub(crate) unsafe extern "C" fn __nx_exception_dispatch(_reason: svc::ExceptionType, _stack_top: *mut u8) ->  !{
+pub(crate) unsafe extern "C" fn __nx_exception_dispatch(
+    _reason: svc::ExceptionType,
+    _stack_top: *mut u8,
+) -> ! {
     svc::return_from_exception(svc::rc::ResultNotHandled::make());
 }
-

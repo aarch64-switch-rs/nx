@@ -1,61 +1,59 @@
 //! Userland library for Nintendo Switch homebrew (and other potential purposes), written in pure Rust and some assembly bits
-//! 
+//!
 //! # Features
-//! 
+//!
 //! This library covers a lot of different modules, wrappers, etc. so some of them (essentially those which can be opt-in) are separated as optional features:
-//! 
+//!
 //! - `services`: Enables custom client-IPC service implementations, AKA the `nx::service` module
-//! 
+//!
 //! - `crypto`: Enables hw-accelerated cryptography support, AKA the `nx::crypto` module
-//! 
+//!
 //! - `smc`: Enables secure-monitor support, AKA the `nx::smc` module
-//! 
+//!
 //! - `gpu`: Enables graphics support, AKA the `nx::gpu` module (also enables `services`)
-//! 
+//!
 //! - `fs`: Enables support for this library's FS implementation, aka the `nx::fs` module (also enables `services`)
-//! 
+//!
 //! - `input`: Enables input support, AKA the `nx::input` module (also enables `services`)
-//! 
+//!
 //! - `la`: Enables library applet support, AKA the `nx::la` module (also enables `services`)
-//! 
+//!
 //! - `rand`: Enabled pseudo-RNG support, AKA the `nx::rand` module (also enables `services`)
-//! 
-//! Note that most of these features/modules are just simplified and easy-to-use wrappers around IPC/raw system features, so not using them doesn't fully block those features (for instance, you could use services using IPC commands more directly without the `services` feature). 
+//!
+//! Note that most of these features/modules are just simplified and easy-to-use wrappers around IPC/raw system features, so not using them doesn't fully block those features (for instance, you could use services using IPC commands more directly without the `services` feature).
 //!
 //! # Contributing
-//! 
+//!
 //! You can always contribute to these libraries, report bugs, etc. at their [repository](https://github.com/aarch64-switch-rs/nx)
-//! 
+//!
 //! # Examples
-//! 
+//!
 //! Library examples are located at this other [repository](https://github.com/aarch64-switch-rs/examples)
 
 #![no_std]
+// needed to implement the APIs for collection types with custom allocators, and doing raw allocations
 #![feature(allocator_api)]
-#![feature(slice_ptr_get)]
-#![allow(incomplete_features)]
-#![allow(non_snake_case)]
-#![feature(adt_const_params)]
-#![feature(generic_const_exprs)]
-#![feature(const_trait_impl)]
-#![feature(specialization)]
+// needed for implementing the mem::Shared type with dyn-compatibility
 #![feature(coerce_unsized)]
-#![feature(linkage)]
 #![feature(unsize)]
-#![feature(fn_traits)]
-#![feature(negative_impls)]
-#![feature(let_chains)]
-#![feature(pointer_is_aligned_to)]
-#![feature(trusted_len)]
-#![feature(layout_for_ptr)]
-#![feature(set_ptr_value)]
-#![feature(alloc_layout_extra)]
-#![feature(try_blocks)]
-#![feature(get_mut_unchecked)]
+// needed to specify weak linkage on some items
+#![feature(linkage)]
+// needed for the implementation of the threads module
 #![feature(unsafe_pin_internals)]
-#![feature(str_from_utf16_endian)]
-#![macro_use]
+#![feature(get_mut_unchecked)]
 
+// used for ergonomics reading UTF16 strings
+#![feature(str_from_utf16_endian)]
+
+
+// TODO - just for now
+#![allow(clippy::missing_safety_doc)]
+
+//#![allow(incomplete_features)]
+//#![allow(non_snake_case)]
+
+
+#![macro_use]
 use core::arch::global_asm;
 
 // Required assembly bits (those which essentially cannot/shouldn't be inlined)

@@ -1,27 +1,29 @@
 //! `LogManager` logger implementation
 
 use super::*;
-use crate::rrt0;
 use crate::ipc::sf;
+use crate::rrt0;
 use crate::service;
 use crate::service::lm::{self, ILogService, ILogger};
 use crate::svc;
 
 /// Represents a logger through [`LogService`][`lm::LogService`] services
 pub struct LmLogger {
-    logger: Option<lm::Logger>
+    logger: Option<lm::Logger>,
 }
 
 impl Logger for LmLogger {
     fn new() -> Self {
         let logger = match service::new_service_object::<lm::LogService>() {
             Ok(mut log_srv) => {
-                match log_srv.open_logger(svc::get_process_id(svc::CURRENT_PROCESS_PSEUDO_HANDLE).unwrap()) {
+                match log_srv
+                    .open_logger(svc::get_process_id(svc::CURRENT_PROCESS_PSEUDO_HANDLE).unwrap())
+                {
                     Ok(logger_obj) => Some(logger_obj),
-                    Err(_) => None
+                    Err(_) => None,
                 }
-            },
-            Err(_) => None
+            }
+            Err(_) => None,
         };
 
         Self { logger }
@@ -35,7 +37,7 @@ impl Logger for LmLogger {
                 log_packet.set_process_id(process_id);
             }
 
-            let cur_thread = unsafe {thread::current().as_ref().unwrap()};
+            let cur_thread = unsafe { thread::current().as_ref().unwrap() };
             if let Ok(thread_id) = cur_thread.id() {
                 log_packet.set_thread_id(thread_id);
             }
@@ -43,10 +45,10 @@ impl Logger for LmLogger {
             log_packet.set_file_name(String::from(metadata.file_name));
             log_packet.set_function_name(String::from(metadata.fn_name));
             log_packet.set_line_number(metadata.line_number);
-    
+
             let mod_name = match rrt0::get_module_name().get_name().get_string() {
                 Ok(name) => name,
-                Err(_) => String::from("aarch64-switch-rs (invalid module name)")
+                Err(_) => String::from("aarch64-switch-rs (invalid module name)"),
             };
             log_packet.set_module_name(mod_name);
 

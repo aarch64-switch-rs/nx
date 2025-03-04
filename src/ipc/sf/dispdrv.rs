@@ -1,5 +1,5 @@
-use crate::result::*;
 use crate::ipc::sf;
+use crate::result::*;
 use crate::version;
 
 use nx_derive::{Request, Response};
@@ -8,7 +8,7 @@ use nx_derive::{Request, Response};
 #[repr(u32)]
 pub enum RefcountType {
     Weak,
-    Strong
+    Strong,
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
@@ -27,20 +27,19 @@ pub enum ParcelTransactionId {
     Disconnect = 11,
     SetSidebandStream = 12,
     AllocateBuffers = 13,
-    SetPreallocatedBuffer = 14
+    SetPreallocatedBuffer = 14,
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
 pub enum NativeHandleType {
-    BufferEvent = 0xF
+    BufferEvent = 0xF,
 }
 
 pub type BinderHandle = i32;
 
-
 ipc_sf_define_default_interface_client!(HOSBinderDriver);
-ipc_sf_define_interface_trait! { 
+ipc_sf_define_interface_trait! {
     trait HOSBinderDriver {
         transact_parcel [0, version::VersionInterval::all()]: (binder_handle: BinderHandle, transaction_id: ParcelTransactionId, flags: u32, in_parcel: sf::InMapAliasBuffer<u8>, out_parcel: sf::OutMapAliasBuffer<u8>) =>  () ();
         adjust_refcount [1, version::VersionInterval::all()]: (binder_handle: BinderHandle, add_value: i32, refcount_type: RefcountType) =>  () ();

@@ -16,8 +16,8 @@ pub struct ModuleStart {
 /// Although we know from the official linker script that all the offsets will be positive,
 /// the offsets have been made signed so that consumers can bring their own linker scripts
 /// (e.g. emuiibo) and we won't break functionality if they reorder sections.
-/// 
-/// All members have been made private as this should only ever be instantiated using 
+///
+/// All members have been made private as this should only ever be instantiated using
 /// [`Header::from_text_start_addr`], with data populated by the linker.
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -45,15 +45,14 @@ impl Header {
     /// Gets the header embedded at the slot `.text.jmp+4`.
     /// Since this is a hard requirement of the switch runtime,
     /// an invalid MOD0 header offset or invalid header magic value panics.
+    /// Panics if the `text_base` pointer is invalid, the derviced `mod0`
+    /// pointer is invalid, or if the dervice `mod0` header magic value is incorrect.
     ///
     /// # Arguments:
     ///
     /// * `text_base`: The start of the `.text.jmp` section.
-    ///
-    /// # Safety
-///
-/// The pointer `text_base` must be a valid pointer to the start of the `.text` section.
     #[inline]
+    #[allow(clippy::not_unsafe_ptr_arg_deref)] // We are cheking the validity of the pointer, so this is handled by
     pub fn from_text_start_addr(text_base: *mut u8) -> &'static mut Self {
         let mod0_ref = unsafe {
             let module_start = (text_base as *const ModuleStart)
@@ -61,7 +60,7 @@ impl Header {
                 .expect("Invalid base `.text` pointer. Address is null or improperly aligned");
 
             // Get the Mod0 offset that is written at the slot `.text.jmp+4`
-            let mod0_offset = (*module_start).magic_offset as usize;
+            let mod0_offset = module_start.magic_offset as usize;
 
             // The mod0_ptr is written into `.rodata`, at the offset `mod0_offset` from the start of `.test.jmp`
             let mod0_ptr = text_base.add(mod0_offset) as *mut Header;
@@ -77,45 +76,48 @@ impl Header {
     }
 
     /// Gets the start address for the `.dynamic` section
-    /// 
+    ///
     /// # Safety
-///
-/// The reference `&self` must be the copy in `.rodata` created by the linker.
+    ///
+    /// The reference `&self` must be the copy in `.rodata` created by the linker.
     pub unsafe fn get_dyn_start(&self) -> *const u8 {
         // SAFETY: Safe as we are just computing a new pointer, not dereferencing.
         unsafe { (self as *const Self as *const u8).offset(self.dynamic as isize) }
     }
 
     /// Gets the start address for the `eh_frame_hdr` section.
-    /// 
+    ///
     /// # Safety
-///
-/// The reference `&self` must be the copy in `.rodata` created by the linker.
+    ///
+    /// The reference `&self` must be the copy in `.rodata` created by the linker.
     #[inline]
     pub fn get_eh_frame_header_start(&self) -> *const u8 {
         // SAFETY: Safe as we are just computing a new pointer, not dereferencing.
-        unsafe {(self as *const Self as *const u8).offset(self.eh_frame_hdr_start as isize) }
+        unsafe { (self as *const Self as *const u8).offset(self.eh_frame_hdr_start as isize) }
     }
 
     /// Zeroes the bss section from a base code address. We have to take an `&mut self` here as computing.
-    /// 
+    ///
     /// # Safety
-///
-/// The reference `&mut self` must be the copy in `.rodata` created by the linker. Additionally,
+    ///
+    /// The reference `&mut self` must be the copy in `.rodata` created by the linker. Additionally,
     /// The reference to self should have been created using a mutable pointer, to prevent a shared->mut conversion
     /// which would be immediate UB (as documented in the struct docstring).
     #[inline]
     pub unsafe fn zero_bss_section(&mut self) {
         use zeroize::Zeroize;
 
-        debug_assert!(self.bss_end>=self.bss_start, "Invalid offset range for BSS region. End address is before start address.");
+        debug_assert!(
+            self.bss_end >= self.bss_start,
+            "Invalid offset range for BSS region. End address is before start address."
+        );
 
         let module_addr = self as *mut Self as *mut u8;
         let bss_start = module_addr.offset(self.bss_start as isize);
         let bss_len = (self.bss_end - self.bss_start) as isize as usize;
 
         // Use the zeroize library to get bss zeroing with the guarantee that it won'get get elided.
-        unsafe {core::slice::from_raw_parts_mut(bss_start, bss_len)}.zeroize();
+        unsafe { core::slice::from_raw_parts_mut(bss_start, bss_len) }.zeroize();
 
         // With a SeqCst fence, we ensure that the bss section is zeroed before we return.
         // The call to this function now can not be reordered either.

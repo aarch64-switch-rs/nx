@@ -134,7 +134,7 @@ impl Version {
 static G_LAST_LOAD_RESULT: AtomicU32 = AtomicU32::new(0);
 
 pub(crate) fn set_last_load_result(rc: ResultCode) {
-        G_LAST_LOAD_RESULT.store(rc.get_value(), Ordering::Release);
+    G_LAST_LOAD_RESULT.store(rc.get_value(), Ordering::Release);
 }
 
 /// Gets the last load [`ResultCode`]
@@ -149,8 +149,7 @@ pub fn get_last_load_result() -> ResultCode {
 static G_PROCESS_HANDLE: AtomicU32 = AtomicU32::new(INVALID_HANDLE);
 
 pub(crate) fn set_process_handle(handle: Handle) {
-        G_PROCESS_HANDLE.store(handle, Ordering::Release);
-
+    G_PROCESS_HANDLE.store(handle, Ordering::Release);
 }
 
 /// Gets the current process handle
@@ -215,32 +214,41 @@ pub(crate) fn set_next_load_entry_ptr(
 /// Gets the next load path, AKA the path of the homebrew NRO which will be executed after this one exits
 ///
 /// This value will only be set/useful if the current code is running through HBL
-pub fn get_next_load_path() -> Option<ArrayString<512>>{
-    G_NEXT_LOAD_PATH.lock().as_ref().map(|s: &&mut ArrayString<512>| (*s).clone())
+pub fn get_next_load_path() -> Option<ArrayString<512>> {
+    G_NEXT_LOAD_PATH
+        .lock()
+        .as_ref()
+        .map(|s: &&mut ArrayString<512>| *(*s))
 }
 
 /// Gets the next load argv, AKA the argv of the homebrew NRO which will be executed after this one exits
 ///
 /// This value will only be set/useful if the current code is running through HBL
-pub fn get_next_load_argv() -> Option<ArrayString<2048>>{
-    G_NEXT_LOAD_ARGV.lock().as_ref().map(|s: &&mut ArrayString<2048>| (*s).clone())
+pub fn get_next_load_argv() -> Option<ArrayString<2048>> {
+    G_NEXT_LOAD_ARGV
+        .lock()
+        .as_ref()
+        .map(|s: &&mut ArrayString<2048>| *(*s))
 }
 
 /// Sets the next homebrew NRO (path and argv) to execute after this one exits
-/// 
+///
 /// This will only make any effect if the current code is running through HB
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `next_load_path`: NRO path
 /// * `next_load_argv`: NRO argv
-/// 
+///
 /// Returns true if the buffers have been initialized, else false.
-/// 
-pub fn set_next_load_entry(next_load_path: &'static str, next_load_argv: &'static str) -> Result<(bool, bool)> {
+///
+pub fn set_next_load_entry(
+    next_load_path: &'static str,
+    next_load_argv: &'static str,
+) -> Result<(bool, bool)> {
     Ok((
         {
-            let mut path_handle = G_NEXT_LOAD_PATH.lock();  
+            let mut path_handle = G_NEXT_LOAD_PATH.lock();
             if let Some(buffer) = path_handle.as_mut() {
                 (*buffer).set_str(next_load_path)?;
                 true
@@ -256,19 +264,19 @@ pub fn set_next_load_entry(next_load_path: &'static str, next_load_argv: &'stati
             } else {
                 false
             }
-        }
+        },
     ))
 }
 
-static G_RANDOM_SEED: generic_once_cell::OnceCell<crate::sync::sys::mutex::Mutex, (u64, u64)> = generic_once_cell::OnceCell::new();
+static G_RANDOM_SEED: RwLock<(u64, u64)> = RwLock::new((0, 0));
 
 pub(crate) fn set_random_seed(seed: (u64, u64)) {
-    G_RANDOM_SEED.set(seed).expect("The random seed should only ever be set once");
+    *G_RANDOM_SEED.write() = seed;
 }
 
 /// Gets the random seed values sent by HBL
 ///
 /// This values will only be set/useful if the current code is running through HBL
 pub fn get_random_seed() -> (u64, u64) {
-    G_RANDOM_SEED.get().map(Clone::clone).unwrap_or((0u64,0u64))
+    *G_RANDOM_SEED.read()
 }

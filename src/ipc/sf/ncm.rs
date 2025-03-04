@@ -1,8 +1,8 @@
-use crate::result::*;
-use crate::version;
 use crate::ipc::sf;
+use crate::result::*;
 use crate::util::ArrayString;
-use core::fmt::{Display, Debug, Formatter, Result as FmtResult};
+use crate::version;
+use core::fmt::{Debug, Display, Formatter, Result as FmtResult};
 
 use nx_derive::{Request, Response};
 
@@ -48,7 +48,7 @@ pub enum StorageId {
     BuiltInSystem = 3,
     BuiltInUser = 4,
     SdCard = 5,
-    Any = 6
+    Any = 6,
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -64,7 +64,7 @@ pub enum ContentMetaType {
     Application = 0x80,
     Patch = 0x81,
     AddOnContent = 0x82,
-    Delta = 0x83
+    Delta = 0x83,
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -77,7 +77,7 @@ pub enum ContentType {
     Control = 3,
     HtmlDocument = 4,
     LegalInformation = 5,
-    DeltaFragment = 6
+    DeltaFragment = 6,
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -86,7 +86,7 @@ pub enum ContentInstallType {
     #[default]
     Full = 0x0,
     FragmentOnly = 0x1,
-    Unknown = 0x7
+    Unknown = 0x7,
 }
 
 pub type ContentPath = ArrayString<0x301>;
@@ -97,20 +97,20 @@ pub struct ContentMetaKey {
     pub program_id: ProgramId,
     pub version: u32,
     pub meta_type: ContentMetaType,
-    pub install_type: ContentInstallType
+    pub install_type: ContentInstallType,
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct ApplicationContentMetaKey {
     pub key: ContentMetaKey,
-    pub app_id: ApplicationId
+    pub app_id: ApplicationId,
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct ContentId {
-    pub id: [u8; 0x10]
+    pub id: [u8; 0x10],
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -120,7 +120,7 @@ pub struct LegacyContentInfo {
     pub id: ContentId,
     pub size: [u8; 0x6],
     pub cnt_type: ContentType,
-    pub id_offset: u8
+    pub id_offset: u8,
 }
 const_assert!(core::mem::size_of::<LegacyContentInfo>() == 0x38);
 
@@ -132,7 +132,7 @@ pub struct ContentInfo {
     pub size: [u8; 0x5],
     pub attrs: u8,
     pub cnt_type: ContentType,
-    pub id_offset: u8
+    pub id_offset: u8,
 }
 const_assert!(core::mem::size_of::<ContentInfo>() == 0x38);
 
@@ -143,12 +143,12 @@ pub struct ContentMetaInfo {
     pub version: u32,
     pub meta_type: ContentMetaType,
     pub attrs: u8,
-    pub pad: [u8; 2]
+    pub pad: [u8; 2],
 }
 
 ipc_sf_define_default_interface_client!(ContentMetaDatabase);
 ipc_sf_define_interface_trait! {
-	trait ContentMetaDatabase {
+    trait ContentMetaDatabase {
         set [0, version::VersionInterval::all()]: (meta_key: ContentMetaKey, in_rec_buf: sf::InMapAliasBuffer<u8>) =>  () ();
         get [1, version::VersionInterval::all()]: (meta_key: ContentMetaKey, out_rec_buf: sf::OutMapAliasBuffer<u8>) =>  (size: usize) (size: usize);
         remove [2, version::VersionInterval::all()]: (meta_key: ContentMetaKey) =>  () ();
@@ -177,7 +177,7 @@ ipc_sf_define_interface_trait! {
 
 ipc_sf_define_default_interface_client!(ContentManager);
 ipc_sf_define_interface_trait! {
-	trait ContentManager {
+    trait ContentManager {
         open_content_meta_database [0, version::VersionInterval::all()]: (storage_id: StorageId) =>  (meta_db: ContentMetaDatabase) (meta_db: session_type!(ContentMetaDatabase));
     }
 }

@@ -2,10 +2,10 @@
 
 use crate::crypto::rc;
 use crate::result::*;
+use core::arch::aarch64;
+use core::arch::asm;
 use core::mem;
 use core::ptr;
-use core::arch::asm;
-use core::arch::aarch64;
 
 /// Represents the key size in bytes
 pub const KEY_SIZE: usize = 0x10;
@@ -32,49 +32,42 @@ const SUB_BYTES_TABLE: [u8; 0x100] = [
     0xba, 0x78, 0x25, 0x2e, 0x1c, 0xa6, 0xb4, 0xc6, 0xe8, 0xdd, 0x74, 0x1f, 0x4b, 0xbd, 0x8b, 0x8a,
     0x70, 0x3e, 0xb5, 0x66, 0x48, 0x03, 0xf6, 0x0e, 0x61, 0x35, 0x57, 0xb9, 0x86, 0xc1, 0x1d, 0x9e,
     0xe1, 0xf8, 0x98, 0x11, 0x69, 0xd9, 0x8e, 0x94, 0x9b, 0x1e, 0x87, 0xe9, 0xce, 0x55, 0x28, 0xdf,
-    0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16
+    0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16,
 ];
 
 const RCON_TABLE: [u8; 0x10] = [
-    0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f
+    0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f,
 ];
 
 #[inline(always)]
-const fn sub_bytes(tmp: u32) -> u32 {
-    ((SUB_BYTES_TABLE[((tmp >> 0x00) & 0xFF) as usize] as u32) << 0x00) |
-    ((SUB_BYTES_TABLE[((tmp >> 0x08) & 0xFF) as usize] as u32) << 0x08) |
-    ((SUB_BYTES_TABLE[((tmp >> 0x10) & 0xFF) as usize] as u32) << 0x10) |
-    ((SUB_BYTES_TABLE[((tmp >> 0x18) & 0xFF) as usize] as u32) << 0x18)
-}
-
-#[inline(always)]
-const fn rotate_bytes(tmp: u32) -> u32 {
-    (((tmp >> 0x00) & 0xFF) << 0x18) |
-    (((tmp >> 0x08) & 0xFF) << 0x00) |
-    (((tmp >> 0x10) & 0xFF) << 0x08) |
-    (((tmp >> 0x18) & 0xFF) << 0x10)
+fn sub_bytes(tmp: u32) -> u32 {
+    let mut out = [0u8; 4];
+    for (index, byte) in tmp.to_ne_bytes().iter().cloned().enumerate() {
+        out[index] = SUB_BYTES_TABLE[byte as usize]
+    }
+    u32::from_ne_bytes(out)
 }
 
 /// Represents the context used for 128-bit AES operations
 pub struct Context {
     /// The round keys
-    pub round_keys: [[u8; super::BLOCK_SIZE]; ROUND_COUNT + 1]
+    pub round_keys: [[u8; super::BLOCK_SIZE]; ROUND_COUNT + 1],
 }
 
 impl Context {
     /// Creates a new [`Context`] with the given key
-    /// 
+    ///
     /// The key must have size [`KEY_SIZE`] in bytes or this will fail with [`ResultInvalidSize`][`rc::ResultInvalidSize`]
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `key`: The key to use
     /// * `is_encryptor`: Whether this context will be used for encrypting or decrypting
     pub fn new(key: &[u8], is_encryptor: bool) -> Result<Self> {
         result_return_unless!(key.len() == KEY_SIZE, rc::ResultInvalidSize);
 
         let mut ctx = Self {
-            round_keys: [[0; super::BLOCK_SIZE]; ROUND_COUNT + 1]
+            round_keys: [[0; super::BLOCK_SIZE]; ROUND_COUNT + 1],
         };
 
         let round_keys_32 = ctx.round_keys.as_mut_ptr() as *mut u32;
@@ -83,21 +76,16 @@ impl Context {
             ptr::copy(key.as_ptr(), round_keys_32 as *mut u8, KEY_SIZE);
         }
 
-        let mut tmp = unsafe {
-            *round_keys_32.add(KEY_SIZE_32 - 1)
-        };
-
+        let mut tmp = unsafe { *round_keys_32.add(KEY_SIZE_32 - 1) };
 
         let round_keys_size_32 = (super::BLOCK_SIZE * (ROUND_COUNT + 1)) / mem::size_of::<u32>();
         for i in KEY_SIZE_32..round_keys_size_32 {
             if (i % KEY_SIZE_32) == 0 {
-                tmp = rotate_bytes(sub_bytes(tmp)) ^ (RCON_TABLE[(i / KEY_SIZE_32) - 1] as u32);
+                tmp = sub_bytes(tmp) ^ (RCON_TABLE[(i / KEY_SIZE_32) - 1] as u32).rotate_right(8);
             }
 
-            tmp ^= unsafe {
-                *round_keys_32.add(i - KEY_SIZE_32)
-            };
-            
+            tmp ^= unsafe { *round_keys_32.add(i - KEY_SIZE_32) };
+
             unsafe {
                 *round_keys_32.add(i) = tmp;
             }
@@ -117,9 +105,9 @@ impl Context {
     }
 
     /// Encrypts the given data
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `src`: The input data
     /// * `dst`: The output data to fill into
     pub fn encrypt_block(&self, src: &[u8], dst: &mut [u8]) {
@@ -193,9 +181,9 @@ impl Context {
     }
 
     /// Decrypts the given data
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `src`: The input data
     /// * `dst`: The output data to fill into
     pub fn decrypt_block(&self, src: &[u8], dst: &mut [u8]) {

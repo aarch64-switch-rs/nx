@@ -1,10 +1,9 @@
 //! Binder support and utils
 
-use crate::result::*;
-use crate::ipc::sf;
-use crate::gpu::parcel;
-use crate::service::dispdrv;
 use super::*;
+use crate::gpu::parcel;
+use crate::ipc::sf;
+use crate::service::dispdrv;
 
 pub mod rc;
 
@@ -65,19 +64,25 @@ pub fn convert_nv_error_code(err: ErrorCode) -> Result<()> {
 /// Represents a binder object, wrapping transaction functionality
 pub struct Binder {
     handle: dispdrv::BinderHandle,
-    hos_binder_driver: Shared<dyn dispdrv::IHOSBinderDriver>,
+    hos_binder_driver: Arc<dyn dispdrv::IHOSBinderDriver>,
 }
 
 impl Binder {
     /// Creates a new [`Binder`]
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `handle`: Binder handle to use
     /// * `hos_binder_driver`: [`IHOSBinderDriver`][`dispdrv::IHOSBinderDriver`] object
     #[inline]
-    pub const fn new(handle: dispdrv::BinderHandle, hos_binder_driver: Shared<dyn dispdrv::IHOSBinderDriver>) -> Result<Self> {
-        Ok(Self { handle, hos_binder_driver })
+    pub const fn new(
+        handle: dispdrv::BinderHandle,
+        hos_binder_driver: Arc<dyn dispdrv::IHOSBinderDriver>,
+    ) -> Result<Self> {
+        Ok(Self {
+            handle,
+            hos_binder_driver,
+        })
     }
 
     fn transact_parcel_begin(&self, parcel: &mut parcel::Parcel) -> Result<()> {
@@ -90,16 +95,30 @@ impl Binder {
         Ok(())
     }
 
-    fn transact_parcel_impl(&mut self, transaction_id: dispdrv::ParcelTransactionId, payload: parcel::ParcelPayload) -> Result<parcel::Parcel> {
+    fn transact_parcel_impl(
+        &mut self,
+        transaction_id: dispdrv::ParcelTransactionId,
+        payload: parcel::ParcelPayload,
+    ) -> Result<parcel::Parcel> {
         let response_payload = parcel::ParcelPayload::new();
-        self.hos_binder_driver.lock().transact_parcel(self.handle, transaction_id, 0, sf::Buffer::from_other_var(&payload), sf::Buffer::from_other_var(&response_payload))?;
-        
+        self.hos_binder_driver.transact_parcel(
+            self.handle,
+            transaction_id,
+            0,
+            sf::Buffer::from_other_var(&payload),
+            sf::Buffer::from_other_var(&response_payload),
+        )?;
+
         let mut parcel = parcel::Parcel::new();
         parcel.load_from(response_payload);
         Ok(parcel)
     }
 
-    fn transact_parcel(&mut self, transaction_id: dispdrv::ParcelTransactionId, parcel: &mut parcel::Parcel) -> Result<parcel::Parcel> {
+    fn transact_parcel(
+        &mut self,
+        transaction_id: dispdrv::ParcelTransactionId,
+        parcel: &mut parcel::Parcel,
+    ) -> Result<parcel::Parcel> {
         let (payload, _payload_size) = parcel.end_write()?;
         self.transact_parcel_impl(transaction_id, payload)
     }
@@ -111,29 +130,37 @@ impl Binder {
     }
 
     /// Gets this [`Binder`]'s underlying [`IHOSBinderDriver`][`dispdrv::IHOSBinderDriver`] object
-    pub fn get_hos_binder_driver(&mut self) -> Shared<dyn dispdrv::IHOSBinderDriver> {
+    pub fn get_hos_binder_driver(&self) -> Arc<dyn dispdrv::IHOSBinderDriver> {
         self.hos_binder_driver.clone()
     }
 
     /// Increases the [`Binder`]'s reference counts
     pub fn increase_refcounts(&mut self) -> Result<()> {
-        self.hos_binder_driver.lock().adjust_refcount(self.handle, 1, dispdrv::RefcountType::Weak)?;
-        self.hos_binder_driver.lock().adjust_refcount(self.handle, 1, dispdrv::RefcountType::Strong)
+        self.hos_binder_driver
+            .adjust_refcount(self.handle, 1, dispdrv::RefcountType::Weak)?;
+        self.hos_binder_driver
+            .adjust_refcount(self.handle, 1, dispdrv::RefcountType::Strong)
     }
 
     /// Decreases the [`Binder`]'s reference counts
     pub fn decrease_refcounts(&mut self) -> Result<()> {
-        self.hos_binder_driver.lock().adjust_refcount(self.handle, -1, dispdrv::RefcountType::Weak)?;
-        self.hos_binder_driver.lock().adjust_refcount(self.handle, -1, dispdrv::RefcountType::Strong)
+        self.hos_binder_driver
+            .adjust_refcount(self.handle, -1, dispdrv::RefcountType::Weak)?;
+        self.hos_binder_driver
+            .adjust_refcount(self.handle, -1, dispdrv::RefcountType::Strong)
     }
 
     /// Performs a connection
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `api`: The connection API to use
     /// * `producer_controlled_by_app`: Whether the producer is controlled by the process itself
-    pub fn connect(&mut self, api: ConnectionApi, producer_controlled_by_app: bool) -> Result<QueueBufferOutput> {
+    pub fn connect(
+        &mut self,
+        api: ConnectionApi,
+        producer_controlled_by_app: bool,
+    ) -> Result<QueueBufferOutput> {
         let mut parcel = parcel::Parcel::new();
         self.transact_parcel_begin(&mut parcel)?;
 
@@ -142,7 +169,8 @@ impl Binder {
         parcel.write(api)?;
         parcel.write(producer_controlled_by_app as u32)?;
 
-        let mut response_parcel = self.transact_parcel(dispdrv::ParcelTransactionId::Connect, &mut parcel)?;
+        let mut response_parcel =
+            self.transact_parcel(dispdrv::ParcelTransactionId::Connect, &mut parcel)?;
         let qbo: QueueBufferOutput = response_parcel.read()?;
 
         self.transact_parcel_check_err(&mut response_parcel)?;
@@ -150,9 +178,9 @@ impl Binder {
     }
 
     /// Performs a disconnection
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `api`: The connection API
     /// * `mode`: The disconnection mode
     pub fn disconnect(&mut self, api: ConnectionApi, mode: DisconnectMode) -> Result<()> {
@@ -162,16 +190,17 @@ impl Binder {
         parcel.write(api)?;
         parcel.write(mode)?;
 
-        let mut response_parcel = self.transact_parcel(dispdrv::ParcelTransactionId::Disconnect, &mut parcel)?;
+        let mut response_parcel =
+            self.transact_parcel(dispdrv::ParcelTransactionId::Disconnect, &mut parcel)?;
 
         self.transact_parcel_check_err(&mut response_parcel)?;
         Ok(())
     }
 
     /// Sets a preallocated buffer
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `slot`: The buffer slot
     /// * `buf`: The buffer
     pub fn set_preallocated_buffer(&mut self, slot: i32, buf: GraphicBuffer) -> Result<()> {
@@ -185,16 +214,19 @@ impl Binder {
             parcel.write_sized(buf)?;
         }
 
-        self.transact_parcel(dispdrv::ParcelTransactionId::SetPreallocatedBuffer, &mut parcel)?;
+        self.transact_parcel(
+            dispdrv::ParcelTransactionId::SetPreallocatedBuffer,
+            &mut parcel,
+        )?;
         Ok(())
     }
-    
+
     /// Requests a buffer at a given slot
-    /// 
+    ///
     /// This also returns whether the buffer is non-null
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `slot`: The slot
     pub fn request_buffer(&mut self, slot: i32) -> Result<(bool, GraphicBuffer)> {
         let mut parcel = parcel::Parcel::new();
@@ -202,7 +234,8 @@ impl Binder {
 
         parcel.write(slot)?;
 
-        let mut response_parcel = self.transact_parcel(dispdrv::ParcelTransactionId::RequestBuffer, &mut parcel)?;
+        let mut response_parcel =
+            self.transact_parcel(dispdrv::ParcelTransactionId::RequestBuffer, &mut parcel)?;
         let non_null_v: u32 = response_parcel.read()?;
         let non_null = non_null_v != 0;
         let mut gfx_buf: GraphicBuffer = Default::default();
@@ -215,15 +248,22 @@ impl Binder {
     }
 
     /// Dequeues a buffer
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `is_async`: Whether the dequeue is asynchronous
     /// * `width`: The width
     /// * `height`: The height
     /// * `get_frame_timestamps`: Whether to get frame timestamps
     /// * `usage`: [`GraphicsAllocatorUsage`] value
-    pub fn dequeue_buffer(&mut self, is_async: bool, width: u32, height: u32, get_frame_timestamps: bool, usage: GraphicsAllocatorUsage) -> Result<(i32, bool, MultiFence)> {
+    pub fn dequeue_buffer(
+        &mut self,
+        is_async: bool,
+        width: u32,
+        height: u32,
+        get_frame_timestamps: bool,
+        usage: GraphicsAllocatorUsage,
+    ) -> Result<(i32, bool, MultiFence)> {
         let mut parcel = parcel::Parcel::new();
         self.transact_parcel_begin(&mut parcel)?;
 
@@ -233,7 +273,8 @@ impl Binder {
         parcel.write(get_frame_timestamps as u32)?;
         parcel.write(usage)?;
 
-        let mut response_parcel = self.transact_parcel(dispdrv::ParcelTransactionId::DequeueBuffer, &mut parcel)?;
+        let mut response_parcel =
+            self.transact_parcel(dispdrv::ParcelTransactionId::DequeueBuffer, &mut parcel)?;
 
         let slot: i32 = response_parcel.read()?;
         let has_fences_v: u32 = response_parcel.read()?;
@@ -248,9 +289,9 @@ impl Binder {
     }
 
     /// Queues a buffer
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `slot`: The slot
     /// * `qbi`: The input layout
     pub fn queue_buffer(&mut self, slot: i32, qbi: QueueBufferInput) -> Result<QueueBufferOutput> {
@@ -260,7 +301,8 @@ impl Binder {
         parcel.write(slot)?;
         parcel.write_sized(qbi)?;
 
-        let mut response_parcel = self.transact_parcel(dispdrv::ParcelTransactionId::QueueBuffer, &mut parcel)?;
+        let mut response_parcel =
+            self.transact_parcel(dispdrv::ParcelTransactionId::QueueBuffer, &mut parcel)?;
 
         let qbo = response_parcel.read()?;
 
@@ -269,11 +311,15 @@ impl Binder {
     }
 
     /// Gets a native handle of the underlying [`IHOSBinderDriver`][`dispdrv::IHOSBinderDriver`] object
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `handle_type`: The [`NativeHandleType`][`dispdrv::NativeHandleType`] value
-    pub fn get_native_handle(&mut self, handle_type: dispdrv::NativeHandleType) -> Result<sf::CopyHandle> {
-        self.hos_binder_driver.lock().get_native_handle(self.handle, handle_type)
+    pub fn get_native_handle(
+        &mut self,
+        handle_type: dispdrv::NativeHandleType,
+    ) -> Result<sf::CopyHandle> {
+        self.hos_binder_driver
+            .get_native_handle(self.handle, handle_type)
     }
 }

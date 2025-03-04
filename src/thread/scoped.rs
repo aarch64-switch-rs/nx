@@ -1,8 +1,8 @@
 use super::{/*current, park,*/ Builder, JoinInner, Result, Thread};
+use ::alloc::sync::Arc;
 use core::fmt;
 use core::marker::PhantomData;
 use core::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
-use ::alloc::sync::Arc;
 
 /// A scope to spawn scoped threads in.
 ///
@@ -155,7 +155,7 @@ where
     result
 }
 
-impl<'scope, 'env> Scope<'scope, 'env> {
+impl<'scope> Scope<'scope, '_> {
     /// Spawns a new thread within a scope, returning a [`ScopedJoinHandle`] for it.
     ///
     /// Unlike non-scoped threads, threads spawned with this function may
@@ -185,7 +185,9 @@ impl<'scope, 'env> Scope<'scope, 'env> {
         F: FnOnce() -> T + Send + 'scope,
         T: Send + 'scope,
     {
-        Builder::new().spawn_scoped(self, f).expect("failed to spawn thread")
+        Builder::new()
+            .spawn_scoped(self, f)
+            .expect("failed to spawn thread")
     }
 }
 
@@ -245,11 +247,13 @@ impl Builder {
         F: FnOnce() -> T + Send + 'scope,
         T: Send + 'scope,
     {
-        Ok(ScopedJoinHandle(unsafe { self.spawn_unchecked_(f, Some(scope.data.clone())) }?))
+        Ok(ScopedJoinHandle(unsafe {
+            self.spawn_unchecked_(f, Some(scope.data.clone()))
+        }?))
     }
 }
 
-impl<'scope, T> ScopedJoinHandle<'scope, T> {
+impl<T> ScopedJoinHandle<'_, T> {
     /// Extracts a handle to the underlying thread.
     ///
     /// # Examples
@@ -317,14 +321,20 @@ impl<'scope, T> ScopedJoinHandle<'scope, T> {
 impl fmt::Debug for Scope<'_, '_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Scope")
-            .field("num_running_threads", &self.data.num_running_threads.load(Ordering::Relaxed))
-            .field("a_thread_panicked", &self.data.a_thread_panicked.load(Ordering::Relaxed))
+            .field(
+                "num_running_threads",
+                &self.data.num_running_threads.load(Ordering::Relaxed),
+            )
+            .field(
+                "a_thread_panicked",
+                &self.data.a_thread_panicked.load(Ordering::Relaxed),
+            )
             //.field("main_thread", &self.data.main_thread)
             .finish_non_exhaustive()
     }
 }
 
-impl<'scope, T> fmt::Debug for ScopedJoinHandle<'scope, T> {
+impl<T> fmt::Debug for ScopedJoinHandle<'_, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("ScopedJoinHandle").finish_non_exhaustive()
     }

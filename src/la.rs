@@ -8,8 +8,9 @@ use crate::service::applet;
 use crate::service::applet::ILibraryAppletAccessor;
 use crate::service::applet::ILibraryAppletCreator;
 use crate::service::applet::{IStorage, IStorageAccessor, Storage};
-use crate::sync::Mutex;
+use crate::service::sm::rc;
 use crate::svc;
+use crate::sync::{Mutex, MutexGuard};
 use crate::wait;
 use applet::LibraryAppletCreator;
 use core::mem as cmem;
@@ -112,15 +113,15 @@ impl Drop for LibraryAppletHolder {
     }
 }
 
-static G_CREATOR: Mutex<Option<mem::Shared<LibraryAppletCreator>>> = Mutex::new(None);
+static G_CREATOR: Mutex<Option<LibraryAppletCreator>> = Mutex::new(None);
 
-/// Initializes library applet support with the provided [`ILibraryAppletCreator`] shared object
+/// Initializes library applet support with the provided [`LibraryAppletCreator`]
 ///
 /// # Arguments
 ///
 /// * `creator`: The shared object to use globally
 #[inline]
-pub fn initialize(creator: mem::Shared<LibraryAppletCreator>) {
+pub fn initialize(creator: LibraryAppletCreator) {
     *G_CREATOR.lock() = Some(creator);
 }
 
@@ -140,12 +141,13 @@ pub(crate) fn finalize() {
 ///
 /// This will fail with [`ResultNotInitialized`][`super::rc::ResultNotInitialized`] if library applet support isn't initialized
 #[inline]
-pub fn get_creator() -> Result<mem::Shared<LibraryAppletCreator>> {
-    G_CREATOR
-        .lock()
-        .as_ref()
-        .map(Clone::clone)
-        .ok_or(super::rc::ResultNotInitialized::make())
+pub fn get_creator<'a>() -> Result<MutexGuard<'a, Option<LibraryAppletCreator>>> {
+    let guard = G_CREATOR.lock();
+    if guard.is_some() {
+        Ok(guard)
+    } else {
+        Err(rc::ResultNotInitialized::make())
+    }
 }
 
 /// Wrapper for reading data from a [`IStorage`] shared object
@@ -193,7 +195,10 @@ pub fn write_storage<T: Copy>(storage: &mut Storage, t: T) -> Result<()> {
 pub fn create_write_storage<T: Copy>(t: T) -> Result<Storage> {
     result_return_unless!(is_initialized(), super::rc::ResultNotInitialized);
 
-    let mut storage = get_creator()?.lock().create_storage(cmem::size_of::<T>())?;
+    let mut storage = get_creator()?
+        .as_ref()
+        .unwrap()
+        .create_storage(cmem::size_of::<T>())?;
     write_storage(&mut storage, t)?;
 
     Ok(storage)
@@ -215,7 +220,10 @@ pub fn create_library_applet(
 ) -> Result<LibraryAppletHolder> {
     result_return_unless!(is_initialized(), super::rc::ResultNotInitialized);
 
-    let accessor = get_creator()?.lock().create_library_applet(id, mode)?;
+    let accessor = get_creator()?
+        .as_ref()
+        .unwrap()
+        .create_library_applet(id, mode)?;
 
     let mut holder = LibraryAppletHolder::new(mem::Shared::new(accessor))?;
 

@@ -77,7 +77,7 @@ macro_rules! ipc_sf_define_interface_trait {
                     #[doc(hidden)]
                     fn [<sf_server_impl_ $name>](&mut self, protocol: $crate::ipc::CommandProtocol, mut ctx: &mut $crate::ipc::server::ServerContext) -> $crate::result::Result<()> {
                         use $crate::result::ResultBase;
-                        
+
                         ctx.raw_data_walker = $crate::ipc::DataWalker::new(ctx.ctx.in_params.data_offset);
                         $( let $in_param_name = <$in_param_type as $crate::ipc::server::RequestCommandParameter<_>>::after_request_read(&mut ctx)?; )*
 
@@ -104,7 +104,7 @@ macro_rules! ipc_sf_define_interface_trait {
                 )*
 
                 /// The dynamic dispatch function that calls into the IPC server functions. This should only be called from the [`$crate::ipc::server::ServerManager`] and not from client code.
-                /// Examples for implementing [`ISessionObject`][`$crate::ipc::server::ISessionObject`] or [`IMitmServerOject`][`$crate::ipc::server::IMitmServerObject`] can be found in the [`nx`] crate.  
+                /// Examples for implementing [`ISessionObject`][`$crate::ipc::server::ISessionObject`] or [`IMitmServerOject`][`$crate::ipc::server::IMitmServerObject`] can be found in the [`nx`] crate.
                 fn try_handle_request_by_id(&mut self, req_id: u32, protocol: $crate::ipc::CommandProtocol, ctx: &mut $crate::ipc::server::ServerContext) -> Option<$crate::result::Result<()>> {
                     let version = $crate::version::get_version();
                     match req_id {
@@ -226,36 +226,12 @@ macro_rules! api_mark_request_command_parameters_types_as_copy {
     };
 }
 
-/*
-#[macro_export]
-macro_rules! ipc_impl_dyn_trait_as_server_param {
-    ($t:trait) => {
-        impl $crate::ipc::server::RequestCommandParameter for $crate::mem::Shared<dyn $t> {
-            default fn after_request_read(_ctx: &mut ServerContext) -> Result<S> {
-                // TODO: implement this (added this placeholder impl for interfaces to actually be valid)
-                sf::hipc::rc::ResultUnsupportedOperation::make_err()
-            }
-        }
-
-        impl<S: sf::IObject + ?Sized> RequestCommandParameter<mem::Shared<dyn $t>> for mem::Shared<dyn $t> {
-            fn after_request_read(_ctx: &mut ServerContext) -> Result<Self> {
-                // TODO: implement this (added this placeholder impl for interfaces to actually be valid)
-                sf::hipc::rc::ResultUnsupportedOperation::make_err()
-            }
-        }
-
-        fn after_response_write(_session: &Self, _ctx: &mut ServerContext) -> Result<()> {
-            Ok(())
-        }
-    }
-}*/
-
 api_mark_request_command_parameters_types_as_copy!(
     bool, u8, i8, u16, i16, u32, i32, u64, i64, usize, isize, u128, i128, f32, f64
 );
 
 impl<T: Copy, const N: usize> crate::ipc::server::RequestCommandParameter<[T; N]> for [T; N] {
-    default fn after_request_read(
+    fn after_request_read(
         ctx: &mut crate::ipc::server::ServerContext,
     ) -> crate::result::Result<Self> {
         Ok(ctx.raw_data_walker.advance_get())
@@ -264,7 +240,7 @@ impl<T: Copy, const N: usize> crate::ipc::server::RequestCommandParameter<[T; N]
 
 impl<T: Copy, const N: usize> crate::ipc::server::ResponseCommandParameter for [T; N] {
     type CarryState = ();
-    default fn before_response_write(
+    fn before_response_write(
         _raw: &Self,
         ctx: &mut crate::ipc::server::ServerContext,
     ) -> crate::result::Result<()> {
@@ -272,7 +248,7 @@ impl<T: Copy, const N: usize> crate::ipc::server::ResponseCommandParameter for [
         Ok(())
     }
 
-    default fn after_response_write(
+    fn after_response_write(
         raw: Self,
         _carry_state: (),
         ctx: &mut crate::ipc::server::ServerContext,

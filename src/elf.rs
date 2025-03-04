@@ -35,7 +35,7 @@ pub enum Tag {
     InitArraySize = 27,
     FiniArraySize = 28,
     RelaCount = 0x6FFFFFF9,
-    RelCount = 0x6FFFFFFA
+    RelCount = 0x6FFFFFFA,
 }
 
 /// Represents ELF relocation types.
@@ -46,7 +46,7 @@ pub enum RelocationType {
     AArch64Abs64 = 257,
     AArch64GlobDat = 1025,
     AArch64JumpSlot = 1026,
-    AArch64Relative = 1027
+    AArch64Relative = 1027,
 }
 
 /// Represents an ELF dynamic entry.
@@ -55,17 +55,16 @@ pub enum RelocationType {
 #[allow(missing_docs)]
 pub struct Dyn {
     pub tag: Tag,
-    pub val_ptr: usize
+    pub val_ptr: usize,
 }
 
 /// Represents an ELF info symbol.
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]
-
 #[allow(missing_docs)]
 pub struct InfoSymbol {
     pub relocation_type: RelocationType,
-    pub symbol: u32
+    pub symbol: u32,
 }
 
 /// Represents an ELF info value.
@@ -74,7 +73,7 @@ pub struct InfoSymbol {
 #[allow(missing_docs)]
 pub union Info {
     pub value: u64,
-    pub symbol: InfoSymbol
+    pub symbol: InfoSymbol,
 }
 
 /// Represents an ELF Rel type.
@@ -83,7 +82,7 @@ pub union Info {
 #[allow(missing_docs)]
 pub struct Rel {
     pub offset: usize,
-    pub info: Info
+    pub info: Info,
 }
 
 /// Represents an ELF Rela type.
@@ -92,13 +91,13 @@ pub struct Rel {
 pub struct Rela {
     pub offset: usize,
     pub info: Info,
-    pub addend: i64
+    pub addend: i64,
 }
 
 /// Relocates a base address with its corresponding [`Dyn`] reference.
-/// 
+///
 /// # Arguments:
-/// 
+///
 /// * `base_address`: The base address to relocate.
 /// * `start_dyn`: Pointer to the start of the [`Dyn`] list.
 pub unsafe fn relocate_with_dyn(base_address: *mut u8, start_dyn: *const Dyn) {
@@ -120,7 +119,7 @@ pub unsafe fn relocate_with_dyn(base_address: *mut u8, start_dyn: *const Dyn) {
                 Tag::RelaOffset => rela_offset_v = Some((*cur_dyn).val_ptr),
                 Tag::RelaEntrySize => rela_entry_size_v = Some((*cur_dyn).val_ptr),
                 Tag::RelaCount => rela_count_v = Some((*cur_dyn).val_ptr),
-                _ => {/* ignore */}
+                _ => { /* ignore */ }
             };
 
             cur_dyn = cur_dyn.add(1);
@@ -132,13 +131,13 @@ pub unsafe fn relocate_with_dyn(base_address: *mut u8, start_dyn: *const Dyn) {
 
             for i in 0..rel_count {
                 let rel = rel_base.add(i * rel_entry_size) as *const Rel;
-                if (*rel).info.symbol.relocation_type  == RelocationType::AArch64Relative {
+                if (*rel).info.symbol.relocation_type == RelocationType::AArch64Relative {
                     let relocation_offset = base_address.add((*rel).offset) as *mut *const u8;
                     *relocation_offset = base_address;
                 }
             }
         }
-        
+
         if let (Some(rela_offset), Some(rela_count)) = (rela_offset_v, rela_count_v) {
             let rela_entry_size = rela_entry_size_v.unwrap_or(core::mem::size_of::<Rela>());
             let rela_base = base_address.add(rela_offset);
@@ -146,9 +145,9 @@ pub unsafe fn relocate_with_dyn(base_address: *mut u8, start_dyn: *const Dyn) {
             for i in 0..rela_count {
                 let rela = rela_base.add(i * rela_entry_size) as *const Rela;
                 if (*rela).info.symbol.relocation_type == RelocationType::AArch64Relative {
-                        let relocation_offset = base_address.add((*rela).offset) as *mut *const u8;
-                        *relocation_offset = base_address.offset((*rela).addend as isize);
-                    }
+                    let relocation_offset = base_address.add((*rela).offset) as *mut *const u8;
+                    *relocation_offset = base_address.offset((*rela).addend as isize);
+                }
             }
         }
     }
@@ -164,26 +163,28 @@ impl EhFrameHdrPtr {
     pub const fn new() -> Self {
         Self(AtomicUsize::new(0))
     }
-    
+
     pub fn set(&self, val: *const u8) {
         self.0.store(val as usize, SeqCst);
-    } 
+    }
+}
+
+impl Default for EhFrameHdrPtr {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 unsafe impl Sync for EhFrameHdrPtr {}
 
-unsafe impl unwinding::custom_eh_frame_finder::EhFrameFinder for EhFrameHdrPtr{
+unsafe impl unwinding::custom_eh_frame_finder::EhFrameFinder for EhFrameHdrPtr {
     fn find(&self, _pc: usize) -> Option<unwinding::custom_eh_frame_finder::FrameInfo> {
         match self.0.load(SeqCst) {
             0 => None,
-            ptr  => {
-                Some(
-                    FrameInfo {
-                        text_base: None,
-                        kind: FrameInfoKind::EhFrameHdr(ptr)
-                    }
-                )
-            }
+            ptr => Some(FrameInfo {
+                text_base: None,
+                kind: FrameInfoKind::EhFrameHdr(ptr),
+            }),
         }
     }
 }

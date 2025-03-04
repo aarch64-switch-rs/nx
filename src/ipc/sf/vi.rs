@@ -1,5 +1,5 @@
-use crate::result::*;
 use crate::ipc::sf;
+use crate::result::*;
 use crate::util;
 use crate::version;
 
@@ -17,13 +17,13 @@ define_bit_enum! {
 }
 
 /// Tells the display service how to scale spawned layers.
-#[derive(Request, Response,  Copy, Clone, Debug, Default)]
+#[derive(Request, Response, Copy, Clone, Debug, Default)]
 #[repr(u64)]
 pub enum ScalingMode {
     None = 0,
     #[default]
     FitToLayer = 2,
-    PreserveAspectRatio = 4
+    PreserveAspectRatio = 4,
 }
 
 pub type DisplayId = u64;
@@ -34,7 +34,7 @@ pub type LayerId = u64;
 #[repr(u32)]
 pub enum DisplayServiceMode {
     User = 0,
-    Privileged = 1
+    Privileged = 1,
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -48,13 +48,12 @@ pub enum LayerStackId {
     LastFrame,
     Arbitrary,
     ApplicationForDebug,
-    Null
+    Null,
 }
-
 
 ipc_sf_define_default_interface_client!(ManagerDisplayService);
 ipc_sf_define_interface_trait! {
-	trait ManagerDisplayService {
+    trait ManagerDisplayService {
         create_managed_layer [2010, version::VersionInterval::all(), mut]: (flags: LayerFlags, display_id: DisplayId, raw_aruid: u64) =>  (id: LayerId) (id: LayerId);
         destroy_managed_layer [2011, version::VersionInterval::all()]: (id: LayerId) =>  () ();
         add_to_layer_stack [6000, version::VersionInterval::all()]: (stack: LayerStackId, layer: LayerId) =>  () ();
@@ -63,7 +62,7 @@ ipc_sf_define_interface_trait! {
 
 ipc_sf_define_default_interface_client!(SystemDisplayService);
 ipc_sf_define_interface_trait! {
-	trait SystemDisplayService {
+    trait SystemDisplayService {
         get_z_order_count_min [1200, version::VersionInterval::all()]: (display_id: DisplayId) =>  (z: i64) (z: i64);
         get_z_order_count_max [1202, version::VersionInterval::all()]: (display_id: DisplayId) =>  (z: i64) (z: i64);
         set_layer_position [2201, version::VersionInterval::all(), mut]: (x: f32, y: f32, id: LayerId) =>  () ();
@@ -75,7 +74,7 @@ ipc_sf_define_interface_trait! {
 
 ipc_sf_define_default_interface_client!(ApplicationDisplayService);
 ipc_sf_define_interface_trait! {
-	trait ApplicationDisplayService {
+    trait ApplicationDisplayService {
         get_relay_service [100, version::VersionInterval::all()]: () => (relay_service: sf::dispdrv::HOSBinderDriver) (relay_service: sf::dispdrv::HOSBinderDriver);
         get_system_display_service [101, version::VersionInterval::all()]: () => (system_display_service: SystemDisplayService) (system_display_service: session_type!(SystemDisplayService));
         get_manager_display_service [102, version::VersionInterval::all()]: () => (manager_display_service: ManagerDisplayService) (manager_display_service: session_type!(ManagerDisplayService));
@@ -91,21 +90,21 @@ ipc_sf_define_interface_trait! {
 
 ipc_sf_define_default_interface_client!(ApplicationRootService);
 ipc_sf_define_interface_trait! {
-	trait ApplicationRootService {
+    trait ApplicationRootService {
         get_display_service [0, version::VersionInterval::all()]: (mode: DisplayServiceMode) =>  (display_service: ApplicationDisplayService) (display_service: session_type!(ApplicationDisplayService));
     }
 }
 
 ipc_sf_define_default_interface_client!(SystemRootService);
 ipc_sf_define_interface_trait! {
-	trait SystemRootService {
+    trait SystemRootService {
         get_display_service [1, version::VersionInterval::all()]: (mode: DisplayServiceMode) =>  (display_service: ApplicationDisplayService) (display_service: session_type!(ApplicationDisplayService));
     }
 }
 
 ipc_sf_define_default_interface_client!(ManagerRootService);
 ipc_sf_define_interface_trait! {
-	trait ManagerRootService {
+    trait ManagerRootService {
         get_display_service [2, version::VersionInterval::all()]: (mode: DisplayServiceMode) =>  (display_service: ApplicationDisplayService) (display_service: session_type!(ApplicationDisplayService));
     }
 }

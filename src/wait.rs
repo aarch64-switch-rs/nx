@@ -1,13 +1,13 @@
 //! Sync/waiting utilities and wrappers
 
+use crate::arm;
 use crate::result::*;
 use crate::svc;
-use crate::arm;
 
 /// Represents an event via a remote handle
 pub struct RemoteEvent {
     /// The remote handle
-    pub handle: svc::Handle
+    pub handle: svc::Handle,
 }
 
 impl RemoteEvent {
@@ -51,7 +51,7 @@ pub struct SystemEvent {
     /// The event's server handle
     pub server_handle: svc::Handle,
     /// The event's client handle
-    pub client_handle: svc::Handle
+    pub client_handle: svc::Handle,
 }
 
 impl SystemEvent {
@@ -62,7 +62,10 @@ impl SystemEvent {
     /// * `timeout` - Wait timeout in nanoseconds, `-1` can be used to wait indefinitely
     pub fn new() -> Result<Self> {
         let (server_handle, client_handle) = svc::create_event()?;
-        Ok(Self { server_handle, client_handle })
+        Ok(Self {
+            server_handle,
+            client_handle,
+        })
     }
 
     /// Signals the [`SystemEvent`] (via the server handle)
@@ -85,7 +88,7 @@ pub enum WaiterType {
     /// A simple handle, that doesn't get cleared when the waiter wakes
     Handle,
     /// A wait handle that has the signal automatically cleared
-    HandleWithClear
+    HandleWithClear,
 }
 
 /// Represents the max amount of objects the Nintendo Switch kernel can wait-sync on at the same time (like Windows)
@@ -95,7 +98,7 @@ pub const MAX_OBJECT_COUNT: u32 = 0x40;
 #[allow(dead_code)]
 pub struct Waiter {
     handle: svc::Handle,
-    wait_type: WaiterType
+    wait_type: WaiterType,
 }
 
 impl Waiter {
@@ -109,7 +112,7 @@ impl Waiter {
     pub const fn from(handle: svc::Handle, wait_type: WaiterType) -> Self {
         Self { handle, wait_type }
     }
-    
+
     /// Creates a new [`Waiter`] from a handle and [`WaiterType::Handle`] type
     ///
     /// # Arguments
@@ -134,7 +137,10 @@ impl Waiter {
 type WaitFn<W> = fn(&[W], i64) -> Result<usize>;
 
 fn handles_wait_fn(handles: &[svc::Handle], timeout: i64) -> Result<usize> {
-    unsafe {svc::wait_synchronization(handles.as_ptr(), handles.len() as u32, timeout).map(|idx| idx as usize)}
+    unsafe {
+        svc::wait_synchronization(handles.as_ptr(), handles.len() as u32, timeout)
+            .map(|idx| idx as usize)
+    }
 }
 
 fn waiters_wait_fn(_waiters: &[Waiter], _timeout: i64) -> Result<usize> {
@@ -153,8 +159,8 @@ fn wait_impl<W>(wait_objects: &[W], timeout: i64, wait_fn: WaitFn<W>) -> Result<
             true => {
                 let remaining = deadline.saturating_sub(arm::get_system_tick());
                 arm::ticks_to_nanoseconds(remaining) as i64
-            },
-            false => -1
+            }
+            false => -1,
         };
         match (wait_fn)(wait_objects, this_timeout) {
             Ok(index) => return Ok(index),
@@ -163,8 +169,7 @@ fn wait_impl<W>(wait_objects: &[W], timeout: i64, wait_fn: WaitFn<W>) -> Result<
                     if has_timeout {
                         return Err(rc);
                     }
-                }
-                else if !svc::rc::ResultCancelled::matches(rc) {
+                } else if !svc::rc::ResultCancelled::matches(rc) {
                     return Err(rc);
                 }
             }

@@ -17,7 +17,7 @@ pub enum DescriptorType {
     Physical = 0x23,
     Hub = 0x29,
     SuperSpeedHub = 0x2A,
-    SsEndPointCompanion = 0x30
+    SsEndPointCompanion = 0x30,
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -41,7 +41,7 @@ pub enum ClassCode {
     DiagnosticDevice = 0xDC,
     Wireless = 0xE0,
     Application = 0xFE,
-    VendorSpec = 0xFF
+    VendorSpec = 0xFF,
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
@@ -55,7 +55,7 @@ pub struct InterfaceDescriptor {
     interface_class: ClassCode,
     interface_subclass: u8,
     interface_protocol: u8,
-    interface: u8
+    interface: u8,
 }
 const_assert!(core::mem::size_of::<InterfaceDescriptor>() == 0x9);
 
@@ -67,7 +67,7 @@ pub struct EndPointDescriptor {
     endpoint_access: u8,
     attributes: u8,
     max_packet_size: u16,
-    interval: u8
+    interval: u8,
 }
 const_assert!(core::mem::size_of::<EndPointDescriptor>() == 0x7);
 
@@ -78,7 +78,7 @@ pub struct SsEndPointCompanionDescriptor {
     descriptor_type: DescriptorType,
     max_burst: u8,
     attributes: u8,
-    bytes_per_interval: u16
+    bytes_per_interval: u16,
 }
 const_assert!(core::mem::size_of::<SsEndPointCompanionDescriptor>() == 0x6);
 
@@ -98,7 +98,7 @@ pub struct DeviceDescriptor {
     manufacturer: u8,
     product: u8,
     serial_number: u8,
-    configuration_count: u8
+    configuration_count: u8,
 }
 const_assert!(core::mem::size_of::<DeviceDescriptor>() == 0x12);
 
@@ -112,6 +112,6 @@ pub struct ConfigDescriptor {
     configuration_value: u8,
     configuration: u8,
     attributes: u8,
-    max_power: u8
+    max_power: u8,
 }
 const_assert!(core::mem::size_of::<ConfigDescriptor>() == 0x9);

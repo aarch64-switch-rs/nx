@@ -1,6 +1,6 @@
-use crate::{result::*, util};
 use crate::ipc::sf;
 use crate::version;
+use crate::{result::*, util};
 
 pub mod mitm;
 
@@ -12,7 +12,7 @@ use nx_derive::{Request, Response};
 #[repr(C)]
 pub union ServiceName {
     pub value: u64,
-    pub name: [u8;8]
+    pub name: [u8; 8],
 }
 const_assert!(core::mem::size_of::<ServiceName>() == 0x8);
 
@@ -22,13 +22,14 @@ impl ServiceName {
     }
 
     pub const fn new(name: &str) -> Self {
-
-        let mut raw_name: [u8; 8] =  [0; 8];
+        let mut raw_name: [u8; 8] = [0; 8];
 
         let name_bytes = name.as_bytes();
         let copy_len = util::const_usize_min(8, name_bytes.len());
 
-        unsafe {core::ptr::copy_nonoverlapping(name_bytes.as_ptr(), raw_name.as_mut_ptr(), copy_len)}
+        unsafe {
+            core::ptr::copy_nonoverlapping(name_bytes.as_ptr(), raw_name.as_mut_ptr(), copy_len)
+        }
 
         Self { name: raw_name }
     }
@@ -38,32 +39,25 @@ impl ServiceName {
     }
 
     pub const fn is_empty(&self) -> bool {
-        unsafe {
-            self.value == 0
-        }
+        unsafe { self.value == 0 }
     }
 }
 
 impl PartialEq for ServiceName {
     fn eq(&self, other: &Self) -> bool {
-        unsafe {
-            self.value == other.value
-        }
+        unsafe { self.value == other.value }
     }
 }
 
 impl core::fmt::Debug for ServiceName {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        unsafe {
-            self.name.fmt(f)
-        }
+        unsafe { self.name.fmt(f) }
     }
 }
 
-
 ipc_sf_define_default_interface_client!(UserInterface);
 ipc_sf_define_interface_trait! {
-	trait UserInterface {
+    trait UserInterface {
         register_client [0, version::VersionInterval::all()]: (process_id: sf::ProcessId) =>  () ();
         get_service_handle [1, version::VersionInterval::all()]: (name: ServiceName) =>  (service_handle: sf::MoveHandle) (service_handle: sf::MoveHandle);
         register_service [2, version::VersionInterval::all()]: (name: ServiceName, is_light: bool, max_sessions: i32) =>  (port_handle: sf::MoveHandle) (port_handle: sf::MoveHandle);

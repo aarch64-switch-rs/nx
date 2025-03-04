@@ -7,7 +7,7 @@ use core::arch::asm;
 #[repr(C)]
 pub struct CpuRegister {
     /// The register value.
-    pub reg: u64
+    pub reg: u64,
 }
 
 impl CpuRegister {
@@ -18,9 +18,9 @@ impl CpuRegister {
     }
 
     /// Sets the [`CpuRegister`] from an `X` value.
-    /// 
+    ///
     /// # Arguments:
-    /// 
+    ///
     /// * `x`: The value to set.
     #[inline]
     pub fn set_x(&mut self, x: u64) {
@@ -34,9 +34,9 @@ impl CpuRegister {
     }
 
     /// Sets the [`CpuRegister`] from an `W` value.
-    /// 
+    ///
     /// # Arguments:
-    /// 
+    ///
     /// * `w`: The value to set.
     #[inline]
     pub fn set_w(&mut self, w: u32) {
@@ -50,9 +50,9 @@ impl CpuRegister {
     }
 
     /// Sets the [`CpuRegister`] from an `R` value.
-    /// 
+    ///
     /// # Arguments:
-    /// 
+    ///
     /// * `r`: The value to set.
     #[inline]
     pub fn set_r(&mut self, r: u32) {
@@ -65,7 +65,7 @@ impl CpuRegister {
 #[repr(C)]
 pub struct FpuRegister {
     /// The register value.
-    pub reg: u128
+    pub reg: u128,
 }
 
 impl FpuRegister {
@@ -76,9 +76,9 @@ impl FpuRegister {
     }
 
     /// Sets the [`FpuRegister`] from an `V` value.
-    /// 
+    ///
     /// # Arguments:
-    /// 
+    ///
     /// * `v`: The value to set.
     #[inline]
     pub fn set_v(&mut self, v: u128) {
@@ -92,9 +92,9 @@ impl FpuRegister {
     }
 
     /// Sets the [`FpuRegister`] from an `D` value.
-    /// 
+    ///
     /// # Arguments:
-    /// 
+    ///
     /// * `d`: The value to set.
     #[inline]
     pub fn set_d(&mut self, d: f64) {
@@ -108,9 +108,9 @@ impl FpuRegister {
     }
 
     /// Sets the [`FpuRegister`] from an `S` value.
-    /// 
+    ///
     /// # Arguments:
-    /// 
+    ///
     /// * `s`: The value to set.
     #[inline]
     pub fn set_s(&mut self, s: f32) {
@@ -151,16 +151,16 @@ pub struct ThreadContext {
     /// The FPSR value.
     pub fpsr: u32,
     /// The TPIDR value.
-    pub tpidr: u64
+    pub tpidr: u64,
 }
 
 /// Flushes memory cache at a certain memory location.
-/// 
+///
 /// # Arguments:
-/// 
+///
 /// * `address`: Memory address.
 /// * `size`: Memory size.
-/// 
+///
 /// # Safety
 ///
 /// `address` must be valid pointer.
@@ -202,9 +202,9 @@ pub fn get_system_tick_frequency() -> u64 {
 }
 
 /// Converts ticks to nanoseconds.
-/// 
+///
 /// # Arguments:
-/// 
+///
 /// * `ticks`: Ticks to convert.
 #[inline]
 pub const fn ticks_to_nanoseconds(ticks: u64) -> u64 {
@@ -212,9 +212,9 @@ pub const fn ticks_to_nanoseconds(ticks: u64) -> u64 {
 }
 
 /// Converts nanoseconds to ticks.
-/// 
+///
 /// # Arguments:
-/// 
+///
 /// * `ns`: Nanoseconds to convert.
 #[inline]
 pub const fn nanoseconds_to_ticks(ns: u64) -> u64 {

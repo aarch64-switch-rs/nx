@@ -1,5 +1,5 @@
-use crate::result::*;
 use crate::ipc::sf;
+use crate::result::*;
 use crate::version;
 
 use nx_derive::{Request, Response};
@@ -20,13 +20,12 @@ pub enum State {
     EssentialServicesSleepReady = 3,
     EssentialServicesAwake = 4,
     ShutdownReady = 5,
-    Invalid = 6
+    Invalid = 6,
 }
-
 
 ipc_sf_define_default_interface_client!(PmModule);
 ipc_sf_define_interface_trait! {
-	trait PmModule {
+    trait PmModule {
         initialize [0, version::VersionInterval::all()]: (id: ModuleId, dependencies: sf::InMapAliasBuffer<ModuleId>) =>  (event_handle: sf::CopyHandle) (event_handle: sf::CopyHandle);
         get_request [1, version::VersionInterval::all()]: () => (state: State, flags: u32) (state: State, flags: u32);
         acknowledge [2, version::VersionInterval::all()]: () => () ();
@@ -37,7 +36,7 @@ ipc_sf_define_interface_trait! {
 
 ipc_sf_define_default_interface_client!(PmService);
 ipc_sf_define_interface_trait! {
-	trait PmService {
+    trait PmService {
         get_pm_module [0, version::VersionInterval::all()]: () => (pm_module: PmModule) (pm_module: session_type!(PmModule));
     }
 }

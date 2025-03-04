@@ -11,15 +11,15 @@ use crate::diag::abort::AbortLevel;
 use crate::result::*;
 use crate::svc;
 use crate::util;
+use core::arch::asm;
 use core::cell::UnsafeCell;
 use core::fmt;
 use core::marker::PhantomData;
 use core::mem;
 use core::mem::ManuallyDrop;
+use core::pin::Pin;
 use core::ptr::addr_of;
 use core::ptr::addr_of_mut;
-use core::pin::Pin;
-use core::arch::asm;
 
 pub mod rc;
 //pub mod _local;
@@ -105,7 +105,7 @@ impl Builder {
         Default::default()
     }
 
-/// Names the thread-to-be. Currently the name is used for identification
+    /// Names the thread-to-be. Currently the name is used for identification
     /// only in panic messages.
     ///
     /// The name must not contain null bytes (`\0`).
@@ -254,10 +254,10 @@ impl Builder {
     /// This can be guaranteed in two ways:
     ///
     /// - ensure that [`join`][`JoinHandle::join`] is called before any referenced
-    /// data is dropped
+    ///   data is dropped
     /// - use only types with `'static` lifetime bounds, i.e., those with no or only
-    /// `'static` references (both [`thread::Builder::spawn`][`Builder::spawn`]
-    /// and [`thread::spawn`][`spawn`] enforce this property statically)
+    ///   `'static` references (both [`thread::Builder::spawn`][`Builder::spawn`]
+    ///   and [`thread::spawn`][`spawn`] enforce this property statically)
     ///
     /// # Examples
     ///
@@ -301,10 +301,17 @@ impl Builder {
         F: Send,
         T: Send,
     {
-        let Builder { name, stack_size, priority, core } = self;
+        let Builder {
+            name,
+            stack_size,
+            priority,
+            core,
+        } = self;
 
         let stack_size = stack_size.unwrap_or(0x8000);
-        let name = name.map(|s| ThreadName::from_string(&s)).unwrap_or(ThreadName::new());
+        let name = name
+            .map(|s| ThreadName::from_string(&s))
+            .unwrap_or(ThreadName::new());
         let priority = priority.unwrap_or_default();
         let core = core.unwrap_or_default();
 
@@ -344,9 +351,7 @@ impl Builder {
         let f = MaybeDangling::new(f);
         let main = move || {
             let f = f.into_inner();
-            let try_result = unwinding::panic::catch_unwind(core::panic::AssertUnwindSafe(|| {
-                f()
-            }));
+            let try_result = unwinding::panic::catch_unwind(core::panic::AssertUnwindSafe(f));
             // SAFETY: `their_packet` as been built just above and moved by the
             // closure (it is an Arc<...>) and `my_packet` will be stored in the
             // same `JoinInner` as this closure meaning the mutation will be
@@ -367,7 +372,8 @@ impl Builder {
         let main = Box::new(main);
         // SAFETY: dynamic size and alignment of the Box remain the same. See below for why the
         // lifetime change is justified.
-        let main = unsafe {Box::from_raw(Box::into_raw(main) as *mut (dyn FnOnce() + Send + 'static))};
+        let main =
+            unsafe { Box::from_raw(Box::into_raw(main) as *mut (dyn FnOnce() + Send + 'static)) };
 
         let mut res = JoinInner {
             // SAFETY:
@@ -389,15 +395,15 @@ impl Builder {
         };
 
         let thread_handle = res.native.init_pinned(stack_size, main, priority, core)?;
-        
+
         // we are still the only running reader/writer since the thread hasn't been started
         // so we can just reach inside the pin as long as we don't cause a move
-        unsafe {res.thread.inner.set_handle(thread_handle);}
-
+        unsafe {
+            res.thread.inner.set_handle(thread_handle);
+        }
 
         res.native.start()?;
         Ok(res)
-
     }
 }
 
@@ -544,7 +550,7 @@ unsafe extern "C" fn thread_wrapper(raw_ptr: *mut u8) -> ! {
 
 struct ThreadArgs {
     runner: Box<dyn FnOnce() + Send + 'static>,
-    thread: Pin<Arc<imp::Thread>>
+    thread: Pin<Arc<imp::Thread>>,
 }
 
 #[derive(Clone)]
@@ -568,8 +574,10 @@ pub struct Thread {
 impl Thread {
     pub fn new_remote<S: AsRef<str>>(name: S, handle: svc::Handle) -> Thread {
         Self {
-            inner:
-            Pin::new(Arc::new(Inner { name: name.as_ref().into(), thread_handle: UnsafeCell::new(handle) }))
+            inner: Pin::new(Arc::new(Inner {
+                name: name.as_ref().into(),
+                thread_handle: UnsafeCell::new(handle),
+            })),
         }
     }
 
@@ -583,7 +591,7 @@ impl Thread {
         // changes.
         let inner = unsafe {
             let mut arc = Arc::<Inner>::new_uninit();
-            let ptr = Arc::get_mut_unchecked(&mut arc).as_mut_ptr();
+            let ptr = Arc::get_mut(&mut arc).unwrap_unchecked().as_mut_ptr();
             /*addr_of_mut!((*ptr).real_thread.name).write(name);
             addr_of_mut!((*ptr).real_thread.name).write(name);
             addr_of_mut!((*ptr).real_thread.name_ptr).write(addr_of!((*ptr).real_thread.name) as *const _);
@@ -613,7 +621,7 @@ impl Thread {
     /// ```
     #[must_use]
     pub fn id(&self) -> ThreadId {
-        svc::get_thread_id(unsafe {*self.inner.thread_handle.get()}).unwrap()
+        svc::get_thread_id(unsafe { *self.inner.thread_handle.get() }).unwrap()
     }
 
     /// Gets the thread's name.
@@ -670,18 +678,16 @@ impl fmt::Debug for Thread {
 
 struct Inner {
     name: ThreadName,
-    thread_handle: 
-    UnsafeCell<svc::Handle>, //imp::Thread
+    thread_handle: UnsafeCell<svc::Handle>, //imp::Thread
 }
 
 unsafe impl Sync for Inner {}
 
 impl Inner {
     pub(self) unsafe fn set_handle(&self, handle: svc::Handle) {
-        unsafe {*self.thread_handle.get() = handle};
+        unsafe { *self.thread_handle.get() = handle };
     }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // JoinHandle
@@ -701,8 +707,8 @@ impl Inner {
 ///
 /// 1. re-raise the panic with [`unwinding::panic::begin_panic`]
 /// 2. or in case the thread is intended to be a subsystem boundary
-/// that is supposed to isolate system-level failures,
-/// match on the `Err` variant and handle the panic in an appropriate way
+///    that is supposed to isolate system-level failures,
+///    match on the `Err` variant and handle the panic in an appropriate way
 ///
 /// A thread that completes without panicking is considered to exit successfully.
 ///
@@ -722,7 +728,7 @@ impl Inner {
 /// fn main() {
 ///     fs::initialize_fspsrv_session();
 ///     fs::mount_sd_card("sdmc");
-/// 
+///
 ///     match copy_in_thread() {
 ///         Ok(_) => println!("copy succeeded"),
 ///         Err(e) => unwinding::panic::begin_panic(e),
@@ -751,16 +757,16 @@ struct Packet<'scope, T> {
 // The type `T` should already always be Send (otherwise the thread could not
 // have been created) and the Packet is Sync because all access to the
 // `UnsafeCell` synchronized (by the `join()` boundary), and `ScopeData` is Sync.
-unsafe impl<'scope, T: Send> Sync for Packet<'scope, T> {}
+unsafe impl<T: Send> Sync for Packet<'_, T> {}
 
-impl<'scope, T> Drop for Packet<'scope, T> {
+impl<T> Drop for Packet<'_, T> {
     fn drop(&mut self) {
         // If this packet was for a thread that ran in a scope, the thread
         // panicked, and nobody consumed the panic payload, we make sure
         // the scope function will panic.
         let unhandled_panic = matches!(self.result.get_mut(), Some(Err(_)));
-        
-        // we don't support panic unwinding       
+
+        // we don't support panic unwinding
         if unhandled_panic {
             abort::abort(AbortLevel::Panic(), crate::rc::ResultPanicked::make());
         }
@@ -783,10 +789,15 @@ struct JoinInner<'scope, T> {
     packet: Arc<Packet<'scope, T>>,
 }
 
-impl<'scope, T> JoinInner<'scope, T> {
+impl<T> JoinInner<'_, T> {
     fn join(mut self) -> Result<T> {
         let _ = self.native.join();
-        Arc::get_mut(&mut self.packet).unwrap().result.get_mut().take().unwrap()
+        Arc::get_mut(&mut self.packet)
+            .unwrap()
+            .result
+            .get_mut()
+            .take()
+            .unwrap()
     }
     fn wait_exit(&self, timeout: i64) -> crate::result::Result<()> {
         self.native.join_timeout(timeout)
@@ -956,7 +967,6 @@ impl<T> JoinHandle<T> {
         self.0.wait_exit(timeout)
     }
 
-
     /// Checks if the associated thread has finished running its main function.
     ///
     /// `is_finished` supports implementing a non-blocking join operation, by checking
@@ -1000,8 +1010,6 @@ pub fn available_parallelism() -> usize {
     4usize
 }
 
-
-
 /////////////////////////////////
 /// Represents a [`Thread`]'s name, a 32-byte `ArrayString`
 pub type ThreadName = util::ArrayString<0x20>;
@@ -1015,7 +1023,7 @@ pub enum ThreadState {
     Initialized = 1,
     DestroyedBeforeStarted = 2,
     Started = 3,
-    Terminated = 4
+    Terminated = 4,
 }
 
 /// Represents what core the (thread)[`Thread`] should start on
@@ -1027,7 +1035,7 @@ pub enum ThreadStartCore {
     Core0 = 0,
     Core1 = 1,
     Core2 = 2,
-    Core3 = 3
+    Core3 = 3,
 }
 
 /// Represents the priority of the (thread)[`Thread`] that we are spawning
@@ -1040,7 +1048,7 @@ pub enum ThreadPriority {
     /// Use the default priority for the main thread (0x2C)
     Default,
     /// Set and explicit thread priority value (0..=0x3F)
-    Set(i32)
+    Set(i32),
 }
 
 impl ThreadPriority {
@@ -1053,11 +1061,9 @@ impl ThreadPriority {
         match self {
             Self::Inherit => {
                 svc::get_thread_priority(svc::CURRENT_THREAD_PSEUDO_HANDLE).unwrap_or(0x2C)
-            },
-            Self::Default => 0x2C,
-            Self::Set(v) => {
-                v
             }
+            Self::Default => 0x2C,
+            Self::Set(v) => v,
         }
     }
 }
@@ -1065,7 +1071,7 @@ impl ThreadPriority {
 impl TryFrom<i32> for ThreadPriority {
     type Error = ResultCode;
     fn try_from(value: i32) -> crate::result::Result<Self> {
-        if ( 0i32 ..= 0x3F ).contains(&value) {
+        if (0i32..=0x3F).contains(&value) {
             Ok(Self::Set(value))
         } else {
             Err(rc::ResultInvalidPriority::make())
@@ -1074,12 +1080,19 @@ impl TryFrom<i32> for ThreadPriority {
 }
 
 pub mod imp {
-    use core::{alloc::{Allocator, Layout}, pin::Pin, ptr::{addr_of, null, null_mut, NonNull}};
+    use core::{
+        alloc::{Allocator, Layout},
+        pin::Pin,
+        ptr::{addr_of, null, null_mut, NonNull},
+    };
 
     use alloc::{alloc::Global, boxed::Box, sync::Arc};
 
+    use super::{
+        thread_wrapper, ThreadArgs, ThreadId, ThreadName, ThreadPriority, ThreadStartCore,
+        ThreadState,
+    };
     use crate::{mem::alloc::PAGE_ALIGNMENT, svc, util::ArrayString, wait::wait_handles};
-    use super::{thread_wrapper, ThreadArgs, ThreadId, ThreadName, ThreadPriority, ThreadStartCore, ThreadState};
 
     pub type Thread = StratosphereThreadType;
 
@@ -1088,13 +1101,13 @@ pub mod imp {
     #[repr(C)]
     pub struct StratosphereThreadType {
         /// An instrusive linked list header for the global thread list
-        __intrusive_thread_list_node: [usize;2],
+        __intrusive_thread_list_node: [usize; 2],
         // doubly linked list of waiters on the thread
-        __thread_wait_list: [usize;2],
+        __thread_wait_list: [usize; 2],
         // reserved field
         _reserved: [usize; 4],
         // current state of the thread
-        pub (crate) state: ThreadState,
+        pub(crate) state: ThreadState,
         // flag whether the stack memory has been remapped
         stack_is_aliased: bool,
         // auto_registerd??
@@ -1128,7 +1141,7 @@ pub mod imp {
         // current_fiber - not used as we don't support lightweight threads
         _current_fiber: *mut (),
         // arguments to the function we're running - pointer must have a longer lifetime than the Thread object
-        pub (crate) arguments: *const u8,
+        pub(crate) arguments: *const u8,
         // storage of an internal critical section (u32 in libatmosphere's impl for Horizon)
         _internal_critical_section_storage: u32,
         // storage of an internal conditional variable for signaling between threads? (u32 in libatmosphere's impl for Horizon)
@@ -1139,21 +1152,20 @@ pub mod imp {
         // here because that's what stratosphere does.
         pub(crate) __nx_thread_pointer: *const LibNxThread,
         // libnx thread type, we'll store this to be compatible with libnx/stratosphere threads
-        pub(crate) __nx_thread: LibNxThread
+        pub(crate) __nx_thread: LibNxThread,
     }
 
     unsafe impl Send for StratosphereThreadType {}
     unsafe impl Sync for StratosphereThreadType {}
 
     impl StratosphereThreadType {
-
-        pub (crate) const MAGIC: u16 = 0xF5A5;
+        pub(crate) const MAGIC: u16 = 0xF5A5;
 
         pub(crate) fn join(&self) -> crate::result::Result<()> {
             wait_handles(&[self.__nx_thread.handle], -1).map(|_| ())
         }
 
-        pub(crate) fn join_timeout(&self, timeout: i64) -> crate::result::Result<()>{
+        pub(crate) fn join_timeout(&self, timeout: i64) -> crate::result::Result<()> {
             wait_handles(&[self.__nx_thread.handle], timeout).map(|_| ())
         }
 
@@ -1172,12 +1184,11 @@ pub mod imp {
             svc::get_thread_id(self.handle())
         }
 
-        pub (crate) const fn empty() -> Self {
-            
+        pub(crate) const fn empty() -> Self {
             Self {
-                __intrusive_thread_list_node: [0,0],
-                __thread_wait_list: [0,0],
-                _reserved: [0;4],
+                __intrusive_thread_list_node: [0, 0],
+                __thread_wait_list: [0, 0],
+                _reserved: [0; 4],
                 state: ThreadState::NotInitialized,
                 stack_is_aliased: false,
                 _auto_registered: false,
@@ -1199,27 +1210,58 @@ pub mod imp {
                 _internal_condvar_storage: 0,
                 _nn_sdk_internal_tls_type: null_mut(),
                 __nx_thread_pointer: null(),
-                __nx_thread: LibNxThread { handle: svc::INVALID_HANDLE, _owns_stack_mem:true , _stack_mem: null_mut(), _stack_mirror: null_mut(), _stack_sz: 0, _tls_array: null_mut(), _next: null_mut(), _prev_next: null_mut() }
+                __nx_thread: LibNxThread {
+                    handle: svc::INVALID_HANDLE,
+                    _owns_stack_mem: true,
+                    _stack_mem: null_mut(),
+                    _stack_mirror: null_mut(),
+                    _stack_sz: 0,
+                    _tls_array: null_mut(),
+                    _next: null_mut(),
+                    _prev_next: null_mut(),
+                },
             }
         }
 
-        pub (crate) unsafe fn init_pinned(self: &mut Pin<Arc<Self>>, stack_size: usize, main: Box<dyn FnOnce() + Send + 'static>, priority: ThreadPriority, core: ThreadStartCore) -> crate::result::Result<svc::Handle> {
-
+        pub(crate) unsafe fn init_pinned(
+            self: &mut Pin<Arc<Self>>,
+            stack_size: usize,
+            main: Box<dyn FnOnce() + Send + 'static>,
+            priority: ThreadPriority,
+            core: ThreadStartCore,
+        ) -> crate::result::Result<svc::Handle> {
             // stack sized up to be a mulitple of a page
-            let aligned_stack_size = crate::util::align_up(stack_size, PAGE_ALIGNMENT);
+            let aligned_stack_size = align_up!(stack_size, PAGE_ALIGNMENT);
             // layout for stack allocation, we know it's safe because the page alignment constant is a valid alignment
-            let stack_layout = unsafe {Layout::from_size_align_unchecked(aligned_stack_size, PAGE_ALIGNMENT)};
+            let stack_layout =
+                unsafe { Layout::from_size_align_unchecked(aligned_stack_size, PAGE_ALIGNMENT) };
             // now we can request memory for the stack
-            let stack: *mut u8 = Global.allocate(stack_layout).unwrap().as_mut_ptr().cast();
+            let stack: *mut u8 = Global.allocate(stack_layout).unwrap().as_ptr().cast();
             // this is technically out of bounds, but the stack top should point to the byte *AFTER* the end of the stack not the last byte of the stack.
-            let stack_top = unsafe {stack.add(aligned_stack_size)};
+            let stack_top = unsafe { stack.add(aligned_stack_size) };
 
-            let entry_args = Box::new(ThreadArgs {runner: main, thread: self.clone()});
+            let entry_args = Box::new(ThreadArgs {
+                runner: main,
+                thread: self.clone(),
+            });
             let entry_args_raw = Box::into_raw(entry_args) as *mut u8;
-            let handle = match unsafe {svc::create_thread(thread_wrapper, entry_args_raw, stack_top, priority.to_raw(), core as _)} {
+            let handle = match unsafe {
+                svc::create_thread(
+                    thread_wrapper,
+                    entry_args_raw,
+                    stack_top,
+                    priority.to_raw(),
+                    core as _,
+                )
+            } {
                 Ok(handle) => handle,
                 Err(e) => {
-                    unsafe {Global.deallocate(NonNull::new_unchecked(stack), stack_layout)};
+                    unsafe {
+                        let _reclaimed_thread_args =
+                            Box::from_raw(entry_args_raw as *mut ThreadArgs);
+
+                        Global.deallocate(NonNull::new_unchecked(stack), stack_layout);
+                    }
                     return Err(e);
                 }
             };
@@ -1228,6 +1270,8 @@ pub mod imp {
                 // SAFETY: we don't cause any moves here, so the pin invariant is met.
                 // We also have to use `__pointer` here as we can only use deref_mut for types that are `UnPin`
                 // which this isn't (internal self-references). There is no guarantee this won't break between compiler versions unfortunately.
+                // This is breaking mutation-xor-sharing technically, but we know that the other handle to the thread data can't access yet as the new thread hasn't started.
+                // Additionally, we need to do `get_mut_unchecked` here as `get_mut().unwrap{_unchecked}()` will always fail (since the strong and weak counts will always be 2).
                 let arc = Arc::get_mut_unchecked(&mut self.__pointer);
 
                 // we can only do this when the remote thread has not yet started though
@@ -1238,13 +1282,13 @@ pub mod imp {
                 arc.arguments = entry_args_raw;
                 arc.name_ptr = addr_of!(arc.name).cast();
                 arc.__nx_thread_pointer = addr_of!(arc.__nx_thread);
-                arc.state = ThreadState::Initialized;            
+                arc.state = ThreadState::Initialized;
             }
 
             Ok(handle)
         }
 
-        pub(crate) fn start(self:&mut Pin<Arc<Self>>) -> crate::result::Result<()> {
+        pub(crate) fn start(self: &mut Pin<Arc<Self>>) -> crate::result::Result<()> {
             svc::start_thread(self.handle())?;
             Ok(())
         }
@@ -1259,13 +1303,17 @@ pub mod imp {
             if !self.stack_top.is_null() {
                 // local thread
                 unsafe {
-                    Global.deallocate(NonNull::new_unchecked(self.stack_top.sub(self.stack_size)), Layout::from_size_align_unchecked(self.stack_size, PAGE_ALIGNMENT));
+                    Global.deallocate(
+                        NonNull::new_unchecked(self.stack_top.sub(self.stack_size)),
+                        Layout::from_size_align_unchecked(self.stack_size, PAGE_ALIGNMENT),
+                    );
                 }
-            if !self.arguments.is_null() // thread arguments were set
-                && (self.state == ThreadState::DestroyedBeforeStarted || self.state == ThreadState::Initialized) // thread wasn't started so the runner wouldn't have claimed the pointer
-                    {
+                if !self.arguments.is_null() // thread arguments were set
+                && (self.state == ThreadState::DestroyedBeforeStarted || self.state == ThreadState::Initialized)
+                // thread wasn't started so the runner wouldn't have claimed the pointer
+                {
                     // drop the allocated, but unclaimed, pointer to the thread start arguments
-                    unsafe {drop(Box::from_raw(self.arguments as *mut u8 as *mut ThreadArgs))};
+                    unsafe { drop(Box::from_raw(self.arguments as *mut u8 as *mut ThreadArgs)) };
                 }
             }
         }
@@ -1288,7 +1336,7 @@ pub mod imp {
         // pointer to next thread in doubly linked list of current threads
         _next: *mut Self,
         // pointer to previous thread in doubly linked list of current threads
-        _prev_next: *mut *mut Self
+        _prev_next: *mut *mut Self,
     }
 
     #[derive(Clone, Debug)]
@@ -1301,15 +1349,13 @@ pub mod imp {
         // thread pointer
         pub thread_ref: *mut StratosphereThreadType,
         pub _reent_ptr: *mut (),
-        pub _tls_tp: *mut ()
+        pub _tls_tp: *mut (),
     }
     const_assert!(core::mem::size_of::<LibNxThreadVars>() == 0x20);
     impl LibNxThreadVars {
         pub const MAGIC: u32 = u32::from_le_bytes(*b"!TV$");
     }
 }
-
-
 
 /// Represents the console's Thread Local Region layout
 #[derive(Clone, Debug)]
@@ -1322,7 +1368,7 @@ pub struct ThreadLocalRegion {
     /// The interrupt flag
     pub _interrupt_flag: u16,
     pub _cache_maintenance_flag: u8, // HOS v14.0.0.+
-    pub _reserved_1: [u8;0x3],
+    pub _reserved_1: [u8; 0x3],
     // These we are ignoring since we're going to use the libnx threadVars anyway and just not use anything in this region
     /*pub reserved_1: [u8; 0x4],
     pub reserved_2: [u8; 0x78],
@@ -1335,8 +1381,8 @@ pub struct ThreadLocalRegion {
     pub thread_ptr: *mut u8,
     /// The region we (and Nintendo) use to store the current [`Thread`] reference
     pub thread_ref: *mut imp::StratosphereThreadType,*/
-    pub _ignored: [u8; /*end offset */ (0x200 - core::mem::size_of::<LibNxThreadVars>()) - /*start offset*/ 0x108],
-    pub nx_thread_vars: LibNxThreadVars
+    pub _ignored: [u8; (0x200 - core::mem::size_of::<LibNxThreadVars>()) - /*start offset*/ 0x108],
+    pub nx_thread_vars: LibNxThreadVars,
 }
 const_assert!(core::mem::size_of::<ThreadLocalRegion>() == 0x200);
 
@@ -1358,11 +1404,11 @@ pub(crate) unsafe fn current() -> *mut imp::Thread {
 }
 
 /// Sets the current [`Thread`] reference on the current [`ThreadLocalRegion`]
-/// 
+///
 /// This is internally used when launching a [`Thread`], and probably shouldn't be used manually
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `thread_ref`: The [`Thread`] address to set
 /// # Safety
 ///
@@ -1381,20 +1427,28 @@ pub unsafe fn set_current_thread(thread_ref: *mut imp::Thread) {
 
 pub fn set_current_thread_name(s: impl AsRef<str>) {
     // SAFETY - The TLR is set up in rrt0, or in the thread startup code - we can only reach hear when the TLR is initialized
-    unsafe {(*(*get_thread_local_region()).nx_thread_vars.thread_ref).set_name(s);}
+    unsafe {
+        (*(*get_thread_local_region()).nx_thread_vars.thread_ref).set_name(s);
+    }
 }
 
 pub fn get_current_thread_name() -> String {
     // SAFETY - The TLR is set up in rrt0, or in the thread startup code - we can only reach hear when the TLR is initialized
-    unsafe {(*(*get_thread_local_region()).nx_thread_vars.thread_ref).name.get_str().unwrap_or("default").to_string()}
+    unsafe {
+        (*(*get_thread_local_region()).nx_thread_vars.thread_ref)
+            .name
+            .get_str()
+            .unwrap_or("default")
+            .to_string()
+    }
 }
 
 /// Sleeps for the given timeout
-/// 
+///
 /// Essentially a wrapper for [`svc::sleep_thread`]
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `timeout`: Sleep timeout in nanoseconds, where `0` can be used for yielding without core migration, `-1` for yielding with core migration and `-2` for yielding to any other thread
 #[inline]
 pub fn sleep(timeout: i64) -> crate::result::Result<()> {
@@ -1403,13 +1457,13 @@ pub fn sleep(timeout: i64) -> crate::result::Result<()> {
 
 /// Represents the thread yielding types for cooperative multitasking
 #[repr(i64)]
-pub enum YieldType{ 
+pub enum YieldType {
     /// Yields to another thread on the same core
     WithoutCoreMigration = 0,
     /// Yields to another thread (possibly on a different core)
     WithCoreMigration = -1,
     /// Yields and performs forced load-balancing
-    ToAnyThread  = -2
+    ToAnyThread = -2,
 }
 
 #[inline]
@@ -1418,7 +1472,7 @@ pub fn r#yield(yield_type: YieldType) -> crate::result::Result<()> {
 }
 
 /// Exits the current thread
-/// 
+///
 /// Essentially a wrapper for [`svc::exit_thread`]
 #[inline]
 pub fn exit() -> ! {

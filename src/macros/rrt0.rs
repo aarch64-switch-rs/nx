@@ -1,15 +1,15 @@
 #![macro_use]
 
 /// Defines the (runtime) module name of the current project
-/// 
+///
 /// Must only be called once in a project
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `name`: The module name
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```
 /// rrt0_define_module_name!("custom-mod-name");
 /// ```
@@ -25,11 +25,11 @@ macro_rules! rrt0_define_module_name {
 }
 
 /// Defines the (runtime) module name of the current project as the package name
-/// 
+///
 /// Must only be called once in a project
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```
 /// rrt0_define_default_module_name!();
 /// ```

@@ -1,6 +1,6 @@
-use crate::result::*;
 use crate::ipc;
 use crate::ipc::sf;
+use crate::result::*;
 use crate::service;
 use crate::version;
 
@@ -12,7 +12,7 @@ impl service::INamedPort for UserInterface {
     }
 
     fn post_initialize(&mut self) -> Result<()> {
-        if version::get_version() >= version::Version::new(12,0,0) {
+        if version::get_version() >= version::Version::new(12, 0, 0) {
             self.session.object_info.protocol = ipc::CommandProtocol::Tipc;
         }
 

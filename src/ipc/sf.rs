@@ -4,18 +4,47 @@ use alloc::{string::String, vec::Vec};
 
 pub use nx_derive::{Request, Response};
 
-pub struct Buffer<const A: BufferAttribute, T> {
+pub struct Buffer<
+    const IN: bool,
+    const OUT: bool,
+    const MAP_ALIAS: bool,
+    const POINTER: bool,
+    const FIXED_SIZE: bool,
+    const AUTO_SELECT: bool,
+    const ALLOW_NON_SECURE: bool,
+    const ALLOW_NON_DEVICE: bool,
+    T,
+> {
     buf: *mut T,
     count: usize,
 }
 
-impl<const A: BufferAttribute, T> Buffer<A, T> {
+impl<
+        const IN: bool,
+        const OUT: bool,
+        const MAP_ALIAS: bool,
+        const POINTER: bool,
+        const FIXED_SIZE: bool,
+        const AUTO_SELECT: bool,
+        const ALLOW_NON_SECURE: bool,
+        const ALLOW_NON_DEVICE: bool,
+        T,
+    >
+    Buffer<
+        IN,
+        OUT,
+        MAP_ALIAS,
+        POINTER,
+        FIXED_SIZE,
+        AUTO_SELECT,
+        ALLOW_NON_SECURE,
+        ALLOW_NON_DEVICE,
+        T,
+    >
+{
     pub const fn get_expected_size() -> usize {
         // Calculate align-padded size of each element in the buffer (in case a type has a larger alignment than its size)
-        util::const_usize_max(
-            mem::size_of::<T>(),
-            mem::align_of::<T>()
-        )
+        util::const_usize_max(mem::size_of::<T>(), mem::align_of::<T>())
     }
 
     pub const fn empty() -> Self {
@@ -77,7 +106,29 @@ impl<const A: BufferAttribute, T> Buffer<A, T> {
         Self::from_mut_ptr(arr.as_mut_ptr(), arr.len())
     }
 
-    pub const fn from_other<const A2: BufferAttribute, U>(other: &Buffer<A2, U>) -> Self {
+    pub const unsafe fn from_other<
+        const IN2: bool,
+        const OUT2: bool,
+        const MAP_ALIAS2: bool,
+        const POINTER2: bool,
+        const FIXED_SIZE2: bool,
+        const AUTO_SELECT2: bool,
+        const ALLOW_NON_SECURE2: bool,
+        const ALLOW_NON_DEVICE2: bool,
+        U,
+    >(
+        other: &Buffer<
+            IN2,
+            OUT2,
+            MAP_ALIAS2,
+            POINTER2,
+            FIXED_SIZE2,
+            AUTO_SELECT2,
+            ALLOW_NON_SECURE2,
+            ALLOW_NON_DEVICE2,
+            U,
+        >,
+    ) -> Self {
         Self::new(other.get_address(), other.get_size())
     }
 
@@ -106,36 +157,57 @@ impl<const A: BufferAttribute, T> Buffer<A, T> {
             *self.buf = t;
         }
     }
-    
+
     pub fn get_maybe_unaligned(&self) -> Vec<T> {
         assert!(!self.buf.is_null());
         let mut out = Vec::with_capacity(self.count);
         for index in 0..self.count {
             // SAFETY: we have already asserted on non-null `self.buf`
-            out.push(unsafe {core::ptr::read_unaligned(self.buf.add(index))});
+            out.push(unsafe { core::ptr::read_unaligned(self.buf.add(index)) });
         }
 
         out
     }
 
     /// # Safety
-///
-/// Unfortunately this doesn't seem to have an alignment guarantee as the clients may ignore it (e.g. TOTK). You should use unaligned reads from the raw pointer or manually check the alignment first
+    ///
+    /// Unfortunately this doesn't seem to have an alignment guarantee as the clients may ignore it (e.g. TOTK). You should use unaligned reads from the raw pointer or manually check the alignment first
     #[deprecated]
     pub unsafe fn get_slice(&self) -> &[T] {
         unsafe { core::slice::from_raw_parts(self.buf as *const T, self.count) }
     }
 
     /// # Safety
-///
-/// Unfortunately this doesn't seem to have an alignment guarantee as the clients may ignore it (e.g. TOTK). You should use unaligned reads from the raw pointer or manually check the alignment first
+    ///
+    /// Unfortunately this doesn't seem to have an alignment guarantee as the clients may ignore it (e.g. TOTK). You should use unaligned reads from the raw pointer or manually check the alignment first
     #[deprecated]
     pub unsafe fn get_mut_slice(&mut self) -> &mut [T] {
         unsafe { core::slice::from_raw_parts_mut(self.buf, self.count) }
     }
 }
 
-impl<const A: BufferAttribute> Buffer<A, u8> {
+impl<
+        const IN: bool,
+        const OUT: bool,
+        const MAP_ALIAS: bool,
+        const POINTER: bool,
+        const FIXED_SIZE: bool,
+        const AUTO_SELECT: bool,
+        const ALLOW_NON_SECURE: bool,
+        const ALLOW_NON_DEVICE: bool,
+    >
+    Buffer<
+        IN,
+        OUT,
+        MAP_ALIAS,
+        POINTER,
+        FIXED_SIZE,
+        AUTO_SELECT,
+        ALLOW_NON_SECURE,
+        ALLOW_NON_DEVICE,
+        u8,
+    >
+{
     pub fn get_string(&self) -> String {
         unsafe {
             let mut string = String::with_capacity(self.count);
@@ -163,81 +235,32 @@ impl<const A: BufferAttribute> Buffer<A, u8> {
     }
 }
 
-pub type InMapAliasBuffer<T> = Buffer<
-    {
-        bit_group! { BufferAttribute [In, MapAlias] }
-    },
-    T,
->;
-pub type OutMapAliasBuffer<T> = Buffer<
-    {
-        bit_group! { BufferAttribute [Out, MapAlias] }
-    },
-    T,
->;
-pub type InNonSecureMapAliasBuffer<T> = Buffer<
-    {
-        bit_group! { BufferAttribute [In, MapAlias, MapTransferAllowsNonSecure] }
-    },
-    T,
->;
-pub type OutNonSecureMapAliasBuffer<T> = Buffer<
-    {
-        bit_group! { BufferAttribute [Out, MapAlias, MapTransferAllowsNonSecure] }
-    },
-    T,
->;
-pub type InAutoSelectBuffer<T> = Buffer<
-    {
-        bit_group! { BufferAttribute [In, AutoSelect] }
-    },
-    T,
->;
-pub type OutAutoSelectBuffer<T> = Buffer<
-    {
-        bit_group! { BufferAttribute [Out, AutoSelect] }
-    },
-    T,
->;
-pub type InPointerBuffer<T> = Buffer<
-    {
-        bit_group! { BufferAttribute [In, Pointer] }
-    },
-    T,
->;
-pub type OutPointerBuffer<T> = Buffer<
-    {
-        bit_group! { BufferAttribute [Out, Pointer] }
-    },
-    T,
->;
-pub type InFixedPointerBuffer<T> = Buffer<
-    {
-        bit_group! { BufferAttribute [In, Pointer, FixedSize] }
-    },
-    T,
->;
-pub type OutFixedPointerBuffer<T> = Buffer<
-    {
-        bit_group! { BufferAttribute [Out, Pointer, FixedSize] }
-    },
-    T,
->;
+pub type InMapAliasBuffer<T> = Buffer<true, false, true, false, false, false, false, false, T>;
+pub type OutMapAliasBuffer<T> = Buffer<false, true, true, false, false, false, false, false, T>;
+pub type InNonSecureMapAliasBuffer<T> =
+    Buffer<true, false, true, false, false, false, true, false, T>;
+pub type OutNonSecureMapAliasBuffer<T> =
+    Buffer<false, true, true, false, false, false, true, false, T>;
+pub type InAutoSelectBuffer<T> = Buffer<true, false, false, false, false, true, false, false, T>;
+pub type OutAutoSelectBuffer<T> = Buffer<false, true, false, false, false, true, false, false, T>;
+pub type InPointerBuffer<T> = Buffer<true, false, false, true, false, false, false, false, T>;
+pub type OutPointerBuffer<T> = Buffer<false, true, false, true, false, false, false, false, T>;
+pub type InFixedPointerBuffer<T> = Buffer<true, false, false, true, true, false, false, false, T>;
+pub type OutFixedPointerBuffer<T> = Buffer<false, true, false, true, true, false, false, false, T>;
 
 #[derive(Clone)]
-pub struct Handle<const M: HandleMode> {
+pub struct Handle<const MOVE: bool> {
     pub handle: svc::Handle,
 }
 
-impl<const M: HandleMode> Handle<M> {
+impl<const MOVE: bool> Handle<MOVE> {
     pub const fn from(handle: svc::Handle) -> Self {
         Self { handle }
     }
 }
 
-pub type CopyHandle = Handle<{ HandleMode::Copy }>;
-pub type MoveHandle = Handle<{ HandleMode::Move }>;
-
+pub type CopyHandle = Handle<false>;
+pub type MoveHandle = Handle<true>;
 
 #[derive(Clone, Default)]
 pub struct ProcessId {
@@ -258,14 +281,14 @@ impl ProcessId {
 /// When they are sent over an IPC interface, they also trigger the sending of a PID descriptor in the HIPC request,
 /// so there is an additional field for the PID. This field is filled in by the kernel during a request, and is read
 /// out of the headers in the same way as the `ProcessId`[`ProcessId`] above.
-/// 
+///
 /// This allows the crate to just send the `AppletResourceUserId` object when the IPC interface is expecting this value
 /// and the `send_pid` flag. This also allows us to have a `ProcessId` type that creates it's own pid placeholder in CMIF
 /// IPC requests.
 #[derive(Clone, Default)]
 pub struct AppletResourceUserId {
     pub process_id: u64,
-    pub aruid: u64
+    pub aruid: u64,
 }
 
 impl AppletResourceUserId {
@@ -275,11 +298,17 @@ impl AppletResourceUserId {
 
     #[cfg(feature = "services")]
     pub fn from_global() -> Self {
-        Self {process_id: 0, aruid: nx::service::applet::GLOBAL_ARUID.load(core::sync::atomic::Ordering::SeqCst)}
+        Self {
+            process_id: 0,
+            aruid: nx::service::applet::GLOBAL_ARUID.load(core::sync::atomic::Ordering::SeqCst),
+        }
     }
 
     pub const fn new(aruid: u64) -> Self {
-        Self { process_id: 0, aruid }
+        Self {
+            process_id: 0,
+            aruid,
+        }
     }
 }
 
@@ -335,7 +364,11 @@ impl<E: Copy + Clone, T: Copy + Clone> server::ResponseCommandParameter
         Ok(())
     }
 
-    fn after_response_write(raw: Self, _carry_state: (), ctx: &mut server::ServerContext) -> Result<()> {
+    fn after_response_write(
+        raw: Self,
+        _carry_state: (),
+        ctx: &mut server::ServerContext,
+    ) -> Result<()> {
         ctx.raw_data_walker.advance_set(raw);
         Ok(())
     }

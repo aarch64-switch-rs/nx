@@ -5,7 +5,10 @@ macro_rules! diag_assert {
     ($desired_abort_level:expr, $cond_expr:expr) => {{
         let cond = $cond_expr;
         if !cond {
-            $crate::diag::abort::abort($desired_abort_level, $crate::diag::rc::ResultAssertionFailed::make());
+            $crate::diag::abort::abort(
+                $desired_abort_level,
+                $crate::diag::rc::ResultAssertionFailed::make(),
+            );
         }
     }};
 }

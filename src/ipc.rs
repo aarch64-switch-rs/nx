@@ -2,7 +2,6 @@ use crate::result::*;
 use crate::svc;
 use crate::thread;
 use arrayvec::ArrayVec;
-use core::marker::ConstParamTy;
 use core::mem;
 use core::ptr;
 
@@ -92,13 +91,6 @@ impl ObjectInfo {
         }
         ipc_client_send_control_command!([*self; cmif::ControlRequestId::CloneCurrentObject] () => (cloned_handle: sf::MoveHandle))
     }
-}
-
-#[derive(Copy, Clone, PartialEq, Eq, Debug, ConstParamTy)]
-#[repr(u8)]
-pub enum HandleMode {
-    Copy,
-    Move,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -380,20 +372,6 @@ impl CommandSpecialHeader {
 
 pub const DATA_PADDING: u32 = 16;
 
-define_bit_enum! {
-    #[derive(ConstParamTy)]
-    BufferAttribute (u8) {
-        In = bit!(0),
-        Out = bit!(1),
-        MapAlias = bit!(2),
-        Pointer = bit!(3),
-        FixedSize = bit!(4),
-        AutoSelect = bit!(5),
-        MapTransferAllowsNonSecure = bit!(6),
-        MapTransferAllowsNonDevice = bit!(7)
-    }
-}
-
 const MAX_COUNT: usize = 8;
 
 #[derive(Clone)]
@@ -446,7 +424,7 @@ impl DataWalker {
             self.cur_offset += core::mem::size_of::<T>() as isize;
 
             let data_ref = self.ptr.offset(offset) as *mut T;
-            
+
             // As above, we need an unaligned read just incase self.ptr doesn't have sufficiently large alignment
             data_ref.write_unaligned(t);
         }
@@ -479,7 +457,7 @@ pub unsafe fn read_array_from_buffer<T: Copy, const LEN: usize>(
 ) -> *mut u8 {
     //debug_assert!(count <= MAX_COUNT, "Taking too may items from a data buffer");
     debug_assert!(
-        buffer.is_aligned_to(align_of::<T>()),
+        is_aligned!(buffer as usize, align_of::<T>()),
         "Data buffer is not properly aligned"
     );
 
@@ -497,7 +475,7 @@ pub unsafe fn write_array_to_buffer<T: Copy, const LEN: usize>(
 ) -> *mut u8 {
     //debug_assert!(count <= MAX_COUNT, "Taking too may items from a data buffer");
     debug_assert!(
-        buffer.is_aligned_to(align_of::<T>()),
+        is_aligned!(buffer as usize, align_of::<T>()),
         "Data buffer is not properly aligned"
     );
     let tmp_buffer = buffer as *mut T;
@@ -555,10 +533,10 @@ impl CommandContent {
         }
     }
 
-    pub fn add_handle<const M: HandleMode>(&mut self, handle: sf::Handle<M>) -> Result<()> {
-        match M {
-            HandleMode::Copy => self.add_copy_handle(handle.handle),
-            HandleMode::Move => self.add_move_handle(handle.handle),
+    pub fn add_handle<const MOVE: bool>(&mut self, handle: sf::Handle<MOVE>) -> Result<()> {
+        match MOVE {
+            false => self.add_copy_handle(handle.handle),
+            true => self.add_move_handle(handle.handle),
         }
     }
 
@@ -598,10 +576,10 @@ impl CommandContent {
         }
     }
 
-    pub fn pop_handle<const M: HandleMode>(&mut self) -> Result<sf::Handle<M>> {
-        let handle = match M {
-            HandleMode::Copy => sf::Handle::from(self.pop_copy_handle()?),
-            HandleMode::Move => sf::Handle::from(self.pop_move_handle()?),
+    pub fn pop_handle<const MOVE: bool>(&mut self) -> Result<sf::Handle<MOVE>> {
+        let handle = match MOVE {
+            false => sf::Handle::from(self.pop_copy_handle()?),
+            true => sf::Handle::from(self.pop_move_handle()?),
         };
         Ok(handle)
     }
@@ -620,10 +598,10 @@ impl CommandContent {
         }
     }
 
-    pub fn push_handle<const M: HandleMode>(&mut self, handle: sf::Handle<M>) -> Result<()> {
-        match M {
-            HandleMode::Copy => self.push_copy_handle(handle.handle),
-            HandleMode::Move => self.push_move_handle(handle.handle),
+    pub fn push_handle<const MOVE: bool>(&mut self, handle: sf::Handle<MOVE>) -> Result<()> {
+        match MOVE {
+            false => self.push_copy_handle(handle.handle),
+            true => self.push_move_handle(handle.handle),
         }
     }
 
@@ -745,16 +723,34 @@ impl CommandContext {
         }
     }
 
-    pub fn add_buffer<const A: BufferAttribute, T>(
+    pub fn add_buffer<
+        const IN: bool,
+        const OUT: bool,
+        const MAP_ALIAS: bool,
+        const POINTER: bool,
+        const FIXED_SIZE: bool,
+        const AUTO_SELECT: bool,
+        const ALLOW_NON_SECURE: bool,
+        const ALLOW_NON_DEVICE: bool,
+        T,
+    >(
         &mut self,
-        buffer: &sf::Buffer<A, T>,
+        buffer: &sf::Buffer<
+            IN,
+            OUT,
+            MAP_ALIAS,
+            POINTER,
+            FIXED_SIZE,
+            AUTO_SELECT,
+            ALLOW_NON_SECURE,
+            ALLOW_NON_DEVICE,
+            T,
+        >,
     ) -> Result<()> {
-        let is_in = A.contains(BufferAttribute::In());
-        let is_out = A.contains(BufferAttribute::Out());
         let buf_addr = buffer.get_address();
         let buf_size = buffer.get_size();
 
-        if A.contains(BufferAttribute::AutoSelect()) {
+        if AUTO_SELECT {
             if self.pointer_buffer.is_null() {
                 self.pointer_buffer = self.object_info.query_pointer_buffer_size()? as *mut u8;
             }
@@ -769,7 +765,7 @@ impl CommandContext {
                 self.in_pointer_buffer_offset += buf_size;
             }
 
-            if is_in {
+            if IN {
                 if buffer_in_static {
                     self.add_send_buffer(BufferDescriptor::new(
                         ptr::null(),
@@ -793,7 +789,7 @@ impl CommandContext {
                         self.send_statics.len() as u32,
                     ))?;
                 }
-            } else if is_out {
+            } else if OUT {
                 if buffer_in_static {
                     self.add_receive_buffer(BufferDescriptor::new(
                         ptr::null(),
@@ -812,34 +808,33 @@ impl CommandContext {
                     self.in_params.add_out_pointer_size(0)?;
                 }
             }
-        } else if A.contains(BufferAttribute::Pointer()) {
-            if is_in {
+        } else if POINTER {
+            if IN {
                 self.add_send_static(SendStaticDescriptor::new(
                     buf_addr,
                     buf_size,
                     self.send_statics.len() as u32,
                 ))?;
-            } else if is_out {
+            } else if OUT {
                 self.add_receive_static(ReceiveStaticDescriptor::new(buf_addr, buf_size))?;
-                if !A.contains(BufferAttribute::FixedSize()) {
+                if !FIXED_SIZE {
                     self.in_params.add_out_pointer_size(buf_size as u16)?;
                 }
             }
-        } else if A.contains(BufferAttribute::MapAlias()) {
+        } else if MAP_ALIAS {
             let mut flags = BufferFlags::Normal;
-            if A.contains(BufferAttribute::MapTransferAllowsNonSecure()) {
+            if ALLOW_NON_SECURE {
                 flags = BufferFlags::NonSecure;
-            } else if A.contains(BufferAttribute::MapTransferAllowsNonDevice()) {
+            } else if ALLOW_NON_DEVICE {
                 flags = BufferFlags::NonDevice;
             }
             let buf_desc = BufferDescriptor::new(buf_addr, buf_size, flags);
-            if is_in && is_out {
-                self.add_exchange_buffer(buf_desc)?;
-            } else if is_in {
-                self.add_send_buffer(buf_desc)?;
-            } else if is_out {
-                self.add_receive_buffer(buf_desc)?;
-            }
+            match (IN, OUT) {
+                (true, true) => self.add_exchange_buffer(buf_desc),
+                (true, false) => self.add_send_buffer(buf_desc),
+                (false, true) => self.add_receive_buffer(buf_desc),
+                (false, false) => Ok(()),
+            }?;
         } else {
             return rc::ResultInvalidBufferAttributes::make_err();
         }
@@ -882,15 +877,34 @@ impl CommandContext {
         }
     }
 
-    pub fn pop_buffer<const A: BufferAttribute, T>(
+    pub fn pop_buffer<
+        const IN: bool,
+        const OUT: bool,
+        const MAP_ALIAS: bool,
+        const POINTER: bool,
+        const FIXED_SIZE: bool,
+        const AUTO_SELECT: bool,
+        const ALLOW_NON_SECURE: bool,
+        const ALLOW_NON_DEVICE: bool,
+        T,
+    >(
         &mut self,
         raw_data_walker: &mut DataWalker,
-    ) -> Result<sf::Buffer<A, T>> {
-        let is_in = A.contains(BufferAttribute::In());
-        let is_out = A.contains(BufferAttribute::Out());
-
-        if A.contains(BufferAttribute::AutoSelect()) {
-            if is_in {
+    ) -> Result<
+        sf::Buffer<
+            IN,
+            OUT,
+            MAP_ALIAS,
+            POINTER,
+            FIXED_SIZE,
+            AUTO_SELECT,
+            ALLOW_NON_SECURE,
+            ALLOW_NON_DEVICE,
+            T,
+        >,
+    > {
+        if AUTO_SELECT {
+            if IN {
                 if let Ok(static_desc) = self.pop_send_static() {
                     if let Ok(send_desc) = self.pop_send_buffer() {
                         if !static_desc.get_address().is_null() && (static_desc.get_size() > 0) {
@@ -907,7 +921,7 @@ impl CommandContext {
                         }
                     }
                 }
-            } else if is_out {
+            } else if OUT {
                 if let Ok(static_desc) = self.pop_receive_static() {
                     if let Ok(recv_desc) = self.pop_receive_buffer() {
                         if !static_desc.get_address().is_null() && (static_desc.get_size() > 0) {
@@ -925,17 +939,27 @@ impl CommandContext {
                     }
                 }
             }
-        } else if A.contains(BufferAttribute::Pointer()) {
-            if is_in {
+        } else if POINTER {
+            if IN {
                 if let Ok(static_desc) = self.pop_send_static() {
                     return Ok(sf::Buffer::new(
                         static_desc.get_address(),
                         static_desc.get_size(),
                     ));
                 }
-            } else if is_out {
-                let buf_size = match A.contains(BufferAttribute::FixedSize()) {
-                    true => sf::Buffer::<A, T>::get_expected_size(),
+            } else if OUT {
+                let buf_size = match FIXED_SIZE {
+                    true => sf::Buffer::<
+                        IN,
+                        OUT,
+                        MAP_ALIAS,
+                        POINTER,
+                        FIXED_SIZE,
+                        AUTO_SELECT,
+                        ALLOW_NON_SECURE,
+                        ALLOW_NON_DEVICE,
+                        T,
+                    >::get_expected_size(),
                     false => {
                         self.ensure_pointer_size_walker(raw_data_walker);
                         self.pointer_size_walker.advance_get::<u16>() as usize
@@ -946,28 +970,33 @@ impl CommandContext {
                 self.out_pointer_buffer_offset += buf_size;
                 return Ok(sf::Buffer::new(buf, buf_size));
             }
-        } else if A.contains(BufferAttribute::MapAlias()) {
-            if is_in && is_out {
-                if let Ok(exch_desc) = self.pop_exchange_buffer() {
-                    return Ok(sf::Buffer::new(
-                        exch_desc.get_address(),
-                        exch_desc.get_size(),
-                    ));
+        } else if MAP_ALIAS {
+            match (IN, OUT) {
+                (true, true) => {
+                    if let Ok(exch_desc) = self.pop_exchange_buffer() {
+                        return Ok(sf::Buffer::new(
+                            exch_desc.get_address(),
+                            exch_desc.get_size(),
+                        ));
+                    }
                 }
-            } else if is_in {
-                if let Ok(send_desc) = self.pop_send_buffer() {
-                    return Ok(sf::Buffer::new(
-                        send_desc.get_address(),
-                        send_desc.get_size(),
-                    ));
+                (true, false) => {
+                    if let Ok(send_desc) = self.pop_send_buffer() {
+                        return Ok(sf::Buffer::new(
+                            send_desc.get_address(),
+                            send_desc.get_size(),
+                        ));
+                    }
                 }
-            } else if is_out {
-                if let Ok(recv_desc) = self.pop_receive_buffer() {
-                    return Ok(sf::Buffer::new(
-                        recv_desc.get_address(),
-                        recv_desc.get_size(),
-                    ));
+                (false, true) => {
+                    if let Ok(recv_desc) = self.pop_receive_buffer() {
+                        return Ok(sf::Buffer::new(
+                            recv_desc.get_address(),
+                            recv_desc.get_size(),
+                        ));
+                    }
                 }
+                (false, false) => {}
             }
         }
 

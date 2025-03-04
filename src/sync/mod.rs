@@ -20,9 +20,9 @@ pub struct ScopedLock<'a> {
 
 impl<'a> ScopedLock<'a> {
     /// Creates a new [`ScopedLock`] for a given [`Mutex`]
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `lock`: The [`Mutex`] to guard
     pub fn new(lock: &'a mut RawMutex) -> Self {
         lock.lock();
@@ -30,21 +30,20 @@ impl<'a> ScopedLock<'a> {
     }
 }
 
-impl<'a> Drop for ScopedLock<'a> {
+impl Drop for ScopedLock<'_> {
     /// Unlocks the [`Mutex`] as the [`ScopedLock`] is destroyed (likely out of scope)
     fn drop(&mut self) {
         // SAFETY: variant upheld that the lock should actually be locked
-        unsafe {self.lock.unlock()};
+        unsafe { self.lock.unlock() };
     }
 }
-
 
 //////////// MUTEX
 
 /// Represents a value whose access is controlled by an inner [`Mutex`]
 pub struct Mutex<T: ?Sized> {
-    pub (self) raw_lock: RawMutex,
-    pub (self) object_cell: UnsafeCell<T>,
+    pub(self) raw_lock: RawMutex,
+    pub(self) object_cell: UnsafeCell<T>,
 }
 
 impl<T> Mutex<T> {
@@ -52,14 +51,17 @@ impl<T> Mutex<T> {
         self.raw_lock.is_locked()
     }
     /// Creates a new [`RwLock`] with a value
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `is_recursive`: Whether the inner [`Mutex`] is recursive
     /// * `t`: The value to store
     #[inline]
     pub const fn new(t: T) -> Self {
-        Self { raw_lock: RawMutex::new(), object_cell: UnsafeCell::new(t) }
+        Self {
+            raw_lock: RawMutex::new(),
+            object_cell: UnsafeCell::new(t),
+        }
     }
 
     /// Sets a value, doing a lock-unlock operation in the process
@@ -72,9 +74,9 @@ impl<T> Mutex<T> {
     }
 }
 
-impl <T: ?Sized> Mutex<T> { 
+impl<T: ?Sized> Mutex<T> {
     /// Locks the Mutex and returns a guarded reference to the inner value
-    pub fn lock(&self) -> MutexGuard<'_, T>{
+    pub fn lock(&self) -> MutexGuard<'_, T> {
         self.raw_lock.lock();
         MutexGuard { lock: self }
     }
@@ -104,40 +106,43 @@ impl<T: Copy> Mutex<T> {
 unsafe impl<T: ?Sized + Sync> Sync for Mutex<T> {}
 unsafe impl<T: ?Sized + Sync> Send for Mutex<T> {}
 
-pub struct MutexGuard<'borrow, T:?Sized> {
-    pub(self) lock: &'borrow Mutex<T>
+pub struct MutexGuard<'borrow, T: ?Sized> {
+    pub(self) lock: &'borrow Mutex<T>,
 }
 
-unsafe impl<'a, T: ?Sized + Sync> Sync for MutexGuard<'a, T> {}
+unsafe impl<T: ?Sized + Sync> Sync for MutexGuard<'_, T> {}
 
 impl<'borrow, T: ?Sized> MutexGuard<'borrow, T> {
     pub fn new(lock: &'borrow Mutex<T>) -> Self {
         lock.raw_lock.lock();
-        Self {
-            lock
-        }
+        Self { lock }
     }
 }
 
-impl<'borrow, T: ?Sized> core::ops::Deref for MutexGuard<'borrow, T> {
+impl<T: ?Sized> core::ops::Deref for MutexGuard<'_, T> {
     type Target = T;
 
     fn deref(&self) -> &T {
-        unsafe { &*self.lock.object_cell.get() }
+        unsafe { self.lock.object_cell.get().as_ref().unwrap_unchecked() }
     }
 }
 
-impl<'borrow, T: ?Sized> core::ops::DerefMut for MutexGuard<'borrow, T> {
-
+impl<T: ?Sized> core::ops::DerefMut for MutexGuard<'_, T> {
     fn deref_mut(&mut self) -> &mut T {
-        let mut_ref = unsafe { self.lock.object_cell.get().as_mut().expect("We know the pointer is valid as we have a valid ref to the parent") };
+        let mut_ref = unsafe {
+            self.lock
+                .object_cell
+                .get()
+                .as_mut()
+                .expect("We know the pointer is valid as we have a valid ref to the parent")
+        };
         mut_ref
     }
 }
 
 impl<T: ?Sized> Drop for MutexGuard<'_, T> {
     fn drop(&mut self) {
-        unsafe {self.lock.raw_lock.unlock()};
+        unsafe { self.lock.raw_lock.unlock() };
     }
 }
 //////////// MUTEX
@@ -145,20 +150,31 @@ impl<T: ?Sized> Drop for MutexGuard<'_, T> {
 //////////// RWLOCK
 
 pub struct RwLock<T: ?Sized> {
-    pub (self) raw_lock: RawRwLock,
-    pub (self) object_cell: UnsafeCell<T>,
+    pub(self) raw_lock: RawRwLock,
+    pub(self) object_cell: UnsafeCell<T>,
+}
+
+impl<T: ?Sized> core::fmt::Debug for RwLock<T>{
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.write_str("RwLock<")?;
+        f.write_str(core::any::type_name::<T>())?;
+        f.write_str(">(...)")
+    }
 }
 
 impl<T> RwLock<T> {
     /// Creates a new [`RwLock`] with a value
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `is_recursive`: Whether the inner [`Mutex`] is recursive
     /// * `t`: The value to store
     #[inline]
     pub const fn new(t: T) -> Self {
-        Self { raw_lock: RawRwLock::new(), object_cell: UnsafeCell::new(t) }
+        Self {
+            raw_lock: RawRwLock::new(),
+            object_cell: UnsafeCell::new(t),
+        }
     }
 
     /// Sets a value, doing a lock-unlock operation in the process
@@ -171,13 +187,13 @@ impl<T> RwLock<T> {
     }
 
     /// Locks the value for writing and returns a guarded reference to the inner value
-    pub fn write(&self) -> WriteGuard<'_, T>{
-        self.raw_lock.read();
+    pub fn write(&self) -> WriteGuard<'_, T> {
+        self.raw_lock.write();
         WriteGuard { lock: self }
     }
 
     /// Locks the value for reading and returns a guarded reference to the inner value
-    pub fn read(&self) -> ReadGuard<'_, T>{
+    pub fn read(&self) -> ReadGuard<'_, T> {
         self.raw_lock.read();
         ReadGuard { lock: self }
     }
@@ -197,23 +213,21 @@ impl<T: Copy> RwLock<T> {
 unsafe impl<T: ?Sized + Send> Sync for RwLock<T> {}
 unsafe impl<T: ?Sized + Send> Send for RwLock<T> {}
 
-pub struct ReadGuard<'borrow, T:?Sized> {
-    pub(self) lock: &'borrow RwLock<T>
+pub struct ReadGuard<'borrow, T: ?Sized> {
+    pub(self) lock: &'borrow RwLock<T>,
 }
 
-pub struct WriteGuard<'borrow, T:?Sized> {
-    pub(self) lock: &'borrow RwLock<T>
+pub struct WriteGuard<'borrow, T: ?Sized> {
+    pub(self) lock: &'borrow RwLock<T>,
 }
 
-unsafe impl<'a, T: ?Sized + Sync> Sync for ReadGuard<'a, T> {}
-unsafe impl<'a, T: ?Sized + Sync> Sync for WriteGuard<'a, T> {}
+unsafe impl<T: ?Sized + Sync> Sync for ReadGuard<'_, T> {}
+unsafe impl<T: ?Sized + Sync> Sync for WriteGuard<'_, T> {}
 
 impl<'borrow, T: ?Sized> ReadGuard<'borrow, T> {
     pub fn new(lock: &'borrow RwLock<T>) -> Self {
         lock.raw_lock.read();
-        Self {
-            lock
-        }
+        Self { lock }
     }
 }
 
@@ -234,7 +248,6 @@ impl<T> core::ops::Deref for WriteGuard<'_, T> {
 }
 
 impl<T> core::ops::DerefMut for WriteGuard<'_, T> {
-
     fn deref_mut(&mut self) -> &mut T {
         unsafe { &mut *self.lock.object_cell.get() }
     }
@@ -242,12 +255,12 @@ impl<T> core::ops::DerefMut for WriteGuard<'_, T> {
 
 impl<T: ?Sized> Drop for ReadGuard<'_, T> {
     fn drop(&mut self) {
-        unsafe {self.lock.raw_lock.read_unlock()};
+        unsafe { self.lock.raw_lock.read_unlock() };
     }
 }
 
 impl<T: ?Sized> Drop for WriteGuard<'_, T> {
     fn drop(&mut self) {
-        unsafe {self.lock.raw_lock.write_unlock()};
+        unsafe { self.lock.raw_lock.write_unlock() };
     }
 }

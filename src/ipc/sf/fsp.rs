@@ -1,5 +1,5 @@
-use crate::result::*;
 use crate::ipc::sf;
+use crate::result::*;
 use crate::util;
 use crate::version;
 
@@ -49,7 +49,7 @@ define_bit_enum! {
 pub enum DirectoryEntryType {
     #[default]
     Directory = 0,
-    File = 1
+    File = 1,
 }
 
 pub type Path = util::ArrayString<0x301>;
@@ -62,7 +62,7 @@ pub struct DirectoryEntry {
     pub pad: [u8; 2],
     pub entry_type: DirectoryEntryType,
     pub pad_2: [u8; 3],
-    pub file_size: usize
+    pub file_size: usize,
 }
 const_assert!(core::mem::size_of::<DirectoryEntry>() == 0x310);
 
@@ -73,7 +73,7 @@ pub struct FileTimeStampRaw {
     pub modify: i64,
     pub access: i64,
     pub is_local_time: bool,
-    pub pad: [u8; 7]
+    pub pad: [u8; 7],
 }
 const_assert!(core::mem::size_of::<FileTimeStampRaw>() == 0x20);
 
@@ -83,7 +83,7 @@ pub enum QueryId {
     SetConcatenationFileAttribute = 0,
     UpdateMac = 1,
     IsSignedSystemPartitionOnSdCardValid = 2,
-    QueryUnpreparedFileInformation = 3
+    QueryUnpreparedFileInformation = 3,
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -92,7 +92,7 @@ pub struct FileQueryRangeInfo {
     pub aes_ctr_key_type: u32,
     pub speed_emulation_type: u32,
     pub reserved_1: [u8; 0x20],
-    pub reserved_2: [u8; 0x18]
+    pub reserved_2: [u8; 0x18],
 }
 const_assert!(core::mem::size_of::<FileQueryRangeInfo>() == 0x40);
 
@@ -106,12 +106,12 @@ pub enum OperationId {
     QueryUnpreparedRange = 4,
     QueryLazyLoadCompletionRate = 5,
     SetLazyLoadPriority = 6,
-    ReadLazyLoadFileForciblyForDebug = 10001
+    ReadLazyLoadFileForciblyForDebug = 10001,
 }
 
 ipc_sf_define_default_interface_client!(File);
 ipc_sf_define_interface_trait! {
-	trait File {
+    trait File {
         read [0, version::VersionInterval::all(), mut]: (option: FileReadOption, offset: usize, size: usize, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) =>  (read_size: usize) (read_size: usize);
         write [1, version::VersionInterval::all(), mut]: (option: FileWriteOption, offset: usize, size: usize, buf: sf::InNonSecureMapAliasBuffer<u8>) =>  () ();
         flush [2, version::VersionInterval::all(), mut]: () => () ();
@@ -124,7 +124,7 @@ ipc_sf_define_interface_trait! {
 
 ipc_sf_define_default_interface_client!(Directory);
 ipc_sf_define_interface_trait! {
-	trait Directory {
+    trait Directory {
         read [0, version::VersionInterval::all()]: (out_entries: sf::OutMapAliasBuffer<DirectoryEntry>) =>  (read_count: u64) (read_count: u64);
         get_entry_count [1, version::VersionInterval::all()]: () => (count: u64) (count: u64);
     }
@@ -132,7 +132,7 @@ ipc_sf_define_interface_trait! {
 
 ipc_sf_define_default_interface_client!(FileSystem);
 ipc_sf_define_interface_trait! {
-	trait FileSystem {
+    trait FileSystem {
         create_file [0, version::VersionInterval::all()]: (attribute: FileAttribute, size: usize, path_buf: sf::InFixedPointerBuffer<Path>) =>  () ();
         delete_file [1, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer<Path>) =>  () ();
         create_directory [2, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer<Path>) =>  () ();
@@ -154,7 +154,7 @@ ipc_sf_define_interface_trait! {
 
 ipc_sf_define_default_interface_client!(FileSystemProxy);
 ipc_sf_define_interface_trait! {
-	trait FileSystemProxy {
+    trait FileSystemProxy {
         set_current_process [1, version::VersionInterval::all()]: (process_id: sf::ProcessId) =>  () ();
         open_sd_card_filesystem [18, version::VersionInterval::all()]: () => (sd_filesystem: FileSystem) (sd_filesystem: session_type!(FileSystem));
         output_access_log_to_sd_card [1006, version::VersionInterval::all()]: (log_buf: sf::InMapAliasBuffer<u8>) =>  () ();

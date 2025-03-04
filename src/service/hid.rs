@@ -17,3 +17,17 @@ impl service::IService for HidServer {
         Ok(())
     }
 }
+
+impl service::IService for HidSysServer {
+    fn get_name() -> sm::ServiceName {
+        sm::ServiceName::new("hid:sys")
+    }
+
+    fn as_domain() -> bool {
+        false
+    }
+
+    fn post_initialize(&mut self) -> Result<()> {
+        Ok(())
+    }
+}

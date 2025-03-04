@@ -1,9 +1,9 @@
 //! Aborting implementation
 
-use crate::result::*;
-use crate::svc;
 use crate::mem::alloc;
+use crate::result::*;
 use crate::rrt0;
+use crate::svc;
 use core::mem;
 
 #[cfg(feature = "services")]
@@ -14,7 +14,6 @@ use crate::service;
 
 #[cfg(feature = "services")]
 use crate::service::fatal;
-
 
 define_bit_enum! {
     /// Represents a system to abort, plus optional flags they have
@@ -31,10 +30,15 @@ define_bit_enum! {
 impl AbortLevel {
     // When the desired level can't be processed (for instance, a panic due to errors allocating memory since it cannot allocate anymore) the next one is attempted, and so on
     // The last level, breaking via SVC, is guaranteed to work properly
-    const LEVEL_ORDER: &'static [AbortLevel] = &[AbortLevel::FatalThrow(), AbortLevel::Panic(), AbortLevel::ProcessExit(), AbortLevel::SvcBreak()];
+    const LEVEL_ORDER: &'static [AbortLevel] = &[
+        AbortLevel::FatalThrow(),
+        AbortLevel::Panic(),
+        AbortLevel::ProcessExit(),
+        AbortLevel::SvcBreak(),
+    ];
 
     /// Gets the next [`AbortLevel`]
-    /// 
+    ///
     /// The abort level order is the following: `FatalThrow`, `Panic`, `ProcessExit`, `SvcBreak`
     #[inline]
     pub fn get_next_level(self) -> Option<Self> {
@@ -61,39 +65,43 @@ fn do_abort(level: AbortLevel, rc: ResultCode) {
         #[cfg(feature = "services")]
         {
             use fatal::IService;
-            match service::new_service_object::<fatal::Service>() {
-                Ok(fatal) => {
-                    let _ = fatal.throw_fatal_with_policy(rc, fatal::FatalPolicy::ErrorScreen, sf::ProcessId::new());
-                },
-                _ => {}
-            };
+            if let Ok(fatal) = service::new_service_object::<fatal::Service>() {
+                let _ = fatal.throw_fatal_with_policy(
+                    rc,
+                    fatal::FatalPolicy::ErrorScreen,
+                    sf::ProcessId::new(),
+                );
+            }
         }
-    }
-    else if level == AbortLevel::Panic() {
+    } else if level == AbortLevel::Panic() {
         panic!("{rc:?}");
-    }
-    else if level == AbortLevel::ProcessExit() {
+    } else if level == AbortLevel::ProcessExit() {
         rrt0::exit(rc);
+    } else if level == AbortLevel::SvcBreak() {
+        let _ = unsafe {
+            svc::r#break(
+                svc::BreakReason::Panic,
+                &rc as *const _ as *const u8,
+                mem::size_of_val(&rc),
+            )
+        };
     }
-    else if level == AbortLevel::SvcBreak() {
-        let _ = unsafe {svc::r#break(svc::BreakReason::Panic, &rc as *const _ as *const u8, mem::size_of_val(&rc))};
-    }
-    
+
     // Note: this won't be reached if the abort succeeds
 }
 
 /// Attempts to abort at the specified [`AbortLevel`]
-/// 
+///
 /// Note that a certain [`AbortLevel`] may not work/be available (heap allocation is not available and that level requires allocations, etc.)
-/// 
+///
 /// Therefore, this function will try with the next levels in order if the desired one fails (see [`get_next_level`][`AbortLevel::get_next_level`])
-/// 
+///
 /// Also note that a success [`ResultCode`] may result in UB for certain [`AbortLevel`]s
-/// 
+///
 /// This function never returns since the last possible [`AbortLevel`] is guaranteed to succeed
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `desired_level`: Desired [`AbortLevel`]
 /// * `rc`: [`ResultCode`] to abort with
 pub fn abort(desired_level: AbortLevel, rc: ResultCode) -> ! {
@@ -104,8 +112,7 @@ pub fn abort(desired_level: AbortLevel, rc: ResultCode) -> ! {
 
         if let Some(next_level) = current_level.get_next_level() {
             current_level = next_level;
-        }
-        else {
+        } else {
             // This should never happen, since the last level is guaranteed to work
             unreachable!();
         }

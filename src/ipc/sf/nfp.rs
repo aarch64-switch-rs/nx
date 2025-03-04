@@ -1,9 +1,9 @@
-use crate::result::*;
 use crate::ipc::sf;
-use crate::util;
 use crate::ipc::sf::applet;
-use crate::ipc::sf::mii;
 use crate::ipc::sf::hid;
+use crate::ipc::sf::mii;
+use crate::result::*;
+use crate::util;
 use crate::version;
 
 use super::ncm;
@@ -16,7 +16,7 @@ pub mod rc;
 #[repr(C)]
 pub struct McuVersionData {
     pub version: u64,
-    pub reserved: [u8; 0x18]
+    pub reserved: [u8; 0x18],
 }
 const_assert!(core::mem::size_of::<McuVersionData>() == 0x20);
 
@@ -24,7 +24,7 @@ const_assert!(core::mem::size_of::<McuVersionData>() == 0x20);
 #[repr(C)]
 pub struct DeviceHandle {
     pub id: u32,
-    pub reserved: [u8; 4]
+    pub reserved: [u8; 4],
 }
 const_assert!(core::mem::size_of::<DeviceHandle>() == 0x8);
 
@@ -32,7 +32,7 @@ const_assert!(core::mem::size_of::<DeviceHandle>() == 0x8);
 #[repr(u32)]
 pub enum State {
     NonInitialized = 0,
-    Initialized = 1
+    Initialized = 1,
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq)]
@@ -44,13 +44,13 @@ pub enum DeviceState {
     TagRemoved = 3,
     TagMounted = 4,
     Unavailable = 5,
-    Finalized = 6
+    Finalized = 6,
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
 pub enum ModelType {
-    Amiibo = 0
+    Amiibo = 0,
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
@@ -58,7 +58,7 @@ pub enum ModelType {
 pub enum MountTarget {
     Rom = 1,
     Ram = 2,
-    All = 3
+    All = 3,
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -66,7 +66,7 @@ pub enum MountTarget {
 pub struct Date {
     pub year: u16,
     pub month: u8,
-    pub day: u8
+    pub day: u8,
 }
 const_assert!(core::mem::size_of::<Date>() == 0x4);
 
@@ -78,7 +78,7 @@ pub struct TagInfo {
     pub reserved_1: [u8; 0x15],
     pub protocol: u32,
     pub tag_type: u32,
-    pub reserved_2: [u8; 0x30]
+    pub reserved_2: [u8; 0x30],
 }
 const_assert!(core::mem::size_of::<TagInfo>() == 0x58);
 
@@ -89,7 +89,7 @@ pub struct RegisterInfo {
     pub first_write_date: Date,
     pub name: util::ArrayString<41>,
     pub font_region: u8,
-    pub reserved: [u8; 0x7A]
+    pub reserved: [u8; 0x7A],
 }
 const_assert!(core::mem::size_of::<RegisterInfo>() == 0x100);
 
@@ -101,7 +101,7 @@ pub struct CommonInfo {
     pub version: u8,
     pub pad: u8,
     pub application_area_size: u32,
-    pub reserved: [u8; 0x34]
+    pub reserved: [u8; 0x34],
 }
 const_assert!(core::mem::size_of::<CommonInfo>() == 0x40);
 
@@ -113,7 +113,7 @@ pub struct ModelInfo {
     pub series: u8,
     pub model_number: u16,
     pub figure_type: u8,
-    pub reserved: [u8; 0x39]
+    pub reserved: [u8; 0x39],
 }
 const_assert!(core::mem::size_of::<ModelInfo>() == 0x40);
 
@@ -130,12 +130,13 @@ define_bit_enum! {
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
-pub enum ConsoleFamily { // Note: unofficial name
+pub enum ConsoleFamily {
+    // Note: unofficial name
     #[default]
     Default = 0,
     NintendoWiiU = 1,
     Nintendo3DS = 2,
-    NintendoSwitch = 3
+    NintendoSwitch = 3,
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
@@ -148,7 +149,7 @@ pub struct AdminInfo {
     pub tag_type: u8,
     pub console_family: ConsoleFamily,
     pub pad: [u8; 0x7],
-    pub reserved: [u8; 0x28]
+    pub reserved: [u8; 0x28],
 }
 const_assert!(core::mem::size_of::<AdminInfo>() == 0x40);
 
@@ -159,11 +160,9 @@ pub struct RegisterInfoPrivate {
     pub first_write_date: Date,
     pub name: util::ArrayString<41>,
     pub unk: u8,
-    pub reserved: [u8; 0x8E]
+    pub reserved: [u8; 0x8E],
 }
 const_assert!(core::mem::size_of::<RegisterInfoPrivate>() == 0x100);
-
-
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]
@@ -193,7 +192,7 @@ pub struct NfpData {
     pub unk_v11: u32,
     pub maybe_reserved_3: [u8; 100],
     pub admin_info: AdminInfo,
-    pub app_area: [u8; 0xD8]
+    pub app_area: [u8; 0xD8],
 }
 const_assert!(core::mem::size_of::<NfpData>() == 0x298);
 
@@ -202,19 +201,19 @@ const_assert!(core::mem::size_of::<NfpData>() == 0x298);
 pub enum BreakType {
     Unk0 = 0,
     Unk1 = 1,
-    Unk2 = 2
+    Unk2 = 2,
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
 pub enum WriteType {
     Unk0 = 0,
-    Unk1 = 1
+    Unk1 = 1,
 }
 
 ipc_sf_define_default_interface_client!(User);
 ipc_sf_define_interface_trait! {
-	trait User {
+    trait User {
         initialize [0, version::VersionInterval::all()]: (aruid: applet::AppletResourceUserId, mcu_data: sf::InMapAliasBuffer<McuVersionData>) =>  () ();
         initialize_2 [400, version::VersionInterval::all()]: (aruid: applet::AppletResourceUserId, mcu_data: sf::InMapAliasBuffer<McuVersionData>) =>  () ();
         finalize [1, version::VersionInterval::all()]: () => () ();
@@ -246,14 +245,14 @@ ipc_sf_define_interface_trait! {
 
 ipc_sf_define_default_interface_client!(UserManager);
 ipc_sf_define_interface_trait! {
-	trait UserManager {
+    trait UserManager {
         create_user_interface [0, version::VersionInterval::all()]: () => (user_interface: User) (user_interface: session_type!(User));
     }
 }
 
 ipc_sf_define_default_interface_client!(System);
 ipc_sf_define_interface_trait! {
-	trait System {
+    trait System {
         initialize_system [0, version::VersionInterval::all()]: (aruid: applet::AppletResourceUserId, _reserved: u64, mcu_data: sf::InMapAliasBuffer<McuVersionData>) =>  () ();
         finalize_system [1, version::VersionInterval::all()]: () => () ();
         list_devices [2, version::VersionInterval::all()]: (out_devices: sf::OutPointerBuffer<DeviceHandle>) =>  (count: u32) (count: u32);
@@ -285,14 +284,14 @@ ipc_sf_define_interface_trait! {
 
 ipc_sf_define_default_interface_client!(SystemManager);
 ipc_sf_define_interface_trait! {
-	trait SystemManager {
+    trait SystemManager {
         create_system_interface [0, version::VersionInterval::all()]: () => (system_interface: System) (system_interface: session_type!(System));
     }
 }
 
 ipc_sf_define_default_interface_client!(Debug);
 ipc_sf_define_interface_trait! {
-	trait Debug {
+    trait Debug {
         initialize_debug [0, version::VersionInterval::all()]: (aruid: applet::AppletResourceUserId, mcu_data: sf::InMapAliasBuffer<McuVersionData>) =>  () ();
         finalize_debug [1, version::VersionInterval::all()]: () => () ();
         list_devices [2, version::VersionInterval::all()]: (out_devices: sf::OutPointerBuffer<DeviceHandle>) =>  (count: u32) (count: u32);
@@ -337,7 +336,7 @@ ipc_sf_define_interface_trait! {
 
 ipc_sf_define_default_interface_client!(DebugManager);
 ipc_sf_define_interface_trait! {
-	trait DebugManager {
+    trait DebugManager {
         create_debug_interface [0, version::VersionInterval::all()]: () => (debug_interface: Debug) (debug_interface: session_type!(Debug));
     }
 }

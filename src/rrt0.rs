@@ -1,9 +1,9 @@
 //! Initial code/entrypoint support and utils
-//! 
+//!
 //! # Custom entrypoint
-//! 
+//!
 //! If you wish to define your custom entrypoint, you can do so by redefining the `__nx_rrt0_entry` weak fn.
-//! 
+//!
 //! Example (check [here](https://switchbrew.org/wiki/Homebrew_ABI#Entrypoint_Arguments) for more entrypoint details):
 //! ```
 //! #[no_mangle]
@@ -11,15 +11,15 @@
 //!     // ...
 //! }
 //! ```
-//! 
+//!
 //! # Custom version setup
-//! 
+//!
 //! On the default entrypoint routine, the internal system version (see [`get_version`][`version::get_version`] and [`set_version`][`version::set_version`]) gets set the following way:
 //! * If the process was launched through HBL, use the "HOS version" value we got from it
 //! * Otherwise (and if using the `services` feature), use settings services ([`SystemSettingsServer`][`crate::service::set::ISystemSettingsServer`]) to get it
-//! 
+//!
 //! If you wish to define your custom version setup (for instance, in contexts in which you wish to avoid executing the aforementioned setup), you can do so by redefining the `initialize_version` weak fn.
-//! 
+//!
 //! Example:
 //! ```
 //! #[no_mangle]
@@ -29,17 +29,17 @@
 //! ```
 
 use crate::elf;
+use crate::hbl;
+use crate::mem::alloc;
 use crate::result::*;
 use crate::svc;
-use crate::mem::alloc;
 use crate::svc::Handle;
 use crate::sync;
+use crate::thread;
 use crate::thread::get_thread_local_region;
 use crate::util;
-use crate::hbl;
-use crate::thread;
-use crate::vmem;
 use crate::version;
+use crate::vmem;
 
 #[cfg(feature = "services")]
 use crate::ipc::sf;
@@ -50,10 +50,9 @@ use crate::service;
 #[cfg(feature = "services")]
 use crate::service::set;
 
-
-use core::ptr;
-use core::mem;
 use core::arch::asm;
+use core::mem;
+use core::ptr;
 use core::ptr::addr_of_mut;
 
 use atomic_enum::atomic_enum;
@@ -62,7 +61,6 @@ use atomic_enum::atomic_enum;
 
 extern "Rust" {
     fn main() -> Result<()>;
-    fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize;
 }
 
 /// Represents the fn pointer used for exiting
@@ -75,7 +73,7 @@ pub enum ExecutableType {
     #[default]
     None,
     Nso,
-    Nro
+    Nro,
 }
 
 /*
@@ -97,14 +95,14 @@ pub(crate) fn set_executable_type(exec_type: ExecutableType) {
 }
 
 /// Gets the current process's executable type
-/// 
+///
 /// Note that this can be used to determine if this process was launched through HBL or not (if so, we would be a homebrew NRO and this would return [`ExecutableType::Nro`])
 pub fn get_executable_type() -> ExecutableType {
     G_EXECUTABLE_TYPE.load(core::sync::atomic::Ordering::Relaxed)
 }
 
 /// Represents the process module format used by processes
-/// 
+///
 /// This layout has to be present at the start of the process's `.rodata` section, containing its module name
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -114,27 +112,27 @@ pub struct ModulePath {
     /// The length of the module name
     path_len: u32,
     /// The module name string
-    path: util::ArrayString<0x200>
+    path: util::ArrayString<0x200>,
 }
 
 impl ModulePath {
     /// Creates a [`ModulePath`] with the given module name
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `name`: The module name
     #[inline]
     pub const fn new(name: &str) -> Self {
         Self {
             _zero: 0,
-            path_len: name.as_bytes().len() as u32,
-            path: util::ArrayString::from_str_truncate_null(name)
+            path_len: util::const_usize_min(name.len(), 0x200 - 1) as u32,
+            path: util::ArrayString::from_str_truncate_null(name),
         }
     }
 
     pub fn set_name(&mut self, new_name: &str) {
         self.path = util::ArrayString::from_str(new_name);
-        self.path_len = new_name.as_bytes().len() as u32
+        self.path_len = new_name.len() as u32
     }
 
     pub fn get_name(&self) -> util::ArrayString<0x200> {
@@ -149,7 +147,7 @@ impl ModulePath {
 static G_MODULE_NAME: ModulePath = ModulePath::new("aarch64-switch-rs (unknown module)");
 
 /// Gets this process's module name
-/// 
+///
 /// The module name is `aarch64-switch-rs (unknown module)` by default, but it can be set to a custom one with [`rrt0_define_module_name`] or [`rrt0_define_default_module_name`] macros
 pub fn get_module_name() -> ModulePath {
     G_MODULE_NAME
@@ -160,35 +158,33 @@ static G_MAIN_THREAD: sync::Mutex<Option<thread::Thread>> = sync::Mutex::new(Non
 static EH_FRAME_HDR_SECTION: elf::EhFrameHdrPtr = elf::EhFrameHdrPtr::new();
 
 /// Exits the current process
-/// 
+///
 /// This will call the HBL-specific exit fn if running as a homebrew NRO, or [`exit_process`][`svc::exit_process`] otherwise
 pub fn exit(rc: ResultCode) -> ! {
     match *G_EXIT_FN.lock() {
-        Some(exit_fn) => {
-            (exit_fn)(rc);
-        },
-        None => svc::exit_process()
+        Some(exit_fn) => (exit_fn)(rc),
+        None => svc::exit_process(),
     }
 }
-
-// TODO: consider adding a default heap-init function?
 
 #[no_mangle]
 #[linkage = "weak"]
 fn initialize_version(hbl_hos_version_opt: Option<hbl::Version>) {
     if let Some(hbl_hos_version) = hbl_hos_version_opt {
-        version::set_version(hbl_hos_version.to_version());
-    }
-    else {
+        unsafe { version::set_version(hbl_hos_version.to_version()) };
+    } else {
         #[cfg(feature = "services")]
         {
             use crate::ipc::sf::set::ISystemSettingsServer;
             let set_sys = service::new_service_object::<set::SystemSettingsServer>().unwrap();
             let mut fw_version: set::FirmwareVersion = Default::default();
-            set_sys.get_firmware_version(sf::Buffer::from_mut_var(&mut fw_version)).unwrap();
+            set_sys
+                .get_firmware_version(sf::Buffer::from_mut_var(&mut fw_version))
+                .unwrap();
 
-            let version = version::Version::new(fw_version.major, fw_version.minor, fw_version.micro);
-            version::set_version(version);
+            let version =
+                version::Version::new(fw_version.major, fw_version.minor, fw_version.micro);
+            unsafe { version::set_version(version) };
         }
     }
 }
@@ -204,18 +200,22 @@ unsafe fn set_main_thread_tlr(handle: svc::Handle) {
     MAIN_THREAD.__nx_thread.handle = handle;
 
     (*tlr_raw).nx_thread_vars.thread_ref = addr_of_mut!(MAIN_THREAD);
-
 }
 
 #[allow(unsafe_op_in_unsafe_fn)]
-unsafe fn normal_entry(maybe_abi_cfg_entries_ptr: *const hbl::AbiConfigEntry, maybe_main_thread_handle: usize, lr_exit_fn: Option<ExitFn>) {
-    let exec_type = match !maybe_abi_cfg_entries_ptr.is_null() && (maybe_main_thread_handle == usize::MAX) {
-        true => ExecutableType::Nro,
-        false => ExecutableType::Nso
-    };
+unsafe fn normal_entry(
+    maybe_abi_cfg_entries_ptr: *const hbl::AbiConfigEntry,
+    maybe_main_thread_handle: usize,
+    lr_exit_fn: Option<ExitFn>,
+) {
+    let exec_type =
+        match !maybe_abi_cfg_entries_ptr.is_null() && (maybe_main_thread_handle == usize::MAX) {
+            true => ExecutableType::Nro,
+            false => ExecutableType::Nso,
+        };
     set_executable_type(exec_type);
 
-    let mut heap = util::PointerAndSize::new(ptr::null_mut(), 0);
+    let mut heap = util::PointerAndSize::new(ptr::null_mut(), crate::mem::alloc::HEAP_SIZE);
     let mut main_thread_handle = maybe_main_thread_handle as svc::Handle;
     let mut hos_version_opt: Option<hbl::Version> = None;
 
@@ -228,60 +228,63 @@ unsafe fn normal_entry(maybe_abi_cfg_entries_ptr: *const hbl::AbiConfigEntry, ma
                     let loader_info_data = (*abi_entry).value[0] as *mut u8;
                     let loader_info_data_len = (*abi_entry).value[1] as usize;
                     if loader_info_data_len > 0 {
-                        let loader_info_slice = core::slice::from_raw_parts(loader_info_data, loader_info_data_len);
+                        let loader_info_slice =
+                            core::slice::from_raw_parts(loader_info_data, loader_info_data_len);
                         if let Ok(loader_info) = core::str::from_utf8(loader_info_slice) {
                             hbl::set_loader_info(loader_info);
                         }
                     }
                     break;
-                },
+                }
                 hbl::AbiConfigEntryKey::MainThreadHandle => {
                     main_thread_handle = (*abi_entry).value[0] as svc::Handle;
-                },
+                }
                 hbl::AbiConfigEntryKey::NextLoadPath => {
                     // lengths from nx-hbloader:source/main.c
                     // https://github.com/switchbrew/nx-hbloader/blob/cd6a723acbeabffd827a8bdc40563066f5401fb7/source/main.c#L13-L14
-                    let next_load_path: &'static mut util::ArrayString<512> = core::mem::transmute((*abi_entry).value[0]);
-                    let next_load_argv: &'static mut util::ArrayString<2048> = core::mem::transmute((*abi_entry).value[1]);
+                    let next_load_path: &'static mut util::ArrayString<512> =
+                        core::mem::transmute((*abi_entry).value[0]);
+                    let next_load_argv: &'static mut util::ArrayString<2048> =
+                        core::mem::transmute((*abi_entry).value[1]);
                     hbl::set_next_load_entry_ptr(next_load_path, next_load_argv);
-                },
+                }
                 hbl::AbiConfigEntryKey::OverrideHeap => {
                     heap.address = (*abi_entry).value[0] as *mut u8;
                     heap.size = (*abi_entry).value[1] as usize;
-                },
+                }
                 hbl::AbiConfigEntryKey::OverrideService => {
                     // todo!("OverrideService");
-                },
+                }
                 hbl::AbiConfigEntryKey::Argv => {
                     // todo!("Argv");
-                },
+                }
                 hbl::AbiConfigEntryKey::SyscallAvailableHint => {
                     // todo!("SyscallAvailableHint");
-                },
+                }
                 hbl::AbiConfigEntryKey::AppletType => {
                     let applet_type: hbl::AppletType = mem::transmute((*abi_entry).value[0] as u32);
                     hbl::set_applet_type(applet_type);
-                },
+                }
                 hbl::AbiConfigEntryKey::ProcessHandle => {
                     let proc_handle = (*abi_entry).value[0] as Handle;
                     hbl::set_process_handle(proc_handle);
-                },
+                }
                 hbl::AbiConfigEntryKey::LastLoadResult => {
                     let last_load_rc = ResultCode::new((*abi_entry).value[0] as u32);
                     hbl::set_last_load_result(last_load_rc);
-                },
+                }
                 hbl::AbiConfigEntryKey::RandomSeed => {
                     let random_seed = ((*abi_entry).value[0], (*abi_entry).value[1]);
                     hbl::set_random_seed(random_seed);
-                },
+                }
                 hbl::AbiConfigEntryKey::UserIdStorage => {
                     // todo!("UserIdStorage");
-                },
+                }
                 hbl::AbiConfigEntryKey::HosVersion => {
                     let hos_version_v = (*abi_entry).value[0] as u32;
                     let os_impl_magic = (*abi_entry).value[1];
                     hos_version_opt = Some(hbl::Version::new(hos_version_v, os_impl_magic));
-                },
+                }
                 _ => {
                     // TODO: invalid config entries?
                 }
@@ -297,21 +300,18 @@ unsafe fn normal_entry(maybe_abi_cfg_entries_ptr: *const hbl::AbiConfigEntry, ma
 
     // Initialize virtual memory
     vmem::initialize().unwrap();
-    
+
     // Set exit function (will be null for non-hbl NROs)
-    match exec_type {
-        ExecutableType::Nro => {
-            *G_EXIT_FN.lock() = lr_exit_fn;
-        },
-        _ => {}
+    if exec_type == ExecutableType::Nro {
+        *G_EXIT_FN.lock() = lr_exit_fn;
     }
-    
-    
+
     // Initialize heap and memory allocation
-    heap = initialize_heap(heap);
+    heap = alloc::configure_heap(heap);
     alloc::initialize(heap);
 
-    let main_thread_handle: thread::Thread = thread::Thread::new_remote("MainThread", main_thread_handle);
+    let main_thread_handle: thread::Thread =
+        thread::Thread::new_remote("MainThread", main_thread_handle);
     G_MAIN_THREAD.set(Some(main_thread_handle));
 
     // Initialize version support
@@ -330,17 +330,23 @@ unsafe fn normal_entry(maybe_abi_cfg_entries_ptr: *const hbl::AbiConfigEntry, ma
         // clears the global fsp_srv session.
         crate::fs::finalize_fspsrv_session();
     }
-    
-    
-    #[cfg(feature = "services")] {
-        let _  = service::applet::finalize();
+
+    #[cfg(feature = "services")]
+    {
+        service::applet::finalize();
+
+        service::mii::finalize();
     }
 
     #[cfg(feature = "la")]
     {
         crate::la::finalize()
     }
-    
+
+    #[cfg(feature = "rand")]
+    {
+        crate::rand::finalize();
+    }
 
     // Successful exit by default
     exit(ResultSuccess::make());
@@ -364,18 +370,15 @@ unsafe extern "C" fn __nx_rrt0_entry(arg0: usize, arg1: usize) {
         crate::exception::__nx_exception_dispatch(exc_type, stack_top);
     }
 
-    let lr_exit_fn: Option<ExitFn>;
     let lr_raw: usize;
     asm!(
         "mov {}, lr",
         out(reg) lr_raw
     );
 
-    lr_exit_fn = match lr_raw {
+    let lr_exit_fn: Option<ExitFn> = match lr_raw {
         0 => None,
-        ptr => {
-            unsafe { Some(core::mem::transmute(ptr))}
-        }
+        ptr => unsafe { Some(core::mem::transmute::<usize, ExitFn>(ptr)) },
     };
 
     // We actually want `_start` which is at the start of the .text region, but we don't know if
@@ -408,6 +411,9 @@ unsafe extern "C" fn __nx_rrt0_entry(arg0: usize, arg1: usize) {
     // Handle NSO/KIP/NRO normal entry
     let maybe_abi_cfg_entries_ptr = arg0 as *const hbl::AbiConfigEntry;
     let maybe_main_thread_handle = arg1;
-    normal_entry(maybe_abi_cfg_entries_ptr, maybe_main_thread_handle, lr_exit_fn);
-    
+    normal_entry(
+        maybe_abi_cfg_entries_ptr,
+        maybe_main_thread_handle,
+        lr_exit_fn,
+    );
 }

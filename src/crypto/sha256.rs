@@ -2,10 +2,10 @@
 
 use crate::crypto::rc;
 use crate::result::*;
+use core::arch::aarch64;
+use core::arch::asm;
 use core::mem;
 use core::ptr;
-use core::arch::asm;
-use core::arch::aarch64;
 
 /// Represents a block size in bytes
 pub const BLOCK_SIZE: usize = 0x40;
@@ -25,31 +25,22 @@ pub struct Context {
     buf: [u8; BLOCK_SIZE],
     bits_consumed: usize,
     buffered_size: usize,
-    finalized: bool
+    finalized: bool,
 }
 
 const ROUND_CONSTANTS: [u32; 0x40] = [
-    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
-    0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
-    0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3,
-    0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
-    0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc,
-    0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
-    0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7,
-    0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
-    0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13,
-    0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
-    0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3,
-    0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
-    0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5,
-    0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
-    0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
-    0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
+    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+    0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+    0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+    0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+    0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+    0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+    0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+    0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
 ];
 
 const H_0: [u32; HASH_SIZE_32] = [
-    0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
-    0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19
+    0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19,
 ];
 
 impl Context {
@@ -60,7 +51,7 @@ impl Context {
             buf: [0; BLOCK_SIZE],
             bits_consumed: 0,
             buffered_size: 0,
-            finalized: false
+            finalized: false,
         }
     }
 
@@ -234,12 +225,12 @@ impl Context {
     }
 
     /// Updates the [`Context`] with the given data
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `data`: The data to update with
     pub fn update<T>(&mut self, data: &[T]) {
-        let data_size = data.len() * mem::size_of::<T>();
+        let data_size = core::mem::size_of_val(data);
         let data_start = data.as_ptr() as *const u8;
         self.bits_consumed += (((self.buffered_size + data_size) / BLOCK_SIZE) * BLOCK_SIZE) * 8;
         let mut data_offset: usize = 0;
@@ -250,7 +241,11 @@ impl Context {
 
             let copyable = needed.min(cur_size);
             unsafe {
-                ptr::copy(data_start.offset(data_offset as isize), self.buf.as_mut_ptr().offset(self.buffered_size as isize), copyable);
+                ptr::copy(
+                    data_start.add(data_offset),
+                    self.buf.as_mut_ptr().add(self.buffered_size),
+                    copyable,
+                );
             }
             data_offset += copyable;
             cur_size -= copyable;
@@ -266,7 +261,7 @@ impl Context {
         if cur_size >= BLOCK_SIZE {
             let block_count = cur_size / BLOCK_SIZE;
             unsafe {
-                self.process_blocks(data_start.offset(data_offset as isize), block_count);
+                self.process_blocks(data_start.add(data_offset), block_count);
             }
             let blocks_size = BLOCK_SIZE * block_count;
             data_offset += blocks_size;
@@ -275,21 +270,24 @@ impl Context {
 
         if cur_size > 0 {
             unsafe {
-                ptr::copy(data_start.offset(data_offset as isize), self.buf.as_mut_ptr(), cur_size);
+                ptr::copy(data_start.add(data_offset), self.buf.as_mut_ptr(), cur_size);
             }
             self.buffered_size = cur_size;
         }
     }
 
     /// Gets the produced hash (produces it first if not done yet)
-    /// 
+    ///
     /// The output hash array must have size [`HASH_SIZE`] in bytes or this will fail with [`ResultInvalidSize`][`rc::ResultInvalidSize`]
-    /// 
+    ///
     /// # Arguments
-    /// 
-    /// * `out_hash`: The output array to fill with the hash 
+    ///
+    /// * `out_hash`: The output array to fill with the hash
     pub fn get_hash<T>(&mut self, out_hash: &mut [T]) -> Result<()> {
-        result_return_unless!(out_hash.len() * mem::size_of::<T>() == HASH_SIZE, rc::ResultInvalidSize);
+        result_return_unless!(
+            core::mem::size_of_val(out_hash) == HASH_SIZE,
+            rc::ResultInvalidSize
+        );
 
         if !self.finalized {
             // Process last block, if necessary
@@ -300,17 +298,24 @@ impl Context {
             let last_block_max_size = BLOCK_SIZE - mem::size_of::<u64>();
             unsafe {
                 if self.buffered_size <= last_block_max_size {
-                    ptr::write_bytes(self.buf.as_mut_ptr().offset(self.buffered_size as isize), 0, last_block_max_size - self.buffered_size);
-                }
-                else {
-                    ptr::write_bytes(self.buf.as_mut_ptr().offset(self.buffered_size as isize), 0, BLOCK_SIZE - self.buffered_size);
+                    ptr::write_bytes(
+                        self.buf.as_mut_ptr().add(self.buffered_size),
+                        0,
+                        last_block_max_size - self.buffered_size,
+                    );
+                } else {
+                    ptr::write_bytes(
+                        self.buf.as_mut_ptr().add(self.buffered_size),
+                        0,
+                        BLOCK_SIZE - self.buffered_size,
+                    );
                     self.process_blocks(self.buf.as_ptr(), 1);
 
                     ptr::write_bytes(self.buf.as_mut_ptr(), 0, last_block_max_size);
                 }
 
                 let be_bits_consumed = self.bits_consumed.swap_bytes();
-                *(self.buf.as_mut_ptr().offset(last_block_max_size as isize) as *mut usize) = be_bits_consumed;
+                *(self.buf.as_mut_ptr().add(last_block_max_size) as *mut usize) = be_bits_consumed;
                 self.process_blocks(self.buf.as_ptr(), 1);
             }
             self.finalized = true;
@@ -319,7 +324,7 @@ impl Context {
         unsafe {
             let out_hash_buf_32 = out_hash.as_mut_ptr() as *mut u32;
             for i in 0..HASH_SIZE_32 {
-                *out_hash_buf_32.offset(i as isize) = self.intermediate_hash[i].swap_bytes();
+                *out_hash_buf_32.add(i) = self.intermediate_hash[i].swap_bytes();
             }
         }
 
@@ -327,14 +332,19 @@ impl Context {
     }
 }
 
+impl Default for Context {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 /// Wrapper for directly calculating the hash of given data
-/// 
+///
 /// The output hash array must have size [`HASH_SIZE`] in bytes or this will fail with [`ResultInvalidSize`][`rc::ResultInvalidSize`]
-/// 
+///
 /// This essentially creates a [`Context`], updates it with the given data and produces its hash
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `data`: Input data
 /// * `out_hash`: Output array to fill into
 #[inline]

@@ -11,7 +11,7 @@ pub enum ControlRequestId {
     CopyFromCurrentDomain = 1,
     CloneCurrentObject = 2,
     QueryPointerBufferSize = 3,
-    CloneCurrentObjectEx = 4
+    CloneCurrentObjectEx = 4,
 }
 
 pub const IN_DATA_HEADER_MAGIC: u32 = u32::from_le_bytes(*b"SFCI");
@@ -23,7 +23,7 @@ pub enum DomainCommandType {
     #[default]
     Invalid = 0,
     SendMessage = 1,
-    Close = 2
+    Close = 2,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -39,11 +39,31 @@ pub struct DomainInDataHeader {
 
 impl DomainInDataHeader {
     pub const fn empty() -> Self {
-        Self { command_type: DomainCommandType::Invalid, object_count: 0, data_size: 0, domain_object_id: 0, pad: 0, token: 0 }
+        Self {
+            command_type: DomainCommandType::Invalid,
+            object_count: 0,
+            data_size: 0,
+            domain_object_id: 0,
+            pad: 0,
+            token: 0,
+        }
     }
 
-    pub const fn new(command_type: DomainCommandType, object_count: u8, data_size: u16, domain_object_id: DomainObjectId, token: u32) -> Self {
-        Self { command_type, object_count, data_size, domain_object_id, pad: 0, token }
+    pub const fn new(
+        command_type: DomainCommandType,
+        object_count: u8,
+        data_size: u16,
+        domain_object_id: DomainObjectId,
+        token: u32,
+    ) -> Self {
+        Self {
+            command_type,
+            object_count,
+            data_size,
+            domain_object_id,
+            pad: 0,
+            token,
+        }
     }
 }
 
@@ -56,7 +76,10 @@ pub struct DomainOutDataHeader {
 
 impl DomainOutDataHeader {
     pub const fn empty() -> Self {
-        Self { out_object_count: 0, pad: [0; 3] }
+        Self {
+            out_object_count: 0,
+            pad: [0; 3],
+        }
     }
 
     pub const fn new(out_object_count: u32) -> Self {
@@ -77,7 +100,7 @@ pub enum CommandType {
     Request = 4,
     Control = 5,
     RequestWithContext = 6,
-    ControlWithContext = 7
+    ControlWithContext = 7,
 }
 
 pub fn convert_command_type(command_type: u32) -> CommandType {
@@ -89,7 +112,7 @@ pub fn convert_command_type(command_type: u32) -> CommandType {
         5 => CommandType::Control,
         6 => CommandType::RequestWithContext,
         7 => CommandType::ControlWithContext,
-        _ => CommandType::Invalid
+        _ => CommandType::Invalid,
     }
 }
 
@@ -104,11 +127,21 @@ pub struct DataHeader {
 
 impl DataHeader {
     pub const fn empty() -> Self {
-        Self { magic: 0, version: 0, value: 0, token: 0 }
+        Self {
+            magic: 0,
+            version: 0,
+            value: 0,
+            token: 0,
+        }
     }
 
     pub const fn new(magic: u32, version: u32, value: u32, token: u32) -> Self {
-        Self { magic, version, value, token }
+        Self {
+            magic,
+            version,
+            value,
+            token,
+        }
     }
 }
 

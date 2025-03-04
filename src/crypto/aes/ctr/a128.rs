@@ -3,9 +3,9 @@
 use crate::crypto::aes;
 use crate::crypto::rc;
 use crate::result::*;
-use core::ptr;
 use core::arch::aarch64;
 use core::arch::asm;
+use core::ptr;
 
 unsafe fn increment_ctr(ctr: aarch64::uint8x16_t) -> aarch64::uint8x16_t {
     let mut inc = aarch64::vdupq_n_u8(0);
@@ -42,16 +42,16 @@ pub struct Context {
     aes_ctx: aes::a128::Context,
     ctr: [u8; aes::BLOCK_SIZE],
     enc_ctr_buffer: [u8; aes::BLOCK_SIZE],
-    buffer_offset: usize
+    buffer_offset: usize,
 }
 
 impl Context {
     /// Creates a new [`Context`]
-    /// 
+    ///
     /// The key must have size [`KEY_SIZE`][`aes::a128::KEY_SIZE`] in bytes and the ctr must have size [`BLOCK_SIZE`][`aes::BLOCK_SIZE`] in bytes or this will fail with [`ResultInvalidSize`][`rc::ResultInvalidSize`]
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `key`: The 128-bit AES key
     /// * `ctr`: The ctr
     pub fn new(key: &[u8], ctr: &[u8]) -> Result<Self> {
@@ -59,7 +59,7 @@ impl Context {
             aes_ctx: aes::a128::Context::new(key, true)?,
             ctr: [0; aes::BLOCK_SIZE],
             enc_ctr_buffer: [0; aes::BLOCK_SIZE],
-            buffer_offset: 0
+            buffer_offset: 0,
         };
 
         ctx.reset_ctr(ctr)?;
@@ -68,11 +68,11 @@ impl Context {
     }
 
     /// Resets the [`Context`] with the provided ctr
-    /// 
+    ///
     /// The ctr must have size [`BLOCK_SIZE`][`aes::BLOCK_SIZE`] in bytes or this will fail with [`ResultInvalidSize`][`rc::ResultInvalidSize`]
-    /// 
+    ///
     /// # Argument
-    /// 
+    ///
     /// * `ctr`: The ctr to reset with
     pub fn reset_ctr(&mut self, ctr: &[u8]) -> Result<()> {
         result_return_unless!(ctr.len() == aes::BLOCK_SIZE, rc::ResultInvalidSize);
@@ -105,7 +105,7 @@ impl Context {
 
         let mut cur_src = src;
         let mut cur_dst = dst;
-        let mut cur_count = block_count; 
+        let mut cur_count = block_count;
         if cur_count >= 3 {
             let mut ctr1 = increment_ctr(ctr0);
             let mut ctr2 = increment_ctr(ctr1);
@@ -159,7 +159,7 @@ impl Context {
                     "aesmc {tmp0:v}.16b, {tmp0:v}.16b",
 
                     "rev {high_tmp}, {high}",
-                    
+
                     "aese {tmp1:v}.16b, {round_key_2:v}.16b",
                     "aesmc {tmp1:v}.16b, {tmp1:v}.16b",
 
@@ -251,9 +251,9 @@ impl Context {
                     "aesmc {tmp2:v}.16b, {tmp2:v}.16b",
 
                     "aese {tmp0:v}.16b, {round_key_9:v}.16b",
-                    
+
                     "aese {tmp1:v}.16b, {round_key_9:v}.16b",
-                    
+
                     "aese {tmp2:v}.16b, {round_key_9:v}.16b",
 
                     "eor {tmp0:v}.16b, {tmp0:v}.16b, {round_key_10:v}.16b",
@@ -358,7 +358,7 @@ impl Context {
                 "aese {tmp0:v}.16b, {round_key_9:v}.16b",
 
                 "mov {ctr0:v}.d[1], {low}",
-        
+
                 "eor {tmp0:v}.16b, {tmp0:v}.16b, {round_key_10:v}.16b",
 
                 round_key_0 = in(vreg) round_key_0,
@@ -380,7 +380,7 @@ impl Context {
 
                 ctr0 = inout(vreg) ctr0
             );
-            
+
             tmp0 = aarch64::veorq_u8(block0, tmp0);
 
             aarch64::vst1q_u8(cur_dst, tmp0);
@@ -393,11 +393,11 @@ impl Context {
     }
 
     /// Crypts the given data
-    /// 
+    ///
     /// Input and output data must have the same size, or this will fail with [`ResultInvalidSize`][`rc::ResultInvalidSize`]
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `src`: The input data
     /// * `dst`: The output data to fill into
     pub fn crypt(&mut self, src: &[u8], dst: &mut [u8]) -> Result<()> {
@@ -440,7 +440,11 @@ impl Context {
 
             if cur_size > 0 {
                 ptr::copy(cur_src, self.enc_ctr_buffer.as_mut_ptr(), cur_size);
-                ptr::write_bytes(self.enc_ctr_buffer.as_mut_ptr().add(cur_size), 0, aes::BLOCK_SIZE - cur_size);
+                ptr::write_bytes(
+                    self.enc_ctr_buffer.as_mut_ptr().add(cur_size),
+                    0,
+                    aes::BLOCK_SIZE - cur_size,
+                );
 
                 let enc_ctr_buf_ptr = self.enc_ctr_buffer.as_ptr();
                 self.crypt_blocks(enc_ctr_buf_ptr, enc_ctr_buf_ptr as *mut u8, 1);

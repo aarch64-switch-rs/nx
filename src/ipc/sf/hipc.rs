@@ -1,6 +1,6 @@
-use crate::result::*;
 use crate::ipc::sf;
 use crate::ipc::sf::sm;
+use crate::result::*;
 use crate::version;
 
 pub mod rc;
@@ -17,10 +17,9 @@ ipc_sf_define_control_interface_trait! {
     }
 }
 
-
 ipc_sf_define_default_interface_client!(MitmQueryService);
 ipc_sf_define_interface_trait! {
-	trait MitmQueryService {
+    trait MitmQueryService {
         should_mitm [65000, version::VersionInterval::all()]: (info: sm::mitm::MitmProcessInfo) =>  (should_mitm: bool) (should_mitm: bool);
     }
 }

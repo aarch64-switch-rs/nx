@@ -1,13 +1,13 @@
 //! Generic library result definitions
-//! 
+//!
 //! All `rc` modules in this library contain result definitions (usually related to/for the parent module)
-//! 
+//!
 //! All library results have module [`RESULT_MODULE`], and their descriptions are `<mod-specific submodule> + <res-value>`
-//! 
+//!
 //! For example, [`ResultNotImplemented`] has module [`RESULT_MODULE`] and description [`RESULT_SUBMODULE`] + `1`
-//! 
+//!
 //! List of existing submodules in the library:
-//! 
+//!
 //! * `0`: library (misc)
 //! * `100`: elf
 //! * `200`: (unused)

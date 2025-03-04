@@ -1,5 +1,5 @@
-use crate::result::*;
 use crate::ipc::sf;
+use crate::result::*;
 use crate::util;
 use crate::version;
 
@@ -18,7 +18,7 @@ pub enum Age {
     Normal,
     Old,
     #[default]
-    All
+    All,
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -27,7 +27,7 @@ pub enum Gender {
     Male,
     Female,
     #[default]
-    All
+    All,
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -37,7 +37,7 @@ pub enum FaceColor {
     White,
     Asian,
     #[default]
-    All
+    All,
 }
 
 define_bit_enum! {
@@ -52,7 +52,7 @@ define_bit_enum! {
 pub enum SpecialKeyCode {
     #[default]
     Normal = 0,
-    Special = 0xA523B78F
+    Special = 0xA523B78F,
 }
 
 pub type CreateId = util::Uuid;
@@ -192,7 +192,7 @@ pub enum HairType {
     ShortFrontTwoBackPonyTails,
     TwoShortSidedPonyTails,
     TwoLongSidedPonyTails,
-    LongFrontTwoBackPonyTails
+    LongFrontTwoBackPonyTails,
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -200,7 +200,7 @@ pub enum HairType {
 pub enum MoleType {
     #[default]
     None,
-    OneDot
+    OneDot,
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -208,7 +208,7 @@ pub enum MoleType {
 pub enum HairFlip {
     #[default]
     Left,
-    Right
+    Right,
 }
 
 pub type CommonColor = u8;
@@ -276,7 +276,7 @@ pub enum EyeType {
     NormalTopLine,
     WhiteOvalLash,
     RoundTired,
-    WhiteLarge
+    WhiteLarge,
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -318,7 +318,7 @@ pub enum MouthType {
     NeutralCommaInverted,
     TeethFull,
     SmileDownLine,
-    Kiss
+    Kiss,
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -328,7 +328,7 @@ pub enum FontRegion {
     Standard,
     China,
     Korea,
-    Taiwan
+    Taiwan,
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -346,7 +346,7 @@ pub enum FacelineType {
     Bump,
     Angular,
     FlatRounded,
-    AngularSmall
+    AngularSmall,
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -362,7 +362,7 @@ pub enum FacelineColor {
     Ivory,
     WarmIvory,
     Almond,
-    Espresso
+    Espresso,
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -380,7 +380,7 @@ pub enum FacelineWrinkle {
     BrowDroop,
     MouthFrown,
     CrowsFeet,
-    FoldsCrowsFrown
+    FoldsCrowsFrown,
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -398,7 +398,7 @@ pub enum FacelineMake {
     CheekBlushPorcelainEyeShadowEspresso,
     Freckles,
     LionsManeBeard,
-    StubbleBeard
+    StubbleBeard,
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -428,7 +428,7 @@ pub enum EyebrowType {
     HighArchLarge,
     Hairy,
     Dotted,
-    None
+    None,
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -452,7 +452,7 @@ pub enum NoseType {
     Hooked,
     Fat,
     Droopy,
-    ArrowLarge
+    ArrowLarge,
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -464,7 +464,7 @@ pub enum BeardType {
     GoateeLong,
     LionsManeLong,
     LionsMane,
-    Full
+    Full,
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -476,7 +476,7 @@ pub enum MustacheType {
     Pencil,
     Horseshoe,
     Normal,
-    Toothbrush
+    Toothbrush,
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -502,7 +502,7 @@ pub enum GlassType {
     OpaqueCatEye,
     OpaqueOval,
     OpaqueRectangle,
-    OpaqueAviator
+    OpaqueAviator,
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -559,7 +559,7 @@ pub struct CharInfo {
     pub mole_scale: u8,
     pub mole_x: u8,
     pub mole_y: u8,
-    pub reserved: u8
+    pub reserved: u8,
 }
 const_assert!(core::mem::size_of::<CharInfo>() == 0x58);
 
@@ -614,7 +614,7 @@ pub enum CoreDataElement {
     NoseScale,
     MouthScale,
     MustacheScale,
-    MoleScale
+    MoleScale,
 }
 
 #[derive(Request, Response, Copy, Clone)]
@@ -625,7 +625,7 @@ pub struct CoreDataElementInfo {
     pub bit_width: u32,
     pub min_value: u32,
     pub max_value: u32,
-    pub unk: u32
+    pub unk: u32,
 }
 
 pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
@@ -636,7 +636,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 8,
             min_value: 0,
             max_value: 0x83,
-            unk: 1
+            unk: 1,
         },
         CoreDataElement::Height => CoreDataElementInfo {
             byte_offset: 0x1,
@@ -644,7 +644,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 7,
             min_value: 0,
             max_value: 0x7F,
-            unk: 0
+            unk: 0,
         },
         CoreDataElement::MoleType => CoreDataElementInfo {
             byte_offset: 0x1,
@@ -652,7 +652,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 1,
             min_value: 0,
             max_value: 0x1,
-            unk: 0
+            unk: 0,
         },
         CoreDataElement::Build => CoreDataElementInfo {
             byte_offset: 0x2,
@@ -660,7 +660,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 7,
             min_value: 0,
             max_value: 0x7F,
-            unk: 0
+            unk: 0,
         },
         CoreDataElement::HairFlip => CoreDataElementInfo {
             byte_offset: 0x2,
@@ -668,7 +668,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 1,
             min_value: 0,
             max_value: 0x1,
-            unk: 0
+            unk: 0,
         },
         CoreDataElement::HairColor => CoreDataElementInfo {
             byte_offset: 0x3,
@@ -676,7 +676,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 7,
             min_value: 0,
             max_value: 0x63,
-            unk: 1
+            unk: 1,
         },
         CoreDataElement::Type => CoreDataElementInfo {
             byte_offset: 0x3,
@@ -684,7 +684,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 1,
             min_value: 0,
             max_value: 0x1,
-            unk: 0
+            unk: 0,
         },
         CoreDataElement::EyeColor => CoreDataElementInfo {
             byte_offset: 0x4,
@@ -692,7 +692,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 7,
             min_value: 0,
             max_value: 0x63,
-            unk: 1
+            unk: 1,
         },
         CoreDataElement::Gender => CoreDataElementInfo {
             byte_offset: 0x4,
@@ -700,7 +700,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 1,
             min_value: 0,
             max_value: 0x1,
-            unk: 0
+            unk: 0,
         },
         CoreDataElement::EyebrowColor => CoreDataElementInfo {
             byte_offset: 0x5,
@@ -708,7 +708,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 7,
             min_value: 0,
             max_value: 0x63,
-            unk: 1
+            unk: 1,
         },
         CoreDataElement::MouthColor => CoreDataElementInfo {
             byte_offset: 0x6,
@@ -716,7 +716,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 7,
             min_value: 0,
             max_value: 0x63,
-            unk: 1
+            unk: 1,
         },
         CoreDataElement::BeardColor => CoreDataElementInfo {
             byte_offset: 0x7,
@@ -724,7 +724,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 7,
             min_value: 0,
             max_value: 0x63,
-            unk: 1
+            unk: 1,
         },
         CoreDataElement::GlassColor => CoreDataElementInfo {
             byte_offset: 0x8,
@@ -732,7 +732,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 7,
             min_value: 0,
             max_value: 0x63,
-            unk: 1
+            unk: 1,
         },
         CoreDataElement::EyeType => CoreDataElementInfo {
             byte_offset: 0x9,
@@ -740,7 +740,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 6,
             min_value: 0,
             max_value: 0x3B,
-            unk: 1
+            unk: 1,
         },
         CoreDataElement::RegionMove => CoreDataElementInfo {
             byte_offset: 0x9,
@@ -748,7 +748,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 2,
             min_value: 0,
             max_value: 0x3,
-            unk: 0
+            unk: 0,
         },
         CoreDataElement::MouthType => CoreDataElementInfo {
             byte_offset: 0xA,
@@ -756,7 +756,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 6,
             min_value: 0,
             max_value: 0x23,
-            unk: 1
+            unk: 1,
         },
         CoreDataElement::FontRegion => CoreDataElementInfo {
             byte_offset: 0xA,
@@ -764,7 +764,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 2,
             min_value: 0,
             max_value: 0x3,
-            unk: 0
+            unk: 0,
         },
         CoreDataElement::EyeY => CoreDataElementInfo {
             byte_offset: 0xB,
@@ -772,7 +772,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 5,
             min_value: 0,
             max_value: 0x12,
-            unk: 1
+            unk: 1,
         },
         CoreDataElement::GlassScale => CoreDataElementInfo {
             byte_offset: 0xB,
@@ -780,7 +780,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 3,
             min_value: 0,
             max_value: 0x7,
-            unk: 0
+            unk: 0,
         },
         CoreDataElement::EyebrowType => CoreDataElementInfo {
             byte_offset: 0xC,
@@ -788,7 +788,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 5,
             min_value: 0,
             max_value: 0x17,
-            unk: 1
+            unk: 1,
         },
         CoreDataElement::MustacheType => CoreDataElementInfo {
             byte_offset: 0xC,
@@ -796,7 +796,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 3,
             min_value: 0,
             max_value: 0x5,
-            unk: 1
+            unk: 1,
         },
         CoreDataElement::NoseType => CoreDataElementInfo {
             byte_offset: 0xD,
@@ -804,7 +804,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 5,
             min_value: 0,
             max_value: 0x11,
-            unk: 1
+            unk: 1,
         },
         CoreDataElement::BeardType => CoreDataElementInfo {
             byte_offset: 0xD,
@@ -812,7 +812,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 3,
             min_value: 0,
             max_value: 0x5,
-            unk: 1
+            unk: 1,
         },
         CoreDataElement::NoseY => CoreDataElementInfo {
             byte_offset: 0xE,
@@ -820,7 +820,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 5,
             min_value: 0,
             max_value: 0x12,
-            unk: 1
+            unk: 1,
         },
         CoreDataElement::MouthAspect => CoreDataElementInfo {
             byte_offset: 0xE,
@@ -828,7 +828,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 3,
             min_value: 0,
             max_value: 0x6,
-            unk: 1
+            unk: 1,
         },
         CoreDataElement::MouthY => CoreDataElementInfo {
             byte_offset: 0xF,
@@ -836,7 +836,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 5,
             min_value: 0,
             max_value: 0x12,
-            unk: 1
+            unk: 1,
         },
         CoreDataElement::EyebrowAspect => CoreDataElementInfo {
             byte_offset: 0xF,
@@ -844,7 +844,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 3,
             min_value: 0,
             max_value: 0x6,
-            unk: 1
+            unk: 1,
         },
         CoreDataElement::MustacheY => CoreDataElementInfo {
             byte_offset: 0x10,
@@ -852,7 +852,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 5,
             min_value: 0,
             max_value: 0x10,
-            unk: 1
+            unk: 1,
         },
         CoreDataElement::EyeRotate => CoreDataElementInfo {
             byte_offset: 0x10,
@@ -860,7 +860,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 3,
             min_value: 0,
             max_value: 0x7,
-            unk: 0
+            unk: 0,
         },
         CoreDataElement::GlassY => CoreDataElementInfo {
             byte_offset: 0x11,
@@ -868,7 +868,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 5,
             min_value: 0,
             max_value: 0x14,
-            unk: 1
+            unk: 1,
         },
         CoreDataElement::EyeAspect => CoreDataElementInfo {
             byte_offset: 0x11,
@@ -876,7 +876,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 3,
             min_value: 0,
             max_value: 0x6,
-            unk: 1
+            unk: 1,
         },
         CoreDataElement::MoleX => CoreDataElementInfo {
             byte_offset: 0x12,
@@ -884,7 +884,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 5,
             min_value: 0,
             max_value: 0x10,
-            unk: 1
+            unk: 1,
         },
         CoreDataElement::EyeScale => CoreDataElementInfo {
             byte_offset: 0x12,
@@ -892,7 +892,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 3,
             min_value: 0,
             max_value: 0x7,
-            unk: 0
+            unk: 0,
         },
         CoreDataElement::MoleY => CoreDataElementInfo {
             byte_offset: 0x13,
@@ -900,7 +900,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 5,
             min_value: 0,
             max_value: 0x1E,
-            unk: 1
+            unk: 1,
         },
         CoreDataElement::GlassType => CoreDataElementInfo {
             byte_offset: 0x14,
@@ -908,7 +908,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 5,
             min_value: 0,
             max_value: 0x13,
-            unk: 1
+            unk: 1,
         },
         CoreDataElement::FavoriteColor => CoreDataElementInfo {
             byte_offset: 0x15,
@@ -916,7 +916,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 4,
             min_value: 0,
             max_value: 0xB,
-            unk: 1
+            unk: 1,
         },
         CoreDataElement::FacelineType => CoreDataElementInfo {
             byte_offset: 0x15,
@@ -924,7 +924,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 4,
             min_value: 0,
             max_value: 0xB,
-            unk: 1
+            unk: 1,
         },
         CoreDataElement::FacelineColor => CoreDataElementInfo {
             byte_offset: 0x16,
@@ -932,7 +932,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 4,
             min_value: 0,
             max_value: 0x9,
-            unk: 1
+            unk: 1,
         },
         CoreDataElement::FacelineWrinkle => CoreDataElementInfo {
             byte_offset: 0x16,
@@ -940,7 +940,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 4,
             min_value: 0,
             max_value: 0xB,
-            unk: 1
+            unk: 1,
         },
         CoreDataElement::FacelineMake => CoreDataElementInfo {
             byte_offset: 0x17,
@@ -948,7 +948,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 4,
             min_value: 0,
             max_value: 0xB,
-            unk: 1
+            unk: 1,
         },
 
         CoreDataElement::EyeX => CoreDataElementInfo {
@@ -957,7 +957,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 4,
             min_value: 0,
             max_value: 0xC,
-            unk: 1
+            unk: 1,
         },
         CoreDataElement::EyebrowScale => CoreDataElementInfo {
             byte_offset: 0x18,
@@ -965,7 +965,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 4,
             min_value: 0,
             max_value: 0x8,
-            unk: 1
+            unk: 1,
         },
         CoreDataElement::EyebrowRotate => CoreDataElementInfo {
             byte_offset: 0x18,
@@ -973,7 +973,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 4,
             min_value: 0,
             max_value: 0xB,
-            unk: 1
+            unk: 1,
         },
         CoreDataElement::EyebrowX => CoreDataElementInfo {
             byte_offset: 0x19,
@@ -981,7 +981,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 4,
             min_value: 0,
             max_value: 0xC,
-            unk: 1
+            unk: 1,
         },
         CoreDataElement::EyebrowY => CoreDataElementInfo {
             byte_offset: 0x19,
@@ -989,7 +989,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 4,
             min_value: 0x3,
             max_value: 0x12,
-            unk: 0
+            unk: 0,
         },
         CoreDataElement::NoseScale => CoreDataElementInfo {
             byte_offset: 0x1A,
@@ -997,7 +997,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 4,
             min_value: 0,
             max_value: 0x8,
-            unk: 1
+            unk: 1,
         },
         CoreDataElement::MouthScale => CoreDataElementInfo {
             byte_offset: 0x1A,
@@ -1005,7 +1005,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 4,
             min_value: 0,
             max_value: 0x8,
-            unk: 1
+            unk: 1,
         },
         CoreDataElement::MustacheScale => CoreDataElementInfo {
             byte_offset: 0x1B,
@@ -1013,7 +1013,7 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 4,
             min_value: 0,
             max_value: 0x8,
-            unk: 1
+            unk: 1,
         },
         CoreDataElement::MoleScale => CoreDataElementInfo {
             byte_offset: 0x1B,
@@ -1021,8 +1021,8 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
             bit_width: 4,
             min_value: 0,
             max_value: 0x8,
-            unk: 1
-        }
+            unk: 1,
+        },
     }
 }
 
@@ -1030,19 +1030,24 @@ pub const fn get_element_info(elm: CoreDataElement) -> CoreDataElementInfo {
 #[repr(C)]
 pub struct CoreData {
     pub data: [u8; 0x1C],
-    pub name: util::ArrayWideString<10>
+    pub name: util::ArrayWideString<10>,
 }
 const_assert!(core::mem::size_of::<CoreData>() == 0x30);
 
 impl CoreData {
     #[inline]
     fn get_value(&self, info: CoreDataElementInfo) -> u32 {
-        ((self.data[info.byte_offset as usize] as u32 >> info.bit_offset) & !(u32::MAX << info.bit_width)) + info.min_value
+        ((self.data[info.byte_offset as usize] as u32 >> info.bit_offset)
+            & !(u32::MAX << info.bit_width))
+            + info.min_value
     }
 
     #[inline]
     fn set_value(&mut self, info: CoreDataElementInfo, val: u32) {
-        let new_val = (self.data[info.byte_offset as usize] as u32 & !(!(u32::MAX << info.bit_width) << info.bit_offset) | (((val - info.min_value) & !(u32::MAX << info.bit_width)) << info.bit_offset)) as u8;
+        let new_val = (self.data[info.byte_offset as usize] as u32
+            & !(!(u32::MAX << info.bit_width) << info.bit_offset)
+            | (((val - info.min_value) & !(u32::MAX << info.bit_width)) << info.bit_offset))
+            as u8;
         self.data[info.byte_offset as usize] = new_val;
     }
 
@@ -1050,12 +1055,17 @@ impl CoreData {
 
     #[inline]
     pub fn get_hair_type(&self) -> HairType {
-        unsafe { core::mem::transmute(self.get_value(get_element_info(CoreDataElement::HairType)) as u8) }
+        unsafe {
+            core::mem::transmute(self.get_value(get_element_info(CoreDataElement::HairType)) as u8)
+        }
     }
 
     #[inline]
     pub fn set_hair_type(&mut self, hair_type: HairType) {
-        self.set_value(get_element_info(CoreDataElement::HairType), hair_type as u32)
+        self.set_value(
+            get_element_info(CoreDataElement::HairType),
+            hair_type as u32,
+        )
     }
 
     #[inline]
@@ -1070,12 +1080,17 @@ impl CoreData {
 
     #[inline]
     pub fn get_mole_type(&self) -> MoleType {
-        unsafe { core::mem::transmute(self.get_value(get_element_info(CoreDataElement::MoleType)) as u8) }
+        unsafe {
+            core::mem::transmute(self.get_value(get_element_info(CoreDataElement::MoleType)) as u8)
+        }
     }
 
     #[inline]
     pub fn set_mole_type(&mut self, mole_type: MoleType) {
-        self.set_value(get_element_info(CoreDataElement::MoleType), mole_type as u32)
+        self.set_value(
+            get_element_info(CoreDataElement::MoleType),
+            mole_type as u32,
+        )
     }
 
     #[inline]
@@ -1090,12 +1105,17 @@ impl CoreData {
 
     #[inline]
     pub fn get_hair_flip(&self) -> HairFlip {
-        unsafe { core::mem::transmute(self.get_value(get_element_info(CoreDataElement::HairFlip)) as u8) }
+        unsafe {
+            core::mem::transmute(self.get_value(get_element_info(CoreDataElement::HairFlip)) as u8)
+        }
     }
 
     #[inline]
     pub fn set_hair_flip(&mut self, hair_flip: HairFlip) {
-        self.set_value(get_element_info(CoreDataElement::HairFlip), hair_flip as u32)
+        self.set_value(
+            get_element_info(CoreDataElement::HairFlip),
+            hair_flip as u32,
+        )
     }
 
     #[inline]
@@ -1130,7 +1150,9 @@ impl CoreData {
 
     #[inline]
     pub fn get_gender(&self) -> Gender {
-        unsafe { core::mem::transmute(self.get_value(get_element_info(CoreDataElement::Gender)) as u8) }
+        unsafe {
+            core::mem::transmute(self.get_value(get_element_info(CoreDataElement::Gender)) as u8)
+        }
     }
 
     #[inline]
@@ -1145,7 +1167,10 @@ impl CoreData {
 
     #[inline]
     pub fn set_eyebrow_color(&mut self, color: u8) {
-        self.set_value(get_element_info(CoreDataElement::EyebrowColor), color as u32)
+        self.set_value(
+            get_element_info(CoreDataElement::EyebrowColor),
+            color as u32,
+        )
     }
 
     #[inline]
@@ -1180,7 +1205,9 @@ impl CoreData {
 
     #[inline]
     pub fn get_eye_type(&self) -> EyeType {
-        unsafe { core::mem::transmute(self.get_value(get_element_info(CoreDataElement::EyeType)) as u8) }
+        unsafe {
+            core::mem::transmute(self.get_value(get_element_info(CoreDataElement::EyeType)) as u8)
+        }
     }
 
     #[inline]
@@ -1195,27 +1222,42 @@ impl CoreData {
 
     #[inline]
     pub fn set_region_move(&mut self, region_move: u8) {
-        self.set_value(get_element_info(CoreDataElement::RegionMove), region_move as u32)
+        self.set_value(
+            get_element_info(CoreDataElement::RegionMove),
+            region_move as u32,
+        )
     }
 
     #[inline]
     pub fn get_mouth_type(&self) -> MouthType {
-        unsafe { core::mem::transmute(self.get_value(get_element_info(CoreDataElement::MouthType)) as u8) }
+        unsafe {
+            core::mem::transmute(self.get_value(get_element_info(CoreDataElement::MouthType)) as u8)
+        }
     }
 
     #[inline]
     pub fn set_mouth_type(&mut self, mouth_type: MouthType) {
-        self.set_value(get_element_info(CoreDataElement::MouthType), mouth_type as u32)
+        self.set_value(
+            get_element_info(CoreDataElement::MouthType),
+            mouth_type as u32,
+        )
     }
 
     #[inline]
     pub fn get_font_region(&self) -> FontRegion {
-        unsafe { core::mem::transmute(self.get_value(get_element_info(CoreDataElement::FontRegion)) as u8) }
+        unsafe {
+            core::mem::transmute(
+                self.get_value(get_element_info(CoreDataElement::FontRegion)) as u8,
+            )
+        }
     }
 
     #[inline]
     pub fn set_font_region(&mut self, font_region: FontRegion) {
-        self.set_value(get_element_info(CoreDataElement::FontRegion), font_region as u32)
+        self.set_value(
+            get_element_info(CoreDataElement::FontRegion),
+            font_region as u32,
+        )
     }
 
     #[inline]
@@ -1240,42 +1282,66 @@ impl CoreData {
 
     #[inline]
     pub fn get_eyebrow_type(&self) -> EyebrowType {
-        unsafe { core::mem::transmute(self.get_value(get_element_info(CoreDataElement::EyebrowType)) as u8) }
+        unsafe {
+            core::mem::transmute(
+                self.get_value(get_element_info(CoreDataElement::EyebrowType)) as u8,
+            )
+        }
     }
 
     #[inline]
     pub fn set_eyebrow_type(&mut self, eyebrow_type: EyebrowType) {
-        self.set_value(get_element_info(CoreDataElement::EyebrowType), eyebrow_type as u32)
+        self.set_value(
+            get_element_info(CoreDataElement::EyebrowType),
+            eyebrow_type as u32,
+        )
     }
 
     #[inline]
     pub fn get_mustache_type(&self) -> MustacheType {
-        unsafe { core::mem::transmute(self.get_value(get_element_info(CoreDataElement::MustacheType)) as u8) }
+        unsafe {
+            core::mem::transmute(
+                self.get_value(get_element_info(CoreDataElement::MustacheType)) as u8,
+            )
+        }
     }
 
     #[inline]
     pub fn set_mustache_type(&mut self, mustache_type: MustacheType) {
-        self.set_value(get_element_info(CoreDataElement::MustacheType), mustache_type as u32)
+        self.set_value(
+            get_element_info(CoreDataElement::MustacheType),
+            mustache_type as u32,
+        )
     }
 
     #[inline]
     pub fn get_nose_type(&self) -> NoseType {
-        unsafe { core::mem::transmute(self.get_value(get_element_info(CoreDataElement::NoseType)) as u8) }
+        unsafe {
+            core::mem::transmute(self.get_value(get_element_info(CoreDataElement::NoseType)) as u8)
+        }
     }
 
     #[inline]
     pub fn set_nose_type(&mut self, nose_type: NoseType) {
-        self.set_value(get_element_info(CoreDataElement::NoseType), nose_type as u32)
+        self.set_value(
+            get_element_info(CoreDataElement::NoseType),
+            nose_type as u32,
+        )
     }
 
     #[inline]
     pub fn get_beard_type(&self) -> BeardType {
-        unsafe { core::mem::transmute(self.get_value(get_element_info(CoreDataElement::BeardType)) as u8) }
+        unsafe {
+            core::mem::transmute(self.get_value(get_element_info(CoreDataElement::BeardType)) as u8)
+        }
     }
 
     #[inline]
     pub fn set_beard_type(&mut self, beard_type: BeardType) {
-        self.set_value(get_element_info(CoreDataElement::BeardType), beard_type as u32)
+        self.set_value(
+            get_element_info(CoreDataElement::BeardType),
+            beard_type as u32,
+        )
     }
 
     #[inline]
@@ -1295,7 +1361,10 @@ impl CoreData {
 
     #[inline]
     pub fn set_mouth_aspect(&mut self, aspect: u8) {
-        self.set_value(get_element_info(CoreDataElement::MouthAspect), aspect as u32)
+        self.set_value(
+            get_element_info(CoreDataElement::MouthAspect),
+            aspect as u32,
+        )
     }
 
     #[inline]
@@ -1315,7 +1384,10 @@ impl CoreData {
 
     #[inline]
     pub fn set_eyebrow_aspect(&mut self, aspect: u8) {
-        self.set_value(get_element_info(CoreDataElement::EyebrowAspect), aspect as u32)
+        self.set_value(
+            get_element_info(CoreDataElement::EyebrowAspect),
+            aspect as u32,
+        )
     }
 
     #[inline]
@@ -1390,12 +1462,17 @@ impl CoreData {
 
     #[inline]
     pub fn get_glass_type(&self) -> GlassType {
-        unsafe { core::mem::transmute(self.get_value(get_element_info(CoreDataElement::GlassType)) as u8) }
+        unsafe {
+            core::mem::transmute(self.get_value(get_element_info(CoreDataElement::GlassType)) as u8)
+        }
     }
 
     #[inline]
     pub fn set_glass_type(&mut self, glass_type: GlassType) {
-        self.set_value(get_element_info(CoreDataElement::GlassType), glass_type as u32)
+        self.set_value(
+            get_element_info(CoreDataElement::GlassType),
+            glass_type as u32,
+        )
     }
 
     #[inline]
@@ -1405,47 +1482,78 @@ impl CoreData {
 
     #[inline]
     pub fn set_favorite_color(&mut self, favorite_color: u8) {
-        self.set_value(get_element_info(CoreDataElement::FavoriteColor), favorite_color as u32)
+        self.set_value(
+            get_element_info(CoreDataElement::FavoriteColor),
+            favorite_color as u32,
+        )
     }
 
     #[inline]
     pub fn get_faceline_type(&self) -> FacelineType {
-        unsafe { core::mem::transmute(self.get_value(get_element_info(CoreDataElement::FacelineType)) as u8) }
+        unsafe {
+            core::mem::transmute(
+                self.get_value(get_element_info(CoreDataElement::FacelineType)) as u8,
+            )
+        }
     }
 
     #[inline]
     pub fn set_faceline_type(&mut self, faceline_type: FacelineType) {
-        self.set_value(get_element_info(CoreDataElement::FacelineType), faceline_type as u32)
+        self.set_value(
+            get_element_info(CoreDataElement::FacelineType),
+            faceline_type as u32,
+        )
     }
 
     #[inline]
     pub fn get_faceline_color(&self) -> FacelineColor {
-        unsafe { core::mem::transmute(self.get_value(get_element_info(CoreDataElement::FacelineColor)) as u8) }
+        unsafe {
+            core::mem::transmute(
+                self.get_value(get_element_info(CoreDataElement::FacelineColor)) as u8,
+            )
+        }
     }
 
     #[inline]
     pub fn set_faceline_color(&mut self, faceline_color: FacelineColor) {
-        self.set_value(get_element_info(CoreDataElement::FacelineColor), faceline_color as u32)
+        self.set_value(
+            get_element_info(CoreDataElement::FacelineColor),
+            faceline_color as u32,
+        )
     }
 
     #[inline]
     pub fn get_faceline_wrinkle(&self) -> FacelineWrinkle {
-        unsafe { core::mem::transmute(self.get_value(get_element_info(CoreDataElement::FacelineWrinkle)) as u8) }
+        unsafe {
+            core::mem::transmute(
+                self.get_value(get_element_info(CoreDataElement::FacelineWrinkle)) as u8,
+            )
+        }
     }
 
     #[inline]
     pub fn set_faceline_wrinkle(&mut self, faceline_wrinkle: FacelineWrinkle) {
-        self.set_value(get_element_info(CoreDataElement::FacelineWrinkle), faceline_wrinkle as u32)
+        self.set_value(
+            get_element_info(CoreDataElement::FacelineWrinkle),
+            faceline_wrinkle as u32,
+        )
     }
 
     #[inline]
     pub fn get_faceline_make(&self) -> FacelineMake {
-        unsafe { core::mem::transmute(self.get_value(get_element_info(CoreDataElement::FacelineMake)) as u8) }
+        unsafe {
+            core::mem::transmute(
+                self.get_value(get_element_info(CoreDataElement::FacelineMake)) as u8,
+            )
+        }
     }
 
     #[inline]
     pub fn set_faceline_make(&mut self, faceline_make: FacelineMake) {
-        self.set_value(get_element_info(CoreDataElement::FacelineMake), faceline_make as u32)
+        self.set_value(
+            get_element_info(CoreDataElement::FacelineMake),
+            faceline_make as u32,
+        )
     }
 
     #[inline]
@@ -1465,7 +1573,10 @@ impl CoreData {
 
     #[inline]
     pub fn set_eyebrow_scale(&mut self, scale: u8) {
-        self.set_value(get_element_info(CoreDataElement::EyebrowScale), scale as u32)
+        self.set_value(
+            get_element_info(CoreDataElement::EyebrowScale),
+            scale as u32,
+        )
     }
 
     #[inline]
@@ -1475,7 +1586,10 @@ impl CoreData {
 
     #[inline]
     pub fn set_eyebrow_rotate(&mut self, rotate: u8) {
-        self.set_value(get_element_info(CoreDataElement::EyebrowRotate), rotate as u32)
+        self.set_value(
+            get_element_info(CoreDataElement::EyebrowRotate),
+            rotate as u32,
+        )
     }
 
     #[inline]
@@ -1525,7 +1639,10 @@ impl CoreData {
 
     #[inline]
     pub fn set_mustache_scale(&mut self, scale: u8) {
-        self.set_value(get_element_info(CoreDataElement::MustacheScale), scale as u32)
+        self.set_value(
+            get_element_info(CoreDataElement::MustacheScale),
+            scale as u32,
+        )
     }
 
     #[inline]
@@ -1651,18 +1768,22 @@ impl CoreData {
     }
 }
 
-pub fn compute_crc16(buffer: &[u8], base_crc: u16, reverse_endianess: bool) -> u16{
-    let crc = buffer.iter().copied().map(u16::from).fold(base_crc, |mut crc, val| {
-        for _ in 0..8 {
-            let apply_shift = (crc & 0x8000) !=0;
-            crc <<= 1;
-            
-            if apply_shift {
-                crc ^= 0x1021;
+pub fn compute_crc16(buffer: &[u8], base_crc: u16, reverse_endianess: bool) -> u16 {
+    let crc = buffer
+        .iter()
+        .copied()
+        .map(u16::from)
+        .fold(base_crc, |mut crc, val| {
+            for _ in 0..8 {
+                let apply_shift = (crc & 0x8000) != 0;
+                crc <<= 1;
+
+                if apply_shift {
+                    crc ^= 0x1021;
+                }
             }
-        }
-        crc ^ val
-    });
+            crc ^ val
+        });
 
     if reverse_endianess {
         crc.swap_bytes()
@@ -1685,14 +1806,18 @@ pub struct StoreData {
     pub core_data: CoreData,
     pub id: CreateId,
     pub data_crc: u16,
-    pub device_crc: u16
+    pub device_crc: u16,
 }
 const_assert!(core::mem::size_of::<StoreData>() == 0x44);
 
 /// Simple wrapper for interpretting structs as byte slices.
+/// This flags in the linter, but is actually used
+#[allow(unused_macros)]
 macro_rules! struct_to_slice {
     ($val:expr) => {
-        unsafe {core::slice::from_raw_parts($val as *const _ as *const u8, core::mem::size_of_val($val))}
+        unsafe {
+            core::slice::from_raw_parts($val as *const _ as *const u8, core::mem::size_of_val($val))
+        }
     };
 }
 
@@ -1703,10 +1828,14 @@ impl StoreData {
             core_data: CoreData::from_charinfo(char_info)?,
             id: char_info.id,
             data_crc: 0,
-            device_crc: 0
+            device_crc: 0,
         };
 
-        store_data.data_crc = compute_crc16(&struct_to_slice!(&store_data)[..core::mem::offset_of!(StoreData, device_crc)], 0, true);
+        store_data.data_crc = compute_crc16(
+            &struct_to_slice!(&store_data)[..core::mem::offset_of!(StoreData, device_crc)],
+            0,
+            true,
+        );
 
         let device_id = get_device_id()?;
         let base_device_crc = compute_crc16(struct_to_slice!(&device_id), 0, false);
@@ -1717,15 +1846,18 @@ impl StoreData {
 
     #[cfg(feature = "services")]
     pub fn is_valid(&self) -> bool {
-        let new_data_crc = compute_crc16(&struct_to_slice!(self)[..core::mem::offset_of!(StoreData, device_crc)], 0, false);
-        
+        let new_data_crc = compute_crc16(
+            &struct_to_slice!(self)[..core::mem::offset_of!(StoreData, device_crc)],
+            0,
+            false,
+        );
+
         if let Ok(device_id) = get_device_id() {
             let base_new_device_crc = compute_crc16(struct_to_slice!(&device_id), 0, false);
             let new_device_crc = compute_crc16(struct_to_slice!(self), base_new_device_crc, false);
 
             (new_data_crc == 0) && (new_device_crc == 0)
-        }
-        else {
+        } else {
             false
         }
     }
@@ -1738,10 +1870,9 @@ impl StoreData {
     }
 }
 
-
 ipc_sf_define_default_interface_client!(DatabaseService);
 ipc_sf_define_interface_trait! {
-	trait DatabaseService {
+    trait DatabaseService {
         is_updated [0, version::VersionInterval::all()]: (flag: SourceFlag) =>  (updated: bool) (updated: bool);
         is_full [1, version::VersionInterval::all()]: () => (full: bool) (full: bool);
         get_count [2, version::VersionInterval::all()]: (flag: SourceFlag) =>  (count: u32) (count: u32);
@@ -1752,7 +1883,7 @@ ipc_sf_define_interface_trait! {
 
 ipc_sf_define_default_interface_client!(StaticService);
 ipc_sf_define_interface_trait! {
-	trait StaticService {
+    trait StaticService {
         get_database_service [0, version::VersionInterval::all()]: (key_code: SpecialKeyCode) =>  (database_service: DatabaseService) (database_service: session_type!(DatabaseService));
     }
 }

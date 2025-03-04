@@ -1,12 +1,15 @@
 //! Allocator implementation and definitions
 
 use crate::result::*;
+use crate::svc;
 use crate::util::PointerAndSize;
+
 use core::mem;
 use core::mem::ManuallyDrop;
+use core::ops::Index;
+use core::ops::IndexMut;
 use core::ptr;
 use core::ptr::NonNull;
-
 extern crate alloc;
 use alloc::alloc::Allocator;
 
@@ -25,6 +28,50 @@ impl From<AllocError> for ResultCode {
     }
 }
 
+#[linkage = "weak"]
+pub static HEAP_SIZE: usize = 0;
+
+/// Default implementation
+#[linkage = "weak"]
+pub fn configure_heap(heap_override: PointerAndSize) -> PointerAndSize {
+    if heap_override.is_valid() {
+        heap_override
+    } else {
+        let heap_size = match heap_override.size {
+            0 => {
+                let mem_available = svc::get_info(
+                    svc::InfoId::TotalMemorySize,
+                    svc::CURRENT_PROCESS_PSEUDO_HANDLE,
+                    0,
+                )
+                .unwrap();
+                let mem_used = svc::get_info(
+                    svc::InfoId::UsedMemorySize,
+                    svc::CURRENT_PROCESS_PSEUDO_HANDLE,
+                    0,
+                )
+                .unwrap();
+                if mem_available > mem_used + 0x200000 {
+                    ((mem_available - mem_used - 0x200000) & !0x1FFFFF) as usize
+                } else {
+                    (0x2000000 * 16) as usize
+                }
+            }
+            non_zero => non_zero,
+        };
+
+        let heap_addr = svc::set_heap_size(heap_size).unwrap();
+        debug_assert!(!heap_addr.is_null(), "Received null heap address after requesting from the kernel");
+
+        let (heap_metadata,_) = svc::query_memory(heap_addr).unwrap();
+        if ! heap_metadata.permission.contains(svc::MemoryPermission::Read() | svc::MemoryPermission::Write()) {
+            unsafe {svc::set_memory_permission(heap_addr, heap_size, svc::MemoryPermission::Read() | svc::MemoryPermission::Write()).unwrap(); }
+        }
+
+        PointerAndSize::new(heap_addr, heap_size)
+    }
+}
+
 // TODO: be able to change the global allocator?
 
 /// Represents a heap allocator for this library
@@ -39,7 +86,7 @@ pub unsafe trait AllocatorEx: Allocator {
         let layout = Layout::new::<T>();
         match self.allocate(layout) {
             Ok(allocation) => Ok(allocation.cast()),
-            Err(_) => rc::ResultOutOfMemory::make_err()
+            Err(_) => rc::ResultOutOfMemory::make_err(),
         }
     }
 
@@ -69,14 +116,9 @@ static GLOBAL_ALLOCATOR: linked_list_allocator::LockedHeap =
 ///
 /// * `heap`: The heap address and size
 pub fn initialize(heap: PointerAndSize) -> bool {
-    unsafe {
-        GLOBAL_ALLOCATOR
-            .lock()
-            .init(heap.address, heap.size)
-    };
+    unsafe { GLOBAL_ALLOCATOR.lock().init(heap.address, heap.size) };
     false
 }
-
 
 /// Gets whether heap allocations are enabled
 ///
@@ -135,20 +177,51 @@ impl<T> Buffer<T> {
 
     pub fn into_raw(value: Self) -> *mut [T] {
         let no_drop = ManuallyDrop::new(value);
-        core::ptr::slice_from_raw_parts_mut(no_drop.ptr, no_drop.layout.size() / mem::size_of::<T>())
+        core::ptr::slice_from_raw_parts_mut(
+            no_drop.ptr,
+            no_drop.layout.size() / mem::size_of::<T>(),
+        )
     }
 
     /// Releases the [`Buffer`]
     ///
     /// The [`Buffer`] becomes invalid after this
-    pub fn release(&mut self) {
+    pub unsafe fn release(&mut self) {
         if self.is_valid() {
             unsafe {
-                self.allocator.deallocate(NonNull::new_unchecked(self.ptr.cast()), self.layout);
+                self.allocator
+                    .deallocate(NonNull::new_unchecked(self.ptr.cast()), self.layout);
             }
             self.ptr = core::ptr::null_mut();
         }
-        
+    }
+}
+
+impl<T> Index<usize> for Buffer<T> {
+    type Output = T;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        assert!(self.is_valid(), "Indexing into invalid buffer");
+        assert!(
+            index <= (self.layout.size() / size_of::<T>()),
+            "Index out of bounds."
+        );
+
+        // SAFETY - we check that this pointer is valid via the two asserts above
+        unsafe { self.ptr.add(index).as_ref().unwrap_unchecked() }
+    }
+}
+
+impl<T> IndexMut<usize> for Buffer<T> {
+    fn index_mut(&mut self, index: usize) -> &mut T {
+        assert!(self.is_valid(), "Indexing into invalid buffer");
+        assert!(
+            index <= (self.layout.size() / size_of::<T>()),
+            "Index out of bounds."
+        );
+
+        // SAFETY - we check that this pointer is valid via the two asserts above
+        unsafe { self.ptr.add(index).as_mut().unwrap_unchecked() }
     }
 }
 
