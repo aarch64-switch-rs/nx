@@ -33,25 +33,25 @@ fn get_npad_id_shmem_entry_index(npad_id: hid::NpadIdType) -> usize {
 
 macro_rules! get_npad_property {
     ($self:expr, $property:ident) => {
-            match $self.shmem {
-                $crate::service::hid::shmem::SharedMemoryFormat::V1(m) => {
-                    &m.npad.entries[$self.npad_id_idx].$property
-                }
-                $crate::service::hid::shmem::SharedMemoryFormat::V2(m) => {
-                    &m.npad.entries[$self.npad_id_idx].$property
-                }
-                $crate::service::hid::shmem::SharedMemoryFormat::V3(m) => {
-                    &m.npad.entries[$self.npad_id_idx].$property
-                }
-                $crate::service::hid::shmem::SharedMemoryFormat::V4(m) => {
-                    &m.npad.entries[$self.npad_id_idx].$property
-                }
-                $crate::service::hid::shmem::SharedMemoryFormat::V5(m) => {
-                    &m.npad.entries[$self.npad_id_idx].$property
-                }
-                $crate::service::hid::shmem::SharedMemoryFormat::V6(m) => {
-                    &m.npad.entries[$self.npad_id_idx].$property
-                }
+        match $self.shmem {
+            $crate::service::hid::shmem::SharedMemoryFormat::V1(m) => {
+                &m.npad.entries[$self.npad_id_idx].$property
+            }
+            $crate::service::hid::shmem::SharedMemoryFormat::V2(m) => {
+                &m.npad.entries[$self.npad_id_idx].$property
+            }
+            $crate::service::hid::shmem::SharedMemoryFormat::V3(m) => {
+                &m.npad.entries[$self.npad_id_idx].$property
+            }
+            $crate::service::hid::shmem::SharedMemoryFormat::V4(m) => {
+                &m.npad.entries[$self.npad_id_idx].$property
+            }
+            $crate::service::hid::shmem::SharedMemoryFormat::V5(m) => {
+                &m.npad.entries[$self.npad_id_idx].$property
+            }
+            $crate::service::hid::shmem::SharedMemoryFormat::V6(m) => {
+                &m.npad.entries[$self.npad_id_idx].$property
+            }
         }
     };
 }

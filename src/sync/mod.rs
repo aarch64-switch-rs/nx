@@ -154,7 +154,7 @@ pub struct RwLock<T: ?Sized> {
     pub(self) object_cell: UnsafeCell<T>,
 }
 
-impl<T: ?Sized> core::fmt::Debug for RwLock<T>{
+impl<T: ?Sized> core::fmt::Debug for RwLock<T> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.write_str("RwLock<")?;
         f.write_str(core::any::type_name::<T>())?;

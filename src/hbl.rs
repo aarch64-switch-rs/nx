@@ -143,7 +143,7 @@ pub(crate) fn set_last_load_result(rc: ResultCode) {
 ///
 /// This value will only be set/useful if the current code is running through HBL
 pub fn get_last_load_result() -> ResultCode {
-    ResultCode::new(G_LAST_LOAD_RESULT.load(Ordering::Relaxed))
+    ResultCode::new(G_LAST_LOAD_RESULT.load(Ordering::Acquire))
 }
 
 static G_PROCESS_HANDLE: AtomicU32 = AtomicU32::new(INVALID_HANDLE);
@@ -174,7 +174,7 @@ pub enum AppletType {
     SystemApplication = 4,
 }
 
-static G_APPLET_TYPE: AtomicAppletType = AtomicAppletType::new(AppletType::None);
+static G_APPLET_TYPE: AtomicAppletType = AtomicAppletType::new(AppletType::Default);
 
 pub(crate) fn set_applet_type(applet_type: AppletType) {
     G_APPLET_TYPE.store(applet_type, Relaxed);

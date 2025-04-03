@@ -557,14 +557,13 @@ impl Drop for Surface {
         };
 
         let mut gpu_guard = self.gpu_ctx.write();
-        if self.managed {
-            gpu_guard.application_display_service.get_manager_display_service().expect("We successfully created a managed layer, we should always then be able to recall the manager service").destroy_managed_layer(self.layer_id).expect("Failed to close our own layer by ID.");
+        let _layer_close_result =if self.managed {
+            gpu_guard.application_display_service.get_manager_display_service().expect("We successfully created a managed layer, we should always then be able to recall the manager service").destroy_managed_layer(self.layer_id)
         } else {
             gpu_guard
                 .application_display_service
                 .destroy_stray_layer(self.layer_id)
-                .expect("Failed to close our own layer by ID.");
-        }
+        };
 
         gpu_guard
             .application_display_service

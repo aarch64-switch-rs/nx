@@ -799,7 +799,7 @@ impl<T> JoinInner<'_, T> {
             .take()
             .unwrap()
     }
-    fn wait_exit(&self, timeout: i64) -> crate::result::Result<()> {
+    fn wait_exit(&self, timeout:Option<i64>) -> crate::result::Result<()> {
         self.native.join_timeout(timeout)
     }
 }
@@ -963,7 +963,7 @@ impl<T> JoinHandle<T> {
     /// }).unwrap();
     /// join_handle.join().expect("Couldn't join on the associated thread");
     /// ```
-    pub fn wait_exit(&self, timeout: i64) -> crate::result::Result<()> {
+    pub fn wait_exit(&self, timeout: Option<i64>) -> crate::result::Result<()> {
         self.0.wait_exit(timeout)
     }
 
@@ -1165,8 +1165,8 @@ pub mod imp {
             wait_handles(&[self.__nx_thread.handle], -1).map(|_| ())
         }
 
-        pub(crate) fn join_timeout(&self, timeout: i64) -> crate::result::Result<()> {
-            wait_handles(&[self.__nx_thread.handle], timeout).map(|_| ())
+        pub(crate) fn join_timeout(&self, timeout: Option<i64>) -> crate::result::Result<()> {
+            wait_handles(&[self.__nx_thread.handle], timeout.unwrap_or(-1)).map(|_| ())
         }
 
         pub fn name(&self) -> ThreadName {

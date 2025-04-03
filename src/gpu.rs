@@ -1006,6 +1006,7 @@ impl Context {
             application_display_srv,
             nvdrv_srv,
             transfer_mem_size,
+            !matches!(nv_kind, NvDrvServiceKind::System),
         )
     }
 
@@ -1019,11 +1020,13 @@ impl Context {
     /// * `application_display_srv`: The VI [`IApplicationDisplayService`] interface object
     /// * `nvdrv_srv`: The NV [`INvDrvServices`] service object
     /// * `transfer_mem_size`: The transfer memory size to use
+    /// * `nv_host_as_gpu`: Flag whether to open a handle to the GPU for hardware accelerated rendering.
     pub fn from(
         vi_srv: RootServiceHolder,
         application_display_srv: Box<vi::ApplicationDisplayService>,
-        nvdrv_srv: Box<dyn INvDrvServices>,
+        mut nvdrv_srv: Box<dyn INvDrvServices>,
         transfer_mem_size: usize,
+        nv_host_as_gpu: bool,
     ) -> Result<Self> {
         let transfer_mem = alloc::Buffer::new(alloc::PAGE_ALIGNMENT, transfer_mem_size)?;
         let transfer_mem_handle = unsafe {
@@ -1033,23 +1036,51 @@ impl Context {
                 svc::MemoryPermission::None(),
             )?
         };
-        nvdrv_srv.initialize(
+        if let Err(rc) = nvdrv_srv.initialize(
             transfer_mem_size as u32,
             sf::Handle::from(svc::CURRENT_PROCESS_PSEUDO_HANDLE),
             sf::Handle::from(transfer_mem_handle),
-        )?;
+        ) {
+            svc::close_handle(transfer_mem_handle);
+            wait_for_permission(transfer_mem.ptr, MemoryPermission::Write(), None);
+            return Err(rc);
+        };
 
-        let (nvhost_fd, nvhost_err) =
-            nvdrv_srv.open(sf::Buffer::from_array(NVHOST_AS_GPU_PATH.as_bytes()))?;
-        convert_nv_error_code(nvhost_err)?;
-        let (nvmap_fd, nvmap_err) =
-            nvdrv_srv.open(sf::Buffer::from_array(NVMAP_PATH.as_bytes()))?;
-        convert_nv_error_code(nvmap_err)?;
-        let (nvhostctrl_fd, nvhostctrl_err) =
-            nvdrv_srv.open(sf::Buffer::from_array(NVHOST_CTRL_PATH.as_bytes()))?;
-        convert_nv_error_code(nvhostctrl_err)?;
+        // wrap this up in a try block so we don't need to call into a function for `?` flow control -
+        // we need this to make sure we request the transfer memory back from the GPU.
+        let (mut nvhost_fd, mut nvmap_fd, mut nvhostctrl_fd) = (0, 0, 0);
+        let hos_binder_drv = match try {
+            if nv_host_as_gpu {
+                let (fd, err) =
+                    nvdrv_srv.open(sf::Buffer::from_array(NVHOST_AS_GPU_PATH.as_bytes()))?;
+                convert_nv_error_code(err)?;
+                nvhost_fd = fd;
+            }
 
-        let hos_binder_drv = application_display_srv.get_relay_service()?;
+            let (fd, err) = nvdrv_srv.open(sf::Buffer::from_array(NVMAP_PATH.as_bytes()))?;
+            convert_nv_error_code(err)?;
+            nvmap_fd = fd;
+
+            let (fd, err) = nvdrv_srv.open(sf::Buffer::from_array(NVHOST_CTRL_PATH.as_bytes()))?;
+            convert_nv_error_code(err)?;
+            nvhostctrl_fd = fd;
+
+            application_display_srv.get_relay_service()?
+        } {
+            Ok(binder) => binder,
+            Err(rc) => {
+                nvdrv_srv.close(nvhost_fd);
+                nvdrv_srv.close(nvmap_fd);
+                nvdrv_srv.close(nvhostctrl_fd);
+
+                nvdrv_srv.close(transfer_mem_handle);
+                nvdrv_srv.get_session_mut().close();
+                svc::close_handle(transfer_mem_handle).unwrap();
+                wait_for_permission(transfer_mem.ptr, MemoryPermission::Write(), None);
+                return Err(rc);
+            }
+        };
+
         Ok(Self {
             vi_service: vi_srv,
             nvdrv_service: nvdrv_srv,

@@ -368,15 +368,30 @@ pub trait Canvas {
         }
     }
 
-    fn draw_line(&mut self, start: (i32, i32), end: (i32, i32), width: u32, color: Self::ColorFormat, blend: AlphaBlend) {
+    fn draw_line(
+        &mut self,
+        start: (i32, i32),
+        end: (i32, i32),
+        width: u32,
+        color: Self::ColorFormat,
+        blend: AlphaBlend,
+    ) {
         for (x, y) in line_drawing::Bresenham::new(start, end) {
             // TODO - fix this stupid algorithm
             self.draw_circle_filled(x, y, width, color, blend)
         }
     }
 
-    fn draw_circle(&mut self, x: i32, y: i32, r: u32, line_width: u32, color: Self::ColorFormat, blend: AlphaBlend) {
-        for (x,y) in line_drawing::BresenhamCircle::new(x, y, r as i32) {
+    fn draw_circle(
+        &mut self,
+        x: i32,
+        y: i32,
+        r: u32,
+        line_width: u32,
+        color: Self::ColorFormat,
+        blend: AlphaBlend,
+    ) {
+        for (x, y) in line_drawing::BresenhamCircle::new(x, y, r as i32) {
             // TODO - fix this stupid algorithm
             self.draw_circle_filled(x, y, line_width, color, blend);
         }
@@ -620,11 +635,14 @@ impl<ColorFormat: CanvasColorFormat> Canvas for BufferedCanvas<'_, ColorFormat> 
     }
 
     fn draw_single(&mut self, x: i32, y: i32, color: ColorFormat, blend: AlphaBlend) {
-        if !(0..self.manager.surface.width() as i32).contains(&x) || !(0..self.manager.surface.height() as i32).contains(&y) {
+        if !(0..self.manager.surface.width() as i32).contains(&x)
+            || !(0..self.manager.surface.height() as i32).contains(&y)
+        {
             return;
         }
         let pixel_offset = (self.manager.surface.pitch() * y as u32
-            + x as u32 * ColorFormat::COLOR_FORMAT.bytes_per_pixel()) as usize;
+            + x as u32 * ColorFormat::COLOR_FORMAT.bytes_per_pixel())
+            as usize;
 
         debug_assert!(
             pixel_offset < self.buffer_size,

@@ -4,6 +4,7 @@ use crate::svc;
 use crate::version;
 
 use super::applet::AppletResourceUserId;
+use super::CopyHandle;
 
 pub mod shmem;
 use nx_derive::{Request, Response};
@@ -565,11 +566,11 @@ ipc_sf_define_default_interface_client!(HidSysServer);
 ipc_sf_define_interface_trait! {
     trait HidSysServer {
         send_keyboard_lock_key_event [31, version::VersionInterval::all()]: (flags: LockKeyFlags) => () ();
-        acquire_home_button_event_handle [101, version::VersionInterval::all()]: (aruid: AppletResourceUserId) =>  (handle: svc::Handle) (handle: svc::Handle);
+        acquire_home_button_event_handle [101, version::VersionInterval::all()]: (aruid: AppletResourceUserId) =>  (handle: CopyHandle) (handle: CopyHandle);
         activate_home_button [111, version::VersionInterval::all()]: (aruid: AppletResourceUserId) => () ();
-        acquire_sleep_button_event_handle [121, version::VersionInterval::all()]: (aruid: AppletResourceUserId) =>  (handle: svc::Handle) (handle: svc::Handle);
+        acquire_sleep_button_event_handle [121, version::VersionInterval::all()]: (aruid: AppletResourceUserId) =>  (handle: CopyHandle) (handle: CopyHandle);
         activate_sleep_button [131, version::VersionInterval::all()]: (aruid: AppletResourceUserId) => () ();
-        acquire_capture_button_event_handle [141, version::VersionInterval::all()]: (aruid: AppletResourceUserId) =>  (handle: svc::Handle) (handle: svc::Handle);
+        acquire_capture_button_event_handle [141, version::VersionInterval::all()]: (aruid: AppletResourceUserId) =>  (handle: CopyHandle) (handle: CopyHandle);
         activate_capture_button [151, version::VersionInterval::all()]: (aruid: AppletResourceUserId) => () ();
     }
 }

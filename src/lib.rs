@@ -41,18 +41,14 @@
 // needed for the implementation of the threads module
 #![feature(unsafe_pin_internals)]
 #![feature(get_mut_unchecked)]
-
+// get rid of mangled error handling in applet::initialize
+#![feature(try_blocks)]
 // used for ergonomics reading UTF16 strings
 #![feature(str_from_utf16_endian)]
-
-
 // TODO - just for now
 #![allow(clippy::missing_safety_doc)]
-
 //#![allow(incomplete_features)]
 //#![allow(non_snake_case)]
-
-
 #![macro_use]
 use core::arch::global_asm;
 

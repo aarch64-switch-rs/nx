@@ -61,11 +61,24 @@ pub fn configure_heap(heap_override: PointerAndSize) -> PointerAndSize {
         };
 
         let heap_addr = svc::set_heap_size(heap_size).unwrap();
-        debug_assert!(!heap_addr.is_null(), "Received null heap address after requesting from the kernel");
+        debug_assert!(
+            !heap_addr.is_null(),
+            "Received null heap address after requesting from the kernel"
+        );
 
-        let (heap_metadata,_) = svc::query_memory(heap_addr).unwrap();
-        if ! heap_metadata.permission.contains(svc::MemoryPermission::Read() | svc::MemoryPermission::Write()) {
-            unsafe {svc::set_memory_permission(heap_addr, heap_size, svc::MemoryPermission::Read() | svc::MemoryPermission::Write()).unwrap(); }
+        let (heap_metadata, _) = svc::query_memory(heap_addr).unwrap();
+        if !heap_metadata
+            .permission
+            .contains(svc::MemoryPermission::Read() | svc::MemoryPermission::Write())
+        {
+            unsafe {
+                svc::set_memory_permission(
+                    heap_addr,
+                    heap_size,
+                    svc::MemoryPermission::Read() | svc::MemoryPermission::Write(),
+                )
+                .unwrap();
+            }
         }
 
         PointerAndSize::new(heap_addr, heap_size)
