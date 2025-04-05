@@ -292,8 +292,7 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
             linear_buf: Buffer::new(
                 size_of::<u128>(), // we do this as the gob conversion is done in blocks of 8 bytes, casting each block to `*mut u128`
                 buffer_length,
-            )
-            .expect("This should never error as the aligment should always be valid"),
+            )?,
             base_pointer: buffer as usize,
             fences,
             buffer_size: buffer_length,
@@ -686,6 +685,11 @@ pub struct UnbufferedCanvas<'fb, ColorFormat: sealed::CanvasColorFormat> {
 }
 
 impl<ColorFormat: sealed::CanvasColorFormat> UnbufferedCanvas<'_, ColorFormat> {
+
+    pub fn raw_buffer<'a>(&'a mut  self) -> &'a mut [u8] {
+        unsafe { core::slice::from_raw_parts_mut(self.base_pointer as *mut u8, self.buffer_size)}
+    }
+
     pub fn draw_single(&mut self, x: i32, y: i32, color: ColorFormat, blend: AlphaBlend) {
         if !(0..self.manager.surface.width() as i32).contains(&x)
             || !(0..self.manager.surface.height() as i32).contains(&y)
