@@ -136,12 +136,12 @@ impl Surface {
             buffer_count,
             display_id,
             layer_id,
-            SCREEN_WIDTH,
-            SCREEN_HEIGHT,
+            width,
+            height,
             block_config,
             color_fmt,
             pixel_fmt,
-            false,
+            true,
         )
     }
 
@@ -557,7 +557,7 @@ impl Drop for Surface {
         };
 
         let mut gpu_guard = self.gpu_ctx.write();
-        let _layer_close_result =if self.managed {
+        let _layer_close_result = if self.managed {
             gpu_guard.application_display_service.get_manager_display_service().expect("We successfully created a managed layer, we should always then be able to recall the manager service").destroy_managed_layer(self.layer_id)
         } else {
             gpu_guard
