@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["RESULT_SUBMODULE"],"struct":["ResultInvalidPointer","ResultInvalidSize","ResultInvalidUtf16Conversion","ResultInvalidUtf8Conversion"]};
+window.SIDEBAR_ITEMS = {"constant":["RESULT_SUBMODULE"],"struct":["ResultInvalidPointer","ResultInvalidSize","ResultInvalidUtf8Conversion"]};

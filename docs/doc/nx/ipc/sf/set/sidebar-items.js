@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["FirmwareVersion","SystemSettingsServer"],"trait":["ISystemSettingsServer","ISystemSettingsServerServer"]};
+window.SIDEBAR_ITEMS = {"struct":["FirmwareVersion"],"trait":["ISystemSettingsServer"]};

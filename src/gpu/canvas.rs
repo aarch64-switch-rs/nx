@@ -13,7 +13,7 @@ use crate::util::PromotingMul;
 
 use crate::{ipc::sf::AppletResourceUserId, service::vi::LayerFlags};
 
-use super::surface::Surface;
+use super::surface::{ScaleMode, Surface};
 use super::{BlockLinearHeights, ColorFormat, Context, LayerZ, MultiFence, PixelFormat};
 
 #[cfg(feature = "truetype")]
@@ -232,6 +232,7 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
         layer_flags: LayerFlags,
         buffer_count: u32,
         block_height: BlockLinearHeights,
+        scaling: ScaleMode
     ) -> Result<Self> {
         let raw_surface = Surface::new_managed(
             gpu_ctx,
@@ -240,13 +241,14 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
             layer_flags,
             x as f32,
             y as f32,
+            z,
             width,
             height,
-            block_height,
-            z,
             buffer_count,
+            block_height,
             ColorFormat::COLOR_FORMAT,
             ColorFormat::PIXEL_FORMAT,
+            scaling
         )?;
         Ok(Self {
             surface: raw_surface,

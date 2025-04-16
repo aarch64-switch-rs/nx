@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["RandomInterface"],"trait":["IRandomInterface","IRandomInterfaceServer"]};
+window.SIDEBAR_ITEMS = {"trait":["IRandomInterface"]};

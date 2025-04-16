@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["ArrayString","ArrayVec","CapacityError","Drain","IntoIter"]};
+window.SIDEBAR_ITEMS = {"struct":["ArrayString","ArrayVec","CapacityError","Drain","IntoIter"],"trait":["Array"]};

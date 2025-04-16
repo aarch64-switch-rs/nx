@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["RESULT_SUBMODULE"],"struct":["ResultLayoutError","ResultOutOfMemory"]};
+window.SIDEBAR_ITEMS = {"constant":["RESULT_SUBMODULE"],"struct":["ResultOutOfMemory"]};

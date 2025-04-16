@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["distr","prelude","rngs","seq"],"trait":["CryptoRng","Fill","Rng","RngCore","SeedableRng","TryCryptoRng","TryRngCore"]};

@@ -1,2 +1,1 @@
-window.ALL_CRATES = ["arrayvec","gimli","libm","linked_list_allocator","lock_api","logpacket","num_traits","nx","rand","rand_core","scopeguard","spinning_top","static_assertions","unwinding","zerocopy","zeroize"];
-//{"start":21,"fragment_lengths":[10,8,7,24,11,12,13,5,7,12,13,15,20,12,11,10]}
+window.ALL_CRATES = ["arrayvec","linked_list_allocator","logpacket","nx","static_assertions"];

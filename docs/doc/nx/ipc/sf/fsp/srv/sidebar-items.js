@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["FileSystemProxy"],"trait":["IFileSystemProxy","IFileSystemProxyServer"]};
+window.SIDEBAR_ITEMS = {"trait":["IFileSystemProxy"]};

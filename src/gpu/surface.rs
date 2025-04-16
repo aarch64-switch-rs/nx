@@ -21,6 +21,16 @@ const MAX_BUFFERS: usize = 8;
 /// Note that different layers (managed layers, stray layers, etc.) are destroyed in different ways
 pub type LayerDestroyFn = fn(vi::LayerId, &mut vi::ApplicationDisplayService) -> Result<()>;
 
+/// Configures the scaling mode for managed layers
+pub enum ScaleMode {
+    // Don't scale the layer
+    None,
+    // Native framebuffer/canvas will be scaled and stretched to fit the provided layer size
+    FitToLayer { width: u32, height: u32 },
+    // Native framebuffer/canvas will be scaled to fit the provided layer height, but aspect ratio will be respected
+    PreseveAspect { height: u32 },
+}
+
 /// Represents a wrapper around layer manipulation
 pub struct Surface {
     binder: binder::Binder,
@@ -37,6 +47,15 @@ pub struct Surface {
 
 #[allow(clippy::too_many_arguments)]
 impl Surface {
+    /// Create a new stray layer covering the full screen (modeled as a 1280x720 pixel surface)
+    ///
+    /// # Arguments:
+    /// * gpu_ctx: a handle to a gpu shared context we can use to control the propeties of our layer.
+    /// * display_name: a name for the spawned layer
+    /// * buffer_count: the number of buffers to use. using a value of 0 will error, and a value of 1 will hang at runtime as you cannot dequeue the active buffer.
+    /// * block_config: configuration value for the GPU buffer tiling height. Applications with row based rendering should set a low value and applications that draw mainly in blocks (e.g. image decoding or text) should set medium or higher values.
+    /// * color_format: The color format set on the layer
+    /// * pixel_format: The pixel format for the buffer. Must match the color format to run without graphical issues.
     pub fn new_stray(
         gpu_ctx: Arc<RwLock<Context>>,
         display_name: &'_ str,
@@ -79,6 +98,22 @@ impl Surface {
         )
     }
 
+    /// Create a new stray layer covering the full screen (modeled as a 1280x720 pixel surface)
+    ///
+    /// # Arguments:
+    /// * gpu_ctx: a handle to a gpu shared context we can use to control the propeties of our layer.
+    /// * display_name: a name for the spawned layer
+    /// * aruid: the applet resource user ID for the running app (usually 0, but can be retrieved by initializing the applet module).
+    /// * layer_flags: the `vi` service flags to set for the layer (usually 0).
+    /// * x: the offset of the layer from the left edge of the screen.
+    /// * y: the offset of the layer from the top edge of the screen.
+    /// * width: width of the canvas.
+    /// * height: height of the canvas.
+    /// * buffer_count: the number of buffers to use. using a value of 0 will error, and a value of 1 will hang at runtime as you cannot dequeue the active buffer.
+    /// * block_config: configuration value for the GPU buffer tiling height. Applications with row based rendering should set a low value and applications that draw mainly in blocks (e.g. image decoding or text) should set medium or higher values.
+    /// * color_format: The color format set on the layer
+    /// * pixel_format: The pixel format for the buffer. Must match the color format to run without graphical issues.
+    /// * scaling: The configuration for mapping the framebuffer/canvas onto the spawned layer which may be a larger/smaller size.
     pub fn new_managed(
         gpu_ctx: Arc<RwLock<Context>>,
         display_name: &'_ str,
@@ -86,13 +121,14 @@ impl Surface {
         layer_flags: vi::LayerFlags,
         x: f32,
         y: f32,
-        width: u32,
-        height: u32,
-        block_config: BlockLinearHeights,
         z: LayerZ,
+        framebuffer_width: u32,
+        framebuffer_height: u32,
         buffer_count: u32,
+        block_config: BlockLinearHeights,
         color_fmt: ColorFormat,
         pixel_fmt: PixelFormat,
+        scaling: ScaleMode,
     ) -> Result<Self> {
         let mut gpu_guard = gpu_ctx.write();
 
@@ -121,13 +157,38 @@ impl Surface {
         binder_parcel.load_from(native_window);
         let binder_handle = binder_parcel.read::<parcel::ParcelData>()?.handle;
 
+        match scaling {
+            ScaleMode::None => {
+                system_display_service.set_layer_size(layer_id, framebuffer_width as u64, framebuffer_height as u64)?;
+                gpu_guard
+                    .application_display_service
+                    .set_scaling_mode(vi::ScalingMode::FitToLayer, layer_id)?
+            }
+            ScaleMode::FitToLayer { width, height } => {
+                system_display_service.set_layer_size(layer_id, width as u64, height as u64)?;
+                gpu_guard
+                    .application_display_service
+                    .set_scaling_mode(vi::ScalingMode::FitToLayer, layer_id)?;
+            }
+            ScaleMode::PreseveAspect { height } => {
+                system_display_service.set_layer_size(layer_id, (framebuffer_width as f32 * (height as f32) / (framebuffer_height as f32)) as u64, height as u64)?;
+                gpu_guard
+                    .application_display_service
+                    .set_scaling_mode(vi::ScalingMode::PreserveAspectRatio, layer_id)?;
+            }
+        }
         gpu_guard
             .application_display_service
             .set_scaling_mode(vi::ScalingMode::FitToLayer, layer_id)?;
 
-        Self::set_layer_position_impl(layer_id, x, y, &mut system_display_service)?;
-        Self::set_layer_size_impl(layer_id, width, height, &mut system_display_service)?;
-        Self::set_layer_z_impl(display_id, layer_id, z, &mut system_display_service)?;
+        system_display_service.set_layer_position(x, y, layer_id)?;
+
+        let z_value = match z {
+            LayerZ::Max => system_display_service.get_z_order_count_max(display_id)?,
+            LayerZ::Min => system_display_service.get_z_order_count_min(display_id)?,
+            LayerZ::Value(z_val) => z_val,
+        };
+        system_display_service.set_layer_z(layer_id, z_value)?;
 
         drop(gpu_guard);
         Self::new_from_parts(
@@ -136,45 +197,13 @@ impl Surface {
             buffer_count,
             display_id,
             layer_id,
-            width,
-            height,
+            framebuffer_width,
+            framebuffer_height,
             block_config,
             color_fmt,
             pixel_fmt,
             true,
         )
-    }
-
-    fn set_layer_z_impl(
-        display_id: vi::DisplayId,
-        layer_id: vi::LayerId,
-        z: LayerZ,
-        system_display_service: &mut vi::SystemDisplayService,
-    ) -> Result<()> {
-        let z_value = match z {
-            LayerZ::Max => system_display_service.get_z_order_count_max(display_id)?,
-            LayerZ::Min => system_display_service.get_z_order_count_min(display_id)?,
-            LayerZ::Value(z_val) => z_val,
-        };
-        system_display_service.set_layer_z(layer_id, z_value)
-    }
-
-    fn set_layer_size_impl(
-        layer_id: vi::LayerId,
-        width: u32,
-        height: u32,
-        system_display_service: &mut vi::SystemDisplayService,
-    ) -> Result<()> {
-        system_display_service.set_layer_size(layer_id, width as u64, height as u64)
-    }
-
-    fn set_layer_position_impl(
-        layer_id: vi::LayerId,
-        x: f32,
-        y: f32,
-        system_display_service: &mut vi::SystemDisplayService,
-    ) -> Result<()> {
-        system_display_service.set_layer_position(x * SIZE_FACTOR, y * SIZE_FACTOR, layer_id)
     }
 
     /// Creates a new  [`Surface`]

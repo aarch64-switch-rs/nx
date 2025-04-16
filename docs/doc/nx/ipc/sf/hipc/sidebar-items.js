@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["rc"],"struct":["MitmQueryService"],"trait":["IHipcManager","IMitmQueryService","IMitmQueryServiceServer"]};
+window.SIDEBAR_ITEMS = {"mod":["rc"],"trait":["IHipcManager","IMitmQueryService"]};

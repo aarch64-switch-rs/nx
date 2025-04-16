@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["PAGE_ALIGNMENT"],"fn":["configure_heap","initialize","is_enabled"],"mod":["rc"],"static":["HEAP_SIZE"],"struct":["Buffer","Layout"],"trait":["AllocatorEx"]};
+window.SIDEBAR_ITEMS = {"constant":["PAGE_ALIGNMENT"],"fn":["allocate","delete","initialize","is_enabled","new","release"],"mod":["rc"],"struct":["Buffer","Layout"],"trait":["Allocator"]};

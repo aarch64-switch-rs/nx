@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["Header","ModuleStart"]};
+window.SIDEBAR_ITEMS = {"fn":["find_start_dyn_address"],"struct":["Header","ModuleStart"]};

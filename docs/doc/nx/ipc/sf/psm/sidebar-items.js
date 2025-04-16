@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["PsmServer"],"trait":["IPsmServer","IPsmServerServer"]};
+window.SIDEBAR_ITEMS = {"trait":["IPsmServer"]};

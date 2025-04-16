@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["ShellInterface"],"trait":["IShellInterface","IShellInterfaceServer"]};
+window.SIDEBAR_ITEMS = {"trait":["IShellInterface"]};

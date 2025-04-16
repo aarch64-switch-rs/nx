@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["srv"]};
+window.SIDEBAR_ITEMS = {"mod":["srv"],"struct":["Directory","File","FileSystem"]};
