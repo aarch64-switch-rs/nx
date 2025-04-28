@@ -6,7 +6,7 @@
 //!
 //! Example (check [here](https://switchbrew.org/wiki/Homebrew_ABI#Entrypoint_Arguments) for more entrypoint details):
 //! ```
-//! #[no_mangle]
+//! #[unsafe(no_mangle)]
 //! unsafe extern "C" fn __nx_rrt0_entry(arg0: usize, arg1: usize) {
 //!     // ...
 //! }
@@ -22,7 +22,7 @@
 //!
 //! Example:
 //! ```
-//! #[no_mangle]
+//! #[unsafe(no_mangle)]
 //! fn initialize_version(hbl_hos_version_opt: Option<hbl::Version>) {
 //!     // ...
 //! }
@@ -142,8 +142,8 @@ impl ModulePath {
 
 #[used]
 #[linkage = "weak"]
-#[link_section = ".module_name"]
-#[export_name = "__nx_rrt0_module_name"]
+#[unsafe(link_section = ".module_name")]
+#[unsafe(export_name = "__nx_rrt0_module_name")]
 static G_MODULE_NAME: ModulePath = ModulePath::new("aarch64-switch-rs (unknown module)");
 
 /// Gets this process's module name
@@ -167,7 +167,7 @@ pub fn exit(rc: ResultCode) -> ! {
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 #[linkage = "weak"]
 fn initialize_version(hbl_hos_version_opt: Option<hbl::Version>) {
     if let Some(hbl_hos_version) = hbl_hos_version_opt {
@@ -352,7 +352,7 @@ unsafe fn normal_entry(
     exit(ResultSuccess::make());
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 #[linkage = "weak"]
 #[allow(unsafe_op_in_unsafe_fn)]
 unsafe extern "C" fn __nx_rrt0_entry(arg0: usize, arg1: usize) {

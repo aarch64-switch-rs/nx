@@ -375,6 +375,9 @@ impl Builder {
         let main =
             unsafe { Box::from_raw(Box::into_raw(main) as *mut (dyn FnOnce() + Send + 'static)) };
 
+        let mut thread_storage = Arc::new(imp::Thread::empty());
+        let thread_handle = thread_storage.init_in_place(stack_size, main, priority, core)?;
+
         let mut res = JoinInner {
             // SAFETY:
             //
@@ -389,12 +392,10 @@ impl Builder {
             // Similarly, the `sys` implementation must guarantee that no references to the closure
             // exist after the thread has terminated, which is signaled by `Thread::join`
             // returning.
-            native: Pin::new(Arc::new(imp::Thread::empty())),
+            native: Pin::new(thread_storage),
             thread: my_thread,
             packet: my_packet,
         };
-
-        let thread_handle = res.native.init_pinned(stack_size, main, priority, core)?;
 
         // we are still the only running reader/writer since the thread hasn't been started
         // so we can just reach inside the pin as long as we don't cause a move
@@ -1223,8 +1224,8 @@ pub mod imp {
             }
         }
 
-        pub(crate) unsafe fn init_pinned(
-            self: &mut Pin<Arc<Self>>,
+        pub(crate) unsafe fn init_in_place(
+            self: &mut Arc<Self>,
             stack_size: usize,
             main: Box<dyn FnOnce() + Send + 'static>,
             priority: ThreadPriority,
@@ -1242,7 +1243,7 @@ pub mod imp {
 
             let entry_args = Box::new(ThreadArgs {
                 runner: main,
-                thread: self.clone(),
+                thread: Pin::new(self.clone()),
             });
             let entry_args_raw = Box::into_raw(entry_args) as *mut u8;
             let handle = match unsafe {
@@ -1268,11 +1269,9 @@ pub mod imp {
 
             unsafe {
                 // SAFETY: we don't cause any moves here, so the pin invariant is met.
-                // We also have to use `__pointer` here as we can only use deref_mut for types that are `UnPin`
-                // which this isn't (internal self-references). There is no guarantee this won't break between compiler versions unfortunately.
                 // This is breaking mutation-xor-sharing technically, but we know that the other handle to the thread data can't access yet as the new thread hasn't started.
                 // Additionally, we need to do `get_mut_unchecked` here as `get_mut().unwrap{_unchecked}()` will always fail (since the strong and weak counts will always be 2).
-                let arc = Arc::get_mut_unchecked(&mut self.__pointer);
+                let arc = Arc::get_mut_unchecked(self);
 
                 // we can only do this when the remote thread has not yet started though
                 debug_assert!(arc.state == ThreadState::NotInitialized);

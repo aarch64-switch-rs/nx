@@ -40,7 +40,9 @@ default-features = false
 features = ["unicode"]
 
 [dependencies.unwinding]
-version = "0.2.4"
+#version = "0.2.5"
+git = "https://github.com/nbdd0121/unwinding" # unfortunately, the fix for the naked functions attribute error (from rustc >1.82) is not yet published
+branch = "trunk"
 default-features = false
 features = ["unwinder", "panic", "fde-custom", "personality"]
 

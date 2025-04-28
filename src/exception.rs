@@ -47,7 +47,7 @@ struct ExceptionContext {
     far: CpuRegister
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 #[linkage = "weak"]
 unsafe extern "C" fn __nx_exception_handler(_ctx: *mut ExceptionContext) -> ! {
     // TODO: user exception handler?
@@ -55,7 +55,7 @@ unsafe extern "C" fn __nx_exception_handler(_ctx: *mut ExceptionContext) -> ! {
 }
 */
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub(crate) unsafe extern "C" fn __nx_exception_dispatch(
     _reason: svc::ExceptionType,
     _stack_top: *mut u8,
