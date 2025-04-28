@@ -4,7 +4,7 @@ use super::*;
 use crate::ipc::sf;
 use crate::result::*;
 use crate::service;
-use crate::service::fsp::srv::{self, IFileSystemProxy};
+use crate::service::fsp::srv::{self, IFileSystemProxyClient};
 
 /// Represents a logger though `FsAccessLog`s (see [`output_access_log_to_sd_card`][`srv::FileSystemProxy::output_access_log_to_sd_card`])
 pub struct FsAccessLogLogger {

@@ -1,13 +1,13 @@
 //! FileSystem support
 
 use crate::ipc::sf as ipc_sf;
-use crate::ipc::sf::fsp::IDirectory;
-use crate::ipc::sf::fsp::IFile;
-use crate::ipc::sf::fsp::IFileSystem;
+use crate::ipc::sf::fsp::IDirectoryClient;
+use crate::ipc::sf::fsp::IFileClient;
+use crate::ipc::sf::fsp::IFileSystemClient;
 use crate::result::*;
 use crate::service;
 use crate::service::fsp;
-use crate::service::fsp::srv::IFileSystemProxy;
+use crate::service::fsp::srv::IFileSystemProxyClient;
 use crate::sync::RwLock;
 use alloc::boxed::Box;
 use alloc::string::String;
@@ -240,9 +240,9 @@ pub trait FileSystem: Sync {
     ) -> Result<()>;
 }
 
-/// Represents a wrapper [`File`] implementation to translate IPC [`IFile`] objects to [`File`] objects.
+/// Represents a wrapper [`File`] implementation to translate IPC [`IFileClient`] objects to [`File`] objects.
 pub struct ProxyFile {
-    file_obj: Box<dyn IFile>,
+    file_obj: Box<dyn IFileClient>,
 }
 
 // TODO: Remove. This fixes a problem in emuiibo but this whole construct is probably not needed.
@@ -250,20 +250,20 @@ unsafe impl Sync for ProxyFile {}
 unsafe impl Send for ProxyFile {}
 
 impl ProxyFile {
-    /// Creates a new [`ProxyFile`] from a [`IFile`] shared object.
+    /// Creates a new [`ProxyFile`] from a [`IFileClient`] shared object.
     ///
     /// # Arguments:
     ///
-    /// * `file_obj`: The IPC [`IFile`] implementation to wrap.
-    pub fn new(file: impl IFile + 'static) -> Self {
+    /// * `file_obj`: The IPC [`IFileClient`] implementation to wrap.
+    pub fn new(file: impl IFileClient + 'static) -> Self {
         Self {
             file_obj: Box::new(file),
         }
     }
 }
 
-impl From<Box<dyn IFile>> for ProxyFile {
-    fn from(value: Box<dyn IFile>) -> Self {
+impl From<Box<dyn IFileClient>> for ProxyFile {
+    fn from(value: Box<dyn IFileClient>) -> Self {
         Self { file_obj: value }
     }
 }
@@ -322,29 +322,29 @@ impl File for ProxyFile {
     }
 }
 
-/// Represents a wrapper [`Directory`] implementation to translate IPC [`IDirectory`] objects to [`Directory`] objects.
+/// Represents a wrapper [`Directory`] implementation to translate IPC [`IDirectoryClient`] objects to [`Directory`] objects.
 #[derive(Clone)]
 pub struct ProxyDirectory {
-    dir_obj: Arc<dyn IDirectory>,
+    dir_obj: Arc<dyn IDirectoryClient>,
 }
 
-// TODO: Remove because we don't actually have a guarantee that IDirectory is Sync
+// TODO: Remove because we don't actually have a guarantee that IDirectoryClient is Sync
 unsafe impl Sync for ProxyDirectory {}
 unsafe impl Send for ProxyDirectory {}
 
-impl From<Arc<dyn IDirectory>> for ProxyDirectory {
-    fn from(value: Arc<dyn IDirectory>) -> Self {
+impl From<Arc<dyn IDirectoryClient>> for ProxyDirectory {
+    fn from(value: Arc<dyn IDirectoryClient>) -> Self {
         Self { dir_obj: value }
     }
 }
 
 impl ProxyDirectory {
-    /// Creates a new [`ProxyDirectory`] from a [`IDirectory`] shared object
+    /// Creates a new [`ProxyDirectory`] from a [`IDirectoryClient`] shared object
     ///
     /// # Arguments
     ///
-    /// * `dir_obj`: The IPC [`IDirectory`] object to wrap
-    pub fn new(dir: impl IDirectory + 'static) -> Self {
+    /// * `dir_obj`: The IPC [`IDirectoryClient`] object to wrap
+    pub fn new(dir: impl IDirectoryClient + 'static) -> Self {
         Self {
             dir_obj: Arc::new(dir),
         }
@@ -363,22 +363,22 @@ impl Directory for ProxyDirectory {
     }
 }
 
-/// Represents a wrapper [`FileSystem`] implementation to translate IPC [`IFileSystem`] objects to [`FileSystem`] objects
+/// Represents a wrapper [`FileSystem`] implementation to translate IPC [`IFileSystemClient`] objects to [`FileSystem`] objects
 #[derive(Clone)]
 pub struct ProxyFileSystem {
-    fs_obj: Arc<dyn IFileSystem>,
+    fs_obj: Arc<dyn IFileSystemClient>,
 }
 
 unsafe impl Send for ProxyFileSystem {}
 unsafe impl Sync for ProxyFileSystem {}
 
 impl ProxyFileSystem {
-    /// Creates a new [`ProxyFileSystem`] from a [`IFileSystem`] shared object
+    /// Creates a new [`ProxyFileSystem`] from a [`IFileSystemClient`] shared object
     ///
     /// # Arguments
     ///
-    /// * `fs_obj`: The IPC [`IFileSystem`] object to wrap
-    pub fn new(fs_obj: Arc<dyn IFileSystem>) -> Self {
+    /// * `fs_obj`: The IPC [`IFileSystemClient`] object to wrap
+    pub fn new(fs_obj: Arc<dyn IFileSystemClient>) -> Self {
         Self { fs_obj }
     }
 }
@@ -710,12 +710,12 @@ define_bit_enum! {
     }
 }
 /*
-/// Initializes `fsp-srv` support with a given [`IFileSystemProxy`] shared object
+/// Initializes `fsp-srv` support with a given [`IFileSystemProxyClient`] shared object
 ///
 /// # Arguments
 ///
 /// * `session`: The IPC client object
-pub fn initialize_fspsrv_session_with(session: Arc<dyn fsp::srv::IFileSystemProxy>) {
+pub fn initialize_fspsrv_session_with(session: Arc<dyn fsp::srv::IFileSystemProxyClient>) {
     let mut guard = G_FSPSRV_SESSION.write();
     debug_assert!(guard.is_none(), "Double initializing FSP session");
     *guard = Some(session);
@@ -744,7 +744,7 @@ pub(crate) unsafe fn finalize_fspsrv_session() {
     G_FSPSRV_SESSION.write().take();
 }
 
-/// Gets the global [`IFileSystemProxy`] shared object used for `fsp-srv` support
+/// Gets the global [`IFileSystemProxyClient`] shared object used for `fsp-srv` support
 #[inline]
 pub fn get_fspsrv_session() -> Result<Arc<fsp::srv::FileSystemProxy>> {
     G_FSPSRV_SESSION
@@ -768,15 +768,15 @@ pub fn mount(name: &str, fs: Arc<dyn FileSystem>) {
         .push(FileSystemDevice::new(String::from(name), fs));
 }
 
-/// Mounts an IPC [`IFileSystem`]
+/// Mounts an IPC [`IFileSystemClient`]
 ///
 /// Essentially creates a [`ProxyFileSystem`] and [`mount`]s it
 ///
 /// # Arguments
 ///
 /// * `name`: The mount name
-/// * `fs_obj`: The [`IFileSystem`] shared object
-pub fn mount_fsp_filesystem(name: &str, fs_obj: Arc<dyn IFileSystem>) {
+/// * `fs_obj`: The [`IFileSystemClient`] shared object
+pub fn mount_fsp_filesystem(name: &str, fs_obj: Arc<dyn IFileSystemClient>) {
     let proxy_fs = Arc::new(ProxyFileSystem::new(fs_obj));
     mount(name, proxy_fs);
 }

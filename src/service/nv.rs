@@ -1,15 +1,14 @@
-use crate::ipc::client;
-use crate::ipc::sf;
+
 use crate::ipc::sf::sm;
 use crate::result::*;
 use crate::service;
 
 pub use crate::ipc::sf::nv::*;
 
-/// NvDrvService is the base trait for all the different services, since the only difference is their service names
+/*/// NvDrvService is the base trait for all the different services, since the only difference is their service names
 pub trait NvDrvService: client::IClientObject + Sync {}
 
-impl<S: NvDrvService> INvDrvServices for S {
+impl<S: INvDrvClient> INvDrvClient for S {
     fn open(&self, path: sf::InMapAliasBuffer<u8>) -> Result<(Fd, ErrorCode)> {
         ipc_client_send_request_command!([self.get_info(); 0] (path) => (fd: Fd, error_code: ErrorCode))
     }
@@ -36,11 +35,11 @@ impl<S: NvDrvService> INvDrvServices for S {
     ) -> Result<ErrorCode> {
         ipc_client_send_request_command!([self.get_info(); 3] (transfer_mem_size, self_process_handle, transfer_mem_handle) => (error_code: ErrorCode))
     }
-}
+}*/
 
-ipc_client_define_object_default!(ApplicationNvDrvService);
+ipc_client_define_client_default!(ApplicationNvDrvService);
 
-impl NvDrvService for ApplicationNvDrvService {}
+impl INvDrvClient for ApplicationNvDrvService {}
 
 impl service::IService for ApplicationNvDrvService {
     fn get_name() -> sm::ServiceName {
@@ -56,9 +55,9 @@ impl service::IService for ApplicationNvDrvService {
     }
 }
 
-ipc_client_define_object_default!(AppletNvDrvService);
+ipc_client_define_client_default!(AppletNvDrvService);
 
-impl NvDrvService for AppletNvDrvService {}
+impl INvDrvClient for AppletNvDrvService {}
 
 impl service::IService for AppletNvDrvService {
     fn get_name() -> sm::ServiceName {
@@ -74,9 +73,9 @@ impl service::IService for AppletNvDrvService {
     }
 }
 
-ipc_client_define_object_default!(SystemNvDrvService);
+ipc_client_define_client_default!(SystemNvDrvService);
 
-impl NvDrvService for SystemNvDrvService {}
+impl INvDrvClient for SystemNvDrvService {}
 
 impl service::IService for SystemNvDrvService {
     fn get_name() -> sm::ServiceName {

@@ -4,7 +4,11 @@ use crate::service;
 
 pub use crate::ipc::sf::psm::*;
 
-impl service::IService for PsmServer {
+ipc_client_define_client_default!(PsmService);
+
+impl IPsmClient for PsmService {}
+
+impl service::IService for PsmService {
     fn get_name() -> sm::ServiceName {
         sm::ServiceName::new("psm")
     }

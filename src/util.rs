@@ -67,11 +67,11 @@ pub struct Uuid {
 #[cfg(feature = "rand")]
 impl Uuid {
     pub fn random() -> Result<Self> {
-        use crate::ipc::sf::spl::{IRandomInterface, RandomInterface};
+        use crate::service::spl::{IRandomClient, RandomService};
         use crate::ipc::sf::Buffer;
 
         let mut uuid = [8; 16];
-        crate::service::new_service_object::<RandomInterface>()?
+        crate::service::new_service_object::<RandomService>()?
             .generate_random_bytes(Buffer::from_mut_array(&mut uuid))?;
         Ok(Self { uuid })
     }

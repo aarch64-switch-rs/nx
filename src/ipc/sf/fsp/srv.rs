@@ -1,10 +1,9 @@
 use crate::ipc::sf;
-use crate::result::*;
 use crate::version;
 
 use super::FileSystem;
 
-ipc_sf_define_default_interface_client!(FileSystemProxy);
+ipc_sf_define_default_client_for_interface!(FileSystemProxy);
 ipc_sf_define_interface_trait! {
     trait FileSystemProxy {
         set_current_process [1, version::VersionInterval::all()]: (process_id: sf::ProcessId) =>  () ();

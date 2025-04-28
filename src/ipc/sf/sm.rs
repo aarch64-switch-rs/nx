@@ -1,6 +1,6 @@
 use crate::ipc::sf;
 use crate::version;
-use crate::{result::*, util};
+use crate::util;
 
 pub mod mitm;
 
@@ -55,7 +55,7 @@ impl core::fmt::Debug for ServiceName {
     }
 }
 
-ipc_sf_define_default_interface_client!(UserInterface);
+ipc_sf_define_default_client_for_interface!(UserInterface);
 ipc_sf_define_interface_trait! {
     trait UserInterface {
         register_client [0, version::VersionInterval::all()]: (process_id: sf::ProcessId) =>  () ();

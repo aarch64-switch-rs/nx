@@ -7,10 +7,10 @@ pub use rand::{Rng, RngCore};
 use crate::ipc::sf::Buffer;
 use crate::result::*;
 use crate::service;
-use crate::service::spl::{IRandomInterface, RandomInterface};
+use crate::service::spl::{IRandomClient, RandomService};
 use crate::sync::Mutex;
 
-impl RngCore for RandomInterface {
+impl RngCore for RandomService {
     fn next_u32(&mut self) -> u32 {
         let mut data = [0; 4];
         self.generate_random_bytes(Buffer::from_mut_array(&mut data))
@@ -58,17 +58,17 @@ pub fn get_rng() -> Result<spl::SplCsrngGenerator> {
 mod spl {
     use super::*;
 
-    /// Represents a pseudo-RNG using [`spl`][`crate::service::spl`]'s [`RandomInterface`] interface
+    /// Represents a pseudo-RNG using [`spl`][`crate::service::spl`]'s [`RandomService`] interface
     #[derive(Clone)]
     pub struct SplCsrngGenerator {
-        csrng: Arc<RandomInterface>,
+        csrng: Arc<RandomService>,
     }
 
     impl SplCsrngGenerator {
         /// Creates a new [`SplCsrngGenerator`]
         pub fn new() -> Result<Self> {
             Ok(Self {
-                csrng: Arc::new(service::new_service_object::<RandomInterface>()?),
+                csrng: Arc::new(service::new_service_object::<RandomService>()?),
             })
         }
     }

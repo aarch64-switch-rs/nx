@@ -539,14 +539,14 @@ define_bit_enum! {
     }
 }
 
-ipc_sf_define_default_interface_client!(AppletResource);
+ipc_sf_define_default_client_for_interface!(AppletResource);
 ipc_sf_define_interface_trait! {
     trait AppletResource {
         get_shared_memory_handle [0, version::VersionInterval::all(), mut]: () => (shmem_handle: sf::CopyHandle) (shmem_handle: sf::CopyHandle);
     }
 }
 
-ipc_sf_define_default_interface_client!(Hid);
+//ipc_sf_define_default_client_for_interface!(Hid);
 ipc_sf_define_interface_trait! {
     trait Hid {
         create_applet_resource [0, version::VersionInterval::all(), mut]: (aruid: AppletResourceUserId) =>  (applet_resource: AppletResource) (applet_resource: session_type!(AppletResource));
@@ -561,7 +561,7 @@ ipc_sf_define_interface_trait! {
     }
 }
 
-ipc_sf_define_default_interface_client!(HidSys);
+//ipc_sf_define_default_client_for_interface!(HidSys);
 ipc_sf_define_interface_trait! {
     trait HidSys {
         send_keyboard_lock_key_event [31, version::VersionInterval::all()]: (flags: LockKeyFlags) => () ();

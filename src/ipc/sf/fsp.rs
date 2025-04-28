@@ -1,5 +1,4 @@
 use crate::ipc::sf;
-use crate::result::*;
 use crate::util;
 use crate::version;
 
@@ -109,7 +108,7 @@ pub enum OperationId {
     ReadLazyLoadFileForciblyForDebug = 10001,
 }
 
-ipc_sf_define_default_interface_client!(File);
+ipc_sf_define_default_client_for_interface!(File);
 ipc_sf_define_interface_trait! {
     trait File {
         read [0, version::VersionInterval::all(), mut]: (option: FileReadOption, offset: usize, size: usize, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) =>  (read_size: usize) (read_size: usize);
@@ -122,7 +121,7 @@ ipc_sf_define_interface_trait! {
     }
 }
 
-ipc_sf_define_default_interface_client!(Directory);
+ipc_sf_define_default_client_for_interface!(Directory);
 ipc_sf_define_interface_trait! {
     trait Directory {
         read [0, version::VersionInterval::all()]: (out_entries: sf::OutMapAliasBuffer<DirectoryEntry>) =>  (read_count: u64) (read_count: u64);
@@ -130,7 +129,7 @@ ipc_sf_define_interface_trait! {
     }
 }
 
-ipc_sf_define_default_interface_client!(FileSystem);
+ipc_sf_define_default_client_for_interface!(FileSystem);
 ipc_sf_define_interface_trait! {
     trait FileSystem {
         create_file [0, version::VersionInterval::all()]: (attribute: FileAttribute, size: usize, path_buf: sf::InFixedPointerBuffer<Path>) =>  () ();
@@ -152,7 +151,7 @@ ipc_sf_define_interface_trait! {
     }
 }
 
-ipc_sf_define_default_interface_client!(FileSystemProxy);
+ipc_sf_define_default_client_for_interface!(FileSystemProxy);
 ipc_sf_define_interface_trait! {
     trait FileSystemProxy {
         set_current_process [1, version::VersionInterval::all()]: (process_id: sf::ProcessId) =>  () ();

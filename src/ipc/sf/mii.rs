@@ -6,9 +6,6 @@ use crate::version;
 #[cfg(feature = "services")]
 use crate::service;
 
-#[cfg(feature = "services")]
-use crate::service::set;
-
 use nx_derive::{Request, Response};
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -1795,9 +1792,9 @@ pub fn compute_crc16(buffer: &[u8], base_crc: u16, reverse_endianess: bool) -> u
 #[cfg(feature = "services")]
 #[inline]
 pub fn get_device_id() -> Result<CreateId> {
-    use super::set::ISystemSettingsServer;
+    use crate::service::set::{ISystemSettingsClient, SystemSettingsService};
 
-    service::new_service_object::<set::SystemSettingsServer>()?.get_mii_author_id()
+    service::new_service_object::<SystemSettingsService>()?.get_mii_author_id()
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -1870,7 +1867,7 @@ impl StoreData {
     }
 }
 
-ipc_sf_define_default_interface_client!(DatabaseService);
+ipc_sf_define_default_client_for_interface!(DatabaseService);
 ipc_sf_define_interface_trait! {
     trait DatabaseService {
         is_updated [0, version::VersionInterval::all()]: (flag: SourceFlag) =>  (updated: bool) (updated: bool);
@@ -1881,7 +1878,7 @@ ipc_sf_define_interface_trait! {
     }
 }
 
-ipc_sf_define_default_interface_client!(StaticService);
+ipc_sf_define_default_client_for_interface!(StaticService);
 ipc_sf_define_interface_trait! {
     trait StaticService {
         get_database_service [0, version::VersionInterval::all()]: (key_code: SpecialKeyCode) =>  (database_service: DatabaseService) (database_service: session_type!(DatabaseService));

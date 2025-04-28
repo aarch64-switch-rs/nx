@@ -4,7 +4,7 @@ use super::*;
 use crate::ipc::sf;
 use crate::rrt0;
 use crate::service;
-use crate::service::lm::{self, ILogService, ILogger};
+use crate::service::lm::{self, LoggingService, ILoggingClient, ILoggerClient};
 use crate::svc;
 
 /// Represents a logger through [`LogService`][`lm::LogService`] services
@@ -14,7 +14,7 @@ pub struct LmLogger {
 
 impl Logger for LmLogger {
     fn new() -> Self {
-        let logger = match service::new_service_object::<lm::LogService>() {
+        let logger = match service::new_service_object::<LoggingService>() {
             Ok(mut log_srv) => {
                 match log_srv
                     .open_logger(svc::get_process_id(svc::CURRENT_PROCESS_PSEUDO_HANDLE).unwrap())

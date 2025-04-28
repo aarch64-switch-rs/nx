@@ -1,6 +1,6 @@
 //! Base service/named port support and wrappers
 
-use sm::IUserInterface;
+use sm::IUserInterfaceClient;
 
 use crate::ipc::client;
 use crate::ipc::sf;

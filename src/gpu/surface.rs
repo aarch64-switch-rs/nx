@@ -1,7 +1,7 @@
 //! Surface (gfx wrapper) implementation
 
 use ::alloc::sync::Arc;
-use service::vi::ISystemDisplayService;
+use service::vi::{IManagerDisplayClient, ISystemDisplayClient};
 
 use super::*;
 use crate::gpu::binder;
@@ -15,11 +15,6 @@ use crate::wait;
 use core::mem as cmem;
 
 const MAX_BUFFERS: usize = 8;
-
-/// Represents a `fn` with a certain layer disposing code
-///
-/// Note that different layers (managed layers, stray layers, etc.) are destroyed in different ways
-pub type LayerDestroyFn = fn(vi::LayerId, &mut vi::ApplicationDisplayService) -> Result<()>;
 
 /// Configures the scaling mode for managed layers
 pub enum ScaleMode {

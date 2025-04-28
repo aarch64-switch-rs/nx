@@ -28,7 +28,7 @@ macro_rules! ipc_sf_define_interface_trait {
     ) => {
         paste::paste! {
             /// The IPC server trait for the [`<I $intf Server>`] trait. All methods are provided and overriding the implementations is not recommended.
-            pub trait [<I$intf>]: $crate::ipc::client::IClientObject + Sync {
+            pub trait [<I $intf Client>]: $crate::ipc::client::IClientObject + Sync {
                 $(
                     #[allow(unused_parens)]
                     #[allow(clippy::too_many_arguments)]
@@ -150,7 +150,8 @@ macro_rules! ipc_sf_define_control_interface_trait {
 
                     #[allow(unused_assignments)]
                     #[allow(unused_parens)]
-                    fn [<sf_server_impl_ $name>](&mut self, _protocol: $crate::ipc::CommandProtocol, mut ctx: &mut $crate::ipc::server::ServerContext) -> $crate::result::Result<()> {
+                    #[doc(hidden)]
+                    fn [<_sf_server_impl_ $name>](&mut self, _protocol: $crate::ipc::CommandProtocol, mut ctx: &mut $crate::ipc::server::ServerContext) -> $crate::result::Result<()> {
                         // TODO: tipc support, for now force cmif
                         $crate::result_return_if!(ctx.ctx.object_info.uses_tipc_protocol(), $crate::ipc::rc::ResultInvalidProtocol);
 
@@ -176,7 +177,7 @@ macro_rules! ipc_sf_define_control_interface_trait {
                     match rq_id {
                         $(
                             $rq_id if $ver_intv.contains($crate::version::get_version()) => {
-                                Some(self.[<sf_server_impl_ $name>](protocol, ctx))
+                                Some(self.[<_sf_server_impl_ $name>](protocol, ctx))
                             }
                         ),*
                         _ => None

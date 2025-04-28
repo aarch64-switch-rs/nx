@@ -1,5 +1,4 @@
 use crate::ipc::sf;
-use crate::result::*;
 use crate::version;
 
 use nx_derive::{Request, Response};
@@ -38,7 +37,7 @@ pub enum NativeHandleType {
 
 pub type BinderHandle = i32;
 
-ipc_sf_define_default_interface_client!(HOSBinderDriver);
+ipc_sf_define_default_client_for_interface!(HOSBinderDriver);
 ipc_sf_define_interface_trait! {
     trait HOSBinderDriver {
         transact_parcel [0, version::VersionInterval::all()]: (binder_handle: BinderHandle, transaction_id: ParcelTransactionId, flags: u32, in_parcel: sf::InMapAliasBuffer<u8>, out_parcel: sf::OutMapAliasBuffer<u8>) =>  () ();

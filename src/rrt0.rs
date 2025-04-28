@@ -175,8 +175,8 @@ fn initialize_version(hbl_hos_version_opt: Option<hbl::Version>) {
     } else {
         #[cfg(feature = "services")]
         {
-            use crate::ipc::sf::set::ISystemSettingsServer;
-            let set_sys = service::new_service_object::<set::SystemSettingsServer>().unwrap();
+            use crate::service::set::{ISystemSettingsClient, SystemSettingsService};
+            let set_sys = service::new_service_object::<SystemSettingsService>().unwrap();
             let mut fw_version: set::FirmwareVersion = Default::default();
             set_sys
                 .get_firmware_version(sf::Buffer::from_mut_var(&mut fw_version))

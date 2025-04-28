@@ -4,7 +4,11 @@ use crate::service;
 
 pub use crate::ipc::sf::spl::*;
 
-impl service::IService for RandomInterface {
+ipc_client_define_client_default!(RandomService);
+
+impl IRandomClient for RandomService {}
+
+impl service::IService for RandomService {
     fn get_name() -> sm::ServiceName {
         sm::ServiceName::new("csrng")
     }

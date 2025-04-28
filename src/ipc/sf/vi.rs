@@ -1,5 +1,4 @@
 use crate::ipc::sf;
-use crate::result::*;
 use crate::util;
 use crate::version;
 
@@ -51,18 +50,18 @@ pub enum LayerStackId {
     Null,
 }
 
-ipc_sf_define_default_interface_client!(ManagerDisplayService);
+ipc_sf_define_default_client_for_interface!(ManagerDisplay);
 ipc_sf_define_interface_trait! {
-    trait ManagerDisplayService {
+    trait ManagerDisplay {
         create_managed_layer [2010, version::VersionInterval::all(), mut]: (flags: LayerFlags, display_id: DisplayId, raw_aruid: u64) =>  (id: LayerId) (id: LayerId);
         destroy_managed_layer [2011, version::VersionInterval::all()]: (id: LayerId) =>  () ();
         add_to_layer_stack [6000, version::VersionInterval::all()]: (stack: LayerStackId, layer: LayerId) =>  () ();
     }
 }
 
-ipc_sf_define_default_interface_client!(SystemDisplayService);
+ipc_sf_define_default_client_for_interface!(SystemDisplay);
 ipc_sf_define_interface_trait! {
-    trait SystemDisplayService {
+    trait SystemDisplay {
         get_z_order_count_min [1200, version::VersionInterval::all()]: (display_id: DisplayId) =>  (z: i64) (z: i64);
         get_z_order_count_max [1202, version::VersionInterval::all()]: (display_id: DisplayId) =>  (z: i64) (z: i64);
         set_layer_position [2201, version::VersionInterval::all(), mut]: (x: f32, y: f32, id: LayerId) =>  () ();
@@ -72,12 +71,12 @@ ipc_sf_define_interface_trait! {
     }
 }
 
-ipc_sf_define_default_interface_client!(ApplicationDisplayService);
+ipc_sf_define_default_client_for_interface!(ApplicationDisplay);
 ipc_sf_define_interface_trait! {
-    trait ApplicationDisplayService {
+    trait ApplicationDisplay {
         get_relay_service [100, version::VersionInterval::all()]: () => (relay_service: sf::dispdrv::HOSBinderDriver) (relay_service: sf::dispdrv::HOSBinderDriver);
-        get_system_display_service [101, version::VersionInterval::all()]: () => (system_display_service: SystemDisplayService) (system_display_service: session_type!(SystemDisplayService));
-        get_manager_display_service [102, version::VersionInterval::all()]: () => (manager_display_service: ManagerDisplayService) (manager_display_service: session_type!(ManagerDisplayService));
+        get_system_display_service [101, version::VersionInterval::all()]: () => (system_display_service: SystemDisplay) (system_display_service: session_type!(SystemDisplay));
+        get_manager_display_service [102, version::VersionInterval::all()]: () => (manager_display_service: ManagerDisplay) (manager_display_service: session_type!(ManagerDisplay));
         open_display [1010, version::VersionInterval::all(), mut]: (name: DisplayName) =>  (id: DisplayId) (id: DisplayId);
         close_display [1020, version::VersionInterval::all(), mut]: (id: DisplayId) =>  () ();
         open_layer [2020, version::VersionInterval::all(), mut]: (name: DisplayName, id: LayerId, aruid: AppletResourceUserId, out_native_window: sf::OutMapAliasBuffer<u8>) =>  (native_window_size: usize) (native_window_size: usize);
@@ -88,23 +87,9 @@ ipc_sf_define_interface_trait! {
     }
 }
 
-ipc_sf_define_default_interface_client!(ApplicationRootService);
+//ipc_sf_define_default_client_for_interface!(ApplicationRootService);
 ipc_sf_define_interface_trait! {
-    trait ApplicationRootService {
-        get_display_service [0, version::VersionInterval::all()]: (mode: DisplayServiceMode) =>  (display_service: ApplicationDisplayService) (display_service: session_type!(ApplicationDisplayService));
-    }
-}
-
-ipc_sf_define_default_interface_client!(SystemRootService);
-ipc_sf_define_interface_trait! {
-    trait SystemRootService {
-        get_display_service [1, version::VersionInterval::all()]: (mode: DisplayServiceMode) =>  (display_service: ApplicationDisplayService) (display_service: session_type!(ApplicationDisplayService));
-    }
-}
-
-ipc_sf_define_default_interface_client!(ManagerRootService);
-ipc_sf_define_interface_trait! {
-    trait ManagerRootService {
-        get_display_service [2, version::VersionInterval::all()]: (mode: DisplayServiceMode) =>  (display_service: ApplicationDisplayService) (display_service: session_type!(ApplicationDisplayService));
+    trait DisplayRoot {
+        get_display_service [0, version::VersionInterval::all()]: (mode: DisplayServiceMode) =>  (display_service: ApplicationDisplay) (display_service: session_type!(ApplicationDisplay));
     }
 }

@@ -7,7 +7,7 @@ use sf::hipc::IMitmQueryServiceServer;
 
 /// This flags, but is actually necessary
 #[allow(unused_imports)]
-use sf::sm::IUserInterface;
+use sf::sm::IUserInterfaceClient;
 
 #[cfg(feature = "services")]
 use crate::service;

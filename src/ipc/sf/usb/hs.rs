@@ -94,7 +94,7 @@ pub struct XferReport {
 }
 const_assert!(core::mem::size_of::<XferReport>() == 0x18);
 
-ipc_sf_define_default_interface_client!(ClientEpSession);
+ipc_sf_define_default_client_for_interface!(ClientEpSession);
 ipc_sf_define_interface_trait! {
     trait ClientEpSession {
         submit_out_request [0, version::VersionInterval::to(version::Version::new(1,0,0))]: (size: u32, unk: u32, buf: sf::InMapAliasBuffer<u8>) =>  (transferred_size: u32) (transferred_size: u32);
@@ -115,7 +115,7 @@ ipc_sf_define_interface_trait! {
     }
 }
 
-ipc_sf_define_default_interface_client!(ClientIfSession);
+ipc_sf_define_default_client_for_interface!(ClientIfSession);
 ipc_sf_define_interface_trait! {
     trait ClientIfSession {
         get_state_change_event [0, version::VersionInterval::all()]: () => (event_handle: sf::CopyHandle) (event_handle: sf::CopyHandle);
@@ -135,7 +135,7 @@ ipc_sf_define_interface_trait! {
     }
 }
 
-ipc_sf_define_default_interface_client!(ClientRootSession);
+ipc_sf_define_default_client_for_interface!(ClientRootSession);
 ipc_sf_define_interface_trait! {
     trait ClientRootSession {
         bind_client_process [0, version::VersionInterval::from(version::Version::new(2,0,0))]: (self_process_handle: sf::CopyHandle) =>  () ();

@@ -49,11 +49,11 @@ pub enum AppletProxy {
 macro_rules! applet_proxy_match_to_fn {
     ($self:ident, $func:ident) => {
         match $self {
-            AppletProxy::Application(p) => IApplicationProxy::$func(p),
-            AppletProxy::SystemApplet(p) => ISystemAppletProxy::$func(p),
-            AppletProxy::LibraryApplet(p) => ILibraryAppletProxy::$func(p),
-            AppletProxy::OverlayApplet(p) => IOverlayAppletProxy::$func(p),
-            AppletProxy::SystemApplication(p) => ISystemApplicationProxy::$func(p),
+            AppletProxy::Application(p) => IApplicationProxyClient::$func(p),
+            AppletProxy::SystemApplet(p) => ISystemAppletProxyClient::$func(p),
+            AppletProxy::LibraryApplet(p) => ILibraryAppletProxyClient::$func(p),
+            AppletProxy::OverlayApplet(p) => IOverlayAppletProxyClient::$func(p),
+            AppletProxy::SystemApplication(p) => ISystemApplicationProxyClient::$func(p),
         }
     };
 }

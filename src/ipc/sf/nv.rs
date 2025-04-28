@@ -1,5 +1,4 @@
 use crate::ipc::sf;
-use crate::result::*;
 use crate::version;
 
 use nx_derive::{Request, Response};
@@ -44,9 +43,9 @@ pub enum IoctlId {
 
 pub type Fd = u32;
 
-ipc_sf_define_default_interface_client!(NvDrvServices);
+//ipc_sf_define_default_client_for_interface!(NvDrvServices);
 ipc_sf_define_interface_trait! {
-    trait NvDrvServices {
+    trait NvDrv {
         open [0, version::VersionInterval::all()]: (path: sf::InMapAliasBuffer<u8>) =>  (fd: Fd, error_code: ErrorCode) (fd: Fd, error_code: ErrorCode);
         ioctl [1, version::VersionInterval::all()]: (fd: Fd, id: IoctlId, in_buf: sf::InAutoSelectBuffer<u8>, out_buf: sf::OutAutoSelectBuffer<u8>) =>  (error_code: ErrorCode) (error_code: ErrorCode);
         close [2, version::VersionInterval::all()]: (fd: Fd) =>  (error_code: ErrorCode) (error_code: ErrorCode);

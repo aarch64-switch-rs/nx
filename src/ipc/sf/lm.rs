@@ -1,5 +1,4 @@
 use crate::ipc::sf;
-use crate::result::*;
 use crate::version;
 
 define_bit_enum! {
@@ -11,7 +10,7 @@ define_bit_enum! {
     }
 }
 
-ipc_sf_define_default_interface_client!(Logger);
+ipc_sf_define_default_client_for_interface!(Logger);
 ipc_sf_define_interface_trait! {
     trait Logger {
         log [0, version::VersionInterval::all()]: (log_buf: sf::InAutoSelectBuffer<u8>) =>  () ();
@@ -19,9 +18,9 @@ ipc_sf_define_interface_trait! {
     }
 }
 
-ipc_sf_define_default_interface_client!(LogService);
+//ipc_sf_define_default_client_for_interface!(LogService);
 ipc_sf_define_interface_trait! {
-    trait LogService {
+    trait Logging {
         open_logger [0, version::VersionInterval::all(), mut]: (raw_process_id: u64) =>  (logger: Logger) (logger: session_type!(Logger));
     }
 }

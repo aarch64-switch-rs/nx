@@ -4,7 +4,11 @@ use crate::service;
 
 pub use crate::ipc::sf::set::*;
 
-impl service::IService for SystemSettingsServer {
+ipc_client_define_client_default!(SystemSettingsService);
+
+impl ISystemSettingsClient for SystemSettingsService {}
+
+impl service::IService for SystemSettingsService {
     fn get_name() -> sm::ServiceName {
         sm::ServiceName::new("set:sys")
     }

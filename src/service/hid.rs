@@ -4,7 +4,13 @@ use crate::service;
 
 pub use crate::ipc::sf::hid::*;
 
-impl service::IService for HidServer {
+ipc_client_define_client_default!(HidService);
+ipc_client_define_client_default!(HidSysService);
+
+impl IHidClient for HidService {}
+impl IHidSysClient for HidSysService {}
+
+impl service::IService for HidService {
     fn get_name() -> sm::ServiceName {
         sm::ServiceName::new("hid")
     }
@@ -18,7 +24,7 @@ impl service::IService for HidServer {
     }
 }
 
-impl service::IService for HidSysServer {
+impl service::IService for HidSysService {
     fn get_name() -> sm::ServiceName {
         sm::ServiceName::new("hid:sys")
     }

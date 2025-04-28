@@ -64,8 +64,8 @@ fn do_abort(level: AbortLevel, rc: ResultCode) {
     if level == AbortLevel::FatalThrow() {
         #[cfg(feature = "services")]
         {
-            use fatal::IService;
-            if let Ok(fatal) = service::new_service_object::<fatal::Service>() {
+            use crate::service::fatal::{FatalService, IFatalClient};
+            if let Ok(fatal) = service::new_service_object::<FatalService>() {
                 let _ = fatal.throw_fatal_with_policy(
                     rc,
                     fatal::FatalPolicy::ErrorScreen,

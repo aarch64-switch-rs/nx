@@ -64,7 +64,7 @@ pub fn convert_nv_error_code(err: ErrorCode) -> Result<()> {
 /// Represents a binder object, wrapping transaction functionality
 pub struct Binder {
     handle: dispdrv::BinderHandle,
-    hos_binder_driver: Arc<dyn dispdrv::IHOSBinderDriver>,
+    hos_binder_driver: Arc<dyn dispdrv::IHOSBinderDriverClient>,
 }
 
 impl Binder {
@@ -77,7 +77,7 @@ impl Binder {
     #[inline]
     pub const fn new(
         handle: dispdrv::BinderHandle,
-        hos_binder_driver: Arc<dyn dispdrv::IHOSBinderDriver>,
+        hos_binder_driver: Arc<dyn dispdrv::IHOSBinderDriverClient>,
     ) -> Result<Self> {
         Ok(Self {
             handle,
@@ -129,8 +129,8 @@ impl Binder {
         self.handle
     }
 
-    /// Gets this [`Binder`]'s underlying [`IHOSBinderDriver`][`dispdrv::IHOSBinderDriver`] object
-    pub fn get_hos_binder_driver(&self) -> Arc<dyn dispdrv::IHOSBinderDriver> {
+    /// Gets this [`Binder`]'s underlying [`IHOSBinderDriverClient`][`dispdrv::IHOSBinderDriverClient`] object
+    pub fn get_hos_binder_driver(&self) -> Arc<dyn dispdrv::IHOSBinderDriverClient> {
         self.hos_binder_driver.clone()
     }
 

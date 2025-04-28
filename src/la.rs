@@ -5,9 +5,9 @@ use crate::ipc::sf;
 use crate::mem;
 use crate::result::*;
 use crate::service::applet;
-use crate::service::applet::ILibraryAppletAccessor;
-use crate::service::applet::ILibraryAppletCreator;
-use crate::service::applet::{IStorage, IStorageAccessor, Storage};
+use crate::service::applet::ILibraryAppletAccessorClient;
+use crate::service::applet::ILibraryAppletCreatorClient;
+use crate::service::applet::{IStorageClient, IStorageAccessorClient, Storage};
 use crate::service::sm::rc;
 use crate::svc;
 use crate::sync::{Mutex, MutexGuard};
@@ -39,15 +39,15 @@ pub struct CommonArguments {
 
 /// Represents a wrapper type for using library applets
 pub struct LibraryAppletHolder {
-    accessor: mem::Shared<dyn ILibraryAppletAccessor>,
+    accessor: mem::Shared<dyn ILibraryAppletAccessorClient>,
     state_changed_event_handle: svc::Handle,
 }
 
 impl LibraryAppletHolder {
-    /// Creates a [`LibraryAppletHolder`] from an existing [`ILibraryAppletAccessor`] shared object
+    /// Creates a [`LibraryAppletHolder`] from an existing [`ILibraryAppletAccessorClient`] shared object
     ///
     /// This shouldn't be manually created unless the accessor object was obtained manually (see [`create_library_applet`])
-    pub fn new(accessor: mem::Shared<dyn ILibraryAppletAccessor>) -> Result<Self> {
+    pub fn new(accessor: mem::Shared<dyn ILibraryAppletAccessorClient>) -> Result<Self> {
         let state_changed_event_h = accessor.lock().get_applet_state_changed_event()?;
 
         Ok(Self {
@@ -56,9 +56,9 @@ impl LibraryAppletHolder {
         })
     }
 
-    /// Gets the underlying [`ILibraryAppletAccessor`] shared object
+    /// Gets the underlying [`ILibraryAppletAccessorClient`] shared object
     #[inline]
-    pub fn get_accessor(&self) -> mem::Shared<dyn ILibraryAppletAccessor> {
+    pub fn get_accessor(&self) -> mem::Shared<dyn ILibraryAppletAccessorClient> {
         self.accessor.clone()
     }
 

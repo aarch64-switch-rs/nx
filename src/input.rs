@@ -13,9 +13,9 @@ use crate::service::hid::shmem;
 use crate::service::hid::shmem::SharedMemoryFormat;
 use crate::service::hid::AnalogStickState;
 use crate::service::hid::AppletResource;
-use crate::service::hid::HidServer;
-use crate::service::hid::IAppletResource;
-use crate::service::hid::IHidServer;
+use crate::service::hid::HidService;
+use crate::service::hid::IAppletResourceClient;
+use crate::service::hid::IHidClient;
 use crate::svc;
 use crate::version;
 use crate::vmem;
@@ -319,7 +319,7 @@ impl<'player, 'context: 'player> Player<'player> {
 /// Represents a simple type for dealing with input handling
 #[allow(dead_code)]
 pub struct Context {
-    hid_service: HidServer,
+    hid_service: HidService,
     applet_resource: AppletResource,
     supported_style_tags: hid::NpadStyleTag,
     shmem_handle: svc::Handle,
@@ -361,7 +361,7 @@ impl Context {
         );
         let players = sf::Buffer::from_array(&players[..player_count]);
 
-        let mut hid_srv = service::new_service_object::<hid::HidServer>()?;
+        let mut hid_srv = service::new_service_object::<HidService>()?;
         let mut applet_res = hid_srv.create_applet_resource(aruid.clone())?;
 
         let shmem_handle = applet_res.get_shared_memory_handle()?;
@@ -390,7 +390,7 @@ impl Context {
         })
     }
 
-    fn activate_npad(hid_srv: &mut HidServer, aruid: AppletResourceUserId) -> Result<()> {
+    fn activate_npad(hid_srv: &mut HidService, aruid: AppletResourceUserId) -> Result<()> {
         let current_version = version::get_version();
         if current_version < version::Version::new(5, 0, 0) {
             hid_srv.activate_npad(aruid)
@@ -450,7 +450,7 @@ impl Context {
 }
 
 impl Drop for Context {
-    /// Destroys the [`Context`], unmapping the shared-memory and closing it, and also closing its [`IHidServer`] session
+    /// Destroys the [`Context`], unmapping the shared-memory and closing it, and also closing its [`IHidClient`] session
     fn drop(&mut self) {
         let _ = self
             .hid_service

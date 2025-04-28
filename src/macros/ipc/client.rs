@@ -7,7 +7,7 @@
 /// ```
 ///
 /// // This already creates the client-IPC type and impls IObject and the SF trait below
-/// ipc_sf_define_default_interface_client!(ExampleInterface);
+/// ipc_sf_define_default_client_for_interface!(ExampleInterface);
 ///
 /// ipc_sf_define_interface_trait! {
 ///     trait ExampleInterface {
@@ -17,7 +17,7 @@
 /// }
 /// ```
 #[macro_export]
-macro_rules! ipc_sf_define_default_interface_client {
+macro_rules! ipc_sf_define_default_client_for_interface {
     ($t:ident) => {
         paste::paste! {
             /// The default client for the `$t` trait. All implementors of the trait need to read their session in accordance with this Types IPC Parameter traits.
@@ -44,23 +44,23 @@ macro_rules! ipc_sf_define_default_interface_client {
             unsafe impl ::core::marker::Send for $t {}
 
             impl $crate::ipc::client::RequestCommandParameter for $t {
-                fn before_request_write(session: &Self, _walker: &mut $crate::ipc::DataWalker, ctx: &mut $crate::ipc::CommandContext) -> Result<()> {
+                fn before_request_write(session: &Self, _walker: &mut $crate::ipc::DataWalker, ctx: &mut $crate::ipc::CommandContext) -> $crate::result::Result<()> {
                     ctx.in_params.add_object(session.session.object_info)
                 }
 
-                fn before_send_sync_request(_session: &Self, _walker: &mut $crate::ipc::DataWalker, _ctx: &mut $crate::ipc::CommandContext) -> Result<()> {
+                fn before_send_sync_request(_session: &Self, _walker: &mut $crate::ipc::DataWalker, _ctx: &mut $crate::ipc::CommandContext) -> $crate::result::Result<()> {
                     Ok(())
                 }
             }
 
             impl $crate::ipc::client::ResponseCommandParameter<$t> for $t {
-                fn after_response_read(_walker: &mut $crate::ipc::DataWalker, ctx: &mut $crate::ipc::CommandContext) -> Result<Self> {
+                fn after_response_read(_walker: &mut $crate::ipc::DataWalker, ctx: &mut $crate::ipc::CommandContext) -> $crate::result::Result<Self> {
                     let object_info = ctx.pop_object()?;
                     Ok(Self { session: $crate::ipc::sf::Session::from(object_info)})
                 }
             }
             impl $crate::ipc::server::RequestCommandParameter<$t> for $t {
-                fn after_request_read(_ctx: &mut $crate::ipc::server::ServerContext) -> Result<Self> {
+                fn after_request_read(_ctx: &mut $crate::ipc::server::ServerContext) -> $crate::result::Result<Self> {
                     use $crate::result::ResultBase;
                     // TODO: determine if we need to do this, since this is a server side operation of a client object?
                     // probably needs to be supported right?
@@ -70,14 +70,14 @@ macro_rules! ipc_sf_define_default_interface_client {
 
             impl $crate::ipc::server::ResponseCommandParameter for $t {
                 type CarryState = ();
-                fn before_response_write(_session: &Self, _ctx: &mut $crate::ipc::server::ServerContext) -> Result<()> {
+                fn before_response_write(_session: &Self, _ctx: &mut $crate::ipc::server::ServerContext) -> $crate::result::Result<()> {
                     use $crate::result::ResultBase;
                     // TODO: determine if we need to do this, since this is a server side operation of a client object?
                     // probably needs to be supported right?
                     $crate::ipc::sf::hipc::rc::ResultUnsupportedOperation::make_err()
                 }
 
-                fn after_response_write(_session: Self, _carry_state: (), _ctx: &mut $crate::ipc::server::ServerContext) -> Result<()> {
+                fn after_response_write(_session: Self, _carry_state: (), _ctx: &mut $crate::ipc::server::ServerContext) -> $crate::result::Result<()> {
                     use $crate::result::ResultBase;
                     // TODO: determine if we need to do this, since this is a server side operation of a client object?
                     // probably needs to be supported right?
@@ -85,7 +85,7 @@ macro_rules! ipc_sf_define_default_interface_client {
                 }
             }
 
-            impl [<I$t>] for $t {}
+            impl [<I $t Client>] for $t {}
         }
     }
 }
@@ -98,14 +98,14 @@ macro_rules! ipc_sf_define_default_interface_client {
 /// // Let's suppose a "IExampleInterface" IPC interface trait exists
 ///
 /// // This already creates the client-IPC type and impls IObject
-/// ipc_client_define_object_default!(ExampleInterface);
+/// ipc_client_define_client_default!(ExampleInterface);
 ///
 /// impl IExampleInterface for ExampleInterface {
 ///     (...)
 /// }
 /// ```
 #[macro_export]
-macro_rules! ipc_client_define_object_default {
+macro_rules! ipc_client_define_client_default {
     ($t:ident) => {
         /// Default client object for the $t service
         #[allow(missing_docs)]
@@ -138,7 +138,7 @@ macro_rules! ipc_client_define_object_default {
 /// ```
 /// use nx::ipc::sf::Session;
 ///
-/// fn demo(session: Session) -> Result<()> {
+/// fn demo(session: Session) -> $crate::result::Result<()> {
 ///     let in_32: u32 = 69;
 ///     let in_16: u16 = 420;
 ///

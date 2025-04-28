@@ -4,7 +4,15 @@ use crate::service;
 
 pub use crate::ipc::sf::vi::*;
 
-impl service::IService for ApplicationRootService {
+ipc_client_define_client_default!(ApplicationDisplayRootService);
+ipc_client_define_client_default!(ManagerDisplayRootService);
+ipc_client_define_client_default!(SystemDisplayRootService);
+
+impl IDisplayRootClient for ApplicationDisplayRootService {}
+impl IDisplayRootClient for ManagerDisplayRootService {}
+impl IDisplayRootClient for SystemDisplayRootService {}
+
+impl service::IService for ApplicationDisplayRootService {
     fn get_name() -> sm::ServiceName {
         sm::ServiceName::new("vi:u")
     }
@@ -18,7 +26,7 @@ impl service::IService for ApplicationRootService {
     }
 }
 
-impl service::IService for SystemRootService {
+impl service::IService for SystemDisplayRootService {
     fn get_name() -> sm::ServiceName {
         sm::ServiceName::new("vi:s")
     }
@@ -32,7 +40,7 @@ impl service::IService for SystemRootService {
     }
 }
 
-impl service::IService for ManagerRootService {
+impl service::IService for ManagerDisplayRootService {
     fn get_name() -> sm::ServiceName {
         sm::ServiceName::new("vi:m")
     }

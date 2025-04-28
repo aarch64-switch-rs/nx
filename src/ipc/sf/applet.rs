@@ -144,7 +144,7 @@ pub enum AppletMessage {
     RecordingSaved = 93,
 }
 
-ipc_sf_define_default_interface_client!(StorageAccessor);
+ipc_sf_define_default_client_for_interface!(StorageAccessor);
 ipc_sf_define_interface_trait! {
     trait StorageAccessor {
         get_size [0, version::VersionInterval::all()]: () => (size: usize) (size: usize);
@@ -153,14 +153,14 @@ ipc_sf_define_interface_trait! {
     }
 }
 
-ipc_sf_define_default_interface_client!(Storage);
+ipc_sf_define_default_client_for_interface!(Storage);
 ipc_sf_define_interface_trait! {
     trait Storage {
         open [0, version::VersionInterval::all()]: () => (storage_accessor: StorageAccessor) (storage_accessor: StorageAccessor);
     }
 }
 
-ipc_sf_define_default_interface_client!(LibraryAppletAccessor);
+ipc_sf_define_default_client_for_interface!(LibraryAppletAccessor);
 ipc_sf_define_interface_trait! {
     trait LibraryAppletAccessor {
         get_applet_state_changed_event [0, version::VersionInterval::all()]: () => (applet_state_changed_event: sf::CopyHandle) (applet_state_changed_event: sf::CopyHandle);
@@ -170,7 +170,7 @@ ipc_sf_define_interface_trait! {
     }
 }
 
-ipc_sf_define_default_interface_client!(LibraryAppletCreator);
+ipc_sf_define_default_client_for_interface!(LibraryAppletCreator);
 ipc_sf_define_interface_trait! {
     trait LibraryAppletCreator {
         create_library_applet [0, version::VersionInterval::all()]: (applet_id: AppletId, applet_mode: LibraryAppletMode) =>  (library_applet_accessor: LibraryAppletAccessor) (library_applet_accessor: session_type!(LibraryAppletAccessor));
@@ -178,7 +178,7 @@ ipc_sf_define_interface_trait! {
     }
 }
 
-ipc_sf_define_default_interface_client!(WindowController);
+ipc_sf_define_default_client_for_interface!(WindowController);
 ipc_sf_define_interface_trait! {
     trait WindowController {
         get_applet_resource_user_id [1, version::VersionInterval::all()]: () => (aruid: u64) (aruid: u64);
@@ -186,7 +186,7 @@ ipc_sf_define_interface_trait! {
     }
 }
 
-ipc_sf_define_default_interface_client!(SelfController);
+ipc_sf_define_default_client_for_interface!(SelfController);
 ipc_sf_define_interface_trait! {
     trait SelfController {
         set_screenshot_permission [10, version::VersionInterval::all()]: (permission: ScreenShotPermission) =>  () ();
@@ -194,7 +194,7 @@ ipc_sf_define_interface_trait! {
     }
 }
 
-ipc_sf_define_default_interface_client!(AudioController);
+ipc_sf_define_default_client_for_interface!(AudioController);
 ipc_sf_define_interface_trait! {
     trait AudioController {
         set_expected_master_volume [0, version::VersionInterval::all()]: (main_applet_level: f32, library_applet_level: f32) =>  () ();
@@ -205,20 +205,20 @@ ipc_sf_define_interface_trait! {
     }
 }
 
-ipc_sf_define_default_interface_client!(DisplayController);
+ipc_sf_define_default_client_for_interface!(DisplayController);
 ipc_sf_define_interface_trait! {
     trait DisplayController {
         update_caller_applet_capture_image [3, version::VersionInterval::all()]: () =>  () ();
     }
 }
-ipc_sf_define_default_interface_client!(ProcessWindingController);
+ipc_sf_define_default_client_for_interface!(ProcessWindingController);
 ipc_sf_define_interface_trait! {
     trait ProcessWindingController {
         get_launch_reason [0, version::VersionInterval::all()]: () => (launch_reason: AppletProcessLaunchReason) (launch_reason: AppletProcessLaunchReason);
     }
 }
 
-ipc_sf_define_default_interface_client!(CommonStateGetter);
+ipc_sf_define_default_client_for_interface!(CommonStateGetter);
 ipc_sf_define_interface_trait! {
     trait CommonStateGetter {
         get_event_handle [0, version::VersionInterval::all()]: () => (handle: Handle) (handle: Handle);
@@ -226,7 +226,7 @@ ipc_sf_define_interface_trait! {
         }
 }
 
-ipc_sf_define_default_interface_client!(LibraryAppletProxy);
+ipc_sf_define_default_client_for_interface!(LibraryAppletProxy);
 ipc_sf_define_interface_trait! {
     trait LibraryAppletProxy {
         get_common_state_getter [0, version::VersionInterval::all()]: () => (common_state_getter: CommonStateGetter) (commond_state_getter: session_type!(CommonStateGetter));
@@ -239,7 +239,7 @@ ipc_sf_define_interface_trait! {
     }
 }
 
-ipc_sf_define_default_interface_client!(ApplicationProxy);
+ipc_sf_define_default_client_for_interface!(ApplicationProxy);
 ipc_sf_define_interface_trait! {
     trait ApplicationProxy {
         get_common_state_getter [0, version::VersionInterval::all()]: () => (common_state_getter: CommonStateGetter) (commond_state_getter: session_type!(CommonStateGetter));
@@ -252,7 +252,7 @@ ipc_sf_define_interface_trait! {
     }
 }
 
-ipc_sf_define_default_interface_client!(SystemAppletProxy);
+ipc_sf_define_default_client_for_interface!(SystemAppletProxy);
 ipc_sf_define_interface_trait! {
     trait SystemAppletProxy {
         get_common_state_getter [0, version::VersionInterval::all()]: () => (common_state_getter: CommonStateGetter) (commond_state_getter: session_type!(CommonStateGetter));
@@ -265,7 +265,7 @@ ipc_sf_define_interface_trait! {
     }
 }
 
-ipc_sf_define_default_interface_client!(OverlayAppletProxy);
+ipc_sf_define_default_client_for_interface!(OverlayAppletProxy);
 ipc_sf_define_interface_trait! {
     trait OverlayAppletProxy {
         get_common_state_getter [0, version::VersionInterval::all()]: () => (common_state_getter: CommonStateGetter) (commond_state_getter: session_type!(CommonStateGetter));
@@ -278,7 +278,7 @@ ipc_sf_define_interface_trait! {
     }
 }
 
-ipc_sf_define_default_interface_client!(SystemApplicationProxy);
+ipc_sf_define_default_client_for_interface!(SystemApplicationProxy);
 ipc_sf_define_interface_trait! {
     trait SystemApplicationProxy {
         get_common_state_getter [0, version::VersionInterval::all()]: () => (common_state_getter: CommonStateGetter) (commond_state_getter: session_type!(CommonStateGetter));
@@ -291,7 +291,7 @@ ipc_sf_define_interface_trait! {
     }
 }
 
-ipc_sf_define_default_interface_client!(AllSystemAppletProxiesService);
+ipc_sf_define_default_client_for_interface!(AllSystemAppletProxiesService);
 ipc_sf_define_interface_trait! {
     trait AllSystemAppletProxiesService {
         open_application_proxy [0, version::VersionInterval::all()]: (process_id: sf::ProcessId, self_process_handle: sf::CopyHandle) =>  (library_applet_proxy: ApplicationProxy) (library_applet_proxy: session_type!(ApplicationProxy));

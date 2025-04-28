@@ -1,5 +1,4 @@
 use crate::ipc::sf;
-use crate::result::*;
 use crate::util::ArrayString;
 use crate::version;
 use core::fmt::{Debug, Display, Formatter, Result as FmtResult};
@@ -146,7 +145,7 @@ pub struct ContentMetaInfo {
     pub pad: [u8; 2],
 }
 
-ipc_sf_define_default_interface_client!(ContentMetaDatabase);
+ipc_sf_define_default_client_for_interface!(ContentMetaDatabase);
 ipc_sf_define_interface_trait! {
     trait ContentMetaDatabase {
         set [0, version::VersionInterval::all()]: (meta_key: ContentMetaKey, in_rec_buf: sf::InMapAliasBuffer<u8>) =>  () ();
@@ -175,7 +174,7 @@ ipc_sf_define_interface_trait! {
     }
 }
 
-ipc_sf_define_default_interface_client!(ContentManager);
+ipc_sf_define_default_client_for_interface!(ContentManager);
 ipc_sf_define_interface_trait! {
     trait ContentManager {
         open_content_meta_database [0, version::VersionInterval::all()]: (storage_id: StorageId) =>  (meta_db: ContentMetaDatabase) (meta_db: session_type!(ContentMetaDatabase));

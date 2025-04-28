@@ -4,7 +4,11 @@ use crate::service;
 
 pub use crate::ipc::sf::lm::*;
 
-impl service::IService for LogService {
+ipc_client_define_client_default!(LoggingService);
+
+impl ILoggingClient for LoggingService {}
+
+impl service::IService for LoggingService {
     fn get_name() -> sm::ServiceName {
         sm::ServiceName::new("lm")
     }

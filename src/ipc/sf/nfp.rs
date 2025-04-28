@@ -2,7 +2,6 @@ use crate::ipc::sf;
 use crate::ipc::sf::applet;
 use crate::ipc::sf::hid;
 use crate::ipc::sf::mii;
-use crate::result::*;
 use crate::util;
 use crate::version;
 
@@ -211,7 +210,7 @@ pub enum WriteType {
     Unk1 = 1,
 }
 
-ipc_sf_define_default_interface_client!(User);
+ipc_sf_define_default_client_for_interface!(User);
 ipc_sf_define_interface_trait! {
     trait User {
         initialize [0, version::VersionInterval::all()]: (aruid: applet::AppletResourceUserId, mcu_data: sf::InMapAliasBuffer<McuVersionData>) =>  () ();
@@ -243,14 +242,14 @@ ipc_sf_define_interface_trait! {
     }
 }
 
-ipc_sf_define_default_interface_client!(UserManager);
+ipc_sf_define_default_client_for_interface!(UserManager);
 ipc_sf_define_interface_trait! {
     trait UserManager {
         create_user_interface [0, version::VersionInterval::all()]: () => (user_interface: User) (user_interface: session_type!(User));
     }
 }
 
-ipc_sf_define_default_interface_client!(System);
+ipc_sf_define_default_client_for_interface!(System);
 ipc_sf_define_interface_trait! {
     trait System {
         initialize_system [0, version::VersionInterval::all()]: (aruid: applet::AppletResourceUserId, _reserved: u64, mcu_data: sf::InMapAliasBuffer<McuVersionData>) =>  () ();
@@ -282,14 +281,14 @@ ipc_sf_define_interface_trait! {
     }
 }
 
-ipc_sf_define_default_interface_client!(SystemManager);
+ipc_sf_define_default_client_for_interface!(SystemManager);
 ipc_sf_define_interface_trait! {
     trait SystemManager {
         create_system_interface [0, version::VersionInterval::all()]: () => (system_interface: System) (system_interface: session_type!(System));
     }
 }
 
-ipc_sf_define_default_interface_client!(Debug);
+ipc_sf_define_default_client_for_interface!(Debug);
 ipc_sf_define_interface_trait! {
     trait Debug {
         initialize_debug [0, version::VersionInterval::all()]: (aruid: applet::AppletResourceUserId, mcu_data: sf::InMapAliasBuffer<McuVersionData>) =>  () ();
@@ -334,7 +333,7 @@ ipc_sf_define_interface_trait! {
     }
 }
 
-ipc_sf_define_default_interface_client!(DebugManager);
+ipc_sf_define_default_client_for_interface!(DebugManager);
 ipc_sf_define_interface_trait! {
     trait DebugManager {
         create_debug_interface [0, version::VersionInterval::all()]: () => (debug_interface: Debug) (debug_interface: session_type!(Debug));
