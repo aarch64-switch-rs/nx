@@ -1,6 +1,5 @@
 use crate::ipc::sf;
 use crate::result::*;
-use crate::svc;
 use crate::version;
 
 use super::applet::AppletResourceUserId;
@@ -547,9 +546,9 @@ ipc_sf_define_interface_trait! {
     }
 }
 
-ipc_sf_define_default_interface_client!(HidServer);
+ipc_sf_define_default_interface_client!(Hid);
 ipc_sf_define_interface_trait! {
-    trait HidServer {
+    trait Hid {
         create_applet_resource [0, version::VersionInterval::all(), mut]: (aruid: AppletResourceUserId) =>  (applet_resource: AppletResource) (applet_resource: session_type!(AppletResource));
         set_supported_npad_style_set [100, version::VersionInterval::all(), mut]: (npad_style_tag: NpadStyleTag, aruid: AppletResourceUserId) =>  () ();
         get_supported_npad_style_set [101, version::VersionInterval::all()]: (aruid: AppletResourceUserId) =>  (npad_style_tag: NpadStyleTag) (npad_style_tag: NpadStyleTag);
@@ -562,9 +561,9 @@ ipc_sf_define_interface_trait! {
     }
 }
 
-ipc_sf_define_default_interface_client!(HidSysServer);
+ipc_sf_define_default_interface_client!(HidSys);
 ipc_sf_define_interface_trait! {
-    trait HidSysServer {
+    trait HidSys {
         send_keyboard_lock_key_event [31, version::VersionInterval::all()]: (flags: LockKeyFlags) => () ();
         acquire_home_button_event_handle [101, version::VersionInterval::all()]: (aruid: AppletResourceUserId) =>  (handle: CopyHandle) (handle: CopyHandle);
         activate_home_button [111, version::VersionInterval::all()]: (aruid: AppletResourceUserId) => () ();
