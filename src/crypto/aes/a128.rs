@@ -81,7 +81,7 @@ impl Context {
         let round_keys_size_32 = (super::BLOCK_SIZE * (ROUND_COUNT + 1)) / mem::size_of::<u32>();
         for i in KEY_SIZE_32..round_keys_size_32 {
             if (i % KEY_SIZE_32) == 0 {
-                tmp = sub_bytes(tmp) ^ (RCON_TABLE[(i / KEY_SIZE_32) - 1] as u32).rotate_right(8);
+                tmp = sub_bytes(tmp).rotate_right(8) ^ (RCON_TABLE[(i / KEY_SIZE_32) - 1] as u32);
             }
 
             tmp ^= unsafe { *round_keys_32.add(i - KEY_SIZE_32) };
