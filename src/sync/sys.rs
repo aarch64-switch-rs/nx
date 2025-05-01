@@ -2,6 +2,7 @@
 
 use crate::thread;
 
+pub mod futex;
 pub mod mutex;
 pub mod rwlock;
 
