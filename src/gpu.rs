@@ -13,7 +13,7 @@ use crate::service::nv;
 use crate::service::nv::INvDrvClient;
 use crate::service::vi;
 use crate::service::vi::{
-    ApplicationDisplayRootService, DisplayServiceMode, IApplicationDisplayClient, IDisplayRootClient, ManagerDisplayRootService,
+    ApplicationDisplayRootService, CommonDisplayRootClient, IApplicationDisplayClient, ManagerDisplayRootService,
     SystemDisplayRootService,
 };
 use crate::svc;
@@ -968,21 +968,21 @@ impl Context {
             ViServiceKind::Manager => {
                 let vi_srv = service::new_service_object::<ManagerDisplayRootService>()?;
                 let app_disp_srv =
-                    Box::new(vi_srv.get_display_service(DisplayServiceMode::Privileged)?);
+                    Box::new(vi_srv.get_display_service()?);
 
                 (RootServiceHolder::Manager(vi_srv), app_disp_srv)
             }
             ViServiceKind::System => {
                 let vi_srv = service::new_service_object::<SystemDisplayRootService>()?;
                 let app_disp_srv =
-                    Box::new(vi_srv.get_display_service(DisplayServiceMode::Privileged)?);
+                    Box::new(vi_srv.get_display_service()?);
 
                 (RootServiceHolder::System(vi_srv), app_disp_srv)
             }
             ViServiceKind::Application => {
                 let vi_srv = service::new_service_object::<ApplicationDisplayRootService>()?;
                 let app_disp_srv =
-                    Box::new(vi_srv.get_display_service(DisplayServiceMode::User)?);
+                    Box::new(vi_srv.get_display_service()?);
 
                 (RootServiceHolder::Application(vi_srv), app_disp_srv)
             }

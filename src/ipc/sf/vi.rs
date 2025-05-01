@@ -89,7 +89,23 @@ ipc_sf_define_interface_trait! {
 
 //ipc_sf_define_default_client_for_interface!(ApplicationRootService);
 ipc_sf_define_interface_trait! {
-    trait DisplayRoot {
+    trait ApplicationDisplayRoot {
         get_display_service [0, version::VersionInterval::all()]: (mode: DisplayServiceMode) =>  (display_service: ApplicationDisplay) (display_service: session_type!(ApplicationDisplay));
     }
+}
+
+ipc_sf_define_interface_trait! {
+    trait SystemDisplayRoot {
+        get_display_service [1, version::VersionInterval::all()]: (mode: DisplayServiceMode) =>  (display_service: ApplicationDisplay) (display_service: session_type!(ApplicationDisplay));
+    }
+}
+
+ipc_sf_define_interface_trait! {
+    trait ManagerDisplayRoot {
+        get_display_service [2, version::VersionInterval::all()]: (mode: DisplayServiceMode) =>  (display_service: ApplicationDisplay) (display_service: session_type!(ApplicationDisplay));
+    }
+}
+
+pub(crate) trait CommonDisplayRootClient {
+    fn get_display_service(&self) -> crate::result::Result<ApplicationDisplay>;
 }

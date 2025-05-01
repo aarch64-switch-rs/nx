@@ -8,9 +8,9 @@ ipc_client_define_client_default!(ApplicationDisplayRootService);
 ipc_client_define_client_default!(ManagerDisplayRootService);
 ipc_client_define_client_default!(SystemDisplayRootService);
 
-impl IDisplayRootClient for ApplicationDisplayRootService {}
-impl IDisplayRootClient for ManagerDisplayRootService {}
-impl IDisplayRootClient for SystemDisplayRootService {}
+impl IApplicationDisplayRootClient for ApplicationDisplayRootService {}
+impl IManagerDisplayRootClient for ManagerDisplayRootService {}
+impl ISystemDisplayRootClient for SystemDisplayRootService {}
 
 impl service::IService for ApplicationDisplayRootService {
     fn get_name() -> sm::ServiceName {
@@ -51,5 +51,23 @@ impl service::IService for ManagerDisplayRootService {
 
     fn post_initialize(&mut self) -> Result<()> {
         Ok(())
+    }
+}
+
+impl CommonDisplayRootClient for ApplicationDisplayRootService {
+    fn get_display_service(&self) -> Result<ApplicationDisplay> {
+        <Self as IApplicationDisplayRootClient>::get_display_service(self, DisplayServiceMode::User)
+    }
+}
+
+impl CommonDisplayRootClient for SystemDisplayRootService {
+    fn get_display_service(&self) -> Result<ApplicationDisplay> {
+        <Self as ISystemDisplayRootClient>::get_display_service(self, DisplayServiceMode::Privileged)
+    }
+}
+
+impl CommonDisplayRootClient for ManagerDisplayRootService {
+    fn get_display_service(&self) -> Result<ApplicationDisplay> {
+        <Self as IManagerDisplayRootClient>::get_display_service(self, DisplayServiceMode::Privileged)
     }
 }
