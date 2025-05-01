@@ -76,13 +76,10 @@ impl Header {
     }
 
     /// Gets the start address for the `.dynamic` section
-    ///
-    /// # Safety
-    ///
-    /// The reference `&self` must be the copy in `.rodata` created by the linker.
-    pub unsafe fn get_dyn_start(&self) -> *const u8 {
-        // SAFETY: Safe as we are just computing a new pointer, not dereferencing.
-        unsafe { (self as *const Self as *const u8).offset(self.dynamic as isize) }
+    pub fn get_dyn_start(&self) -> *const super::Dyn {
+        // This could cause panics on access if the pointer is incorrectly aligned but that is not a
+        // UB issue here - unaligned raw pointers are allowed.
+        unsafe {(self as *const Self as *const u8).offset(self.dynamic as isize) as *const super::Dyn}
     }
 
     /// Gets the start address for the `eh_frame_hdr` section.
