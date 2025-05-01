@@ -98,13 +98,13 @@ impl FpuRegister {
     /// * `d`: The value to set.
     #[inline]
     pub fn set_d(&mut self, d: f64) {
-        self.reg = d as u128;
+        self.reg = d.to_bits() as u128;
     }
 
     /// Gets the [`FpuRegister`] as an `S` value.
     #[inline]
     pub const fn get_s(&self) -> f32 {
-        self.reg as f32
+        f32::from_bits(self.reg as u32)
     }
 
     /// Sets the [`FpuRegister`] from an `S` value.
@@ -114,7 +114,7 @@ impl FpuRegister {
     /// * `s`: The value to set.
     #[inline]
     pub fn set_s(&mut self, s: f32) {
-        self.reg = s as u128;
+        self.reg = s.to_bits() as u128;
     }
 }
 
