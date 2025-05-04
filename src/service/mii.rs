@@ -6,6 +6,13 @@ use crate::sync::Mutex;
 
 pub use crate::ipc::sf::mii::*;
 
+#[inline]
+pub fn get_device_id() -> Result<CreateId> {
+    use service::set::{ISystemSettingsClient, SystemSettingsService};
+
+    service::new_service_object::<SystemSettingsService>()?.get_mii_author_id()
+}
+
 impl service::IService for StaticService {
     fn get_name() -> sm::ServiceName {
         sm::ServiceName::new("mii:e")

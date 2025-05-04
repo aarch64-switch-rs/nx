@@ -1437,7 +1437,7 @@ pub fn get_current_thread_name() -> String {
         (*(*get_thread_local_region()).nx_thread_vars.thread_ref)
             .name
             .get_str()
-            .unwrap_or("default")
+            .unwrap_or("")
             .to_string()
     }
 }
