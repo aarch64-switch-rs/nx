@@ -20,5 +20,6 @@ result_define_subgroup!(rc::RESULT_MODULE, RESULT_SUBMODULE => {
     InvalidReceiveBufferCount: 14,
     InvalidExchangeBufferCount: 15,
     InvalidBufferAttributes: 16,
-    InvalidProtocol: 17
+    InvalidProtocol: 17,
+    InvalidBufferPointer: 18
 });

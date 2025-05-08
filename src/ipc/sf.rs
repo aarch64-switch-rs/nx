@@ -1,6 +1,6 @@
 use super::*;
 use crate::util;
-use alloc::{string::String, vec::Vec};
+use alloc::{string::{String, ToString}, vec::Vec};
 
 pub use nx_derive::{Request, Response};
 
@@ -169,20 +169,37 @@ impl<
         out
     }
 
-    /// # Safety
-    ///
-    /// Unfortunately this doesn't seem to have an alignment guarantee as the clients may ignore it (e.g. TOTK). You should use unaligned reads from the raw pointer or manually check the alignment first
-    #[deprecated]
-    pub unsafe fn get_slice(&self) -> &[T] {
-        unsafe { core::slice::from_raw_parts(self.buf as *const T, self.count) }
+    pub fn as_slice(&mut self) -> Result<&[T]> {
+        result_return_unless!(self.buf.is_aligned() && !self.buf.is_null(), rc::ResultInvalidBufferPointer);
+        Ok(unsafe { core::slice::from_raw_parts(self.buf, self.count) })
     }
+}
 
-    /// # Safety
-    ///
-    /// Unfortunately this doesn't seem to have an alignment guarantee as the clients may ignore it (e.g. TOTK). You should use unaligned reads from the raw pointer or manually check the alignment first
-    #[deprecated]
-    pub unsafe fn get_mut_slice(&mut self) -> &mut [T] {
-        unsafe { core::slice::from_raw_parts_mut(self.buf, self.count) }
+impl<
+        const IN: bool,
+        const MAP_ALIAS: bool,
+        const POINTER: bool,
+        const FIXED_SIZE: bool,
+        const AUTO_SELECT: bool,
+        const ALLOW_NON_SECURE: bool,
+        const ALLOW_NON_DEVICE: bool,
+        T,
+    >
+    Buffer<
+        IN,
+        true,
+        MAP_ALIAS,
+        POINTER,
+        FIXED_SIZE,
+        AUTO_SELECT,
+        ALLOW_NON_SECURE,
+        ALLOW_NON_DEVICE,
+        T,
+    >
+{
+    pub fn as_slice_mut(&mut self) -> Result<&mut [T]> {
+        result_return_unless!(self.buf.is_aligned() && !self.buf.is_null(), rc::ResultInvalidBufferPointer);
+        Ok(unsafe { core::slice::from_raw_parts_mut(self.buf, self.count) })
     }
 }
 
@@ -209,19 +226,33 @@ impl<
     >
 {
     pub fn get_string(&self) -> String {
-        unsafe {
-            let mut string = String::with_capacity(self.count);
-            for i in 0..self.count {
-                let cur_char = *self.buf.add(i) as char;
-                if cur_char == '\0' {
-                    break;
-                }
-                string.push(cur_char);
-            }
-            string
-        }
-    }
+        let cstr = unsafe {core::ffi::CStr::from_ptr(self.buf as _)};
 
+        String::from_utf8_lossy(cstr.to_bytes()).to_string()
+    }
+}
+
+impl<
+        const IN: bool,
+        const MAP_ALIAS: bool,
+        const POINTER: bool,
+        const FIXED_SIZE: bool,
+        const AUTO_SELECT: bool,
+        const ALLOW_NON_SECURE: bool,
+        const ALLOW_NON_DEVICE: bool,
+    >
+    Buffer<
+        IN,
+        true,
+        MAP_ALIAS,
+        POINTER,
+        FIXED_SIZE,
+        AUTO_SELECT,
+        ALLOW_NON_SECURE,
+        ALLOW_NON_DEVICE,
+        u8,
+    >
+{
     pub fn set_string(&mut self, string: String) {
         unsafe {
             // First memset to zero so that it will be a valid nul-terminated string

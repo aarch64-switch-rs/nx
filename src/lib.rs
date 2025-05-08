@@ -134,8 +134,5 @@ pub mod version;
 #[cfg(feature = "rand")]
 pub mod rand;
 
-#[cfg(feature = "crypto")]
-pub mod crypto;
-
 #[cfg(feature = "la")]
 pub mod la;
