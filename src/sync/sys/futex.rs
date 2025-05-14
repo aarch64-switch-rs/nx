@@ -9,7 +9,7 @@ use crate::{
 };
 
 #[repr(transparent)]
-pub struct Futex(pub(super)AtomicU32);
+pub struct Futex(pub(super) AtomicU32);
 
 impl Futex {
     pub const fn new() -> Self {
@@ -30,10 +30,8 @@ impl Futex {
                 timeout,
             )
         } {
-            Ok(_) => {
-                return true;
-            }
-            Err(rc) if ResultTimedOut::matches(rc) => return false,
+            Ok(_) => true,
+            Err(rc) if ResultTimedOut::matches(rc) => false,
             Err(rc) => {
                 panic!(
                     "Error waiting for valid pointer at {:#X}, err : {}-{}",
@@ -47,21 +45,35 @@ impl Futex {
 
     #[inline(always)]
     pub fn signal_one(&self) {
-        self.signal_n( 1);
+        self.signal_n(1);
     }
 
     #[inline(always)]
     pub fn signal_all(&self) {
-        self.signal_n( -1);
+        self.signal_n(-1);
     }
 
     pub fn signal_n(&self, count: i32) {
-        if let Err(rc) = unsafe {svc::signal_to_address(ptr::from_ref(self).cast(), svc::SignalType::Signal, 0, count)} {
-            panic!("Error signaling for valid pointer at {:#X}, err : {}-{}",
-                    ptr::from_ref(self).addr(),
-                    rc.get_module(),
-                    rc.get_value())
+        if let Err(rc) = unsafe {
+            svc::signal_to_address(
+                ptr::from_ref(self).cast(),
+                svc::SignalType::Signal,
+                0,
+                count,
+            )
+        } {
+            panic!(
+                "Error signaling for valid pointer at {:#X}, err : {}-{}",
+                ptr::from_ref(self).addr(),
+                rc.get_module(),
+                rc.get_value()
+            )
         }
     }
+}
 
+impl Default for Futex {
+    fn default() -> Self {
+        Self::new()
+    }
 }

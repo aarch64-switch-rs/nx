@@ -291,6 +291,7 @@ impl Builder {
         Ok(JoinHandle(unsafe { self.spawn_unchecked_(f, None) }?))
     }
 
+    #[allow(unsafe_op_in_unsafe_fn)]
     unsafe fn spawn_unchecked_<'scope, F, T>(
         self,
         f: F,
@@ -530,6 +531,7 @@ where
 
 /// Internal wrapper function that is run as the entrypoint to newly spawned functions.
 #[doc(hidden)]
+#[allow(unsafe_op_in_unsafe_fn)]
 unsafe extern "C" fn thread_wrapper(raw_ptr: *mut u8) -> ! {
     // SAFETY: This is fine as it is created with a call to Box::<ThreadArgs>::new()
     let entry_env: Box<ThreadArgs> = Box::from_raw(raw_ptr.cast());
@@ -541,10 +543,8 @@ unsafe extern "C" fn thread_wrapper(raw_ptr: *mut u8) -> ! {
     // The runner is actually a wrapper of the thread payload that captures the thread environment (e.g. the packet for returning data from the thread)
     (entry_env.runner)();
 
-    unsafe {
-        // access the thread state through the thread local storage, just like the runner would have to.
-        current().as_mut().unwrap().state = ThreadState::Terminated;
-    }
+    // access the thread state through the thread local storage, just like the runner would have to.
+    current().as_mut().unwrap().state = ThreadState::Terminated;
 
     svc::exit_thread();
 }
@@ -800,7 +800,7 @@ impl<T> JoinInner<'_, T> {
             .take()
             .unwrap()
     }
-    fn wait_exit(&self, timeout:Option<i64>) -> crate::result::Result<()> {
+    fn wait_exit(&self, timeout: Option<i64>) -> crate::result::Result<()> {
         self.native.join_timeout(timeout)
     }
 }
@@ -1084,14 +1084,14 @@ pub mod imp {
     use core::{
         alloc::{Allocator, Layout},
         pin::Pin,
-        ptr::{addr_of, null, null_mut, NonNull},
+        ptr::{NonNull, addr_of, null, null_mut},
     };
 
     use alloc::{alloc::Global, boxed::Box, sync::Arc};
 
     use super::{
-        thread_wrapper, ThreadArgs, ThreadId, ThreadName, ThreadPriority, ThreadStartCore,
-        ThreadState,
+        ThreadArgs, ThreadId, ThreadName, ThreadPriority, ThreadStartCore, ThreadState,
+        thread_wrapper,
     };
     use crate::{mem::alloc::PAGE_ALIGNMENT, svc, util::ArrayString, wait::wait_handles};
 
@@ -1384,10 +1384,11 @@ pub struct ThreadLocalRegion {
     pub nx_thread_vars: LibNxThreadVars,
 }
 const_assert!(core::mem::size_of::<ThreadLocalRegion>() == 0x200);
+const_assert!(core::mem::align_of::<ThreadLocalRegion>() >= 4); // for some assumptions in the IPC code
 
 /// Gets the current thread's [`ThreadLocalRegion`] address
 #[inline(always)]
-pub unsafe fn get_thread_local_region() -> *mut ThreadLocalRegion {
+pub fn get_thread_local_region() -> *mut ThreadLocalRegion {
     let tlr: *mut ThreadLocalRegion;
     unsafe {
         asm!(
@@ -1399,7 +1400,7 @@ pub unsafe fn get_thread_local_region() -> *mut ThreadLocalRegion {
 }
 
 pub(crate) unsafe fn current() -> *mut imp::Thread {
-    (*get_thread_local_region()).nx_thread_vars.thread_ref
+    unsafe { (*get_thread_local_region()).nx_thread_vars.thread_ref }
 }
 
 /// Sets the current [`Thread`] reference on the current [`ThreadLocalRegion`]
@@ -1411,13 +1412,16 @@ pub(crate) unsafe fn current() -> *mut imp::Thread {
 /// * `thread_ref`: The [`Thread`] address to set
 /// # Safety
 ///
-/// thread_ref must be a valid Thread pointer that will not move until the thread is finished running.
+/// `thread_ref`` must be a valid Thread pointer that will not move until the thread is finished running.
 pub unsafe fn set_current_thread(thread_ref: *mut imp::Thread) {
     unsafe {
         (*thread_ref).state = ThreadState::Started;
         (*thread_ref).name_ptr = addr_of!((*thread_ref).name) as *const _;
         let tlr = get_thread_local_region();
-        debug_assert!(!tlr.is_null(), "tlr should always be valid, as the kernel sets tpidrro_el0 on context switch, and creates the TLR for us.");
+        debug_assert!(
+            !tlr.is_null(),
+            "tlr should always be valid, as the kernel sets tpidrro_el0 on context switch, and creates the TLR for us."
+        );
         (*tlr).nx_thread_vars.thread_ref = thread_ref;
         (*tlr).nx_thread_vars.handle = (*thread_ref).__nx_thread.handle;
         (*tlr).nx_thread_vars.magic = imp::LibNxThreadVars::MAGIC;

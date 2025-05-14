@@ -1,9 +1,10 @@
 //! Parcel support and utils
 
+use alloc::vec::Vec;
+
 use crate::result::*;
 use crate::service::dispdrv::BinderHandle;
 use crate::util;
-use core::mem as cmem;
 use core::ptr;
 
 pub mod rc;
@@ -108,6 +109,10 @@ impl Parcel {
     ///
     /// * `out_data`: Out data buffer
     /// * `data_size`: Out data size
+    /// 
+    /// # Safety
+    /// 
+    /// The caller is responsible for providing a pointer valid to write `out_size` bytes
     pub unsafe fn read_raw_unaligned(&mut self, out_data: *mut u8, data_size: usize) -> Result<()> {
         result_return_if!(
             (self.read_offset + data_size) > PAYLOAD_SIZE,
@@ -116,7 +121,7 @@ impl Parcel {
 
         unsafe {
             ptr::copy(
-                (&mut self.payload.payload as *mut _ as *mut u8).add(self.read_offset),
+                self.payload.payload.as_mut_ptr().add(self.read_offset),
                 out_data,
                 data_size,
             );
@@ -133,9 +138,15 @@ impl Parcel {
     ///
     /// * `out_data`: Out data buffer
     /// * `data_size`: Out data size
+    /// 
+    /// # Safety
+    /// 
+    /// The caller is responsible for providing a pointer valid to write `out_size` bytes
     #[inline]
     pub unsafe fn read_raw(&mut self, out_data: *mut u8, data_size: usize) -> Result<()> {
-        self.read_raw_unaligned(out_data, align_up!(data_size, 4usize))
+        unsafe { self.read_raw_unaligned(out_data, data_size) }?;
+        self.read_offset += (align_up!(data_size, 4usize) - data_size);
+        Ok(())
     }
 
     /// Writes raw, unaligned data
@@ -144,6 +155,10 @@ impl Parcel {
     ///
     /// * `data`: In data buffer
     /// * `data_size`: In data size
+    /// 
+    /// # Safety
+    /// 
+    /// The caller is responsible for providing a pointer valid to read `out_size` bytes
     pub unsafe fn write_raw_unaligned(&mut self, data: *const u8, data_size: usize) -> Result<()> {
         result_return_if!(
             (self.write_offset + data_size) > PAYLOAD_SIZE,
@@ -153,7 +168,7 @@ impl Parcel {
         unsafe {
             ptr::copy(
                 data,
-                (&mut self.payload.payload as *mut _ as *mut u8).add(self.write_offset),
+                self.payload.payload.as_mut_ptr().add(self.write_offset),
                 data_size,
             );
         }
@@ -173,23 +188,28 @@ impl Parcel {
             rc::ResultNotEnoughWriteSpace
         );
 
-        let buf =
-            unsafe { (&mut self.payload.payload as *mut _ as *mut u8).add(self.write_offset) };
+        let buf = unsafe { self.payload.payload.as_mut_ptr().add(self.write_offset) };
         self.write_offset += actual_size;
         Ok(buf)
     }
 
     /// Writes raw (aligned) data
     ///
-    /// This essentially aligns up the write size to a 4-byte align
+    /// This essentially aligns up the write size to a 4-byte alignment in the buffer
     ///
     /// # Arguments
     ///
     /// * `data`: In data buffer
     /// * `data_size`: In data size
+    /// 
+    /// # Safety
+    /// 
+    /// The caller must provide a pointer valid for reading `data_size` bytes
     #[inline]
     pub unsafe fn write_raw(&mut self, data: *const u8, data_size: usize) -> Result<()> {
-        self.write_raw_unaligned(data, align_up!(data_size, 4usize))
+        unsafe { self.write_raw_unaligned(data, data_size) }?;
+        self.write_offset += (align_up!(data_size, 4usize) - data_size);
+        Ok(())
     }
 
     /// Writes an unaligned value
@@ -199,7 +219,7 @@ impl Parcel {
     /// * `t`: The value
     #[inline]
     pub fn write_unaligned<T>(&mut self, t: T) -> Result<()> {
-        unsafe { self.write_raw_unaligned(&t as *const T as *const u8, cmem::size_of::<T>()) }
+        unsafe { self.write_raw_unaligned((&raw const t).cast(), size_of::<T>()) }
     }
 
     /// Writes a value (aligned)
@@ -209,23 +229,23 @@ impl Parcel {
     /// * `t`: The value
     #[inline]
     pub fn write<T: Copy>(&mut self, t: T) -> Result<()> {
-        unsafe { self.write_raw(&t as *const T as *const u8, cmem::size_of::<T>()) }
+        unsafe { self.write_raw((&raw const t).cast(), size_of::<T>()) }
     }
 
     /// Reads an unaligned value
     pub fn read_unaligned<T>(&mut self) -> Result<T> {
         unsafe {
-            let mut t: T = cmem::zeroed();
-            self.read_raw_unaligned(&mut t as *mut T as *mut u8, cmem::size_of::<T>())?;
+            let mut t: T = core::mem::zeroed();
+            self.read_raw_unaligned((&raw mut t).cast(), size_of::<T>())?;
             Ok(t)
         }
     }
 
-    /// Reads a value (aligned)
+    /// Reads a value (aligned to a 4-byte word)
     pub fn read<T: Copy>(&mut self) -> Result<T> {
         unsafe {
-            let mut t: T = cmem::zeroed();
-            self.read_raw(&mut t as *mut T as *mut u8, cmem::size_of::<T>())?;
+            let mut t: T = core::mem::zeroed();
+            self.read_raw((&raw mut t).cast(), size_of::<T>())?;
             Ok(t)
         }
     }
@@ -238,14 +258,12 @@ impl Parcel {
     ///
     /// * `string`: The string to write
     pub fn write_str(&mut self, string: &str) -> Result<()> {
-        let len = string.len();
+        let encoded:Vec<u16> = string.encode_utf16().collect();
+        let len = encoded.len();
         self.write(len as u32)?;
-        let str_bytes = string.as_bytes();
         let str_write_buf = self.write_reserve_raw((len + 1) * 2)? as *mut u16;
 
-        let _: () = (0..len)
-            .map(|index| unsafe { *(str_write_buf.add(index)) = str_bytes[index] as u16 })
-            .collect();
+        unsafe {core::ptr::copy(encoded.as_ptr(), str_write_buf, encoded.len())};
         Ok(())
     }
 
@@ -267,12 +285,20 @@ impl Parcel {
     /// # Arguments
     ///
     /// * `out_data`: Out data buffer
-    pub unsafe fn read_sized_raw(&mut self, out_data: *mut u8) -> Result<usize> {
+    /// * `out_size`: The maximum size in bytes that can be read into `out_data`
+    /// 
+    /// # Safety
+    /// 
+    /// The caller is responsible for providing a pointer valid to read `out_size` bytes
+    pub unsafe fn read_sized_raw(&mut self, out_data: *mut u8, out_size: usize) -> Result<usize> {
         let len = self.read::<i32>()? as usize;
+        result_return_unless!(len <= out_size, rc::ResultReadSizeMismatch);
         let fd_count = self.read::<i32>()?;
         result_return_unless!(fd_count == 0, rc::ResultFdsNotSupported);
 
-        self.read_raw(out_data, len)?;
+        unsafe {
+            self.read_raw(out_data, len)?;
+        }
         Ok(len)
     }
 
@@ -281,8 +307,7 @@ impl Parcel {
     /// This verifies that the read data is at least big enough to contain the value type, returning [`ResultReadSizeMismatch`][`rc::ResultReadSizeMismatch`] otherwise
     pub fn read_sized<T: Default + Copy>(&mut self) -> Result<T> {
         let mut t: T = Default::default();
-        let len = unsafe { self.read_sized_raw(&mut t as *mut T as *mut u8)? };
-        result_return_unless!(len >= cmem::size_of::<T>(), rc::ResultReadSizeMismatch);
+        let _len = unsafe { self.read_sized_raw((&raw mut t).cast(), size_of::<T>())? };
         Ok(t)
     }
 
@@ -292,13 +317,17 @@ impl Parcel {
     ///
     /// * `data`: In data buffer
     /// * `data size`: In data size
+    /// 
+    /// # Safety
+    /// 
+    /// The caller must provide a pointer valid for reading `data_size` bytes
     pub unsafe fn write_sized_raw(&mut self, data: *const u8, data_size: usize) -> Result<()> {
         let len = data_size as i32;
         self.write(len)?;
         let fd_count: i32 = 0;
         self.write(fd_count)?;
 
-        self.write_raw(data, data_size)?;
+        unsafe { self.write_raw(data, data_size)? };
         Ok(())
     }
 
@@ -309,7 +338,7 @@ impl Parcel {
     /// * `t`: The value to write
     #[inline]
     pub fn write_sized<T: Copy>(&mut self, t: T) -> Result<()> {
-        unsafe { self.write_sized_raw(&t as *const T as *const u8, cmem::size_of::<T>()) }
+        unsafe { self.write_sized_raw((&raw const t).cast(), size_of::<T>()) }
     }
 
     /// Loads an external payload in this [`Parcel`]
@@ -328,7 +357,7 @@ impl Parcel {
     /// Essentially populates the payload header and returns the current payload, along with its size
     pub fn end_write(&mut self) -> Result<(ParcelPayload, usize)> {
         self.payload.header.payload_size = self.write_offset as u32;
-        self.payload.header.payload_offset = cmem::size_of::<ParcelHeader>() as u32;
+        self.payload.header.payload_offset = size_of::<ParcelHeader>() as u32;
         let payload_len = self.payload.header.payload_offset + self.payload.header.payload_size;
         self.payload.header.objects_offset = payload_len;
         self.payload.header.objects_size = 0;

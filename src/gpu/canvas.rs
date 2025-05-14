@@ -1,4 +1,5 @@
 use core::marker::PhantomData;
+use core::ops::Mul;
 
 use alloc::sync::Arc;
 use bitfield_struct::bitfield;
@@ -9,7 +10,6 @@ use crate::arm;
 use crate::mem::alloc::Buffer;
 use crate::result::Result;
 use crate::sync::RwLock;
-use crate::util::PromotingMul;
 
 use crate::{ipc::sf::AppletResourceUserId, service::vi::LayerFlags};
 
@@ -132,7 +132,9 @@ impl RGBA8 {
     }
 
     fn blend_channel(channel: u8, other: u8, alpha: u8) -> u8 {
-        ((channel.promoting_mul(alpha) + other.promoting_mul(u8::MAX - alpha)) / 0xff) as u8
+        ((u16::from(channel).mul(alpha as u16)
+            + u16::from(other).mul(u8::MAX as u16 - alpha as u16))
+            / 0xff) as u8
     }
 }
 
@@ -232,7 +234,7 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
         layer_flags: LayerFlags,
         buffer_count: u32,
         block_height: BlockLinearHeights,
-        scaling: ScaleMode
+        scaling: ScaleMode,
     ) -> Result<Self> {
         let raw_surface = Surface::new_managed(
             gpu_ctx,
@@ -248,7 +250,7 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
             block_height,
             ColorFormat::COLOR_FORMAT,
             ColorFormat::PIXEL_FORMAT,
-            scaling
+            scaling,
         )?;
         Ok(Self {
             surface: raw_surface,
@@ -687,9 +689,8 @@ pub struct UnbufferedCanvas<'fb, ColorFormat: sealed::CanvasColorFormat> {
 }
 
 impl<ColorFormat: sealed::CanvasColorFormat> UnbufferedCanvas<'_, ColorFormat> {
-
-    pub fn raw_buffer<'a>(&'a mut  self) -> &'a mut [u8] {
-        unsafe { core::slice::from_raw_parts_mut(self.base_pointer as *mut u8, self.buffer_size)}
+    pub fn raw_buffer(&mut self) -> &mut [u8] {
+        unsafe { core::slice::from_raw_parts_mut(self.base_pointer as *mut u8, self.buffer_size) }
     }
 
     pub fn draw_single(&mut self, x: i32, y: i32, color: ColorFormat, blend: AlphaBlend) {

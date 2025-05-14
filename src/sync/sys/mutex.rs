@@ -150,7 +150,7 @@ unsafe impl lock_api::RawMutex for Mutex {
         self.try_lock()
     }
 
-    unsafe fn unlock(&self) {
+    unsafe fn unlock(&self) { unsafe {
         self.unlock()
-    }
+    }}
 }

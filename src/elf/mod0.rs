@@ -1,7 +1,7 @@
 //! MOD0 format utils
 
-/// Represents the `MOD0` start layout, whicha are the first 8 bytes of the binary in memory.
-/// These are usually right before the actual header in official binaries, but they dont have
+/// Represents the `MOD0` start layout, which are the first 8 bytes of the binary in memory.
+/// These are usually right before the actual header in official binaries, but they don't have
 /// to be and we store it (the actual header) in `.rodata`.
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -45,32 +45,32 @@ impl Header {
     /// Gets the header embedded at the slot `.text.jmp+4`.
     /// Since this is a hard requirement of the switch runtime,
     /// an invalid MOD0 header offset or invalid header magic value panics.
-    /// Panics if the `text_base` pointer is invalid, the derviced `mod0`
-    /// pointer is invalid, or if the dervice `mod0` header magic value is incorrect.
+    /// Panics if the `text_base` pointer is invalid, the derived `MOD0`
+    /// pointer is invalid, or if the derived `MOD0` header magic value is incorrect.
     ///
     /// # Arguments:
     ///
     /// * `text_base`: The start of the `.text.jmp` section.
     #[inline]
-    #[allow(clippy::not_unsafe_ptr_arg_deref)] // We are cheking the validity of the pointer, so this is handled by
+    #[allow(clippy::not_unsafe_ptr_arg_deref)] // We are checking the validity of the pointer, so this is handled by
     pub fn from_text_start_addr(text_base: *mut u8) -> &'static mut Self {
         let mod0_ref = unsafe {
             let module_start = (text_base as *const ModuleStart)
                 .as_ref()
                 .expect("Invalid base `.text` pointer. Address is null or improperly aligned");
 
-            // Get the Mod0 offset that is written at the slot `.text.jmp+4`
+            // Get the MOD0 offset that is written at the slot `.text.jmp+4`
             let mod0_offset = module_start.magic_offset as usize;
 
             // The mod0_ptr is written into `.rodata`, at the offset `mod0_offset` from the start of `.test.jmp`
             let mod0_ptr = text_base.add(mod0_offset) as *mut Header;
 
             mod0_ptr.as_mut().expect(
-                "Failed to get reference to Mod0 header. Address is null or improperly aligned.",
+                "Failed to get reference to MOD0 header. Address is null or improperly aligned.",
             )
         };
 
-        assert!(mod0_ref.magic == Header::MAGIC, "Invalid Mod0 magic value.");
+        assert!(mod0_ref.magic == Header::MAGIC, "Invalid MOD0 magic value.");
 
         mod0_ref
     }
@@ -79,7 +79,9 @@ impl Header {
     pub fn get_dyn_start(&self) -> *const super::Dyn {
         // This could cause panics on access if the pointer is incorrectly aligned but that is not a
         // UB issue here - unaligned raw pointers are allowed.
-        unsafe {(self as *const Self as *const u8).offset(self.dynamic as isize) as *const super::Dyn}
+        unsafe {
+            (self as *const Self as *const u8).offset(self.dynamic as isize) as *const super::Dyn
+        }
     }
 
     /// Gets the start address for the `eh_frame_hdr` section.
@@ -109,12 +111,14 @@ impl Header {
             "Invalid offset range for BSS region. End address is before start address."
         );
 
-        let module_addr = self as *mut Self as *mut u8;
-        let bss_start = module_addr.offset(self.bss_start as isize);
-        let bss_len = (self.bss_end - self.bss_start) as isize as usize;
+        unsafe {
+            let module_addr = (&raw mut *self).cast::<u8>();
+            let bss_start = module_addr.offset(self.bss_start as isize);
+            let bss_len = (self.bss_end - self.bss_start) as usize;
 
-        // Use the zeroize library to get bss zeroing with the guarantee that it won'get get elided.
-        unsafe { core::slice::from_raw_parts_mut(bss_start, bss_len) }.zeroize();
+            // Use the zeroize library to get bss zeroing with the guarantee that it won'get get elided.
+            core::slice::from_raw_parts_mut(bss_start, bss_len).zeroize();
+        }
 
         // With a SeqCst fence, we ensure that the bss section is zeroed before we return.
         // The call to this function now can not be reordered either.

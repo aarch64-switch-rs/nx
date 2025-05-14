@@ -33,29 +33,6 @@ pub trait IntoInner<Inner> {
     fn into_inner(self) -> Inner;
 }
 
-// Multiplies 2 unsigned integer values and promotes up to the next largest integer size to avoid overflows.
-// # SAFETY: This needs to only be implemented on primitive integer types, where the $out type is larger than the $in type
-#[allow(dead_code)]
-pub(crate) unsafe trait PromotingMul: Copy + num_traits::PrimInt {
-    type OutputPrim: Copy + num_traits::PrimInt;
-    fn promoting_mul(self, other: Self) -> Self::OutputPrim;
-}
-macro_rules! promoting_mul_impl {
-    ($in:ty, $out:ty) => {
-        unsafe impl PromotingMul for $in {
-            type OutputPrim = $out;
-            fn promoting_mul(self, other: Self) -> Self::OutputPrim {
-                self as $out * other as $out
-            }
-        }
-    };
-}
-
-promoting_mul_impl!(u8, u16);
-promoting_mul_impl!(u16, u32);
-promoting_mul_impl!(u32, u64);
-promoting_mul_impl!(u64, u128);
-
 /// Represents a 16-byte UUID
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
@@ -640,13 +617,14 @@ impl<const S: usize> core::str::FromStr for ArrayWideString<S> {
 /// # Arguments
 ///
 /// * `str_ptr`: The `const char*`-like ptr to use
+/// 
 /// # Safety
 ///
-/// There must be a null byte present in the string, or at some point after the pointer and within valid memory. This function will read infinitely until a null is read or crash occurs.
-pub unsafe fn str_ptr_len(str_ptr: *const u8) -> usize {
-    (0usize..)
-        .find(|&offset| (*str_ptr.add(offset)) == 0)
-        .expect("There will be a null byte (or crash) eventually")
+/// This is a wrapper around `Cstr::from_ptr`[`core::ffi::Cstr::from_ptr`]
+/// so the same safety requirements apply
+#[inline(always)]
+pub unsafe fn str_ptr_len(str_ptr: *const u8) -> usize { 
+    unsafe {core::ffi::CStr::from_ptr(str_ptr.cast()).to_bytes().len()}
 }
 
 /// Simplified panic handler using a provided [`Logger`] type, available as a helpful default panic handler

@@ -60,12 +60,12 @@ use atomic_enum::atomic_enum;
 
 // These functions must be implemented by any binary using this crate
 
-extern "Rust" {
+unsafe extern "Rust" {
     fn main() -> Result<()>;
 }
 
 /// Represents the fn pointer used for exiting
-pub type ExitFn = extern "C" fn(ResultCode) -> !;
+pub type ExitFn = unsafe extern "C" fn(ResultCode) -> !;
 
 #[atomic_enum]
 /// Represents the executable type of the current process
@@ -163,7 +163,7 @@ static EH_FRAME_HDR_SECTION: elf::EhFrameHdrPtr = elf::EhFrameHdrPtr::new();
 /// This will call the HBL-specific exit fn if running as a homebrew NRO, or [`exit_process`][`svc::exit_process`] otherwise
 pub fn exit(rc: ResultCode) -> ! {
     match *G_EXIT_FN.lock() {
-        Some(exit_fn) => (exit_fn)(rc),
+        Some(exit_fn) => unsafe { (exit_fn)(rc) },
         None => svc::exit_process(),
     }
 }
@@ -194,13 +194,15 @@ static mut MAIN_THREAD: thread::imp::Thread = thread::imp::Thread::empty();
 
 #[inline]
 unsafe fn set_main_thread_tlr(handle: svc::Handle) {
-    let tlr_raw = get_thread_local_region();
-    (*tlr_raw).nx_thread_vars.handle = handle;
-    (*tlr_raw).nx_thread_vars.magic = thread::imp::LibNxThreadVars::MAGIC;
+    unsafe {
+        let tlr_raw = get_thread_local_region();
+        (*tlr_raw).nx_thread_vars.handle = handle;
+        (*tlr_raw).nx_thread_vars.magic = thread::imp::LibNxThreadVars::MAGIC;
 
-    MAIN_THREAD.__nx_thread.handle = handle;
+        MAIN_THREAD.__nx_thread.handle = handle;
 
-    (*tlr_raw).nx_thread_vars.thread_ref = addr_of_mut!(MAIN_THREAD);
+        (*tlr_raw).nx_thread_vars.thread_ref = addr_of_mut!(MAIN_THREAD);
+    }
 }
 
 #[allow(unsafe_op_in_unsafe_fn)]
@@ -215,81 +217,85 @@ unsafe fn normal_entry(loader_mode: LoaderMode, exit_config: Option<ExitFn>) -> 
         }
         LoaderMode::Nro(mut abi_entry) => {
             set_executable_type(ExecutableType::Nro);
-            loop {
-                match (*abi_entry).key {
-                    hbl::AbiConfigEntryKey::EndOfList => {
-                        let loader_info_data = (*abi_entry).value[0] as *mut u8;
-                        let loader_info_data_len = (*abi_entry).value[1] as usize;
-                        if loader_info_data_len > 0 {
-                            let loader_info_slice =
-                                core::slice::from_raw_parts(loader_info_data, loader_info_data_len);
-                            if let Ok(loader_info) = core::str::from_utf8(loader_info_slice) {
-                                hbl::set_loader_info(loader_info);
+            unsafe {
+                loop {
+                    match (*abi_entry).key {
+                        hbl::AbiConfigEntryKey::EndOfList => {
+                            let loader_info_data = (*abi_entry).value[0] as *mut u8;
+                            let loader_info_data_len = (*abi_entry).value[1] as usize;
+                            if loader_info_data_len > 0 {
+                                let loader_info_slice = core::slice::from_raw_parts(
+                                    loader_info_data,
+                                    loader_info_data_len,
+                                );
+                                if let Ok(loader_info) = core::str::from_utf8(loader_info_slice) {
+                                    hbl::set_loader_info(loader_info);
+                                }
                             }
+                            break;
                         }
-                        break;
+                        hbl::AbiConfigEntryKey::MainThreadHandle => {
+                            main_thread_handle = (*abi_entry).value[0] as svc::Handle;
+                        }
+                        hbl::AbiConfigEntryKey::NextLoadPath => {
+                            // lengths from nx-hbloader:source/main.c
+                            // https://github.com/switchbrew/nx-hbloader/blob/cd6a723acbeabffd827a8bdc40563066f5401fb7/source/main.c#L13-L14
+                            let next_load_path: &'static mut util::ArrayString<512> =
+                                core::mem::transmute((*abi_entry).value[0]);
+                            let next_load_argv: &'static mut util::ArrayString<2048> =
+                                core::mem::transmute((*abi_entry).value[1]);
+                            hbl::set_next_load_entry_ptr(next_load_path, next_load_argv);
+                        }
+                        hbl::AbiConfigEntryKey::OverrideHeap => {
+                            heap.address = (*abi_entry).value[0] as *mut u8;
+                            heap.size = (*abi_entry).value[1] as usize;
+                        }
+                        hbl::AbiConfigEntryKey::OverrideService => {
+                            // todo!("OverrideService");
+                        }
+                        hbl::AbiConfigEntryKey::Argv => {
+                            // todo!("Argv");
+                        }
+                        hbl::AbiConfigEntryKey::SyscallAvailableHint => {
+                            // todo!("SyscallAvailableHint");
+                        }
+                        hbl::AbiConfigEntryKey::AppletType => {
+                            let applet_type: hbl::AppletType =
+                                mem::transmute((*abi_entry).value[0] as u32);
+                            hbl::set_applet_type(applet_type);
+                        }
+                        hbl::AbiConfigEntryKey::ProcessHandle => {
+                            let proc_handle = (*abi_entry).value[0] as Handle;
+                            hbl::set_process_handle(proc_handle);
+                        }
+                        hbl::AbiConfigEntryKey::LastLoadResult => {
+                            let last_load_rc = ResultCode::new((*abi_entry).value[0] as u32);
+                            hbl::set_last_load_result(last_load_rc);
+                        }
+                        hbl::AbiConfigEntryKey::RandomSeed => {
+                            let random_seed = ((*abi_entry).value[0], (*abi_entry).value[1]);
+                            hbl::set_random_seed(random_seed);
+                        }
+                        hbl::AbiConfigEntryKey::UserIdStorage => {
+                            // todo!("UserIdStorage");
+                        }
+                        hbl::AbiConfigEntryKey::HosVersion => {
+                            let hos_version_v = (*abi_entry).value[0] as u32;
+                            let os_impl_magic = (*abi_entry).value[1];
+                            hos_version_opt = Some(hbl::Version::new(hos_version_v, os_impl_magic));
+                        }
+                        _ => {
+                            // TODO: invalid config entries?
+                        }
                     }
-                    hbl::AbiConfigEntryKey::MainThreadHandle => {
-                        main_thread_handle = (*abi_entry).value[0] as svc::Handle;
-                    }
-                    hbl::AbiConfigEntryKey::NextLoadPath => {
-                        // lengths from nx-hbloader:source/main.c
-                        // https://github.com/switchbrew/nx-hbloader/blob/cd6a723acbeabffd827a8bdc40563066f5401fb7/source/main.c#L13-L14
-                        let next_load_path: &'static mut util::ArrayString<512> =
-                            core::mem::transmute((*abi_entry).value[0]);
-                        let next_load_argv: &'static mut util::ArrayString<2048> =
-                            core::mem::transmute((*abi_entry).value[1]);
-                        hbl::set_next_load_entry_ptr(next_load_path, next_load_argv);
-                    }
-                    hbl::AbiConfigEntryKey::OverrideHeap => {
-                        heap.address = (*abi_entry).value[0] as *mut u8;
-                        heap.size = (*abi_entry).value[1] as usize;
-                    }
-                    hbl::AbiConfigEntryKey::OverrideService => {
-                        // todo!("OverrideService");
-                    }
-                    hbl::AbiConfigEntryKey::Argv => {
-                        // todo!("Argv");
-                    }
-                    hbl::AbiConfigEntryKey::SyscallAvailableHint => {
-                        // todo!("SyscallAvailableHint");
-                    }
-                    hbl::AbiConfigEntryKey::AppletType => {
-                        let applet_type: hbl::AppletType =
-                            mem::transmute((*abi_entry).value[0] as u32);
-                        hbl::set_applet_type(applet_type);
-                    }
-                    hbl::AbiConfigEntryKey::ProcessHandle => {
-                        let proc_handle = (*abi_entry).value[0] as Handle;
-                        hbl::set_process_handle(proc_handle);
-                    }
-                    hbl::AbiConfigEntryKey::LastLoadResult => {
-                        let last_load_rc = ResultCode::new((*abi_entry).value[0] as u32);
-                        hbl::set_last_load_result(last_load_rc);
-                    }
-                    hbl::AbiConfigEntryKey::RandomSeed => {
-                        let random_seed = ((*abi_entry).value[0], (*abi_entry).value[1]);
-                        hbl::set_random_seed(random_seed);
-                    }
-                    hbl::AbiConfigEntryKey::UserIdStorage => {
-                        // todo!("UserIdStorage");
-                    }
-                    hbl::AbiConfigEntryKey::HosVersion => {
-                        let hos_version_v = (*abi_entry).value[0] as u32;
-                        let os_impl_magic = (*abi_entry).value[1];
-                        hos_version_opt = Some(hbl::Version::new(hos_version_v, os_impl_magic));
-                    }
-                    _ => {
-                        // TODO: invalid config entries?
-                    }
+                    abi_entry = abi_entry.add(1);
                 }
-                abi_entry = abi_entry.add(1);
             }
         }
     }
 
     // we need to set up our own ThreadLocalRegion
-    set_main_thread_tlr(main_thread_handle);
+    unsafe { set_main_thread_tlr(main_thread_handle) };
 
     // Initialize virtual memory
     vmem::initialize().unwrap();
@@ -307,9 +313,9 @@ unsafe fn normal_entry(loader_mode: LoaderMode, exit_config: Option<ExitFn>) -> 
     // Initialize version support
     initialize_version(hos_version_opt);
 
-    // Unwrap main(), which will trigger a panic if it didn't succeed
-    let res = main();
+    let res = unsafe { main() };
 
+    // Unwrap main(), which will trigger a panic if it didn't succeed
     res.unwrap();
 
     // unmount fs devices
@@ -350,7 +356,7 @@ enum LoaderMode {
 #[linkage = "weak"]
 #[allow(unsafe_op_in_unsafe_fn)]
 unsafe extern "C" fn __nx_rrt0_entry(arg0: usize, arg1: usize) -> ! {
-    // Since we're using the `b` instuction instead of `bl` in `rrt0.s`, the `lr` register will still have the passed in value.
+    // Since we're using the `b` instruction instead of `bl` in `rrt0.s`, the `lr` register will still have the passed in value.
     // This will be null for NSOs that are directly executed, but has the loader's return pointer for hbl/ovll loaded NROs.
     let lr_raw: usize;
     asm!(

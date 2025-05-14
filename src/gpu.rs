@@ -781,7 +781,7 @@ pub struct MultiFence {
     fences: [Fence; 4],
 }
 
-/// Represenrs a rectangle layout
+/// Represents a rectangle layout
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct Rect {
@@ -830,7 +830,7 @@ pub enum BlockLinearHeights {
     EightGobs,
     #[default]
     SixteenGobs,
-    ThrityTwoGobs,
+    ThirtyTwoGobs,
 }
 
 impl BlockLinearHeights {
@@ -1040,8 +1040,8 @@ impl Context {
             sf::Handle::from(svc::CURRENT_PROCESS_PSEUDO_HANDLE),
             sf::Handle::from(transfer_mem_handle),
         ) {
-            svc::close_handle(transfer_mem_handle);
-            wait_for_permission(transfer_mem.ptr, MemoryPermission::Write(), None);
+            let _ = svc::close_handle(transfer_mem_handle);
+            let _ = wait_for_permission(transfer_mem.ptr, MemoryPermission::Write(), None);
             return Err(rc);
         };
 
@@ -1068,14 +1068,14 @@ impl Context {
         } {
             Ok(binder) => binder,
             Err(rc) => {
-                nvdrv_srv.close(nvhost_fd);
-                nvdrv_srv.close(nvmap_fd);
-                nvdrv_srv.close(nvhostctrl_fd);
+                let _ =nvdrv_srv.close(nvhost_fd);
+                let _ =nvdrv_srv.close(nvmap_fd);
+                let _ =nvdrv_srv.close(nvhostctrl_fd);
 
-                nvdrv_srv.close(transfer_mem_handle);
+                let _ =nvdrv_srv.close(transfer_mem_handle);
                 nvdrv_srv.get_session_mut().close();
                 svc::close_handle(transfer_mem_handle).unwrap();
-                wait_for_permission(transfer_mem.ptr, MemoryPermission::Write(), None);
+                let _ = wait_for_permission(transfer_mem.ptr, MemoryPermission::Write(), None);
                 return Err(rc);
             }
         };

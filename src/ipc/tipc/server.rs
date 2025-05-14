@@ -56,7 +56,7 @@ pub fn write_command_response_on_msg_buffer(
         let command_header = ipc_buf as *mut CommandHeader;
         ipc_buf = command_header.offset(1) as *mut u8;
 
-        let data_word_count = (data_size + 3) / 4;
+        let data_word_count = data_size.div_ceil(4);
         let has_special_header = ctx.out_params.send_process_id
             || !ctx.out_params.copy_handles.is_empty()
             || !ctx.out_params.move_handles.is_empty();

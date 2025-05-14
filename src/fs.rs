@@ -740,7 +740,7 @@ pub fn is_fspsrv_session_initialized() -> bool {
 
 /// Finalizes `fsp-srv` support
 #[inline]
-pub(crate) unsafe fn finalize_fspsrv_session() {
+pub(crate) fn finalize_fspsrv_session() {
     G_FSPSRV_SESSION.write().take();
 }
 

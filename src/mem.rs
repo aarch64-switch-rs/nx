@@ -23,7 +23,7 @@ pub mod alloc;
 #[inline(always)]
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub fn flush_data_cache(address: *mut u8, size: usize) {
-    extern "C" {
+    unsafe extern "C" {
         fn __nx_mem_flush_data_cache(address: *mut u8, size: usize);
     }
 

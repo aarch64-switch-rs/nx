@@ -166,7 +166,7 @@ pub struct ThreadContext {
 /// `address` must be valid pointer.
 #[inline(always)]
 pub unsafe fn cache_flush(address: *mut u8, size: usize) {
-    extern "C" {
+    unsafe extern "C" {
         fn __nx_arm_cache_flush(address: *mut u8, size: usize);
     }
 

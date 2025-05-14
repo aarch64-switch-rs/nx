@@ -45,14 +45,9 @@
 // used for ergonomics reading UTF16 strings
 #![feature(str_from_utf16_endian)]
 // manually migrate later since the error is in our dependency `unwinding`
-#![warn(unsafe_attr_outside_unsafe)]
+// for manually pre-checked pointer to reference conversion
+#![feature(ptr_as_ref_unchecked)]
 
-// TODO - just for now
-#![allow(clippy::missing_safety_doc)]
-
-
-//#![allow(incomplete_features)]
-//#![allow(non_snake_case)]
 #![macro_use]
 use core::arch::global_asm;
 
@@ -100,6 +95,9 @@ pub mod hbl;
 #[macro_use]
 pub mod rrt0;
 
+// We're going to allow this just because EVERYTHING in there is potentially unsafe in some way,
+// even if it's not necessarily memory safety. 
+#[allow(clippy::missing_safety_doc)]
 pub mod svc;
 
 #[cfg(feature = "smc")]

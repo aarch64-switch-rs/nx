@@ -297,10 +297,8 @@ impl RwLock {
         }
 
         // If readers are waiting, wake them all up.
-        if state == READERS_WAITING {
-            if self.state.0.compare_exchange(state, 0, Relaxed, Relaxed).is_ok() {
+        if state == READERS_WAITING && self.state.0.compare_exchange(state, 0, Relaxed, Relaxed).is_ok() {
                 self.state.signal_all();
-            }
         }
 
         

@@ -450,6 +450,17 @@ pub fn get_msg_buffer() -> *mut u8 {
 }
 
 #[inline(always)]
+/// Reads to an IPC array from a provided buffer
+///
+/// # Arguments
+///
+/// * `buffer`: In data buffer
+/// * `count`:In data size in T-count, not bytes
+/// * `array`: The ipc array to read the data from
+/// 
+/// # Safety
+/// 
+/// The caller is responsible for providing a pointer valid to read `count * size_of::<T>()` bytes
 pub unsafe fn read_array_from_buffer<T: Copy, const LEN: usize>(
     buffer: *mut u8,
     count: u32,
@@ -461,12 +472,28 @@ pub unsafe fn read_array_from_buffer<T: Copy, const LEN: usize>(
         "Data buffer is not properly aligned"
     );
 
-    let tmp_buffer = buffer as *mut T;
     array.clear();
-    let _ = array.try_extend_from_slice(core::slice::from_raw_parts(tmp_buffer, count as usize));
-    tmp_buffer.add(count as usize) as *mut u8
+
+    unsafe {
+        let tmp_buffer = buffer.cast();
+        let _ =
+            array.try_extend_from_slice(core::slice::from_raw_parts(tmp_buffer, count as usize));
+        tmp_buffer.add(count as usize).cast()
+    }
 }
 
+
+/// Reads an IPC array into a provided buffer
+///
+/// # Arguments
+///
+/// * `buffer`: Out data buffer
+/// * `count`: Out data size in T-count, not bytes
+/// * `array`: The ipc array to read the data from
+/// 
+/// # Safety
+/// 
+/// The caller is responsible for providing a pointer valid to write `count * size_of::<T>()` bytes
 #[inline(always)]
 pub unsafe fn write_array_to_buffer<T: Copy, const LEN: usize>(
     buffer: *mut u8,
@@ -478,16 +505,22 @@ pub unsafe fn write_array_to_buffer<T: Copy, const LEN: usize>(
         is_aligned!(buffer as usize, align_of::<T>()),
         "Data buffer is not properly aligned"
     );
-    let tmp_buffer = buffer as *mut T;
-    core::ptr::copy(array.as_ptr(), tmp_buffer, count as usize);
-    tmp_buffer.add(count as usize) as *mut u8
+
+    debug_assert!(count as usize <= LEN, "Writing too may items to array");
+
+    unsafe {
+        let tmp_buffer = buffer as *mut T;
+        core::ptr::copy(array.as_ptr(), tmp_buffer, count as usize);
+        tmp_buffer.add(count as usize) as *mut u8
+    }
 }
 
 #[inline(always)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub fn get_aligned_data_offset(data_words_offset: *mut u8, base_offset: *mut u8) -> *mut u8 {
     let align = DATA_PADDING as usize - 1;
-    let data_offset = (data_words_offset as usize - base_offset as usize + align) & !align;
-    (data_offset + base_offset as usize) as *mut u8
+    let data_offset = (data_words_offset.addr() - base_offset.addr() + align) & !align;
+    unsafe { base_offset.add(data_offset) }
 }
 
 pub struct CommandContent {

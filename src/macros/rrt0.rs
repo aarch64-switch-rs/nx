@@ -19,7 +19,7 @@ macro_rules! rrt0_define_module_name {
         #[unsafe(no_mangle)]
         #[used]
         #[unsafe(link_section = ".module_name")]
-        #[export_name = "__nx_rrt0_module_name"]
+        #[unsafe(export_name = "__nx_rrt0_module_name")]
         static G_MODULE_NAME: $crate::rrt0::ModulePath = $crate::rrt0::ModulePath::new($name);
     };
 }

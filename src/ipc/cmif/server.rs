@@ -63,7 +63,7 @@ pub fn write_command_response_on_msg_buffer(
         let command_header = ipc_buf as *mut CommandHeader;
         ipc_buf = command_header.offset(1) as *mut u8;
 
-        let data_word_count = (data_size + 3) / 4;
+        let data_word_count = data_size.div_ceil(4);
         let has_special_header = ctx.out_params.send_process_id
             || !ctx.out_params.copy_handles.is_empty()
             || !ctx.out_params.move_handles.is_empty();
@@ -134,25 +134,25 @@ pub fn read_request_command_from_msg_buffer(
         let mut domain_command_type = DomainCommandType::Invalid;
         let mut domain_object_id: DomainObjectId = 0;
         let ipc_buf = get_msg_buffer();
-        let mut data_offset = get_aligned_data_offset(ctx.in_params.data_words_offset, ipc_buf);
+        let mut data_ptr = get_aligned_data_offset(ctx.in_params.data_words_offset, ipc_buf);
 
-        let mut data_header = data_offset as *mut DataHeader;
+        let mut data_header = data_ptr as *mut DataHeader;
         if ctx.object_info.is_domain() {
-            let domain_header = data_offset as *mut DomainInDataHeader;
-            data_offset = domain_header.offset(1) as *mut u8;
+            let domain_header = data_ptr as *mut DomainInDataHeader;
+            data_ptr = domain_header.offset(1) as *mut u8;
             ctx.in_params.data_size -= cmem::size_of::<DomainInDataHeader>() as u32;
 
             domain_command_type = (*domain_header).command_type;
             let object_count = (*domain_header).object_count;
             domain_object_id = (*domain_header).domain_object_id;
-            let objects_offset = data_offset.offset((*domain_header).data_size as isize);
+            let objects_offset = data_ptr.offset((*domain_header).data_size as isize);
             read_array_from_buffer(
                 objects_offset,
                 object_count as u32,
                 &mut ctx.in_params.objects,
             );
 
-            data_header = data_offset as *mut DataHeader;
+            data_header = data_ptr as *mut DataHeader;
         }
 
         let mut rq_id: u32 = 0;
@@ -165,12 +165,12 @@ pub fn read_request_command_from_msg_buffer(
                 );
 
                 rq_id = (*data_header).value;
-                data_offset = data_header.offset(1) as *mut u8;
+                data_ptr = data_header.offset(1) as *mut u8;
                 ctx.in_params.data_size -= cmem::size_of::<DataHeader>() as u32;
             }
         }
 
-        ctx.in_params.data_offset = data_offset;
+        ctx.in_params.data_offset = data_ptr;
         Ok((rq_id, domain_command_type, domain_object_id))
     }
 }

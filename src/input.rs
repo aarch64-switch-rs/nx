@@ -336,8 +336,8 @@ impl Context {
     /// * `supported_style_tags`: Supported [`NpadStyleTag`][`hid::NpadStyleTag`] flags
     /// * `supported_npad_ids`: Supported [`NpadIdType`][`hid::NpadIdType`] values
     pub fn new(supported_style_tags: hid::NpadStyleTag, mut player_count: usize) -> Result<Self> {
-        result_return_if!(
-            player_count == 0 || player_count > 8,
+        result_return_unless!(
+            (1..=8).contains(&player_count),
             ResultInvalidControllerId
         );
 

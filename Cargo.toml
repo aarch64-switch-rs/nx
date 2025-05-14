@@ -1,8 +1,8 @@
 [package]
 name = "nx"
 version = "0.2.0"
-authors = ["XorTroll"]
-edition = "2021"
+authors = ["XorTroll", "pantsman0"]
+edition = "2024"
 include = [
     "src",
     "nx_derive"
@@ -18,7 +18,7 @@ atomic_enum = "0.3.0"
 zeroize = { version = "1.8.1", features = ["aarch64"] }
 nx-derive = { path = "nx-derive/" }
 num-traits = { version = "0.2.19", default-features = false, features = ["libm"]}
-bitfield-struct = "0.10.0"
+bitfield-struct = "0.11.0"
 num-derive = "0.4.2"
 #enumflags2 = "0.7.11"
 
@@ -70,6 +70,5 @@ la = ["services"]
 rand = ["services", "dep:rand"]
 
 [lints.rust]
-internal_features = "allow" # We need this since we're peeking into a Pin while implementing the Threading API.
 #missing_docs = "warn"
 #unsafe_op_in_unsafe_fn = "deny"

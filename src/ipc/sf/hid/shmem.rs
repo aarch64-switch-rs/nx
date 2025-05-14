@@ -467,51 +467,44 @@ impl SharedMemoryFormat {
     /// # Args
     /// * ptr - a const pointer to the controller's shared memory
     ///
-    /// # SAFETY - It is the caller's responsibility to specify a lifetime that does not exceed the lifetime of the shared memory mapping.
+    /// # Safety
+    /// 
+    ///  It is the caller's responsibility to make sure the returned struct does not outlive the shared memory mapping.
     pub unsafe fn from_shmem_ptr(ptr: *const u8) -> Result<Self> {
+        result_return_if!(ptr.is_null(), ResultInvalidAddress);
         let firmware_version = version::get_version();
 
         // Safety - The calls to `cast()` should be safe as we only access it though the checked `as_ref()` calls,
         // It is just the responsibility of the caller to specify a valid lifetime that does not outlive the shared memory map.
         unsafe {
             if SharedMemoryFormatV1::VERSION_INTERVAL.contains(firmware_version) {
-                Ok(Self::V1(
-                    ptr.cast::<SharedMemoryFormatV1>()
-                        .as_ref()
-                        .ok_or(ResultInvalidAddress::make())?,
-                ))
+                let ptr = ptr.cast::<SharedMemoryFormatV1>();
+                result_return_unless!(ptr.is_aligned(), ResultInvalidAddress);
+                Ok(Self::V1(ptr.as_ref_unchecked()))
             } else if SharedMemoryFormatV2::VERSION_INTERVAL.contains(firmware_version) {
-                Ok(Self::V2(
-                    ptr.cast::<SharedMemoryFormatV2>()
-                        .as_ref()
-                        .ok_or(ResultInvalidAddress::make())?,
-                ))
+                let ptr = ptr.cast::<SharedMemoryFormatV2>();
+                result_return_unless!(ptr.is_aligned(), ResultInvalidAddress);
+                Ok(Self::V2(ptr.as_ref_unchecked()))
             } else if SharedMemoryFormatV3::VERSION_INTERVAL.contains(firmware_version) {
-                Ok(Self::V3(
-                    ptr.cast::<SharedMemoryFormatV3>()
-                        .as_ref()
-                        .ok_or(ResultInvalidAddress::make())?,
-                ))
+                let ptr = ptr.cast::<SharedMemoryFormatV3>();
+                result_return_unless!(ptr.is_aligned(), ResultInvalidAddress);
+                Ok(Self::V3(ptr.as_ref_unchecked()))
             } else if SharedMemoryFormatV4::VERSION_INTERVAL.contains(firmware_version) {
-                Ok(Self::V4(
-                    ptr.cast::<SharedMemoryFormatV4>()
-                        .as_ref()
-                        .ok_or(ResultInvalidAddress::make())?,
-                ))
+                let ptr = ptr.cast::<SharedMemoryFormatV4>();
+                result_return_unless!(ptr.is_aligned(), ResultInvalidAddress);
+                Ok(Self::V4(ptr.as_ref_unchecked()))
             } else if SharedMemoryFormatV5::VERSION_INTERVAL.contains(firmware_version) {
-                Ok(Self::V5(
-                    ptr.cast::<SharedMemoryFormatV5>()
-                        .as_ref()
-                        .ok_or(ResultInvalidAddress::make())?,
-                ))
+                let ptr = ptr.cast::<SharedMemoryFormatV5>();
+                result_return_unless!(ptr.is_aligned(), ResultInvalidAddress);
+                Ok(Self::V5(ptr.as_ref_unchecked()))
             } else if SharedMemoryFormatV6::VERSION_INTERVAL.contains(firmware_version) {
-                Ok(Self::V6(
-                    ptr.cast::<SharedMemoryFormatV6>()
-                        .as_ref()
-                        .ok_or(ResultInvalidAddress::make())?,
-                ))
+                let ptr = ptr.cast::<SharedMemoryFormatV6>();
+                result_return_unless!(ptr.is_aligned(), ResultInvalidAddress);
+                Ok(Self::V6(ptr.as_ref_unchecked()))
             } else {
-                unreachable!("We should never have this happen as all versions should be covered by the above matching")
+                unreachable!(
+                    "We should never have this happen as all versions should be covered by the above matching"
+                )
             }
         }
     }

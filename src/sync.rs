@@ -129,14 +129,14 @@ impl<T: ?Sized> core::ops::Deref for MutexGuard<'_, T> {
 
 impl<T: ?Sized> core::ops::DerefMut for MutexGuard<'_, T> {
     fn deref_mut(&mut self) -> &mut T {
-        let mut_ref = unsafe {
+        unsafe {
             self.lock
                 .object_cell
                 .get()
                 .as_mut()
-                .expect("We know the pointer is valid as we have a valid ref to the parent")
-        };
-        mut_ref
+                // We know the pointer is valid as we have a valid ref to the parent
+                .unwrap()
+        }
     }
 }
 

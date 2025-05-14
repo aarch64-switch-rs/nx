@@ -153,23 +153,7 @@ pub struct Buffer<T, A: Allocator = Global> {
     allocator: A,
 }
 
-impl<T> Buffer<T> {
-    /// Creates a new, invalid [`Buffer`]
-    #[inline]
-    pub const fn empty() -> Self {
-        Self {
-            ptr: ptr::null_mut(),
-            layout: Layout::new::<u8>(), // Dummy value
-            allocator: Global,
-        }
-    }
-
-    /// Gets whether this [`Buffer`] is valid
-    #[inline]
-    pub fn is_valid(&self) -> bool {
-        !self.ptr.is_null()
-    }
-
+impl <T> Buffer<T> {
     /// Creates a new [`Buffer`] using the global allocator
     ///
     /// # Arguments
@@ -188,6 +172,42 @@ impl<T> Buffer<T> {
         })
     }
 
+    /// Creates a new, invalid [`Buffer`]
+    #[inline]
+    pub const fn empty() -> Self {
+        Self {
+            ptr: ptr::null_mut(),
+            layout: Layout::new::<u8>(), // Dummy value
+            allocator: Global,
+        }
+    }
+}
+
+impl<T, A: Allocator> Buffer<T, A> {
+    /// Creates a new [`Buffer`] using a given allocator
+    ///
+    /// # Arguments
+    ///
+    /// * `align`: The align to use
+    /// * `count`: The count of values to allocate
+    /// * `allocator`: The allocator to use
+    pub fn new_in(align: usize, count: usize, allocator: A) -> Result<Self> {
+        let layout = Layout::from_size_align(count * mem::size_of::<T>(), align)
+            .map_err(|_| ResultCode::new(rc::ResultLayoutError::get_value()))?;
+        let ptr = allocator.allocate(layout)?.as_ptr().cast();
+        Ok(Self {
+            ptr,
+            layout,
+            allocator,
+        })
+    }
+
+    /// Gets whether this [`Buffer`] is valid
+    #[inline]
+    pub fn is_valid(&self) -> bool {
+        !self.ptr.is_null()
+    }
+
     pub fn into_raw(value: Self) -> *mut [T] {
         let no_drop = ManuallyDrop::new(value);
         core::ptr::slice_from_raw_parts_mut(
@@ -195,10 +215,14 @@ impl<T> Buffer<T> {
             no_drop.layout.size() / mem::size_of::<T>(),
         )
     }
-
+    
     /// Releases the [`Buffer`]
     ///
     /// The [`Buffer`] becomes invalid after this
+    /// 
+    /// # Safety
+    /// 
+    /// The buffer must never be read after this, as the internal buffer pointer is wiped. The buffer must also be for
     pub unsafe fn release(&mut self) {
         if self.is_valid() {
             unsafe {
@@ -238,29 +262,9 @@ impl<T> IndexMut<usize> for Buffer<T> {
     }
 }
 
-impl<T, A: Allocator> Buffer<T, A> {
-    /// Creates a new [`Buffer`] using a given allocator
-    ///
-    /// # Arguments
-    ///
-    /// * `align`: The align to use
-    /// * `count`: The count of values to allocate
-    /// * `allocator`: The allocator to use
-    pub fn new_in(align: usize, count: usize, allocator: A) -> Result<Self> {
-        let layout = Layout::from_size_align(count * mem::size_of::<T>(), align)
-            .map_err(|_| ResultCode::new(rc::ResultLayoutError::get_value()))?;
-        let ptr = allocator.allocate(layout)?.as_ptr().cast();
-        Ok(Self {
-            ptr,
-            layout,
-            allocator,
-        })
-    }
-}
-
 impl<T, A: Allocator> Drop for Buffer<T, A> {
     fn drop(&mut self) {
-        if !self.ptr.is_null() {
+        if self.is_valid() {
             unsafe {
                 self.allocator
                     .deallocate(NonNull::new_unchecked(self.ptr.cast()), self.layout);

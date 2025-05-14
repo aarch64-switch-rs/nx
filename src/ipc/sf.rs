@@ -106,7 +106,18 @@ impl<
         Self::from_mut_ptr(arr.as_mut_ptr(), arr.len())
     }
 
-    pub const unsafe fn from_other<
+    /// Converts a Buffer from one flag set to another
+    /// 
+    /// # Arguments:
+    /// 
+    /// * `other`: The other buffer to clone
+    /// 
+    /// # Safety
+    /// 
+    /// Since this clones the raw pointer, this can be used to get 2 mutable references to the same data.
+    /// The caller _MUST_ ensure that only one the passed `other` buffer or the produced buffer is ever
+    /// read/written while the other is alive.
+    pub(crate) const unsafe fn from_other<
         const IN2: bool,
         const OUT2: bool,
         const MAP_ALIAS2: bool,
@@ -133,7 +144,7 @@ impl<
     }
 
     pub const fn get_address(&self) -> *mut u8 {
-        self.buf as *mut u8
+        self.buf.cast()
     }
 
     pub const fn get_size(&self) -> usize {
@@ -145,16 +156,16 @@ impl<
     }
 
     pub const fn get_var(&self) -> &T {
-        unsafe { &*(self.buf as *const T) }
+        unsafe { self.buf.as_ref().unwrap()}
     }
 
     pub fn get_mut_var(&mut self) -> &mut T {
-        unsafe { &mut *self.buf }
+        unsafe { self.buf.as_mut().unwrap() }
     }
 
     pub fn set_var(&mut self, t: T) {
         unsafe {
-            *self.buf = t;
+            *self.buf.as_mut().unwrap()= t;
         }
     }
 
@@ -169,7 +180,7 @@ impl<
         out
     }
 
-    pub fn as_slice(&mut self) -> Result<&[T]> {
+    pub fn as_slice(&self) -> Result<&[T]> {
         result_return_unless!(self.buf.is_aligned() && !self.buf.is_null(), rc::ResultInvalidBufferPointer);
         Ok(unsafe { core::slice::from_raw_parts(self.buf, self.count) })
     }

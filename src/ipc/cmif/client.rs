@@ -13,7 +13,7 @@ pub fn write_command_on_msg_buffer(
         let has_special_header = ctx.in_params.send_process_id
             || !ctx.in_params.copy_handles.is_empty()
             || !ctx.in_params.move_handles.is_empty();
-        let data_word_count = (data_size + 3) / 4;
+        let data_word_count = data_size.div_ceil(4);
         let command_header = ipc_buf as *mut CommandHeader;
         *command_header = CommandHeader::new(
             command_type as u32,
