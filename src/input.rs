@@ -272,7 +272,7 @@ impl<'player, 'context: 'player> Player<'player> {
 
     /// Gets the up [`NpadButton`][`hid::NpadButton`]s for all of the supported [`NpadStyleTag`][`hid::NpadStyleTag`]s, combining all of them
     ///
-    /// This only updates the state once, but is otherwise eqiuvalent to `(self.get_previous(), self.get_buttons(), self.get_buttons_down(), self.get_buttons_up())`
+    /// This only updates the state once, but is otherwise equivalent to `(self.get_previous(), self.get_buttons(), self.get_buttons_down(), self.get_buttons_up())`
     #[inline]
     pub fn get_button_updates(
         &mut self,

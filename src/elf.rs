@@ -157,7 +157,7 @@ pub unsafe fn relocate_with_dyn(base_address: *mut u8, start_dyn: *const Dyn) {
     }
 }
 
-/// A stuct containing a pointer sized int, representing a pointer to the start of the eh_frame_hdr elf section.
+/// A struct containing a pointer sized int, representing a pointer to the start of the eh_frame_hdr elf section.
 /// This is obviously not a great option to use with Rust's upcoming strict/exposed providence APIs, but works fine here as
 /// the Switch has a single address space and the memory will have a static lifetime that is longer than the currently running code.
 #[derive(Debug)]

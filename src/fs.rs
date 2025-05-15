@@ -756,7 +756,7 @@ pub fn get_fspsrv_session() -> Result<Arc<fsp::srv::FileSystemProxy>> {
 
 /// Mounts a [`FileSystem`]
 ///
-/// Paths inside the filesystem will be accesible as `<name>:/<path>` with fns like [`open_file`], etc.
+/// Paths inside the filesystem will be accessible as `<name>:/<path>` with fns like [`open_file`], etc.
 ///
 /// # Arguments
 ///
@@ -846,8 +846,8 @@ pub fn format_path(path: &str) -> Result<(Arc<dyn FileSystem>, &str)> {
 /// # Arguments
 ///
 /// * `path`: The path to use
-/// * `size`: The initial file size, default/IPC behaviour is to fill the file with zeros
-/// * `attribute`: The file attribute, default/IPC behaviour uses this to allow creating "concatenation files" (allowing 32GB+ files in FAT32 filesystems)
+/// * `size`: The initial file size, default/IPC behavior is to fill the file with zeros
+/// * `attribute`: The file attribute, default/IPC behavior uses this to allow creating "concatenation files" (allowing 32GB+ files in FAT32 filesystems)
 pub fn create_file(path: &str, size: usize, attribute: FileAttribute) -> Result<()> {
     let (fs, processed_path) = format_path(path)?;
     fs.create_file(processed_path, attribute, size)

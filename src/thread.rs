@@ -1129,7 +1129,7 @@ pub mod imp {
         id: ThreadId,
         // original stack address
         original_stack_top: *mut u8,
-        // aliased statck address (if stack_is_aliased == true)
+        // aliased stack address (if stack_is_aliased == true)
         pub(crate) stack_top: *mut u8,
         // size of the stack
         stack_size: usize,
