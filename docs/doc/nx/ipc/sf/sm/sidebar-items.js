@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["mitm","rc"],"trait":["IUserInterface"],"union":["ServiceName"]};

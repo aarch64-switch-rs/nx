@@ -297,7 +297,7 @@ impl<const S: usize> ArrayString<S> {
     /// # Arguments
     ///
     /// * `string`: The `&str` to use
-    #[allow(clippy::should_implement_trait)] // We don't implement the trait as we do the conversion infallably
+    #[allow(clippy::should_implement_trait)] // We don't implement the trait as we do the conversion infallibly
     pub fn from_str(string: &str) -> Self {
         let mut cstr = Self::new();
         let _ = cstr.set_str(string);
@@ -620,8 +620,8 @@ impl<const S: usize> core::str::FromStr for ArrayWideString<S> {
 /// 
 /// # Safety
 ///
-/// This is a wrapper around `Cstr::from_ptr`[`core::ffi::Cstr::from_ptr`]
-/// so the same safety requirements apply
+/// This is a wrapper around `Cstr::from_ptr`[`core::ffi::CStr::from_ptr`]
+/// so the same safety requirements apply.
 #[inline(always)]
 pub unsafe fn str_ptr_len(str_ptr: *const u8) -> usize { 
     unsafe {core::ffi::CStr::from_ptr(str_ptr.cast()).to_bytes().len()}

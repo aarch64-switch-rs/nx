@@ -62,7 +62,7 @@ impl LibraryAppletHolder {
         self.accessor.clone()
     }
 
-    /// Pushes an input [`IStorage`] shared object to the library applet
+    /// Pushes an input [`IStorageClient`] shared object to the library applet
     #[inline]
     pub fn push_in_data_storage(&mut self, storage: Storage) -> Result<()> {
         self.accessor.lock().push_in_data(storage)
@@ -70,7 +70,7 @@ impl LibraryAppletHolder {
 
     /// Pushes input data to the library applet
     ///
-    /// This is a wrapper which creates an [`IStorage`] object with the given value and pushes it
+    /// This is a wrapper which creates an [`IStorageClient`] object with the given value and pushes it
     pub fn push_in_data<T: Copy>(&mut self, t: T) -> Result<()> {
         let t_st = create_write_storage(t)?;
         self.push_in_data_storage(t_st)
@@ -91,7 +91,7 @@ impl LibraryAppletHolder {
         Ok(())
     }
 
-    /// Pops an output [`IStorage`] shared object from the library applet
+    /// Pops an output [`IStorageClient`] shared object from the library applet
     #[inline]
     pub fn pop_out_data_storage(&mut self) -> Result<Storage> {
         self.accessor.lock().pop_out_data()
@@ -99,7 +99,7 @@ impl LibraryAppletHolder {
 
     /// Pops output data from the library applet
     ///
-    /// This is a wrapper which pops an [`IStorage`] object and reads its data (reads [`size_of`][`cmem::size_of`] `O` bytes and returns that data)
+    /// This is a wrapper which pops an [`IStorageClient`] object and reads its data (reads [`size_of`][`cmem::size_of`] `O` bytes and returns that data)
     pub fn pop_out_data<O: Copy>(&mut self) -> Result<O> {
         let mut o_st = self.pop_out_data_storage()?;
         read_storage(&mut o_st)
@@ -107,7 +107,7 @@ impl LibraryAppletHolder {
 }
 
 impl Drop for LibraryAppletHolder {
-    /// Drops the [`LibraryAppletHolder`], closing the [`ILibraryAppletAccessor`] object instance and the acquired state-changed event handle
+    /// Drops the [`LibraryAppletHolder`], closing the [`ILibraryAppletAccessorClient`] object instance and the acquired state-changed event handle
     fn drop(&mut self) {
         let _ = svc::close_handle(self.state_changed_event_handle);
     }
@@ -131,13 +131,13 @@ pub fn is_initialized() -> bool {
     G_CREATOR.lock().is_some()
 }
 
-/// Finalizes library applet support, dropping the inner [`ILibraryAppletCreator`] shared object instance. Gets run in the rrt0 runtime after the main function runs.
+/// Finalizes library applet support, dropping the inner [`ILibraryAppletCreatorClient`] shared object instance. Gets run in the rrt0 runtime after the main function runs.
 #[inline]
 pub(crate) fn finalize() {
     *G_CREATOR.lock() = None;
 }
 
-/// Gets access to the global [`ILibraryAppletCreator`] shared object instance
+/// Gets access to the global [`ILibraryAppletCreatorClient`] shared object instance
 ///
 /// This will fail with [`ResultNotInitialized`][`super::rc::ResultNotInitialized`] if library applet support isn't initialized
 #[inline]
@@ -150,7 +150,7 @@ pub fn get_creator<'a>() -> Result<MutexGuard<'a, Option<LibraryAppletCreator>>>
     }
 }
 
-/// Wrapper for reading data from a [`IStorage`] shared object
+/// Wrapper for reading data from a [`IStorageClient`] shared object
 ///
 /// This will try to read [`size_of`][`cmem::size_of`] `T` bytes from the storage and return them as the expected value
 ///
@@ -166,7 +166,7 @@ pub fn read_storage<T: Copy>(storage: &mut Storage) -> Result<T> {
     Ok(t)
 }
 
-/// Wrapper for writing data to a [`IStorage`] shared object
+/// Wrapper for writing data to a [`IStorageClient`] shared object
 ///
 /// This will try to write [`size_of`][`cmem::size_of`] `T` bytes to the storage from the given value
 ///
@@ -183,11 +183,11 @@ pub fn write_storage<T: Copy>(storage: &mut Storage, t: T) -> Result<()> {
     Ok(())
 }
 
-/// Wrapper for creating a [`IStorage`] shared object from the given value
+/// Wrapper for creating a [`IStorageClient`] shared object from the given value
 ///
 /// This will fail with [`ResultNotInitialized`][`super::rc::ResultNotInitialized`] if library applet support isn't initialized
 ///
-/// This will create a [`IStorage`] object using the global [`ILibraryAppletCreator`] object and write the given value to it
+/// This will create a [`IStorageClient`] object using the global [`ILibraryAppletCreatorClient`] object and write the given value to it
 ///
 /// # Arguments
 ///

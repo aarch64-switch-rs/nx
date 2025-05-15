@@ -1,0 +1,1 @@
+searchState.loadedDescShard("atomic_enum", 0, "An attribute to create an atomic wrapper around a C-style …\nCreates an atomic wrapper around a C-style enum.")

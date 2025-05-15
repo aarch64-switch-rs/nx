@@ -1,0 +1,34 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Creates a bitfield for this struct."><title>bitfield in bitfield_struct - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../static.files/rustdoc-c233d2bd.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="bitfield_struct" data-themes="" data-resource-suffix="" data-rustdoc-version="1.88.0-nightly (6bc57c6bf 2025-04-22)" data-channel="nightly" data-search-js="search-f7877310.js" data-settings-js="settings-5514c975.js" ><script src="../static.files/storage-4e99c027.js"></script><script defer src="sidebar-items.js"></script><script defer src="../static.files/main-7ef8a74a.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-044be391.svg"></head><body class="rustdoc attr"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../bitfield_struct/index.html">bitfield_<wbr>struct</a><span class="version">0.11.0</span></h2></div><div class="sidebar-elems"><div id="rustdoc-modnav"></div></div></nav><div class="sidebar-resizer"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="index.html">bitfield_struct</a></div><h1>Attribute Macro <span class="attr">bitfield</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../src/bitfield_struct/lib.rs.html#52-57">Source</a> </span></div><pre class="rust item-decl"><code>#[bitfield]</code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Creates a bitfield for this struct.</p>
+<p>The arguments first, have to begin with the integer type of the bitfield:
+For example: <code>#[bitfield(u64)]</code>.</p>
+<p>It can contain the following additional parameters, like the <code>debug</code> argument
+for disabling the <code>Debug</code> trait generation (<code>#[bitfield(u64, debug = false)]</code>).</p>
+<p>Parameters of the <code>bitfield</code> attribute:</p>
+<ul>
+<li>the bitfield integer type (required)</li>
+<li><code>repr</code> specifies the bitfield’s representation in memory</li>
+<li><code>from</code> to specify a conversion function from repr to the bitfield’s integer type</li>
+<li><code>into</code> to specify a conversion function from the bitfield’s integer type to repr</li>
+<li><code>new</code> to disable the <code>new</code> function generation</li>
+<li><code>clone</code> to disable the <code>Clone</code> trait generation</li>
+<li><code>debug</code> to disable the <code>Debug</code> trait generation</li>
+<li><code>defmt</code> to enable the <code>defmt::Format</code> trait generation</li>
+<li><code>default</code> to disable the <code>Default</code> trait generation</li>
+<li><code>hash</code> to generate the <code>Hash</code> trait</li>
+<li><code>order</code> to specify the bit order (Lsb, Msb)</li>
+<li><code>conversion</code> to disable the generation of <code>into_bits</code> and <code>from_bits</code></li>
+</ul>
+<blockquote>
+<p>For <code>new</code>, <code>clone</code>, <code>debug</code>, <code>defmt</code> or <code>default</code>, you can either use booleans
+(<code>#[bitfield(u8, debug = false)]</code>) or cfg attributes
+(<code>#[bitfield(u8, debug = cfg(test))]</code>) to enable/disable them.</p>
+</blockquote>
+<p>Parameters of the <code>bits</code> attribute (for fields):</p>
+<ul>
+<li>the number of bits</li>
+<li><code>access</code> to specify the access mode (RW, RO, WO, None)</li>
+<li><code>default</code> to set a default value</li>
+<li><code>into</code> to specify a conversion function from the field type to the bitfield type</li>
+<li><code>from</code> to specify a conversion function from the bitfield type to the field type</li>
+</ul>
+</div></details></section></div></main></body></html>

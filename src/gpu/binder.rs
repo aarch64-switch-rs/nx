@@ -73,7 +73,7 @@ impl Binder {
     /// # Arguments
     ///
     /// * `handle`: Binder handle to use
-    /// * `hos_binder_driver`: [`IHOSBinderDriver`][`dispdrv::IHOSBinderDriver`] object
+    /// * `hos_binder_driver`: [`IHOSBinderDriver`][`dispdrv::IHOSBinderDriverClient`] object
     #[inline]
     pub const fn new(
         handle: dispdrv::BinderHandle,
@@ -310,7 +310,7 @@ impl Binder {
         Ok(qbo)
     }
 
-    /// Gets a native handle of the underlying [`IHOSBinderDriver`][`dispdrv::IHOSBinderDriver`] object
+    /// Gets a native handle of the underlying [`IHOSBinderDriver`][`dispdrv::IHOSBinderDriverClient`] object
     ///
     /// # Arguments
     ///

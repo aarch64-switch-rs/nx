@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":["AppletResource","HidServer"]};

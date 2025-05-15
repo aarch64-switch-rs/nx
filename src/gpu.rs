@@ -1016,7 +1016,7 @@ impl Context {
     /// # Arguments
     ///
     /// * `vi_srv`: The VI service object
-    /// * `application_display_srv`: The VI [`IApplication`] interface object
+    /// * `application_display_srv`: The vi [`IApplicationDisplayClient`] interface object
     /// * `nvdrv_srv`: The NV [`INvDrvClient`] service object
     /// * `transfer_mem_size`: The transfer memory size to use
     /// * `nv_host_as_gpu`: Flag whether to open a handle to the GPU for hardware accelerated rendering.

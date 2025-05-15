@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"constant":["GENERATE_RANDOM_BYTES_MAX_SIZE"],"enum":["FunctionId","Result"],"fn":["generate_random_bytes"],"struct":["Input","Output"],"type":["Arguments"]};

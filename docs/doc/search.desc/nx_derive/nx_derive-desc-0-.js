@@ -1,0 +1,1 @@
+searchState.loadedDescShard("nx_derive", 0, "This creates the required trait implementations for the …\nThis creates the required trait implementations for the …")

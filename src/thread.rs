@@ -555,6 +555,7 @@ struct ThreadArgs {
 }
 
 #[derive(Clone)]
+#[allow(rustdoc::private_intra_doc_links)]
 /// A handle to a thread.
 ///
 /// Threads are represented via the `Thread` type, which you can get in one of

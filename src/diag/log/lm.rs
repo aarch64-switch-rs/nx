@@ -7,7 +7,7 @@ use crate::service;
 use crate::service::lm::{self, ILoggerClient, ILoggingClient, LoggingService};
 use crate::svc;
 
-/// Represents a logger through [`LogService`][`lm::LogService`] services
+/// Represents a logger through [`LogService`][`lm::LoggingService`] services
 pub struct LmLogger {
     logger: Option<lm::Logger>,
 }

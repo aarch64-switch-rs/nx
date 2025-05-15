@@ -204,12 +204,6 @@ impl Surface {
     /// Creates a new  [`Surface`]
     ///
     /// This is not meant to really be used manually, see [`Context`][`super::Context`]
-    ///
-    /// # Arguments
-    ///
-    /// * `binder_handle`: The binder handle to use
-    /// * `nvdrv_srv`: The [`NvDrvServicesService`][`crate::service::nv::INvDrvServices`] dyn-object to use
-    /// * ``
     pub fn new_from_parts(
         binder_handle: dispdrv::BinderHandle,
         gpu_ctx: Arc<RwLock<Context>>,
