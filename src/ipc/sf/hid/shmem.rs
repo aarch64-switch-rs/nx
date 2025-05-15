@@ -471,36 +471,24 @@ impl SharedMemoryFormat {
     /// 
     ///  It is the caller's responsibility to make sure the returned struct does not outlive the shared memory mapping.
     pub unsafe fn from_shmem_ptr(ptr: *const u8) -> Result<Self> {
-        result_return_if!(ptr.is_null(), ResultInvalidAddress);
+        result_return_if!(ptr.is_null() || !ptr.is_aligned_to(8), ResultInvalidAddress);
         let firmware_version = version::get_version();
 
         // Safety - The calls to `cast()` should be safe as we only access it though the checked `as_ref()` calls,
-        // It is just the responsibility of the caller to specify a valid lifetime that does not outlive the shared memory map.
+        // and the pointer->reference preconditions are checked above.
         unsafe {
             if SharedMemoryFormatV1::VERSION_INTERVAL.contains(firmware_version) {
-                let ptr = ptr.cast::<SharedMemoryFormatV1>();
-                result_return_unless!(ptr.is_aligned(), ResultInvalidAddress);
-                Ok(Self::V1(ptr.as_ref_unchecked()))
+                Ok(Self::V1(ptr.cast::<SharedMemoryFormatV1>().as_ref_unchecked()))
             } else if SharedMemoryFormatV2::VERSION_INTERVAL.contains(firmware_version) {
-                let ptr = ptr.cast::<SharedMemoryFormatV2>();
-                result_return_unless!(ptr.is_aligned(), ResultInvalidAddress);
-                Ok(Self::V2(ptr.as_ref_unchecked()))
+                Ok(Self::V2(ptr.cast::<SharedMemoryFormatV2>().as_ref_unchecked()))
             } else if SharedMemoryFormatV3::VERSION_INTERVAL.contains(firmware_version) {
-                let ptr = ptr.cast::<SharedMemoryFormatV3>();
-                result_return_unless!(ptr.is_aligned(), ResultInvalidAddress);
-                Ok(Self::V3(ptr.as_ref_unchecked()))
+                Ok(Self::V3(ptr.cast::<SharedMemoryFormatV3>().as_ref_unchecked()))
             } else if SharedMemoryFormatV4::VERSION_INTERVAL.contains(firmware_version) {
-                let ptr = ptr.cast::<SharedMemoryFormatV4>();
-                result_return_unless!(ptr.is_aligned(), ResultInvalidAddress);
-                Ok(Self::V4(ptr.as_ref_unchecked()))
+                Ok(Self::V4(ptr.cast::<SharedMemoryFormatV4>().as_ref_unchecked()))
             } else if SharedMemoryFormatV5::VERSION_INTERVAL.contains(firmware_version) {
-                let ptr = ptr.cast::<SharedMemoryFormatV5>();
-                result_return_unless!(ptr.is_aligned(), ResultInvalidAddress);
-                Ok(Self::V5(ptr.as_ref_unchecked()))
+                Ok(Self::V5(ptr.cast::<SharedMemoryFormatV5>().as_ref_unchecked()))
             } else if SharedMemoryFormatV6::VERSION_INTERVAL.contains(firmware_version) {
-                let ptr = ptr.cast::<SharedMemoryFormatV6>();
-                result_return_unless!(ptr.is_aligned(), ResultInvalidAddress);
-                Ok(Self::V6(ptr.as_ref_unchecked()))
+                Ok(Self::V6(ptr.cast::<SharedMemoryFormatV6>().as_ref_unchecked()))
             } else {
                 unreachable!(
                     "We should never have this happen as all versions should be covered by the above matching"
@@ -510,13 +498,13 @@ impl SharedMemoryFormat {
     }
 
     pub fn as_ptr(&self) -> *const u8 {
-        match self {
-            Self::V1(r) => (*r) as *const SharedMemoryFormatV1 as *const _,
-            Self::V2(r) => (*r) as *const SharedMemoryFormatV2 as *const _,
-            Self::V3(r) => (*r) as *const SharedMemoryFormatV3 as *const _,
-            Self::V4(r) => (*r) as *const SharedMemoryFormatV4 as *const _,
-            Self::V5(r) => (*r) as *const SharedMemoryFormatV5 as *const _,
-            Self::V6(r) => (*r) as *const SharedMemoryFormatV6 as *const _,
+        match *self {
+            Self::V1(r) => r as *const SharedMemoryFormatV1 as *const _,
+            Self::V2(r) => r as *const SharedMemoryFormatV2 as *const _,
+            Self::V3(r) => r as *const SharedMemoryFormatV3 as *const _,
+            Self::V4(r) => r as *const SharedMemoryFormatV4 as *const _,
+            Self::V5(r) => r as *const SharedMemoryFormatV5 as *const _,
+            Self::V6(r) => r as *const SharedMemoryFormatV6 as *const _,
         }
     }
 }
@@ -763,6 +751,7 @@ pub struct SharedMemoryFormatV1 {
     pub npad: NpadSharedMemoryFormatV1,
     pub gesture: GestureSharedMemoryFormat,
 }
+const_assert!(align_of::<SharedMemoryFormatV1>() <=8);
 
 impl SharedMemoryFormatV1 {
     pub const VERSION_INTERVAL: version::VersionInterval = version::VersionInterval::from_to(
@@ -787,6 +776,7 @@ pub struct SharedMemoryFormatV2 {
     pub npad: NpadSharedMemoryFormatV2,
     pub gesture: GestureSharedMemoryFormat,
 }
+const_assert!(align_of::<SharedMemoryFormatV2>() <=8);
 
 impl SharedMemoryFormatV2 {
     pub const VERSION_INTERVAL: version::VersionInterval = version::VersionInterval::from_to(
@@ -812,6 +802,7 @@ pub struct SharedMemoryFormatV3 {
     pub gesture: GestureSharedMemoryFormat,
     pub console_six_axis_sensor: ConsoleSixAxisSensorSharedMemoryFormat,
 }
+const_assert!(align_of::<SharedMemoryFormatV3>() <=8);
 
 impl SharedMemoryFormatV3 {
     pub const VERSION_INTERVAL: version::VersionInterval = version::VersionInterval::from_to(
@@ -837,6 +828,7 @@ pub struct SharedMemoryFormatV4 {
     pub gesture: GestureSharedMemoryFormat,
     pub console_six_axis_sensor: ConsoleSixAxisSensorSharedMemoryFormat,
 }
+const_assert!(align_of::<SharedMemoryFormatV4>() <=8);
 
 impl SharedMemoryFormatV4 {
     pub const VERSION_INTERVAL: version::VersionInterval = version::VersionInterval::from_to(
@@ -862,6 +854,7 @@ pub struct SharedMemoryFormatV5 {
     pub gesture: GestureSharedMemoryFormat,
     pub console_six_axis_sensor: ConsoleSixAxisSensorSharedMemoryFormat,
 }
+const_assert!(align_of::<SharedMemoryFormatV5>() <=8);
 
 impl SharedMemoryFormatV5 {
     pub const VERSION_INTERVAL: version::VersionInterval = version::VersionInterval::from_to(
@@ -887,6 +880,7 @@ pub struct SharedMemoryFormatV6 {
     pub gesture: GestureSharedMemoryFormat,
     pub console_six_axis_sensor: ConsoleSixAxisSensorSharedMemoryFormat,
 }
+const_assert!(align_of::<SharedMemoryFormatV6>() <=8);
 
 impl SharedMemoryFormatV6 {
     pub const VERSION_INTERVAL: version::VersionInterval =

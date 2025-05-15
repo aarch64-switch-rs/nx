@@ -44,9 +44,9 @@
 #![feature(try_blocks)]
 // used for ergonomics reading UTF16 strings
 #![feature(str_from_utf16_endian)]
-// manually migrate later since the error is in our dependency `unwinding`
 // for manually pre-checked pointer to reference conversion
 #![feature(ptr_as_ref_unchecked)]
+#![feature(pointer_is_aligned_to)]
 
 #![macro_use]
 use core::arch::global_asm;
