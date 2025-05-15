@@ -1,3 +1,7 @@
+//! This module wraps svc calls provided by `svc.s`.
+//! There is no function-level Safety docs, but the core requirement is that all raw pointers provided must be 
+//! validated by the caller.
+
 use crate::arm;
 use crate::ipc::sf::ncm;
 use crate::result::*;
