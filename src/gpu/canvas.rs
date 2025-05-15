@@ -109,7 +109,7 @@ impl sealed::CanvasColorFormat for RGBA4 {
 /// RGBA (8888) Pixel/Color Representation
 ///
 /// We are using the bitfields crate here just for consistency with RGBA4444.
-/// The bit range checks should be optimised out in release mode.
+/// The bit range checks should be optimized out in release mode.
 #[bitfield(u32, order = Lsb)]
 pub struct RGBA8 {
     /// Alpha channel
@@ -195,7 +195,7 @@ mod sealed {
         fn from_raw(raw: Self::RawType) -> Self;
         fn to_raw(self) -> Self::RawType;
         fn blend_with(self, other: Self, blend: AlphaBlend) -> Self;
-        fn scale_alpha(self, apha: f32) -> Self;
+        fn scale_alpha(self, alpha: f32) -> Self;
     }
 }
 
@@ -222,6 +222,7 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
         buffer_count as usize * single_buffer_size
     }
 
+    /// Creates a new stray layer (application/applet window) that can be drawn on for UI elements
     pub fn new_managed(
         gpu_ctx: Arc<RwLock<Context>>,
         surface_name: Option<&'static str>,
@@ -258,6 +259,9 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
         })
     }
 
+    /// Creates a new managed layer (application/applet window) that can be drawn on overlay elements.
+    /// These layers exist on top of stray layers and application/applet UIs, and can be Z-order vertically layered over each other.
+    /// The GPU provides the alpha blending for all layers based on the committed frame.
     pub fn new_stray(
         gpu_ctx: Arc<RwLock<Context>>,
         surface_name: Option<&'static str>,
@@ -278,10 +282,15 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
         })
     }
 
+    /// Wait for a vsync event to ensure that the previously submitted frame has been fully rendered to the display.
     pub fn wait_vsync_event(&self, timeout: Option<i64>) -> Result<()> {
         self.surface.wait_vsync_event(timeout.unwrap_or(-1))
     }
 
+    /// Check out a canvas/framebuffer to draw a new frame. This frame is buffered to a linear buffer before being
+    /// swizzled into the backing buffer during frame-commit. This provides better performance for line-based renderers
+    /// as writes will be sequential in memory. There are cache misses during commit, but that is still better performance
+    /// than mapped page churn for GPU-mapped memory.
     pub fn render<T>(
         &mut self,
         clear_color: Option<ColorFormat>,
@@ -309,6 +318,9 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
         runner(&mut canvas)
     }
 
+    /// Check out a canvas/framebuffer to draw a new frame, without a linear buffer.
+    /// This can be used in memory constrained environments such as sysmodules, but also provides slightly better performance
+    /// for frames that draw in block rather than scan-lines (e.g. JPEG decoding).
     pub fn render_unbuffered<T>(
         &mut self,
         clear_color: Option<ColorFormat>,
@@ -659,7 +671,7 @@ impl<ColorFormat: CanvasColorFormat> Canvas for BufferedCanvas<'_, ColorFormat> 
             blend,
         );
 
-        // SAFETY - we know get_unchecked access below is OK as we have checked the dimentions
+        // SAFETY - we know get_unchecked access below is OK as we have checked the dimensions
         unsafe {
             core::ptr::write(
                 self.linear_buf.ptr.add(pixel_offset) as *mut ColorFormat::RawType,
@@ -741,7 +753,7 @@ impl<ColorFormat: sealed::CanvasColorFormat> UnbufferedCanvas<'_, ColorFormat> {
                 + (y % (8 * block_height) / 8) * 512;
 
         //  Figure 46 in the TRM is in pixel space, even though each GOB in a block is sequential in memory.
-        // This means that each 64bytes of a row (y1 == y2) are separeated by `64 x 8 x block_height` bytes,
+        // This means that each 64bytes of a row (y1 == y2) are separated by `64 x 8 x block_height` bytes,
         // so the `x` value  in figure 47 will be (x * bytes_per_pixel)%64, and `y` will be (y%8)
         let x = (x * ColorFormat::COLOR_FORMAT.bytes_per_pixel()) % 64;
         let y = y % 8;
@@ -764,52 +776,6 @@ impl<ColorFormat: sealed::CanvasColorFormat> Canvas for UnbufferedCanvas<'_, Col
     fn draw_single(&mut self, x: i32, y: i32, color: Self::ColorFormat, blend: AlphaBlend) {
         self.draw_single(x, y, color, blend);
     }
-
-    /*fn clear(&mut self, color: Self::ColorFormat) {
-        // This transmute is safe because we are only implementing pixel/color types with even/size. If we implement an odd-sized pixels, this needs to change.
-        let write_row: u128 = {
-            let raw_color: <ColorFormat as CanvasColorFormat>::RawType = color.to_raw();
-            let mut tmp: u128 = 0;
-            let transmuted =
-                &mut tmp as *mut u128 as *mut <ColorFormat as CanvasColorFormat>::RawType;
-            for i in 0..(size_of::<u128>()
-                / <ColorFormat as CanvasColorFormat>::BYTES_PER_PIXEL as usize)
-            {
-                unsafe {
-                    *transmuted.add(i) = raw_color;
-                }
-            }
-            tmp
-        };
-
-        let block_config = self.manager.surface.get_block_linear_config();
-        let block_height_gobs = 1 << block_config.block_height_log2();
-        let block_height_px = 8 << block_config.block_height_log2();
-
-        let mut out_buf = self.base_pointer;
-        let stride = self.manager.surface.pitch();
-        let height = self.manager.surface.height();
-
-        let width_blocks = stride >> 6;
-        let height_blocks =
-            (height + block_height_px - 1) >> (3 + block_config.block_height_log2());
-
-        for block_y in 0..height_blocks {
-            for _block_x in 0..width_blocks {
-                for gob_y in 0..block_height_gobs {
-                    unsafe {
-                        let y = block_y * block_height_px + gob_y * 8;
-                        if y < height {
-                            for i in 0..32 {
-                                *(out_buf as *mut u128).offset(i) = write_row;
-                            }
-                        }
-                        out_buf += 512;
-                    }
-                }
-            }
-        }
-    }*/
 
     fn clear(&mut self, color: Self::ColorFormat) {
         let raw_color: <ColorFormat as CanvasColorFormat>::RawType = color.to_raw();

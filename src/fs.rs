@@ -506,7 +506,7 @@ pub enum SeekFrom {
     End(isize),
 }
 
-/// Represents a wrapper type to simplify file access, tracking the currently seeked location in the file.
+/// Represents a wrapper type to simplify file access, tracking the currently seek-ed location in the file.
 pub struct FileAccessor {
     file: Box<dyn File>,
     offset: usize,
@@ -875,7 +875,7 @@ pub fn create_directory(path: &str) -> Result<()> {
 
 /// Deletes a directory
 ///
-/// Note that (in default/IPC behaviour) this won't succeed unless the directory is empty (see [`remove_dir_all`])
+/// Note that (in default/IPC behavior) this won't succeed unless the directory is empty (see [`remove_dir_all`])
 ///
 /// # Arguments
 ///

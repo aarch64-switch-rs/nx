@@ -82,12 +82,12 @@ fn do_abort(level: AbortLevel, rc: ResultCode) {
             svc::r#break(
                 svc::BreakReason::Panic,
                 &rc as *const _ as *const u8,
-                mem::size_of_val(&rc),
+                mem::size_of::<ResultCode>(),
             )
         };
     }
-
-    // Note: this won't be reached if the abort succeeds
+    
+    // return so we can try the next level.
 }
 
 /// Attempts to abort at the specified [`AbortLevel`]

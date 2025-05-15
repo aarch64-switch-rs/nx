@@ -200,8 +200,7 @@ impl<'player, 'context: 'player> Player<'player> {
             deadzone.is_positive() && deadzone <= 1.0,
             "deadzone is a factor in the range (0, 1)"
         );
-
-        //let controller_type = self.get_npad_id()
+        // TODO - make an iterator through the supported style tags to get the first one passing the deadzone test.
 
         None
     }
@@ -450,7 +449,7 @@ impl Context {
 }
 
 impl Drop for Context {
-    /// Destroys the [`Context`], unmapping the shared-memory and closing it, and also closing its [`IHidClient`] session
+    /// Destroys the [`Context`], un-mapping the shared-memory and closing it, and also closing its [`IHidClient`] session
     fn drop(&mut self) {
         let _ = self
             .hid_service

@@ -53,7 +53,7 @@ impl ResultCode {
     ///
     /// # Arguments
     ///
-    /// * `value`: The raw value, note that it mustn't be `0`/success (that would be undefined behaviour)
+    /// * `value`: The raw value, note that it mustn't be `0`/success (that would be undefined behavior)
     #[inline]
     pub const fn new_err<T>(value: u32) -> Result<T> {
         Err(Self::new(value))

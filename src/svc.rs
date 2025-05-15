@@ -60,8 +60,8 @@ pub enum MemoryState {
     Ipc = 0xA,
     Stack = 0xB,
     ThreadLocal = 0xC,
-    Transfered = 0xD,
-    SharedTransfered = 0xE,
+    Transferred = 0xD,
+    SharedTransferred = 0xE,
     SharedCode = 0xF,
     Inaccessible = 0x10,
     NonSecureIpc = 0x11,
@@ -219,7 +219,7 @@ pub type Handle = u32;
 pub struct ScopedHandle(pub Handle);
 impl ScopedHandle {
     /// Creates a scoped guard for the handle.
-    /// The handle can still be accessed and copied, but will become invalid when this scruct is dropped.
+    /// The handle can still be accessed and copied, but will become invalid when this struct is dropped.
     pub fn guard(handle: Handle) -> Self {
         Self(handle)
     }
@@ -977,7 +977,6 @@ pub fn get_thread_list(debug_handle: Handle, thread_id_list: &mut [u64]) -> Resu
 }
 
 #[inline(always)]
-#[allow(improper_ctypes)]
 pub fn get_debug_thread_context(
     debug_handle: Handle,
     thread_id: u64,
@@ -985,10 +984,10 @@ pub fn get_debug_thread_context(
 ) -> Result<arm::ThreadContext> {
     unsafe extern "C" {
         fn __nx_svc_get_debug_thread_context(
-            thread_context: *mut arm::ThreadContext,
+            thread_context: *mut u8,  //*mut arm::ThreadContext
             debug_handle: Handle,
             thread_id: u64,
-            register_group: arm::RegisterGroup,
+            register_group: u32,
         ) -> ResultCode;
     }
 
@@ -996,17 +995,16 @@ pub fn get_debug_thread_context(
         let mut thread_context: arm::ThreadContext = Default::default();
 
         let rc = __nx_svc_get_debug_thread_context(
-            &mut thread_context,
+            &raw mut thread_context as *mut _,
             debug_handle,
             thread_id,
-            register_group,
+            register_group.get(),
         );
         pack(rc, thread_context)
     }
 }
 
 #[inline(always)]
-#[allow(improper_ctypes)]
 pub fn set_debug_thread_context(
     debug_handle: Handle,
     thread_context: arm::ThreadContext,
@@ -1017,8 +1015,8 @@ pub fn set_debug_thread_context(
         fn __nx_svc_set_debug_thread_context(
             debug_handle: Handle,
             thread_id: u64,
-            thread_context: *const arm::ThreadContext,
-            register_group: arm::RegisterGroup,
+            thread_context: *const u8, //*const arm::ThreadContext
+            register_group: u32,
         ) -> ResultCode;
     }
 
@@ -1026,8 +1024,8 @@ pub fn set_debug_thread_context(
         let rc = __nx_svc_set_debug_thread_context(
             debug_handle,
             thread_id,
-            &thread_context as *const _,
-            register_group,
+            &raw const thread_context as *const _,
+            register_group.get(),
         );
         pack(rc, ())
     }

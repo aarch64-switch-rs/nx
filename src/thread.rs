@@ -1101,7 +1101,7 @@ pub mod imp {
     #[derive(Debug)]
     #[repr(C)]
     pub struct StratosphereThreadType {
-        /// An instrusive linked list header for the global thread list
+        /// An intrusive linked list header for the global thread list
         __intrusive_thread_list_node: [usize; 2],
         // doubly linked list of waiters on the thread
         __thread_wait_list: [usize; 2],
@@ -1111,7 +1111,7 @@ pub mod imp {
         pub(crate) state: ThreadState,
         // flag whether the stack memory has been remapped
         stack_is_aliased: bool,
-        // auto_registerd??
+        // auto_registered??
         _auto_registered: bool,
         // count of thread suspensions?
         _suspend_count: u8,
@@ -1231,7 +1231,7 @@ pub mod imp {
             priority: ThreadPriority,
             core: ThreadStartCore,
         ) -> crate::result::Result<svc::Handle> {
-            // stack sized up to be a mulitple of a page
+            // stack sized up to be a multiple of a page
             let aligned_stack_size = align_up!(stack_size, PAGE_ALIGNMENT);
             // layout for stack allocation, we know it's safe because the page alignment constant is a valid alignment
             let stack_layout =

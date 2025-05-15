@@ -20,11 +20,8 @@ nx-derive = { path = "nx-derive/" }
 num-traits = { version = "0.2.19", default-features = false, features = ["libm"]}
 bitfield-struct = "0.11.0"
 num-derive = "0.4.2"
-#enumflags2 = "0.7.11"
 
 [dependencies.line_drawing]
-#git = "https://github.com/pantsman0/line_drawing"
-#branch = "master"
 optional = true
 version = "1.0.1"
 
@@ -68,7 +65,3 @@ fs = ["services"]
 input = ["services"]
 la = ["services"]
 rand = ["services", "dep:rand"]
-
-[lints.rust]
-#missing_docs = "warn"
-#unsafe_op_in_unsafe_fn = "deny"

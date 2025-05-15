@@ -3,7 +3,7 @@
 use alloc::sync::Arc;
 pub use rand::{Rng, RngCore};
 
-/// Represents a psudo-RNG
+/// Represents a pseudo-RNG
 use crate::ipc::sf::Buffer;
 use crate::result::*;
 use crate::service;
