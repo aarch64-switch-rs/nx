@@ -18,7 +18,9 @@ impl Logger for LmLogger {
             logger: service::new_service_object::<LoggingService>()
                 .map(|mut log_srv| {
                     log_srv.open_logger(
-                        svc::get_process_id(svc::CURRENT_PROCESS_PSEUDO_HANDLE).unwrap(),
+                        // The standard logging service doesn't use the provided value,
+                        // so just use a dummy value.
+                        0,
                     ).ok()
                 })
                 .ok().flatten()
