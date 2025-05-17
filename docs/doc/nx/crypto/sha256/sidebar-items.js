@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"constant":["BLOCK_SIZE","BLOCK_SIZE_32","HASH_SIZE","HASH_SIZE_32"],"fn":["calculate_hash"],"struct":["Context"]};

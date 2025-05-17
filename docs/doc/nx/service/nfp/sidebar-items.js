@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":["Debug","DebugManager","System","SystemManager","User","UserManager"]};

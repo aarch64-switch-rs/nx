@@ -1,185 +1,205 @@
 //! Allocator implementation and definitions
 
 use crate::result::*;
+use crate::svc;
 use crate::util::PointerAndSize;
-use crate::sync;
-use core::ptr;
-use core::mem;
 
+use core::mem;
+use core::mem::ManuallyDrop;
+use core::ops::Index;
+use core::ops::IndexMut;
+use core::ptr;
+use core::ptr::NonNull;
 extern crate alloc;
-use alloc::alloc::GlobalAlloc;
+use alloc::alloc::Allocator;
+
+use alloc::alloc::Global;
 pub use alloc::alloc::Layout;
 
 pub const PAGE_ALIGNMENT: usize = 0x1000;
 
 pub mod rc;
 
+use alloc::alloc::AllocError;
+
+impl From<AllocError> for ResultCode {
+    fn from(_value: AllocError) -> Self {
+        ResultCode::new(rc::ResultOutOfMemory::get_value())
+    }
+}
+
+#[linkage = "weak"]
+pub static HEAP_SIZE: usize = 0;
+
+/// Default implementation
+#[linkage = "weak"]
+pub fn configure_heap(heap_override: PointerAndSize) -> PointerAndSize {
+    if heap_override.is_valid() {
+        heap_override
+    } else {
+        let heap_size = match heap_override.size {
+            0 => {
+                let mem_available = svc::get_info(
+                    svc::InfoId::TotalMemorySize,
+                    svc::CURRENT_PROCESS_PSEUDO_HANDLE,
+                    0,
+                )
+                .unwrap();
+                let mem_used = svc::get_info(
+                    svc::InfoId::UsedMemorySize,
+                    svc::CURRENT_PROCESS_PSEUDO_HANDLE,
+                    0,
+                )
+                .unwrap();
+                if mem_available > mem_used + 0x200000 {
+                    ((mem_available - mem_used - 0x200000) & !0x1FFFFF) as usize
+                } else {
+                    (0x2000000 * 16) as usize
+                }
+            }
+            non_zero => non_zero,
+        };
+
+        let heap_addr = svc::set_heap_size(heap_size).unwrap();
+        debug_assert!(
+            !heap_addr.is_null(),
+            "Received null heap address after requesting from the kernel"
+        );
+
+        let (heap_metadata, _) = svc::query_memory(heap_addr).unwrap();
+        if !heap_metadata
+            .permission
+            .contains(svc::MemoryPermission::Read() | svc::MemoryPermission::Write())
+        {
+            unsafe {
+                svc::set_memory_permission(
+                    heap_addr,
+                    heap_size,
+                    svc::MemoryPermission::Read() | svc::MemoryPermission::Write(),
+                )
+                .unwrap();
+            }
+        }
+
+        PointerAndSize::new(heap_addr, heap_size)
+    }
+}
+
 // TODO: be able to change the global allocator?
 
 /// Represents a heap allocator for this library
-pub trait Allocator {
-    /// Allocates memory
-    /// 
-    /// # Arguments
-    /// 
-    /// * `layout`: The memory layout
-    fn allocate(&mut self, layout: Layout) -> Result<*mut u8>;
-
-    /// Releases memory
-    /// 
-    /// # Arguments
-    /// 
-    /// * `addr`: The memory address
-    /// * `layout`: The memory layout
-    fn release(&mut self, addr: *mut u8, layout: Layout);
-
+/// # Safety
+///
+/// As with the regular Allocator trait, the `delete` function can only be called on pointers produced by the same implementation's `new`
+pub unsafe trait AllocatorEx: Allocator {
     /// Allocates a new heap value
-    fn new<T>(&mut self) -> Result<*mut T> {
+    #[allow(clippy::new_ret_no_self)]
+    #[allow(clippy::wrong_self_convention)]
+    fn new<T>(&self) -> Result<NonNull<T>> {
         let layout = Layout::new::<T>();
-        self.allocate(layout).map(|ptr| ptr as *mut T)
+        match self.allocate(layout) {
+            Ok(allocation) => Ok(allocation.cast()),
+            Err(_) => rc::ResultOutOfMemory::make_err(),
+        }
     }
 
     /// Releases a heap value
-    /// 
-    /// The value must have been created using [`Allocator::new`]
-    /// 
+    ///
+    /// The value must have been created using [`AllocatorEx::new`]
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `t`: Heap value address
-    fn delete<T>(&mut self, t: *mut T) {
+    fn delete<T>(&self, t: *mut T) {
         let layout = Layout::new::<T>();
-        self.release(t as *mut u8, layout);
+        unsafe { self.deallocate(NonNull::new_unchecked(t.cast()), layout) };
     }
 }
 
-extern crate linked_list_allocator;
-use linked_list_allocator::Heap as LinkedListAllocator;
-
-impl Allocator for LinkedListAllocator {
-    fn allocate(&mut self, layout: Layout) -> Result<*mut u8> {
-        match self.allocate_first_fit(layout) {
-            Ok(non_null_addr) => Ok(non_null_addr.as_ptr()),
-            Err(_) => rc::ResultOutOfMemory::make_err()
-        }
-    }
-
-    fn release(&mut self, addr: *mut u8, layout: Layout) {
-        if !addr.is_null() {
-            unsafe {
-                self.deallocate(ptr::NonNull::new_unchecked(addr), layout);
-            }
-        }
-    }
-}
-
-unsafe impl<A: Allocator> GlobalAlloc for sync::Locked<A> {
-    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        self.get().allocate(layout).unwrap()
-    }
-
-    unsafe fn dealloc(&self, addr: *mut u8, layout: Layout) {
-        self.get().release(addr, layout);
-    }
-}
+unsafe impl AllocatorEx for Global {}
 
 #[global_allocator]
-static mut G_ALLOCATOR_HOLDER: sync::Locked<LinkedListAllocator> = sync::Locked::new(false, LinkedListAllocator::empty());
-static mut G_ALLOCATOR_ENABLED: bool = false;
+static GLOBAL_ALLOCATOR: linked_list_allocator::LockedHeap =
+    linked_list_allocator::LockedHeap::empty();
 
-/// Initializes the global allocator with the given address and size
-/// 
+/// Initializes the global allocator with the given address and size.
+/// Returns a bool to indicate if the memory was consumed by the allocator
+///
 /// # Arguments
-/// 
+///
 /// * `heap`: The heap address and size
-pub fn initialize(heap: PointerAndSize) {
-    unsafe {
-        G_ALLOCATOR_HOLDER.get().init(heap.address, heap.size);
-        G_ALLOCATOR_ENABLED = true;
-    }
+pub fn initialize(heap: PointerAndSize) -> bool {
+    unsafe { GLOBAL_ALLOCATOR.lock().init(heap.address, heap.size) };
+    false
 }
-
-/*
-pub(crate) fn set_enabled(enabled: bool) {
-    unsafe {
-        G_ALLOCATOR_ENABLED = enabled;
-    }
-}
-*/
 
 /// Gets whether heap allocations are enabled
-/// 
+///
 /// The library may internally disable them in exceptional cases: for instance, to avoid exception handlers to allocate heap memory if the exception cause is actually an OOM situation
 pub fn is_enabled() -> bool {
-    unsafe {
-        G_ALLOCATOR_ENABLED
-    }
-}
-
-/// Allocates heap memory using the global allocator
-/// 
-/// # Arguments
-/// 
-/// * `align`: The memory alignment
-/// * `size`: The memory size
-pub fn allocate(align: usize, size: usize) -> Result<*mut u8> {
-    unsafe {
-        let layout = Layout::from_size_align_unchecked(size, align);
-        G_ALLOCATOR_HOLDER.get().allocate(layout)
-    }
-}
-
-/// Releases allocated memory
-/// 
-/// # Arguments
-/// 
-/// * `addr`: The memory address
-/// * `align`: The memory alignment
-/// * `size`: The memory size
-pub fn release(addr: *mut u8, align: usize, size: usize) {
-    unsafe {
-        let layout = Layout::from_size_align_unchecked(size, align);
-        G_ALLOCATOR_HOLDER.get().release(addr, layout);
-    }
-}
-
-/// Creates a new heap value using the global allocator
-pub fn new<T>() -> Result<*mut T> {
-    unsafe {
-        G_ALLOCATOR_HOLDER.get().new::<T>()
-    }
-}
-
-/// Deletes a heap value
-/// 
-/// The value must have been created using the global allocator
-/// 
-/// # Arguments
-/// 
-/// * `t`: The heap value
-pub fn delete<T>(t: *mut T) {
-    unsafe {
-        G_ALLOCATOR_HOLDER.get().delete(t);
-    }
+    let alloc_guard = GLOBAL_ALLOCATOR.lock();
+    alloc_guard.size() != 0
 }
 
 /// Represents a wrapped and manually managed heap value
-/// 
+///
 /// Note that a [`Buffer`] is able to hold both a single value or an array of values of the provided type
-pub struct Buffer<T> {
+pub struct Buffer<T, A: Allocator = Global> {
     /// The actual heap value
     pub ptr: *mut T,
     /// The memory's layout
-    pub layout: Layout
+    pub layout: Layout,
+    /// The allocator used to request the buffer
+    allocator: A,
 }
 
-impl<T> Buffer<T> {
+impl <T> Buffer<T> {
+    /// Creates a new [`Buffer`] using the global allocator
+    ///
+    /// # Arguments
+    ///
+    /// * `align`: The align to use
+    /// * `count`: The count of values to allocate
+    pub fn new(align: usize, count: usize) -> Result<Self> {
+        let layout = Layout::from_size_align(count * mem::size_of::<T>(), align)
+            .map_err(|_| ResultCode::new(rc::ResultLayoutError::get_value()))?;
+        let allocator = Global;
+        let ptr = allocator.allocate(layout)?.as_ptr().cast();
+        Ok(Self {
+            ptr,
+            layout,
+            allocator,
+        })
+    }
+
     /// Creates a new, invalid [`Buffer`]
     #[inline]
     pub const fn empty() -> Self {
         Self {
             ptr: ptr::null_mut(),
-            layout: Layout::new::<u8>() // Dummy value
+            layout: Layout::new::<u8>(), // Dummy value
+            allocator: Global,
         }
+    }
+}
+
+impl<T, A: Allocator> Buffer<T, A> {
+    /// Creates a new [`Buffer`] using a given allocator
+    ///
+    /// # Arguments
+    ///
+    /// * `align`: The align to use
+    /// * `count`: The count of values to allocate
+    /// * `allocator`: The allocator to use
+    pub fn new_in(align: usize, count: usize, allocator: A) -> Result<Self> {
+        let layout = Layout::from_size_align(count * mem::size_of::<T>(), align)
+            .map_err(|_| ResultCode::new(rc::ResultLayoutError::get_value()))?;
+        let ptr = allocator.allocate(layout)?.as_ptr().cast();
+        Ok(Self {
+            ptr,
+            layout,
+            allocator,
+        })
     }
 
     /// Gets whether this [`Buffer`] is valid
@@ -188,48 +208,67 @@ impl<T> Buffer<T> {
         !self.ptr.is_null()
     }
 
-    /// Creates a new [`Buffer`] using the global allocator
-    /// 
-    /// # Arguments
-    /// 
-    /// * `align`: The align to use
-    /// * `count`: The count of values to allocate
-    pub fn new(align: usize, count: usize) -> Result<Self> {
-        let size = count * mem::size_of::<T>();
-        let ptr = allocate(align, size)? as *mut T;
-        Ok(Self {
-            ptr,
-            layout: unsafe {
-                Layout::from_size_align_unchecked(size, align)
-            }
-        })
+    pub fn into_raw(value: Self) -> *mut [T] {
+        let no_drop = ManuallyDrop::new(value);
+        core::ptr::slice_from_raw_parts_mut(
+            no_drop.ptr,
+            no_drop.layout.size() / mem::size_of::<T>(),
+        )
     }
-
-    /// Creates a new [`Buffer`] using a given allocator
-    /// 
-    /// # Arguments
-    /// 
-    /// * `align`: The align to use
-    /// * `count`: The count of values to allocate
-    /// * `allocator`: The allocator
-    pub fn new_alloc<A: Allocator>(align: usize, count: usize, allocator: &mut A) -> Result<Self> {
-        let size = count * mem::size_of::<T>();
-        let layout = unsafe {
-            Layout::from_size_align_unchecked(size, align)
-        };
-        let ptr = allocator.allocate(layout)? as *mut T;
-
-        Ok(Self {
-            ptr,
-            layout
-        })
-    }
-
+    
     /// Releases the [`Buffer`]
-    /// 
+    ///
     /// The [`Buffer`] becomes invalid after this
-    pub fn release(&mut self) {
-        release(self.ptr as *mut u8, self.layout.align(), self.layout.size());
-        *self = Self::empty();
+    /// 
+    /// # Safety
+    /// 
+    /// The buffer must never be read after this, as the internal buffer pointer is wiped. The buffer must also be for
+    pub unsafe fn release(&mut self) {
+        if self.is_valid() {
+            unsafe {
+                self.allocator
+                    .deallocate(NonNull::new_unchecked(self.ptr.cast()), self.layout);
+            }
+            self.ptr = core::ptr::null_mut();
+        }
+    }
+}
+
+impl<T> Index<usize> for Buffer<T> {
+    type Output = T;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        assert!(self.is_valid(), "Indexing into invalid buffer");
+        assert!(
+            index <= (self.layout.size() / size_of::<T>()),
+            "Index out of bounds."
+        );
+
+        // SAFETY - we check that this pointer is valid via the two asserts above
+        unsafe { self.ptr.add(index).as_ref().unwrap_unchecked() }
+    }
+}
+
+impl<T> IndexMut<usize> for Buffer<T> {
+    fn index_mut(&mut self, index: usize) -> &mut T {
+        assert!(self.is_valid(), "Indexing into invalid buffer");
+        assert!(
+            index <= (self.layout.size() / size_of::<T>()),
+            "Index out of bounds."
+        );
+
+        // SAFETY - we check that this pointer is valid via the two asserts above
+        unsafe { self.ptr.add(index).as_mut().unwrap_unchecked() }
+    }
+}
+
+impl<T, A: Allocator> Drop for Buffer<T, A> {
+    fn drop(&mut self) {
+        if self.is_valid() {
+            unsafe {
+                self.allocator
+                    .deallocate(NonNull::new_unchecked(self.ptr.cast()), self.layout);
+            }
+        }
     }
 }

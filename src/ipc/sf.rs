@@ -1,22 +1,56 @@
 use super::*;
-use crate::version;
-use alloc::vec::Vec;
-use alloc::string::String;
+use crate::util;
+use alloc::{string::{String, ToString}, vec::Vec};
 
-pub struct Buffer<const A: BufferAttribute, T> {
+pub use nx_derive::{Request, Response};
+
+pub struct Buffer<
+    const IN: bool,
+    const OUT: bool,
+    const MAP_ALIAS: bool,
+    const POINTER: bool,
+    const FIXED_SIZE: bool,
+    const AUTO_SELECT: bool,
+    const ALLOW_NON_SECURE: bool,
+    const ALLOW_NON_DEVICE: bool,
+    T,
+> {
     buf: *mut T,
-    count: usize
+    count: usize,
 }
 
-impl<const A: BufferAttribute, T> Buffer<A, T> {
+impl<
+        const IN: bool,
+        const OUT: bool,
+        const MAP_ALIAS: bool,
+        const POINTER: bool,
+        const FIXED_SIZE: bool,
+        const AUTO_SELECT: bool,
+        const ALLOW_NON_SECURE: bool,
+        const ALLOW_NON_DEVICE: bool,
+        T,
+    >
+    Buffer<
+        IN,
+        OUT,
+        MAP_ALIAS,
+        POINTER,
+        FIXED_SIZE,
+        AUTO_SELECT,
+        ALLOW_NON_SECURE,
+        ALLOW_NON_DEVICE,
+        T,
+    >
+{
     pub const fn get_expected_size() -> usize {
-        mem::size_of::<T>()
+        // Calculate align-padded size of each element in the buffer (in case a type has a larger alignment than its size)
+        util::const_usize_max(mem::size_of::<T>(), mem::align_of::<T>())
     }
 
     pub const fn empty() -> Self {
         Self {
             buf: ptr::null_mut(),
-            count: 0
+            count: 0,
         }
     }
 
@@ -25,22 +59,19 @@ impl<const A: BufferAttribute, T> Buffer<A, T> {
     pub const fn new(addr: *mut u8, size: usize) -> Self {
         Self {
             buf: addr as *mut T,
-            count: size / Self::get_expected_size()
+            count: size / Self::get_expected_size(),
         }
     }
-    
+
     pub const fn from_ptr(buf: *const T, count: usize) -> Self {
         Self {
             buf: buf as *mut T,
-            count
+            count,
         }
     }
 
     pub const fn from_mut_ptr(buf: *mut T, count: usize) -> Self {
-        Self {
-            buf,
-            count
-        }
+        Self { buf, count }
     }
 
     pub const fn from_var(var: &T) -> Self {
@@ -54,11 +85,17 @@ impl<const A: BufferAttribute, T> Buffer<A, T> {
     // TODO: ensure sizeof(T) is a multiple of sizeof(U)
 
     pub const fn from_other_var<U>(var: &U) -> Self {
-        Self::from_ptr(var as *const U as *const T, mem::size_of::<U>() / Self::get_expected_size())
+        Self::from_ptr(
+            var as *const U as *const T,
+            mem::size_of::<U>() / Self::get_expected_size(),
+        )
     }
 
     pub const fn from_other_mut_var<U>(var: &mut U) -> Self {
-        Self::from_mut_ptr(var as *mut U as *mut T, mem::size_of::<U>() / Self::get_expected_size())
+        Self::from_mut_ptr(
+            var as *mut U as *mut T,
+            mem::size_of::<U>() / Self::get_expected_size(),
+        )
     }
 
     pub const fn from_array(arr: &[T]) -> Self {
@@ -69,12 +106,45 @@ impl<const A: BufferAttribute, T> Buffer<A, T> {
         Self::from_mut_ptr(arr.as_mut_ptr(), arr.len())
     }
 
-    pub const fn from_other<const A2: BufferAttribute, U>(other: &Buffer<A2, U>) -> Self {
+    /// Converts a Buffer from one flag set to another
+    /// 
+    /// # Arguments:
+    /// 
+    /// * `other`: The other buffer to clone
+    /// 
+    /// # Safety
+    /// 
+    /// Since this clones the raw pointer, this can be used to get 2 mutable references to the same data.
+    /// The caller _MUST_ ensure that only one the passed `other` buffer or the produced buffer is ever
+    /// read/written while the other is alive.
+    pub(crate) const unsafe fn from_other<
+        const IN2: bool,
+        const OUT2: bool,
+        const MAP_ALIAS2: bool,
+        const POINTER2: bool,
+        const FIXED_SIZE2: bool,
+        const AUTO_SELECT2: bool,
+        const ALLOW_NON_SECURE2: bool,
+        const ALLOW_NON_DEVICE2: bool,
+        U,
+    >(
+        other: &Buffer<
+            IN2,
+            OUT2,
+            MAP_ALIAS2,
+            POINTER2,
+            FIXED_SIZE2,
+            AUTO_SELECT2,
+            ALLOW_NON_SECURE2,
+            ALLOW_NON_DEVICE2,
+            U,
+        >,
+    ) -> Self {
         Self::new(other.get_address(), other.get_size())
     }
 
     pub const fn get_address(&self) -> *mut u8 {
-        self.buf as *mut u8
+        self.buf.cast()
     }
 
     pub const fn get_size(&self) -> usize {
@@ -86,88 +156,157 @@ impl<const A: BufferAttribute, T> Buffer<A, T> {
     }
 
     pub const fn get_var(&self) -> &T {
-        unsafe {
-            &*(self.buf as *const T)
-        }
+        unsafe { self.buf.as_ref().unwrap()}
     }
 
-    pub fn get_mut_var(&self) -> &mut T {
-        unsafe {
-            &mut *self.buf
-        }
+    pub fn get_mut_var(&mut self) -> &mut T {
+        unsafe { self.buf.as_mut().unwrap() }
     }
 
     pub fn set_var(&mut self, t: T) {
         unsafe {
-            *self.buf = t;
+            *self.buf.as_mut().unwrap()= t;
         }
     }
 
-    pub fn get_slice(&self) -> &[T] {
-        unsafe {
-            core::slice::from_raw_parts(self.buf as *const T, self.count)
+    pub fn get_maybe_unaligned(&self) -> Vec<T> {
+        assert!(!self.buf.is_null());
+        let mut out = Vec::with_capacity(self.count);
+        for index in 0..self.count {
+            // SAFETY: we have already asserted on non-null `self.buf`
+            out.push(unsafe { core::ptr::read_unaligned(self.buf.add(index)) });
         }
+
+        out
     }
 
-    pub fn get_mut_slice(&self) -> &mut [T] {
-        unsafe {
-            core::slice::from_raw_parts_mut(self.buf, self.count)
-        }
+    pub fn as_slice(&self) -> Result<&[T]> {
+        result_return_unless!(self.buf.is_aligned() && !self.buf.is_null(), rc::ResultInvalidBufferPointer);
+        Ok(unsafe { core::slice::from_raw_parts(self.buf, self.count) })
     }
 }
 
-impl<const A: BufferAttribute> Buffer<A, u8> {
-    pub fn get_string(&self) -> String {
-        unsafe {
-            let mut string = String::with_capacity(self.count);
-            for i in 0..self.count {
-                let cur_char = *self.buf.add(i) as char;
-                if cur_char == '\0' {
-                    break;
-                }
-                string.push(cur_char);
-            }
-            string
-        }
+impl<
+        const IN: bool,
+        const MAP_ALIAS: bool,
+        const POINTER: bool,
+        const FIXED_SIZE: bool,
+        const AUTO_SELECT: bool,
+        const ALLOW_NON_SECURE: bool,
+        const ALLOW_NON_DEVICE: bool,
+        T,
+    >
+    Buffer<
+        IN,
+        true,
+        MAP_ALIAS,
+        POINTER,
+        FIXED_SIZE,
+        AUTO_SELECT,
+        ALLOW_NON_SECURE,
+        ALLOW_NON_DEVICE,
+        T,
+    >
+{
+    pub fn as_slice_mut(&mut self) -> Result<&mut [T]> {
+        result_return_unless!(self.buf.is_aligned() && !self.buf.is_null(), rc::ResultInvalidBufferPointer);
+        Ok(unsafe { core::slice::from_raw_parts_mut(self.buf, self.count) })
     }
+}
 
+impl<
+        const IN: bool,
+        const OUT: bool,
+        const MAP_ALIAS: bool,
+        const POINTER: bool,
+        const FIXED_SIZE: bool,
+        const AUTO_SELECT: bool,
+        const ALLOW_NON_SECURE: bool,
+        const ALLOW_NON_DEVICE: bool,
+    >
+    Buffer<
+        IN,
+        OUT,
+        MAP_ALIAS,
+        POINTER,
+        FIXED_SIZE,
+        AUTO_SELECT,
+        ALLOW_NON_SECURE,
+        ALLOW_NON_DEVICE,
+        u8,
+    >
+{
+    pub fn get_string(&self) -> String {
+        let cstr = unsafe {core::ffi::CStr::from_ptr(self.buf as _)};
+
+        String::from_utf8_lossy(cstr.to_bytes()).to_string()
+    }
+}
+
+impl<
+        const IN: bool,
+        const MAP_ALIAS: bool,
+        const POINTER: bool,
+        const FIXED_SIZE: bool,
+        const AUTO_SELECT: bool,
+        const ALLOW_NON_SECURE: bool,
+        const ALLOW_NON_DEVICE: bool,
+    >
+    Buffer<
+        IN,
+        true,
+        MAP_ALIAS,
+        POINTER,
+        FIXED_SIZE,
+        AUTO_SELECT,
+        ALLOW_NON_SECURE,
+        ALLOW_NON_DEVICE,
+        u8,
+    >
+{
     pub fn set_string(&mut self, string: String) {
         unsafe {
             // First memset to zero so that it will be a valid nul-terminated string
-            core::ptr::write_bytes(self.buf as *mut u8, 0, self.count);
-            core::ptr::copy(string.as_ptr(), self.buf as *mut u8, core::cmp::min(self.count - 1, string.len()));
+            core::ptr::write_bytes(self.buf, 0, self.count);
+            core::ptr::copy(
+                string.as_ptr(),
+                self.buf,
+                core::cmp::min(self.count - 1, string.len()),
+            );
         }
     }
 }
 
-pub type InMapAliasBuffer<T> = Buffer<{bit_group!{ BufferAttribute [In, MapAlias] }}, T>;
-pub type OutMapAliasBuffer<T> = Buffer<{bit_group!{ BufferAttribute [Out, MapAlias] }}, T>;
-pub type InNonSecureMapAliasBuffer<T> = Buffer<{bit_group!{ BufferAttribute [In, MapAlias, MapTransferAllowsNonSecure] }}, T>;
-pub type OutNonSecureMapAliasBuffer<T> = Buffer<{bit_group!{ BufferAttribute [Out, MapAlias, MapTransferAllowsNonSecure] }}, T>;
-pub type InAutoSelectBuffer<T> = Buffer<{bit_group!{ BufferAttribute [In, AutoSelect] }}, T>;
-pub type OutAutoSelectBuffer<T> = Buffer<{bit_group!{ BufferAttribute [Out, AutoSelect] }}, T>;
-pub type InPointerBuffer<T> = Buffer<{bit_group!{ BufferAttribute [In, Pointer] }}, T>;
-pub type OutPointerBuffer<T> = Buffer<{bit_group!{ BufferAttribute [Out, Pointer] }}, T>;
-pub type InFixedPointerBuffer<T> = Buffer<{bit_group!{ BufferAttribute [In, Pointer, FixedSize] }}, T>;
-pub type OutFixedPointerBuffer<T> = Buffer<{bit_group!{ BufferAttribute [Out, Pointer, FixedSize] }}, T>;
+pub type InMapAliasBuffer<T> = Buffer<true, false, true, false, false, false, false, false, T>;
+pub type OutMapAliasBuffer<T> = Buffer<false, true, true, false, false, false, false, false, T>;
+pub type InNonSecureMapAliasBuffer<T> =
+    Buffer<true, false, true, false, false, false, true, false, T>;
+pub type OutNonSecureMapAliasBuffer<T> =
+    Buffer<false, true, true, false, false, false, true, false, T>;
+pub type InAutoSelectBuffer<T> = Buffer<true, false, false, false, false, true, false, false, T>;
+pub type OutAutoSelectBuffer<T> = Buffer<false, true, false, false, false, true, false, false, T>;
+pub type InPointerBuffer<T> = Buffer<true, false, false, true, false, false, false, false, T>;
+pub type OutPointerBuffer<T> = Buffer<false, true, false, true, false, false, false, false, T>;
+pub type InFixedPointerBuffer<T> = Buffer<true, false, false, true, true, false, false, false, T>;
+pub type OutFixedPointerBuffer<T> = Buffer<false, true, false, true, true, false, false, false, T>;
 
 #[derive(Clone)]
-pub struct Handle<const M: HandleMode> {
-    pub handle: svc::Handle
+pub struct Handle<const MOVE: bool> {
+    pub handle: svc::Handle,
 }
 
-impl<const M: HandleMode> Handle<M> {
+impl<const MOVE: bool> Handle<MOVE> {
     pub const fn from(handle: svc::Handle) -> Self {
         Self { handle }
     }
 }
 
-pub type CopyHandle = Handle<{HandleMode::Copy}>;
-pub type MoveHandle = Handle<{HandleMode::Move}>;
+pub type CopyHandle = Handle<false>;
+pub type MoveHandle = Handle<true>;
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct ProcessId {
-    pub process_id: u64
+    pub process_id: u64,
 }
 
 impl ProcessId {
@@ -175,8 +314,43 @@ impl ProcessId {
         Self { process_id }
     }
 
-    pub const fn new() -> ProcessId {
-        Self::from(0)
+    pub const fn new() -> Self {
+        Self { process_id: 0 }
+    }
+}
+
+/// AppletResourceUserIds are restricted to the values of zero, or the process' PID.
+/// When they are sent over an IPC interface, they also trigger the sending of a PID descriptor in the HIPC request,
+/// so there is an additional field for the PID. This field is filled in by the kernel during a request, and is read
+/// out of the headers in the same way as the `ProcessId`[`ProcessId`] above.
+///
+/// This allows the crate to just send the `AppletResourceUserId` object when the IPC interface is expecting this value
+/// and the `send_pid` flag. This also allows us to have a `ProcessId` type that creates it's own pid placeholder in CMIF
+/// IPC requests.
+#[derive(Clone, Default)]
+pub struct AppletResourceUserId {
+    pub process_id: u64,
+    pub aruid: u64,
+}
+
+impl AppletResourceUserId {
+    pub const fn from(process_id: u64, aruid: u64) -> Self {
+        Self { process_id, aruid }
+    }
+
+    #[cfg(feature = "services")]
+    pub fn from_global() -> Self {
+        Self {
+            process_id: 0,
+            aruid: nx::service::applet::GLOBAL_ARUID.load(core::sync::atomic::Ordering::SeqCst),
+        }
+    }
+
+    pub const fn new(aruid: u64) -> Self {
+        Self {
+            process_id: 0,
+            aruid,
+        }
     }
 }
 
@@ -186,20 +360,16 @@ impl ProcessId {
 #[repr(C)]
 pub union EnumAsPrimitiveType<E: Copy + Clone, T: Copy + Clone> {
     val: T,
-    enum_val: E
+    enum_val: E,
 }
 
 impl<E: Copy + Clone, T: Copy + Clone> EnumAsPrimitiveType<E, T> {
     pub fn from(enum_val: E) -> Self {
-        Self {
-            enum_val
-        }
+        Self { enum_val }
     }
 
     pub fn from_val(val: T) -> Self {
-        Self {
-            val
-        }
+        Self { val }
     }
 
     pub fn get(&self) -> E {
@@ -219,19 +389,82 @@ impl<E: Copy + Clone, T: Copy + Clone> EnumAsPrimitiveType<E, T> {
     }
 }
 
+impl<E: Copy + Clone, T: Copy + Clone> server::RequestCommandParameter<EnumAsPrimitiveType<E, T>>
+    for EnumAsPrimitiveType<E, T>
+{
+    fn after_request_read(ctx: &mut server::ServerContext) -> Result<Self> {
+        Ok(ctx.raw_data_walker.advance_get())
+    }
+}
+
+impl<E: Copy + Clone, T: Copy + Clone> server::ResponseCommandParameter
+    for EnumAsPrimitiveType<E, T>
+{
+    type CarryState = ();
+    fn before_response_write(_raw: &Self, ctx: &mut server::ServerContext) -> Result<()> {
+        ctx.raw_data_walker.advance::<Self>();
+        Ok(())
+    }
+
+    fn after_response_write(
+        raw: Self,
+        _carry_state: (),
+        ctx: &mut server::ServerContext,
+    ) -> Result<()> {
+        ctx.raw_data_walker.advance_set(raw);
+        Ok(())
+    }
+}
+
+impl<E: Copy + Clone, T: Copy + Clone> client::RequestCommandParameter
+    for EnumAsPrimitiveType<E, T>
+{
+    fn before_request_write(
+        _raw: &Self,
+        walker: &mut crate::ipc::DataWalker,
+        _ctx: &mut crate::ipc::CommandContext,
+    ) -> crate::result::Result<()> {
+        walker.advance::<Self>();
+        Ok(())
+    }
+
+    fn before_send_sync_request(
+        raw: &Self,
+        walker: &mut crate::ipc::DataWalker,
+        _ctx: &mut crate::ipc::CommandContext,
+    ) -> crate::result::Result<()> {
+        walker.advance_set(*raw);
+        Ok(())
+    }
+}
+
+impl<E: Copy + Clone, T: Copy + Clone> client::ResponseCommandParameter<EnumAsPrimitiveType<E, T>>
+    for EnumAsPrimitiveType<E, T>
+{
+    fn after_response_read(
+        walker: &mut crate::ipc::DataWalker,
+        _ctx: &mut crate::ipc::CommandContext,
+    ) -> crate::result::Result<Self> {
+        Ok(walker.advance_get())
+    }
+}
+
+#[derive(Default)]
 pub struct Session {
-    pub object_info: ObjectInfo
+    pub object_info: ObjectInfo,
 }
 
 impl Session {
-    pub const fn new() -> Self  {
-        Self { object_info: ObjectInfo::new() }
+    pub const fn new() -> Self {
+        Self {
+            object_info: ObjectInfo::new(),
+        }
     }
 
     pub const fn from(object_info: ObjectInfo) -> Self {
         Self { object_info }
     }
-    
+
     pub const fn from_handle(handle: svc::Handle) -> Self {
         Self::from(ObjectInfo::from_handle(handle))
     }
@@ -253,15 +486,22 @@ impl Session {
         if self.object_info.is_valid() {
             if self.object_info.is_domain() {
                 let mut ctx = CommandContext::new_client(self.object_info);
-                cmif::client::write_request_command_on_msg_buffer(&mut ctx, None, cmif::DomainCommandType::Close);
+                cmif::client::write_request_command_on_msg_buffer(
+                    &mut ctx,
+                    None,
+                    cmif::DomainCommandType::Close,
+                );
                 let _ = svc::send_sync_request(self.object_info.handle);
-            }
-            else if self.object_info.owns_handle {
+            } else if self.object_info.owns_handle {
                 let mut ctx = CommandContext::new_client(self.object_info);
-                
+
                 match self.object_info.protocol {
-                    CommandProtocol::Cmif => cmif::client::write_close_command_on_msg_buffer(&mut ctx),
-                    CommandProtocol::Tipc => tipc::client::write_close_command_on_msg_buffer(&mut ctx)
+                    CommandProtocol::Cmif => {
+                        cmif::client::write_close_command_on_msg_buffer(&mut ctx)
+                    }
+                    CommandProtocol::Tipc => {
+                        tipc::client::write_close_command_on_msg_buffer(&mut ctx)
+                    }
                 };
 
                 let _ = svc::send_sync_request(self.object_info.handle);
@@ -277,46 +517,6 @@ impl Session {
 impl Drop for Session {
     fn drop(&mut self) {
         self.close();
-    }
-}
-
-pub struct CommandMetadata {
-    pub rq_id: u32,
-    pub command_fn: server::CommandFn,
-    pub ver_intv: version::VersionInterval
-}
-
-pub type CommandMetadataTable = Vec<CommandMetadata>;
-
-impl CommandMetadata {
-    pub const fn new(rq_id: u32, command_fn: server::CommandFn, ver_intv: version::VersionInterval) -> Self {
-        Self {
-            rq_id,
-            command_fn,
-            ver_intv
-        }
-    }
-
-    pub fn matches(&self, rq_id: u32) -> bool {
-        let cur_ver = version::get_version();
-        (self.rq_id == rq_id) && self.ver_intv.contains(cur_ver)
-    }
-}
-
-// This trait is analogous to N's nn::sf::IServiceObject type - the base trait for any kind of IPC interface
-// IClientObject / {IService, INamedPort} (on client module) and ISessionObject / {IServerObject, IMitmServerObject} (on server module) are superior types for specific kind of objects
-
-// TODO: make use of the command metadata on client side too (for instance for checking if the command is valid on the current system version, etc.)
-// TODO: think of a proper way to migrate call_self_server_command / command_fn stuff to server and avoid it being on every single IObject?
-
-pub trait IObject {
-    fn get_session(&mut self) -> &mut Session;
-
-    fn get_command_metadata_table(&self) -> CommandMetadataTable;
-
-    fn call_self_server_command(&mut self, command_fn: server::CommandFn, protocol: CommandProtocol, ctx: &mut server::ServerContext) -> Result<()> {
-        let self_fn: server::CommandSpecificFn<Self> = unsafe { core::mem::transmute(command_fn) };
-        (self_fn)(self, protocol, ctx)
     }
 }
 

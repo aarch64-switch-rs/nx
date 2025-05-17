@@ -5,3 +5,4 @@
 _start:
 	b __nx_rrt0_entry
 	.word __module_header - _start
+	.ascii "HOMEBREW"

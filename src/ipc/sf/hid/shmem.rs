@@ -1,20 +1,81 @@
+use core::fmt::Debug;
+use core::mem::MaybeUninit;
+use core::ptr::addr_of;
+use core::sync::atomic::Ordering;
+use core::sync::atomic::{AtomicU64, AtomicUsize};
+
+use crate::svc::rc::ResultInvalidAddress;
+
 use super::*;
 
 pub const SHMEM_SIZE: usize = 0x40000;
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]
-pub struct RingLifo<T: Copy, const S: usize> {
+pub struct RingLifo<T: Copy + Clone + Debug, const S: usize> {
     pub vptr: u64,
-    pub buf_count: u64,
-    pub tail: u64,
-    pub count: u64,
-    pub items: [T; S]
+    pub buf_count: AtomicUsize,
+    pub tail: AtomicUsize,
+    pub count: AtomicUsize,
+    pub items: [AtomicSample<T>; S],
 }
 
-impl<T: Copy, const S: usize> RingLifo<T, S> {
-    pub fn get_tail_item(&self) -> &T {
-        &self.items[self.tail as usize]
+impl<T: Copy + Clone + Debug, const S: usize> core::fmt::Debug for RingLifo<T, S> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("RingLifo")
+            .field("vptr", &self.vptr)
+            .field("buf_count", &self.buf_count)
+            .field("tail", &self.tail)
+            .field("count", &self.count)
+            .field("items", &self.items)
+            .finish()
+    }
+}
+// Copy bound it important as we (and libnx) rely on the data being trivially copy-able to memcopy the data out.
+#[derive(Debug)]
+#[repr(C)]
+pub struct AtomicSample<T: Copy + Clone + Debug> {
+    pub sampling_size: AtomicU64,
+    pub storage: T,
+}
+
+/*
+impl<T: Debug> core::fmt::Debug for AtomicSample<T> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("LifoStorageAtomicContainer")
+        .field("sampling_size", &self.sampling_size.load(Ordering::Relaxed))
+        .field("storage", &self.storage)
+        .finish()
+    }
+} */
+
+impl<T: Copy + Debug, const S: usize> RingLifo<T, S> {
+    pub fn get_tail_item(&self) -> T {
+        let mut out_value: MaybeUninit<T> = MaybeUninit::uninit();
+        loop {
+            let tail_index = self.tail.load(Ordering::Acquire);
+            /*debug_assert!(
+                tail_index < self.count.load(Ordering::Acquire),
+                "We are somehow loading from a tail index that hasn't been written to yet."
+            );*/
+            let sampling_value_before =
+                self.items[tail_index].sampling_size.load(Ordering::Acquire);
+            // We read through a volatile pointer since it basically an uncached memcpy for our purposes.
+            // The read is safe, as it is being constructed from a valid reference.
+            unsafe {
+                out_value
+                    .as_mut_ptr()
+                    .write(core::ptr::read_volatile(addr_of!(
+                        self.items[tail_index].storage
+                    )))
+            };
+            if sampling_value_before == self.items[tail_index].sampling_size.load(Ordering::Acquire)
+            {
+                // the value hasn't been updated while we were reading it (split read)
+                break;
+            }
+        }
+        // we have successfully initialized the value slot, so we can unwrap it into the real type
+        unsafe { out_value.assume_init() }
     }
 }
 
@@ -25,21 +86,14 @@ pub struct DebugPadState {
     pub attrs: DebugPadAttribute,
     pub buttons: DebugPadButton,
     pub analog_stick_r: AnalogStickState,
-    pub analog_stick_l: AnalogStickState
+    pub analog_stick_l: AnalogStickState,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-#[repr(C)]
-pub struct DebugPadStateAtomicStorage {
-    pub sampling_number: u64,
-    pub state: DebugPadState
-}
-
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Debug)]
 #[repr(C)]
 pub struct DebugPadSharedMemoryFormat {
-    pub lifo: RingLifo<DebugPadStateAtomicStorage, 17>,
-    pub pad: [u8; 0x138]
+    pub lifo: RingLifo<DebugPadState, 17>,
+    pub pad: [u8; 0x138],
 }
 const_assert!(core::mem::size_of::<DebugPadSharedMemoryFormat>() == 0x400);
 
@@ -49,21 +103,14 @@ pub struct TouchScreenState {
     pub sampling_number: u64,
     pub count: u32,
     pub reserved: [u8; 4],
-    pub touches: [TouchState; 16]
+    pub touches: [TouchState; 16],
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-#[repr(C)]
-pub struct TouchScreenStateAtomicStorage {
-    pub sampling_number: u64,
-    pub state: TouchScreenState
-}
-
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Debug)]
 #[repr(C)]
 pub struct TouchScreenSharedMemoryFormat {
-    pub lifo: RingLifo<TouchScreenStateAtomicStorage, 17>,
-    pub pad: [u8; 0x3C8]
+    pub lifo: RingLifo<TouchScreenState, 17>,
+    pub pad: [u8; 0x3C8],
 }
 const_assert!(core::mem::size_of::<TouchScreenSharedMemoryFormat>() == 0x3000);
 
@@ -78,21 +125,14 @@ pub struct MouseState {
     pub wheel_delta_x: u32,
     pub wheel_delta_y: u32,
     pub buttons: MouseButton,
-    pub attributes: MouseAttribute
+    pub attributes: MouseAttribute,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-#[repr(C)]
-pub struct MouseStateAtomicStorage {
-    pub sampling_number: u64,
-    pub state: MouseState
-}
-
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Debug)]
 #[repr(C)]
 pub struct MouseSharedMemoryFormat {
-    pub lifo: RingLifo<MouseStateAtomicStorage, 17>,
-    pub pad: [u8; 0xB0]
+    pub lifo: RingLifo<MouseState, 17>,
+    pub pad: [u8; 0xB0],
 }
 const_assert!(core::mem::size_of::<MouseSharedMemoryFormat>() == 0x400);
 
@@ -101,21 +141,14 @@ const_assert!(core::mem::size_of::<MouseSharedMemoryFormat>() == 0x400);
 pub struct KeyboardState {
     pub sampling_number: u64,
     pub modifiers: KeyboardModifier,
-    pub keys: KeyboardKey
+    pub keys: KeyboardKey,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-#[repr(C)]
-pub struct KeyboardStateAtomicStorage {
-    pub sampling_number: u64,
-    pub state: KeyboardState
-}
-
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Debug)]
 #[repr(C)]
 pub struct KeyboardSharedMemoryFormat {
-    pub lifo: RingLifo<KeyboardStateAtomicStorage, 17>,
-    pub pad: [u8; 0x28]
+    pub lifo: RingLifo<KeyboardState, 17>,
+    pub pad: [u8; 0x28],
 }
 const_assert!(core::mem::size_of::<KeyboardSharedMemoryFormat>() == 0x400);
 
@@ -126,27 +159,20 @@ pub struct BasicXpadState {
     pub attributes: BasicXpadAttribute,
     pub buttons: BasicXpadButton,
     pub analog_stick_l: AnalogStickState,
-    pub analog_stick_r: AnalogStickState
+    pub analog_stick_r: AnalogStickState,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-#[repr(C)]
-pub struct BasicXpadStateAtomicStorage {
-    pub sampling_number: u64,
-    pub state: BasicXpadState
-}
-
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Debug)]
 #[repr(C)]
 pub struct BasicXpadSharedMemoryEntry {
-    pub lifo: RingLifo<BasicXpadStateAtomicStorage, 17>,
-    pub pad: [u8; 0x138]
+    pub lifo: RingLifo<BasicXpadState, 17>,
+    pub pad: [u8; 0x138],
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Debug)]
 #[repr(C)]
 pub struct BasicXpadSharedMemoryFormat {
-    pub entries: [BasicXpadSharedMemoryEntry; 4]
+    pub entries: [BasicXpadSharedMemoryEntry; 4],
 }
 const_assert!(core::mem::size_of::<BasicXpadSharedMemoryFormat>() == 0x1000);
 
@@ -157,21 +183,14 @@ pub struct DigitizerState {
     pub unk_1: [u32; 2],
     pub attributes: DigitizerAttribute,
     pub buttons: DigitizerButton,
-    pub unk_2: [u32; 16]
+    pub unk_2: [u32; 16],
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-#[repr(C)]
-pub struct DigitizerStateAtomicStorage {
-    pub sampling_number: u64,
-    pub state: DigitizerState
-}
-
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Debug)]
 #[repr(C)]
 pub struct DigitizerSharedMemoryFormat {
-    pub lifo: RingLifo<DigitizerStateAtomicStorage, 17>,
-    pub pad: [u8; 0x980]
+    pub lifo: RingLifo<DigitizerState, 17>,
+    pub pad: [u8; 0x980],
 }
 const_assert!(core::mem::size_of::<DigitizerSharedMemoryFormat>() == 0x1000);
 
@@ -179,21 +198,14 @@ const_assert!(core::mem::size_of::<DigitizerSharedMemoryFormat>() == 0x1000);
 #[repr(C)]
 pub struct HomeButtonState {
     pub sampling_number: u64,
-    pub buttons: HomeButton
+    pub buttons: HomeButton,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-#[repr(C)]
-pub struct HomeButtonStateAtomicStorage {
-    pub sampling_number: u64,
-    pub state: HomeButtonState
-}
-
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Debug)]
 #[repr(C)]
 pub struct HomeButtonSharedMemoryFormat {
-    pub lifo: RingLifo<HomeButtonStateAtomicStorage, 17>,
-    pub pad: [u8; 0x48]
+    pub lifo: RingLifo<HomeButtonState, 17>,
+    pub pad: [u8; 0x48],
 }
 const_assert!(core::mem::size_of::<HomeButtonSharedMemoryFormat>() == 0x200);
 
@@ -201,21 +213,14 @@ const_assert!(core::mem::size_of::<HomeButtonSharedMemoryFormat>() == 0x200);
 #[repr(C)]
 pub struct SleepButtonState {
     pub sampling_number: u64,
-    pub buttons: SleepButton
+    pub buttons: SleepButton,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-#[repr(C)]
-pub struct SleepButtonStateAtomicStorage {
-    pub sampling_number: u64,
-    pub state: SleepButtonState
-}
-
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Debug)]
 #[repr(C)]
 pub struct SleepButtonSharedMemoryFormat {
-    pub lifo: RingLifo<SleepButtonStateAtomicStorage, 17>,
-    pub pad: [u8; 0x48]
+    pub lifo: RingLifo<SleepButtonState, 17>,
+    pub pad: [u8; 0x48],
 }
 const_assert!(core::mem::size_of::<SleepButtonSharedMemoryFormat>() == 0x200);
 
@@ -223,21 +228,14 @@ const_assert!(core::mem::size_of::<SleepButtonSharedMemoryFormat>() == 0x200);
 #[repr(C)]
 pub struct CaptureButtonState {
     pub sampling_number: u64,
-    pub buttons: CaptureButton
+    pub buttons: CaptureButton,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-#[repr(C)]
-pub struct CaptureButtonStateAtomicStorage {
-    pub sampling_number: u64,
-    pub state: CaptureButtonState
-}
-
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Debug)]
 #[repr(C)]
 pub struct CaptureButtonSharedMemoryFormat {
-    pub lifo: RingLifo<CaptureButtonStateAtomicStorage, 17>,
-    pub pad: [u8; 0x48]
+    pub lifo: RingLifo<CaptureButtonState, 17>,
+    pub pad: [u8; 0x48],
 }
 const_assert!(core::mem::size_of::<CaptureButtonSharedMemoryFormat>() == 0x200);
 
@@ -245,27 +243,20 @@ const_assert!(core::mem::size_of::<CaptureButtonSharedMemoryFormat>() == 0x200);
 #[repr(C)]
 pub struct InputDetectorState {
     pub source_state: InputSourceState,
-    pub sampling_number: u64
-}
-
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-#[repr(C)]
-pub struct InputDetectorStateAtomicStorage {
     pub sampling_number: u64,
-    pub state: InputDetectorState
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Debug)]
 #[repr(C)]
 pub struct InputDetectorSharedMemoryEntry {
-    pub lifo: RingLifo<InputDetectorStateAtomicStorage, 2>,
-    pub pad: [u8; 0x30]
+    pub lifo: RingLifo<InputDetectorState, 2>,
+    pub pad: [u8; 0x30],
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Debug)]
 #[repr(C)]
 pub struct InputDetectorSharedMemoryFormat {
-    pub entries: [InputDetectorSharedMemoryEntry; 16]
+    pub entries: [InputDetectorSharedMemoryEntry; 16],
 }
 const_assert!(core::mem::size_of::<InputDetectorSharedMemoryFormat>() == 0x800);
 
@@ -278,14 +269,7 @@ pub struct UniquePadConfig {
     pub controller_number: u32,
     pub is_active: bool,
     pub reserved: [u8; 3],
-    pub sampling_number: u64
-}
-
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-#[repr(C)]
-pub struct UniquePadConfigAtomicStorage {
     pub sampling_number: u64,
-    pub config: UniquePadConfig
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -294,14 +278,7 @@ pub struct AnalogStickCalibrationStateImpl {
     pub state: AnalogStickState,
     pub flags: AnalogStickCalibrationFlags,
     pub stage: AnalogStickManualCalibrationStage,
-    pub sampling_number: u64
-}
-
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-#[repr(C)]
-pub struct AnalogStickCalibrationStateImplAtomicStorage {
     pub sampling_number: u64,
-    pub state: AnalogStickCalibrationStateImpl
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -310,30 +287,23 @@ pub struct SixAxisSensorUserCalibrationState {
     pub flags: SixAxisSensorUserCalibrationFlags,
     pub reserved: [u8; 4],
     pub stage: SixAxisSensorUserCalibrationStage,
-    pub sampling_number: u64
-}
-
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-#[repr(C)]
-pub struct SixAxisSensorUserCalibrationStateAtomicStorage {
     pub sampling_number: u64,
-    pub state: SixAxisSensorUserCalibrationState
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Debug)]
 #[repr(C)]
 pub struct UniquePadSharedMemoryEntry {
-    pub config_lifo: RingLifo<UniquePadConfigAtomicStorage, 2>,
-    pub analog_stick_calibration_state_impls: [RingLifo<AnalogStickCalibrationStateImplAtomicStorage, 2>; 2],
-    pub six_axis_sensor_user_calibration_state: RingLifo<SixAxisSensorUserCalibrationStateAtomicStorage, 2>,
+    pub config_lifo: RingLifo<UniquePadConfig, 2>,
+    pub analog_stick_calibration_state_impls: [RingLifo<AnalogStickCalibrationStateImpl, 2>; 2],
+    pub six_axis_sensor_user_calibration_state: RingLifo<SixAxisSensorUserCalibrationState, 2>,
     pub unique_pad_config_mutex: [u8; 0x40],
-    pub pad: [u8; 0x220]
+    pub pad: [u8; 0x220],
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Debug)]
 #[repr(C)]
 pub struct UniquePadSharedMemoryFormat {
-    pub entries: [UniquePadSharedMemoryEntry; 16]
+    pub entries: [UniquePadSharedMemoryEntry; 16],
 }
 const_assert!(core::mem::size_of::<UniquePadSharedMemoryFormat>() == 0x4000);
 
@@ -341,7 +311,7 @@ const_assert!(core::mem::size_of::<UniquePadSharedMemoryFormat>() == 0x4000);
 #[repr(C)]
 pub struct NpadFullKeyColorState {
     pub attribute: ColorAttribute,
-    pub color: NpadControllerColor
+    pub color: NpadControllerColor,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -349,7 +319,7 @@ pub struct NpadFullKeyColorState {
 pub struct NpadJoyColorState {
     pub attribute: ColorAttribute,
     pub left_joy_color: NpadControllerColor,
-    pub right_joy_color: NpadControllerColor
+    pub right_joy_color: NpadControllerColor,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -360,14 +330,7 @@ pub struct NpadFullKeyState {
     pub analog_stick_l: AnalogStickState,
     pub analog_stick_r: AnalogStickState,
     pub attributes: NpadAttribute,
-    pub reserved: [u8; 4]
-}
-
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-#[repr(C)]
-pub struct NpadFullKeyStateAtomicStorage {
-    pub sampling_number: u64,
-    pub state: NpadFullKeyState
+    pub reserved: [u8; 4],
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -378,14 +341,7 @@ pub struct NpadHandheldState {
     pub analog_stick_l: AnalogStickState,
     pub analog_stick_r: AnalogStickState,
     pub attributes: NpadAttribute,
-    pub reserved: [u8; 4]
-}
-
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-#[repr(C)]
-pub struct NpadHandheldStateAtomicStorage {
-    pub sampling_number: u64,
-    pub state: NpadHandheldState
+    pub reserved: [u8; 4],
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -396,14 +352,7 @@ pub struct NpadJoyDualState {
     pub analog_stick_l: AnalogStickState,
     pub analog_stick_r: AnalogStickState,
     pub attributes: NpadAttribute,
-    pub reserved: [u8; 4]
-}
-
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-#[repr(C)]
-pub struct NpadJoyDualStateAtomicStorage {
-    pub sampling_number: u64,
-    pub state: NpadJoyDualState
+    pub reserved: [u8; 4],
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -414,14 +363,7 @@ pub struct NpadJoyLeftState {
     pub analog_stick_l: AnalogStickState,
     pub analog_stick_r: AnalogStickState,
     pub attributes: NpadAttribute,
-    pub reserved: [u8; 4]
-}
-
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-#[repr(C)]
-pub struct NpadJoyLeftStateAtomicStorage {
-    pub sampling_number: u64,
-    pub state: NpadJoyLeftState
+    pub reserved: [u8; 4],
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -432,14 +374,7 @@ pub struct NpadJoyRightState {
     pub analog_stick_l: AnalogStickState,
     pub analog_stick_r: AnalogStickState,
     pub attributes: NpadAttribute,
-    pub reserved: [u8; 4]
-}
-
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-#[repr(C)]
-pub struct NpadJoyRightStateAtomicStorage {
-    pub sampling_number: u64,
-    pub state: NpadJoyRightState
+    pub reserved: [u8; 4],
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -450,14 +385,7 @@ pub struct NpadSystemState {
     pub analog_stick_l: AnalogStickState,
     pub analog_stick_r: AnalogStickState,
     pub attributes: NpadAttribute,
-    pub reserved: [u8; 4]
-}
-
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-#[repr(C)]
-pub struct NpadSystemStateAtomicStorage {
-    pub sampling_number: u64,
-    pub state: NpadSystemState
+    pub reserved: [u8; 4],
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -468,14 +396,7 @@ pub struct NpadPalmaState {
     pub analog_stick_l: AnalogStickState,
     pub analog_stick_r: AnalogStickState,
     pub attributes: NpadAttribute,
-    pub reserved: [u8; 4]
-}
-
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-#[repr(C)]
-pub struct NpadPalmaStateAtomicStorage {
-    pub sampling_number: u64,
-    pub state: NpadPalmaState
+    pub reserved: [u8; 4],
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -486,14 +407,7 @@ pub struct NpadSystemExtState {
     pub analog_stick_l: AnalogStickState,
     pub analog_stick_r: AnalogStickState,
     pub attributes: NpadAttribute,
-    pub reserved: [u8; 4]
-}
-
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-#[repr(C)]
-pub struct NpadSystemExtStateAtomicStorage {
-    pub sampling_number: u64,
-    pub state: NpadSystemExtState
+    pub reserved: [u8; 4],
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -512,14 +426,7 @@ pub struct SixAxisSensorState {
     pub angle_z: u32,
     pub direction: DirectionState,
     pub attributes: SixAxisSensorAttribute,
-    pub reserved: [u8; 4]
-}
-
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-#[repr(C)]
-pub struct SixAxisSensorStateAtomicStorage {
-    pub sampling_number: u64,
-    pub state: SixAxisSensorState
+    pub reserved: [u8; 4],
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -529,14 +436,7 @@ pub struct NfcXcdDeviceHandleStateImpl {
     pub is_available: bool,
     pub is_activated: bool,
     pub reserved: [u8; 6],
-    pub sampling_number: u64
-}
-
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-#[repr(C)]
-pub struct NfcXcdDeviceHandleStateImplAtomicStorage {
     pub sampling_number: u64,
-    pub state: NfcXcdDeviceHandleStateImpl
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -544,41 +444,91 @@ pub struct NfcXcdDeviceHandleStateImplAtomicStorage {
 pub struct NpadGcTriggerState {
     pub sampling_number: u64,
     pub trigger_l: u32,
-    pub trigger_r: u32
-}
-
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-#[repr(C)]
-pub struct NpadGcTriggerStateAtomicStorage {
-    pub sampling_number: u64,
-    pub state: NpadGcTriggerState
+    pub trigger_r: u32,
 }
 
 // V1: 1.0.0-3.0.2
 // V2: 4.0.0-8.1.0
 // V3: 9.0.0-12.1.0
 // V4: 13.0.0-
+#[derive(Debug)]
+pub enum SharedMemoryFormat {
+    V1(&'static SharedMemoryFormatV1),
+    V2(&'static SharedMemoryFormatV2),
+    V3(&'static SharedMemoryFormatV3),
+    V4(&'static SharedMemoryFormatV4),
+    V5(&'static SharedMemoryFormatV5),
+    V6(&'static SharedMemoryFormatV6),
+}
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+impl SharedMemoryFormat {
+    /// Constructs an enum to get the controller parameters from the shared memory map.
+    ///
+    /// # Args
+    /// * ptr - a const pointer to the controller's shared memory
+    ///
+    /// # Safety
+    /// 
+    ///  It is the caller's responsibility to make sure the returned struct does not outlive the shared memory mapping.
+    pub unsafe fn from_shmem_ptr(ptr: *const u8) -> Result<Self> {
+        result_return_if!(ptr.is_null() || !ptr.is_aligned_to(8), ResultInvalidAddress);
+        let firmware_version = version::get_version();
+
+        // Safety - The calls to `cast()` should be safe as we only access it though the checked `as_ref()` calls,
+        // and the pointer->reference preconditions are checked above.
+        unsafe {
+            if SharedMemoryFormatV1::VERSION_INTERVAL.contains(firmware_version) {
+                Ok(Self::V1(ptr.cast::<SharedMemoryFormatV1>().as_ref_unchecked()))
+            } else if SharedMemoryFormatV2::VERSION_INTERVAL.contains(firmware_version) {
+                Ok(Self::V2(ptr.cast::<SharedMemoryFormatV2>().as_ref_unchecked()))
+            } else if SharedMemoryFormatV3::VERSION_INTERVAL.contains(firmware_version) {
+                Ok(Self::V3(ptr.cast::<SharedMemoryFormatV3>().as_ref_unchecked()))
+            } else if SharedMemoryFormatV4::VERSION_INTERVAL.contains(firmware_version) {
+                Ok(Self::V4(ptr.cast::<SharedMemoryFormatV4>().as_ref_unchecked()))
+            } else if SharedMemoryFormatV5::VERSION_INTERVAL.contains(firmware_version) {
+                Ok(Self::V5(ptr.cast::<SharedMemoryFormatV5>().as_ref_unchecked()))
+            } else if SharedMemoryFormatV6::VERSION_INTERVAL.contains(firmware_version) {
+                Ok(Self::V6(ptr.cast::<SharedMemoryFormatV6>().as_ref_unchecked()))
+            } else {
+                unreachable!(
+                    "We should never have this happen as all versions should be covered by the above matching"
+                )
+            }
+        }
+    }
+
+    pub fn as_ptr(&self) -> *const u8 {
+        match *self {
+            Self::V1(r) => r as *const SharedMemoryFormatV1 as *const _,
+            Self::V2(r) => r as *const SharedMemoryFormatV2 as *const _,
+            Self::V3(r) => r as *const SharedMemoryFormatV3 as *const _,
+            Self::V4(r) => r as *const SharedMemoryFormatV4 as *const _,
+            Self::V5(r) => r as *const SharedMemoryFormatV5 as *const _,
+            Self::V6(r) => r as *const SharedMemoryFormatV6 as *const _,
+        }
+    }
+}
+
+#[derive(Debug)]
 #[repr(C)]
 pub struct NpadSharedMemoryEntryV1 {
     pub style_tag: NpadStyleTag,
     pub joy_assignment_mode: NpadJoyAssignmentMode,
     pub full_key_color: NpadFullKeyColorState,
     pub joy_color: NpadJoyColorState,
-    pub full_key_lifo: RingLifo<NpadFullKeyStateAtomicStorage, 17>,
-    pub handheld_lifo: RingLifo<NpadHandheldStateAtomicStorage, 17>,
-    pub joy_dual_lifo: RingLifo<NpadJoyDualStateAtomicStorage, 17>,
-    pub joy_left_lifo: RingLifo<NpadJoyLeftStateAtomicStorage, 17>,
-    pub joy_right_lifo: RingLifo<NpadJoyRightStateAtomicStorage, 17>,
-    pub system_lifo: RingLifo<NpadSystemStateAtomicStorage, 17>,
-    pub system_ext_lifo: RingLifo<NpadSystemExtStateAtomicStorage, 17>,
-    pub full_key_six_axis_sensor_lifo: RingLifo<SixAxisSensorStateAtomicStorage, 17>,
-    pub handheld_six_axis_sensor_lifo: RingLifo<SixAxisSensorStateAtomicStorage, 17>,
-    pub joy_dual_left_six_axis_sensor_lifo: RingLifo<SixAxisSensorStateAtomicStorage, 17>,
-    pub joy_dual_right_six_axis_sensor_lifo: RingLifo<SixAxisSensorStateAtomicStorage, 17>,
-    pub joy_left_six_axis_sensor_lifo: RingLifo<SixAxisSensorStateAtomicStorage, 17>,
-    pub joy_right_six_axis_sensor_lifo: RingLifo<SixAxisSensorStateAtomicStorage, 17>,
+    pub full_key_lifo: RingLifo<NpadFullKeyState, 17>,
+    pub handheld_lifo: RingLifo<NpadHandheldState, 17>,
+    pub joy_dual_lifo: RingLifo<NpadJoyDualState, 17>,
+    pub joy_left_lifo: RingLifo<NpadJoyLeftState, 17>,
+    pub joy_right_lifo: RingLifo<NpadJoyRightState, 17>,
+    pub system_lifo: RingLifo<NpadSystemState, 17>,
+    pub system_ext_lifo: RingLifo<NpadSystemExtState, 17>,
+    pub full_key_six_axis_sensor_lifo: RingLifo<SixAxisSensorState, 17>,
+    pub handheld_six_axis_sensor_lifo: RingLifo<SixAxisSensorState, 17>,
+    pub joy_dual_left_six_axis_sensor_lifo: RingLifo<SixAxisSensorState, 17>,
+    pub joy_dual_right_six_axis_sensor_lifo: RingLifo<SixAxisSensorState, 17>,
+    pub joy_left_six_axis_sensor_lifo: RingLifo<SixAxisSensorState, 17>,
+    pub joy_right_six_axis_sensor_lifo: RingLifo<SixAxisSensorState, 17>,
     pub device_type: DeviceType,
     pub reserved: [u8; 4],
     pub system_properties: NpadSystemProperties,
@@ -586,37 +536,37 @@ pub struct NpadSharedMemoryEntryV1 {
     pub battery_level_joy_dual: NpadBatteryLevel,
     pub battery_level_joy_left: NpadBatteryLevel,
     pub battery_level_joy_right: NpadBatteryLevel,
-    pub nfc_xcd_device_handle_lifo: RingLifo<NfcXcdDeviceHandleStateImplAtomicStorage, 2>,
+    pub nfc_xcd_device_handle_lifo: RingLifo<NfcXcdDeviceHandleStateImpl, 2>,
     pub mutex: [u8; 0x40],
-    pub gc_trigger_lifo: RingLifo<NpadGcTriggerStateAtomicStorage, 17>,
+    pub gc_trigger_lifo: RingLifo<NpadGcTriggerState, 17>,
     pub lark_type_l_and_main: NpadLarkType,
     pub lark_type_r: NpadLarkType,
     pub lucia_type: NpadLuciaType,
     pub lager_type: NpadLagerType,
-    pub pad: [u8; 0xBF0]
+    pub pad: [u8; 0xBF0],
 }
 const_assert!(core::mem::size_of::<NpadSharedMemoryEntryV1>() == 0x5000);
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Debug)]
 #[repr(C)]
 pub struct NpadSharedMemoryEntryV2 {
     pub style_tag: NpadStyleTag,
     pub joy_assignment_mode: NpadJoyAssignmentMode,
     pub full_key_color: NpadFullKeyColorState,
     pub joy_color: NpadJoyColorState,
-    pub full_key_lifo: RingLifo<NpadFullKeyStateAtomicStorage, 17>,
-    pub handheld_lifo: RingLifo<NpadHandheldStateAtomicStorage, 17>,
-    pub joy_dual_lifo: RingLifo<NpadJoyDualStateAtomicStorage, 17>,
-    pub joy_left_lifo: RingLifo<NpadJoyLeftStateAtomicStorage, 17>,
-    pub joy_right_lifo: RingLifo<NpadJoyRightStateAtomicStorage, 17>,
-    pub palma_lifo: RingLifo<NpadPalmaStateAtomicStorage, 17>,
-    pub system_ext_lifo: RingLifo<NpadSystemExtStateAtomicStorage, 17>,
-    pub full_key_six_axis_sensor_lifo: RingLifo<SixAxisSensorStateAtomicStorage, 17>,
-    pub handheld_six_axis_sensor_lifo: RingLifo<SixAxisSensorStateAtomicStorage, 17>,
-    pub joy_dual_left_six_axis_sensor_lifo: RingLifo<SixAxisSensorStateAtomicStorage, 17>,
-    pub joy_dual_right_six_axis_sensor_lifo: RingLifo<SixAxisSensorStateAtomicStorage, 17>,
-    pub joy_left_six_axis_sensor_lifo: RingLifo<SixAxisSensorStateAtomicStorage, 17>,
-    pub joy_right_six_axis_sensor_lifo: RingLifo<SixAxisSensorStateAtomicStorage, 17>,
+    pub full_key_lifo: RingLifo<NpadFullKeyState, 17>,
+    pub handheld_lifo: RingLifo<NpadHandheldState, 17>,
+    pub joy_dual_lifo: RingLifo<NpadJoyDualState, 17>,
+    pub joy_left_lifo: RingLifo<NpadJoyLeftState, 17>,
+    pub joy_right_lifo: RingLifo<NpadJoyRightState, 17>,
+    pub palma_lifo: RingLifo<NpadPalmaState, 17>,
+    pub system_ext_lifo: RingLifo<NpadSystemExtState, 17>,
+    pub full_key_six_axis_sensor_lifo: RingLifo<SixAxisSensorState, 17>,
+    pub handheld_six_axis_sensor_lifo: RingLifo<SixAxisSensorState, 17>,
+    pub joy_dual_left_six_axis_sensor_lifo: RingLifo<SixAxisSensorState, 17>,
+    pub joy_dual_right_six_axis_sensor_lifo: RingLifo<SixAxisSensorState, 17>,
+    pub joy_left_six_axis_sensor_lifo: RingLifo<SixAxisSensorState, 17>,
+    pub joy_right_six_axis_sensor_lifo: RingLifo<SixAxisSensorState, 17>,
     pub device_type: DeviceType,
     pub reserved: [u8; 4],
     pub system_properties: NpadSystemProperties,
@@ -624,37 +574,37 @@ pub struct NpadSharedMemoryEntryV2 {
     pub battery_level_joy_dual: NpadBatteryLevel,
     pub battery_level_joy_left: NpadBatteryLevel,
     pub battery_level_joy_right: NpadBatteryLevel,
-    pub nfc_xcd_device_handle_lifo: RingLifo<NfcXcdDeviceHandleStateImplAtomicStorage, 2>,
+    pub nfc_xcd_device_handle_lifo: RingLifo<NfcXcdDeviceHandleStateImpl, 2>,
     pub mutex: [u8; 0x40],
-    pub gc_trigger_lifo: RingLifo<NpadGcTriggerStateAtomicStorage, 17>,
+    pub gc_trigger_lifo: RingLifo<NpadGcTriggerState, 17>,
     pub lark_type_l_and_main: NpadLarkType,
     pub lark_type_r: NpadLarkType,
     pub lucia_type: NpadLuciaType,
     pub lager_type: NpadLagerType,
-    pub pad: [u8; 0xBF0]
+    pub pad: [u8; 0xBF0],
 }
 const_assert!(core::mem::size_of::<NpadSharedMemoryEntryV2>() == 0x5000);
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Debug)]
 #[repr(C)]
 pub struct NpadSharedMemoryEntryV3 {
     pub style_tag: NpadStyleTag,
     pub joy_assignment_mode: NpadJoyAssignmentMode,
     pub full_key_color: NpadFullKeyColorState,
     pub joy_color: NpadJoyColorState,
-    pub full_key_lifo: RingLifo<NpadFullKeyStateAtomicStorage, 17>,
-    pub handheld_lifo: RingLifo<NpadHandheldStateAtomicStorage, 17>,
-    pub joy_dual_lifo: RingLifo<NpadJoyDualStateAtomicStorage, 17>,
-    pub joy_left_lifo: RingLifo<NpadJoyLeftStateAtomicStorage, 17>,
-    pub joy_right_lifo: RingLifo<NpadJoyRightStateAtomicStorage, 17>,
-    pub palma_lifo: RingLifo<NpadPalmaStateAtomicStorage, 17>,
-    pub system_ext_lifo: RingLifo<NpadSystemExtStateAtomicStorage, 17>,
-    pub full_key_six_axis_sensor_lifo: RingLifo<SixAxisSensorStateAtomicStorage, 17>,
-    pub handheld_six_axis_sensor_lifo: RingLifo<SixAxisSensorStateAtomicStorage, 17>,
-    pub joy_dual_left_six_axis_sensor_lifo: RingLifo<SixAxisSensorStateAtomicStorage, 17>,
-    pub joy_dual_right_six_axis_sensor_lifo: RingLifo<SixAxisSensorStateAtomicStorage, 17>,
-    pub joy_left_six_axis_sensor_lifo: RingLifo<SixAxisSensorStateAtomicStorage, 17>,
-    pub joy_right_six_axis_sensor_lifo: RingLifo<SixAxisSensorStateAtomicStorage, 17>,
+    pub full_key_lifo: RingLifo<NpadFullKeyState, 17>,
+    pub handheld_lifo: RingLifo<NpadHandheldState, 17>,
+    pub joy_dual_lifo: RingLifo<NpadJoyDualState, 17>,
+    pub joy_left_lifo: RingLifo<NpadJoyLeftState, 17>,
+    pub joy_right_lifo: RingLifo<NpadJoyRightState, 17>,
+    pub palma_lifo: RingLifo<NpadPalmaState, 17>,
+    pub system_ext_lifo: RingLifo<NpadSystemExtState, 17>,
+    pub full_key_six_axis_sensor_lifo: RingLifo<SixAxisSensorState, 17>,
+    pub handheld_six_axis_sensor_lifo: RingLifo<SixAxisSensorState, 17>,
+    pub joy_dual_left_six_axis_sensor_lifo: RingLifo<SixAxisSensorState, 17>,
+    pub joy_dual_right_six_axis_sensor_lifo: RingLifo<SixAxisSensorState, 17>,
+    pub joy_left_six_axis_sensor_lifo: RingLifo<SixAxisSensorState, 17>,
+    pub joy_right_six_axis_sensor_lifo: RingLifo<SixAxisSensorState, 17>,
     pub device_type: DeviceType,
     pub reserved: [u8; 4],
     pub system_properties: NpadSystemProperties,
@@ -665,35 +615,35 @@ pub struct NpadSharedMemoryEntryV3 {
     pub applet_footer_ui_attributes: AppletFooterUiAttribute,
     pub applet_footer_ui_type: AppletFooterUiType,
     pub reserved_2: [u8; 0x7B],
-    pub gc_trigger_lifo: RingLifo<NpadGcTriggerStateAtomicStorage, 17>,
+    pub gc_trigger_lifo: RingLifo<NpadGcTriggerState, 17>,
     pub lark_type_l_and_main: NpadLarkType,
     pub lark_type_r: NpadLarkType,
     pub lucia_type: NpadLuciaType,
     pub lager_type: NpadLagerType,
-    pub pad: [u8; 0xC10]
+    pub pad: [u8; 0xC10],
 }
 const_assert!(core::mem::size_of::<NpadSharedMemoryEntryV3>() == 0x5000);
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Debug)]
 #[repr(C)]
 pub struct NpadSharedMemoryEntryV4 {
     pub style_tag: NpadStyleTag,
     pub joy_assignment_mode: NpadJoyAssignmentMode,
     pub full_key_color: NpadFullKeyColorState,
     pub joy_color: NpadJoyColorState,
-    pub full_key_lifo: RingLifo<NpadFullKeyStateAtomicStorage, 17>,
-    pub handheld_lifo: RingLifo<NpadHandheldStateAtomicStorage, 17>,
-    pub joy_dual_lifo: RingLifo<NpadJoyDualStateAtomicStorage, 17>,
-    pub joy_left_lifo: RingLifo<NpadJoyLeftStateAtomicStorage, 17>,
-    pub joy_right_lifo: RingLifo<NpadJoyRightStateAtomicStorage, 17>,
-    pub palma_lifo: RingLifo<NpadPalmaStateAtomicStorage, 17>,
-    pub system_ext_lifo: RingLifo<NpadSystemExtStateAtomicStorage, 17>,
-    pub full_key_six_axis_sensor_lifo: RingLifo<SixAxisSensorStateAtomicStorage, 17>,
-    pub handheld_six_axis_sensor_lifo: RingLifo<SixAxisSensorStateAtomicStorage, 17>,
-    pub joy_dual_left_six_axis_sensor_lifo: RingLifo<SixAxisSensorStateAtomicStorage, 17>,
-    pub joy_dual_right_six_axis_sensor_lifo: RingLifo<SixAxisSensorStateAtomicStorage, 17>,
-    pub joy_left_six_axis_sensor_lifo: RingLifo<SixAxisSensorStateAtomicStorage, 17>,
-    pub joy_right_six_axis_sensor_lifo: RingLifo<SixAxisSensorStateAtomicStorage, 17>,
+    pub full_key_lifo: RingLifo<NpadFullKeyState, 17>,
+    pub handheld_lifo: RingLifo<NpadHandheldState, 17>,
+    pub joy_dual_lifo: RingLifo<NpadJoyDualState, 17>,
+    pub joy_left_lifo: RingLifo<NpadJoyLeftState, 17>,
+    pub joy_right_lifo: RingLifo<NpadJoyRightState, 17>,
+    pub palma_lifo: RingLifo<NpadPalmaState, 17>,
+    pub system_ext_lifo: RingLifo<NpadSystemExtState, 17>,
+    pub full_key_six_axis_sensor_lifo: RingLifo<SixAxisSensorState, 17>,
+    pub handheld_six_axis_sensor_lifo: RingLifo<SixAxisSensorState, 17>,
+    pub joy_dual_left_six_axis_sensor_lifo: RingLifo<SixAxisSensorState, 17>,
+    pub joy_dual_right_six_axis_sensor_lifo: RingLifo<SixAxisSensorState, 17>,
+    pub joy_left_six_axis_sensor_lifo: RingLifo<SixAxisSensorState, 17>,
+    pub joy_right_six_axis_sensor_lifo: RingLifo<SixAxisSensorState, 17>,
     pub device_type: DeviceType,
     pub reserved: [u8; 4],
     pub system_properties: NpadSystemProperties,
@@ -704,38 +654,38 @@ pub struct NpadSharedMemoryEntryV4 {
     pub applet_footer_ui_attributes: AppletFooterUiAttribute,
     pub applet_footer_ui_type: AppletFooterUiType,
     pub reserved_2: [u8; 0x7B],
-    pub gc_trigger_lifo: RingLifo<NpadGcTriggerStateAtomicStorage, 17>,
+    pub gc_trigger_lifo: RingLifo<NpadGcTriggerState, 17>,
     pub lark_type_l_and_main: NpadLarkType,
     pub lark_type_r: NpadLarkType,
     pub lucia_type: NpadLuciaType,
     pub lager_type: NpadLagerType,
     pub six_axis_sensor_properties: [SixAxisSensorProperties; 6],
-    pub pad: [u8; 0xC08]
+    pub pad: [u8; 0xC08],
 }
 const_assert!(core::mem::size_of::<NpadSharedMemoryEntryV4>() == 0x5000);
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Debug)]
 #[repr(C)]
 pub struct NpadSharedMemoryFormatV1 {
-    pub entries: [NpadSharedMemoryEntryV1; 10]
+    pub entries: [NpadSharedMemoryEntryV1; 10],
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Debug)]
 #[repr(C)]
 pub struct NpadSharedMemoryFormatV2 {
-    pub entries: [NpadSharedMemoryEntryV2; 10]
+    pub entries: [NpadSharedMemoryEntryV2; 10],
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Debug)]
 #[repr(C)]
 pub struct NpadSharedMemoryFormatV3 {
-    pub entries: [NpadSharedMemoryEntryV3; 10]
+    pub entries: [NpadSharedMemoryEntryV3; 10],
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Debug)]
 #[repr(C)]
 pub struct NpadSharedMemoryFormatV4 {
-    pub entries: [NpadSharedMemoryEntryV4; 10]
+    pub entries: [NpadSharedMemoryEntryV4; 10],
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -755,34 +705,28 @@ pub struct GestureDummyState {
     pub scale: u32,
     pub rotation_angle: u32,
     pub point_count: u32,
-    pub points: [GesturePoint; 4]
+    pub points: [GesturePoint; 4],
 }
 
-#[derive(Copy, Clone, PartialEq, Debug)]
-#[repr(C)]
-pub struct GestureDummyStateAtomicStorage {
-    pub sampling_number: u64,
-    pub state: GestureDummyState
-}
-
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Debug)]
 #[repr(C)]
 pub struct GestureSharedMemoryFormat {
-    pub lifo: RingLifo<GestureDummyStateAtomicStorage, 17>,
-    pub pad: [u8; 0xF8]
+    pub lifo: RingLifo<GestureDummyState, 17>,
+    pub pad: [u8; 0xF8],
 }
 const_assert!(core::mem::size_of::<GestureSharedMemoryFormat>() == 0x800);
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-#[repr(C, packed)]
+#[derive(Debug)]
+#[repr(C)]
 pub struct ConsoleSixAxisSensorSharedMemoryFormat {
-    pub sampling_number: u64,
+    pub sampling_number: AtomicU64,
     pub is_seven_six_axis_sensor_at_rest: bool,
     pub pad: [u8; 3],
-    pub verticalization_error: u32,
-    pub gyro_bias: [u8; 0xC]
+    pub verticalization_error: f32,
+    pub gyro_bias: [f32; 3],
+    pub pad2: [u8; 4],
 }
-const_assert!(core::mem::size_of::<ConsoleSixAxisSensorSharedMemoryFormat>() == 0x1C);
+const_assert!(core::mem::size_of::<ConsoleSixAxisSensorSharedMemoryFormat>() == 0x20);
 
 // V1: 1.0.0-3.0.2
 // V2: 4.0.0-4.1.0
@@ -791,7 +735,7 @@ const_assert!(core::mem::size_of::<ConsoleSixAxisSensorSharedMemoryFormat>() == 
 // V5: 10.0.0-12.1.0
 // V6: 13.0.0-
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Debug)]
 #[repr(C)]
 pub struct SharedMemoryFormatV1 {
     pub debug_pad: DebugPadSharedMemoryFormat,
@@ -805,14 +749,18 @@ pub struct SharedMemoryFormatV1 {
     pub input_detector: InputDetectorSharedMemoryFormat,
     pub unique_pad: UniquePadSharedMemoryFormat,
     pub npad: NpadSharedMemoryFormatV1,
-    pub gesture: GestureSharedMemoryFormat
+    pub gesture: GestureSharedMemoryFormat,
 }
+const_assert!(align_of::<SharedMemoryFormatV1>() <=8);
 
 impl SharedMemoryFormatV1 {
-    pub const VERSION_INTERVAL: version::VersionInterval = version::VersionInterval::from_to(version::Version::new(1,0,0), version::Version::new(3,0,2));
+    pub const VERSION_INTERVAL: version::VersionInterval = version::VersionInterval::from_to(
+        version::Version::new(1, 0, 0),
+        version::Version::new(3, 0, 2),
+    );
 }
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Debug)]
 #[repr(C)]
 pub struct SharedMemoryFormatV2 {
     pub debug_pad: DebugPadSharedMemoryFormat,
@@ -826,14 +774,18 @@ pub struct SharedMemoryFormatV2 {
     pub input_detector: InputDetectorSharedMemoryFormat,
     pub unique_pad: UniquePadSharedMemoryFormat,
     pub npad: NpadSharedMemoryFormatV2,
-    pub gesture: GestureSharedMemoryFormat
+    pub gesture: GestureSharedMemoryFormat,
 }
+const_assert!(align_of::<SharedMemoryFormatV2>() <=8);
 
 impl SharedMemoryFormatV2 {
-    pub const VERSION_INTERVAL: version::VersionInterval = version::VersionInterval::from_to(version::Version::new(4,0,0), version::Version::new(4,1,0));
+    pub const VERSION_INTERVAL: version::VersionInterval = version::VersionInterval::from_to(
+        version::Version::new(4, 0, 0),
+        version::Version::new(4, 1, 0),
+    );
 }
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Debug)]
 #[repr(C)]
 pub struct SharedMemoryFormatV3 {
     pub debug_pad: DebugPadSharedMemoryFormat,
@@ -848,14 +800,18 @@ pub struct SharedMemoryFormatV3 {
     pub pad: [u8; 0x4000],
     pub npad: NpadSharedMemoryFormatV2,
     pub gesture: GestureSharedMemoryFormat,
-    pub console_six_axis_sensor: ConsoleSixAxisSensorSharedMemoryFormat
+    pub console_six_axis_sensor: ConsoleSixAxisSensorSharedMemoryFormat,
 }
+const_assert!(align_of::<SharedMemoryFormatV3>() <=8);
 
 impl SharedMemoryFormatV3 {
-    pub const VERSION_INTERVAL: version::VersionInterval = version::VersionInterval::from_to(version::Version::new(5,0,0), version::Version::new(8,1,1));
+    pub const VERSION_INTERVAL: version::VersionInterval = version::VersionInterval::from_to(
+        version::Version::new(5, 0, 0),
+        version::Version::new(8, 1, 1),
+    );
 }
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Debug)]
 #[repr(C)]
 pub struct SharedMemoryFormatV4 {
     pub debug_pad: DebugPadSharedMemoryFormat,
@@ -870,14 +826,18 @@ pub struct SharedMemoryFormatV4 {
     pub pad: [u8; 0x4000],
     pub npad: NpadSharedMemoryFormatV3,
     pub gesture: GestureSharedMemoryFormat,
-    pub console_six_axis_sensor: ConsoleSixAxisSensorSharedMemoryFormat
+    pub console_six_axis_sensor: ConsoleSixAxisSensorSharedMemoryFormat,
 }
+const_assert!(align_of::<SharedMemoryFormatV4>() <=8);
 
 impl SharedMemoryFormatV4 {
-    pub const VERSION_INTERVAL: version::VersionInterval = version::VersionInterval::from_to(version::Version::new(9,0,0), version::Version::new(9,2,0));
+    pub const VERSION_INTERVAL: version::VersionInterval = version::VersionInterval::from_to(
+        version::Version::new(9, 0, 0),
+        version::Version::new(9, 2, 0),
+    );
 }
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Debug)]
 #[repr(C)]
 pub struct SharedMemoryFormatV5 {
     pub debug_pad: DebugPadSharedMemoryFormat,
@@ -892,14 +852,18 @@ pub struct SharedMemoryFormatV5 {
     pub pad: [u8; 0x4000],
     pub npad: NpadSharedMemoryFormatV3,
     pub gesture: GestureSharedMemoryFormat,
-    pub console_six_axis_sensor: ConsoleSixAxisSensorSharedMemoryFormat
+    pub console_six_axis_sensor: ConsoleSixAxisSensorSharedMemoryFormat,
 }
+const_assert!(align_of::<SharedMemoryFormatV5>() <=8);
 
 impl SharedMemoryFormatV5 {
-    pub const VERSION_INTERVAL: version::VersionInterval = version::VersionInterval::from_to(version::Version::new(10,0,0), version::Version::new(12,1,0));
+    pub const VERSION_INTERVAL: version::VersionInterval = version::VersionInterval::from_to(
+        version::Version::new(10, 0, 0),
+        version::Version::new(12, 1, 0),
+    );
 }
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Debug)]
 #[repr(C)]
 pub struct SharedMemoryFormatV6 {
     pub debug_pad: DebugPadSharedMemoryFormat,
@@ -914,9 +878,11 @@ pub struct SharedMemoryFormatV6 {
     pub pad: [u8; 0x4000],
     pub npad: NpadSharedMemoryFormatV4,
     pub gesture: GestureSharedMemoryFormat,
-    pub console_six_axis_sensor: ConsoleSixAxisSensorSharedMemoryFormat
+    pub console_six_axis_sensor: ConsoleSixAxisSensorSharedMemoryFormat,
 }
+const_assert!(align_of::<SharedMemoryFormatV6>() <=8);
 
 impl SharedMemoryFormatV6 {
-    pub const VERSION_INTERVAL: version::VersionInterval = version::VersionInterval::from(version::Version::new(13,0,0));
+    pub const VERSION_INTERVAL: version::VersionInterval =
+        version::VersionInterval::from(version::Version::new(13, 0, 0));
 }

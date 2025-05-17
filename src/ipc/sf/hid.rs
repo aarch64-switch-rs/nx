@@ -1,9 +1,12 @@
-use crate::result::*;
 use crate::ipc::sf;
-use crate::mem;
+use crate::result::*;
 use crate::version;
 
+use super::applet::AppletResourceUserId;
+use super::CopyHandle;
+
 pub mod shmem;
+use nx_derive::{Request, Response};
 
 define_bit_enum! {
     DebugPadAttribute (u32) {
@@ -30,11 +33,11 @@ define_bit_enum! {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct AnalogStickState {
-    pub x: u32,
-    pub y: u32
+    pub x: i32,
+    pub y: i32,
 }
 
 define_bit_enum! {
@@ -45,7 +48,7 @@ define_bit_enum! {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct TouchState {
     pub delta_time: u64,
@@ -56,7 +59,7 @@ pub struct TouchState {
     pub diameter_x: u32,
     pub diameter_y: u32,
     pub rotation_angle: u32,
-    pub reserved: [u8; 4]
+    pub reserved: [u8; 4],
 }
 
 define_bit_enum! {
@@ -99,10 +102,10 @@ define_bit_enum! {
 }
 */
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]
 pub struct KeyboardKey {
-    pub todo: [u8; 0x20]
+    pub todo: [u8; 0x20],
 }
 
 define_bit_enum! {
@@ -147,29 +150,29 @@ define_bit_enum! {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]
 pub struct InputSourceState {
-    pub timestamp: u64
+    pub timestamp: u64,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
 pub enum UniquePadType {
     Embedded = 0,
     FullKeyController = 1,
     RightController = 2,
     LeftController = 3,
-    DebugPadController = 4
+    DebugPadController = 4,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
 pub enum UniquePadInterface {
     Embedded = 0,
     Rail = 1,
     Bluetooth = 2,
-    Usb = 3
+    Usb = 3,
 }
 
 pub type UniquePadSerialNumber = [u8; 0x10];
@@ -180,7 +183,7 @@ define_bit_enum! {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
 pub enum AnalogStickManualCalibrationStage {
     ReleaseFromRight = 0,
@@ -191,7 +194,7 @@ pub enum AnalogStickManualCalibrationStage {
     Update = 5,
     Completed = 6,
     Clear = 7,
-    ClearCompleted = 8
+    ClearCompleted = 8,
 }
 
 define_bit_enum! {
@@ -200,15 +203,15 @@ define_bit_enum! {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
 pub enum SixAxisSensorUserCalibrationStage {
     Measuring = 0,
     Update = 1,
-    Completed = 2
+    Completed = 2,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
 pub enum GestureType {
     Idle = 0,
@@ -220,24 +223,24 @@ pub enum GestureType {
     Pan = 6,
     Swipe = 7,
     Pinch = 8,
-    Rotate = 9
+    Rotate = 9,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
 pub enum GestureDirection {
     None = 0,
     Left = 1,
     Up = 2,
     Right = 3,
-    Down = 4
+    Down = 4,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]
 pub struct GesturePoint {
     pub x: u32,
-    pub y: u32
+    pub y: u32,
 }
 
 define_bit_enum! {
@@ -265,15 +268,37 @@ define_bit_enum! {
         System = bit!(30) // Generic controller
     }
 }
-
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+/*
+#[atomic_enum]
+#[repr(u32)]
+#[derive(crate::ipc::sf::Request, crate::ipc::sf::Response, PartialEq, Eq, Default)]
+pub enum NpadStyleTag {
+    #[default]
+    None = 0, // The flag was not set for some reason
+    FullKey = bit!(0), // Pro controller
+    Handheld = bit!(1), // Joy-Con controller in handheld mode
+    JoyDual = bit!(2), // Joy-Con controller in dual mode
+    JoyLeft = bit!(3), // Joy-Con left controller in single mode
+    JoyRight = bit!(4), // Joy-Con right controller in single mode
+    Gc = bit!(5), // GameCube controller
+    Palma = bit!(6), // Poké Ball Plus controller
+    Lark = bit!(7), // NES/Famicom controller
+    HandheldLark = bit!(8), // NES/Famicom controller (handheld)
+    Lucia = bit!(9), // SNES controller
+    Lagon = bit!(10), // N64 controller
+    Lager = bit!(11), // Sega Genesis controller
+    SystemExt = bit!(29), // Generic external controller
+    System = bit!(30) // Generic controller
+}
+*/
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(i64)]
 pub enum NpadJoyDeviceType {
     Left = 0,
-    Right = 1
+    Right = 1,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
 pub enum NpadIdType {
     No1 = 0, // Players 1-8
@@ -285,29 +310,29 @@ pub enum NpadIdType {
     No7 = 6,
     No8 = 7,
     Other = 0x10,
-    Handheld = 0x20
+    Handheld = 0x20,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
 pub enum NpadJoyAssignmentMode {
     Dual = 0,
-    Single = 1
+    Single = 1,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
 pub enum ColorAttribute {
     Ok = 0,
     ReadError = 1,
-    NoController = 2
+    NoController = 2,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]
 pub struct NpadControllerColor {
     pub main: u32,
-    pub sub: u32
+    pub sub: u32,
 }
 
 define_bit_enum! {
@@ -361,7 +386,7 @@ define_bit_enum! {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]
 pub struct DirectionState {
     pub xx: u32,
@@ -372,7 +397,7 @@ pub struct DirectionState {
     pub yz: u32,
     pub zx: u32,
     pub zy: u32,
-    pub zz: u32
+    pub zz: u32,
 }
 
 define_bit_enum! {
@@ -438,7 +463,7 @@ define_bit_enum! {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u8)]
 pub enum AppletFooterUiType {
     None = 0,
@@ -462,35 +487,35 @@ pub enum AppletFooterUiType {
     LarkNesRight = 18,
     Lucia = 19,
     Verification = 20,
-    Lagon = 21
+    Lagon = 21,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
 pub enum NpadLarkType {
     Invalid = 0,
     H1 = 1,
     H2 = 2,
     NL = 3,
-    NR = 4
+    NR = 4,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
 pub enum NpadLuciaType {
     Invalid = 0,
     J = 1,
     E = 2,
-    U = 3
+    U = 3,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
 pub enum NpadLagerType {
     Invalid = 0,
     J = 1,
     E = 2,
-    U = 3
+    U = 3,
 }
 
 define_bit_enum! {
@@ -500,20 +525,51 @@ define_bit_enum! {
     }
 }
 
-ipc_sf_define_interface_trait! {
-    trait IAppletResource {
-        get_shared_memory_handle [1, version::VersionInterval::all()]: () => (shmem_handle: sf::CopyHandle);
+define_bit_enum! {
+    LockKeyFlags (u32) {
+        NumLockOn = bit!(0),
+        NumLockOff = bit!(1),
+        NumLockToggle = bit!(2),
+        CapsLockOn = bit!(3),
+        CapsLockOff = bit!(4),
+        CapsLockToggle = bit!(5),
+        ScrollLockOn = bit!(6),
+        ScrollLockOff = bit!(7),
+        ScrollLockToggle = bit!(8)
     }
 }
 
+ipc_sf_define_default_client_for_interface!(AppletResource);
 ipc_sf_define_interface_trait! {
-    trait IHidServer {
-        create_applet_resource [0, version::VersionInterval::all()]: (process_id: sf::ProcessId) => (applet_resource: mem::Shared<dyn IAppletResource>);
-        set_supported_npad_style_set [100, version::VersionInterval::all()]: (process_id: sf::ProcessId, npad_style_tag: NpadStyleTag) => ();
-        set_supported_npad_id_type [102, version::VersionInterval::all()]: (process_id: sf::ProcessId, npad_ids: sf::InPointerBuffer<NpadIdType>) => ();
-        activate_npad [103, version::VersionInterval::all()]: (process_id: sf::ProcessId) => ();
-        deactivate_npad [104, version::VersionInterval::all()]: (process_id: sf::ProcessId) => ();
-        set_npad_joy_assignment_mode_single [123, version::VersionInterval::all()]: (process_id: sf::ProcessId, npad_id: NpadIdType, joy_type: NpadJoyDeviceType) => ();
-        set_npad_joy_assignment_mode_dual [124, version::VersionInterval::all()]: (process_id: sf::ProcessId, npad_id: NpadIdType) => ();
+    trait AppletResource {
+        get_shared_memory_handle [0, version::VersionInterval::all(), mut]: () => (shmem_handle: sf::CopyHandle) (shmem_handle: sf::CopyHandle);
+    }
+}
+
+//ipc_sf_define_default_client_for_interface!(Hid);
+ipc_sf_define_interface_trait! {
+    trait Hid {
+        create_applet_resource [0, version::VersionInterval::all(), mut]: (aruid: AppletResourceUserId) =>  (applet_resource: AppletResource) (applet_resource: session_type!(AppletResource));
+        set_supported_npad_style_set [100, version::VersionInterval::all(), mut]: (npad_style_tag: NpadStyleTag, aruid: AppletResourceUserId) =>  () ();
+        get_supported_npad_style_set [101, version::VersionInterval::all()]: (aruid: AppletResourceUserId) =>  (npad_style_tag: NpadStyleTag) (npad_style_tag: NpadStyleTag);
+        set_supported_npad_id_type [102, version::VersionInterval::all(), mut]: (aruid: AppletResourceUserId, npad_ids: sf::InPointerBuffer<NpadIdType>) =>  () ();
+        activate_npad [103, version::VersionInterval::all(), mut]: (aruid: AppletResourceUserId) =>  () ();
+        deactivate_npad [104, version::VersionInterval::all(), mut]: (aruid: AppletResourceUserId) =>  () ();
+        activate_npad_with_revision [109, version::VersionInterval::all(), mut]: (revision: i32, aruid: AppletResourceUserId) =>  () ();
+        set_npad_joy_assignment_mode_single [123, version::VersionInterval::all(), mut]: (npad_id: NpadIdType, aruid: AppletResourceUserId, joy_type: NpadJoyDeviceType) =>  () ();
+        set_npad_joy_assignment_mode_dual [124, version::VersionInterval::all(), mut]: (npad_id: NpadIdType, aruid: AppletResourceUserId) =>  () ();
+    }
+}
+
+//ipc_sf_define_default_client_for_interface!(HidSys);
+ipc_sf_define_interface_trait! {
+    trait HidSys {
+        send_keyboard_lock_key_event [31, version::VersionInterval::all()]: (flags: LockKeyFlags) => () ();
+        acquire_home_button_event_handle [101, version::VersionInterval::all()]: (aruid: AppletResourceUserId) =>  (handle: CopyHandle) (handle: CopyHandle);
+        activate_home_button [111, version::VersionInterval::all()]: (aruid: AppletResourceUserId) => () ();
+        acquire_sleep_button_event_handle [121, version::VersionInterval::all()]: (aruid: AppletResourceUserId) =>  (handle: CopyHandle) (handle: CopyHandle);
+        activate_sleep_button [131, version::VersionInterval::all()]: (aruid: AppletResourceUserId) => () ();
+        acquire_capture_button_event_handle [141, version::VersionInterval::all()]: (aruid: AppletResourceUserId) =>  (handle: CopyHandle) (handle: CopyHandle);
+        activate_capture_button [151, version::VersionInterval::all()]: (aruid: AppletResourceUserId) => () ();
     }
 }

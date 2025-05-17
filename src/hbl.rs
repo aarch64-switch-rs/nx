@@ -1,10 +1,17 @@
 //! HBL (homebrew loader) ABI support and utils
 
+use atomic_enum::atomic_enum;
+use core::sync::atomic::AtomicU32;
+use core::sync::atomic::Ordering;
+use core::sync::atomic::Ordering::Relaxed;
+
+use crate::result::*;
 use crate::svc::Handle;
 use crate::svc::INVALID_HANDLE;
+use crate::sync::Mutex;
+use crate::sync::RwLock;
+use crate::util::ArrayString;
 use crate::version;
-use crate::util;
-use crate::result::*;
 
 /// Represents the entry value keys for a hbl ABI context
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -25,7 +32,7 @@ pub enum AbiConfigEntryKey {
     LastLoadResult = 11,
     RandomSeed = 14,
     UserIdStorage = 15,
-    HosVersion = 16
+    HosVersion = 16,
 }
 
 define_bit_enum! {
@@ -52,14 +59,14 @@ pub struct AbiConfigEntry {
     /// The entry flags
     pub flags: AbiConfigEntryFlags,
     /// The entry-specific values
-    pub value: [u64; 2]
+    pub value: [u64; 2],
 }
 
 /// Represents the hbl-ABI format of the system version
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct Version {
-    value: u32
+    value: u32,
 }
 
 impl Version {
@@ -76,19 +83,21 @@ impl Version {
     }
 
     /// Creates a [`Version`] from a raw value and the magic representing the current OS implementation
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `value`: The raw value
     /// * `os_impl_magic`: The magic value
     #[inline]
     pub const fn new(value: u32, os_impl_magic: u64) -> Self {
         let actual_value = match os_impl_magic == Self::ATMOSPHERE_OS_IMPL_MAGIC {
             true => value | Self::IS_ATMOSPHERE_BIT,
-            false => value
+            false => value,
         };
 
-        Self { value: actual_value }
+        Self {
+            value: actual_value,
+        }
     }
 
     /// Gets the major component of the [`Version`]
@@ -122,44 +131,37 @@ impl Version {
     }
 }
 
-static mut G_LAST_LOAD_RESULT: ResultCode = ResultCode::new(0); // TODO: const result traits for ResultSuccess?
+static G_LAST_LOAD_RESULT: AtomicU32 = AtomicU32::new(0);
 
 pub(crate) fn set_last_load_result(rc: ResultCode) {
-    unsafe {
-        G_LAST_LOAD_RESULT = rc;
-    }
+    G_LAST_LOAD_RESULT.store(rc.get_value(), Ordering::Release);
 }
 
 /// Gets the last load [`ResultCode`]
-/// 
+///
 /// This value represents the [`ResultCode`] of the last homebrew NRO executed before the current one
-/// 
+///
 /// This value will only be set/useful if the current code is running through HBL
 pub fn get_last_load_result() -> ResultCode {
-    unsafe {
-        G_LAST_LOAD_RESULT
-    }
+    ResultCode::new(G_LAST_LOAD_RESULT.load(Ordering::Acquire))
 }
 
-static mut G_PROCESS_HANDLE: Handle = INVALID_HANDLE;
+static G_PROCESS_HANDLE: AtomicU32 = AtomicU32::new(INVALID_HANDLE);
 
 pub(crate) fn set_process_handle(handle: Handle) {
-    unsafe {
-        G_PROCESS_HANDLE = handle;
-    }
+    G_PROCESS_HANDLE.store(handle, Ordering::Release);
 }
 
 /// Gets the current process handle
-/// 
-/// This value will only be set/useful if the current code is running through HBL 
+///
+/// This value will only be set/useful if the current code is running through HBL
 pub fn get_process_handle() -> Handle {
-    unsafe {
-        G_PROCESS_HANDLE
-    }
+    G_PROCESS_HANDLE.load(Ordering::Relaxed)
 }
 
+#[atomic_enum]
 /// Represents the applet types for HBL
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[derive(PartialEq, Eq, Default)]
 #[repr(i32)]
 pub enum AppletType {
     #[default]
@@ -169,100 +171,112 @@ pub enum AppletType {
     SystemApplet = 1,
     LibraryApplet = 2,
     OverlayApplet = 3,
-    SystemApplication = 4
+    SystemApplication = 4,
 }
 
-static mut G_APPLET_TYPE: AppletType = AppletType::None;
+static G_APPLET_TYPE: AtomicAppletType = AtomicAppletType::new(AppletType::Default);
 
 pub(crate) fn set_applet_type(applet_type: AppletType) {
-    unsafe {
-        G_APPLET_TYPE = applet_type;
-    }
+    G_APPLET_TYPE.store(applet_type, Relaxed);
 }
 
 /// Gets the current applet type (according to HBL)
-/// 
+///
 /// This value will only be set/useful if the current code is running through HBL
 pub fn get_applet_type() -> AppletType {
-    unsafe {
-        G_APPLET_TYPE
-    }
+    G_APPLET_TYPE.load(Relaxed)
 }
 
-static mut G_LOADER_INFO: &'static str = "";
+static G_LOADER_INFO: RwLock<&'static str> = RwLock::new("");
 
 pub(crate) fn set_loader_info(loader_info: &'static str) {
-    unsafe {
-        G_LOADER_INFO = loader_info;
-    }
+    *G_LOADER_INFO.write() = loader_info;
 }
 
 /// Gets the loader information string, about HBL
-/// 
+///
 /// This value will only be set/useful if the current code is running through HBL
 pub fn get_loader_info() -> &'static str {
-    unsafe {
-        G_LOADER_INFO
-    }
+    *G_LOADER_INFO.read()
 }
 
-static mut G_NEXT_LOAD_PATH: &'static str = "";
-static mut G_NEXT_LOAD_ARGV: &'static str = "";
+pub static G_NEXT_LOAD_PATH: Mutex<Option<&'static mut ArrayString<512>>> = Mutex::new(None);
+pub static G_NEXT_LOAD_ARGV: Mutex<Option<&'static mut ArrayString<2048>>> = Mutex::new(None);
 
-pub(crate) fn set_next_load_entry_ptr(next_load_path: &'static str, next_load_argv: &'static str) {
-    unsafe {
-        G_NEXT_LOAD_PATH = next_load_path;
-        G_NEXT_LOAD_ARGV = next_load_argv;
-    }
+pub(crate) fn set_next_load_entry_ptr(
+    next_load_path: &'static mut ArrayString<512>,
+    next_load_argv: &'static mut ArrayString<2048>,
+) {
+    *G_NEXT_LOAD_PATH.lock() = Some(next_load_path);
+    *G_NEXT_LOAD_ARGV.lock() = Some(next_load_argv);
 }
 
 /// Gets the next load path, AKA the path of the homebrew NRO which will be executed after this one exits
-/// 
+///
 /// This value will only be set/useful if the current code is running through HBL
-pub fn get_next_load_path() -> &'static str {
-    unsafe {
-        G_NEXT_LOAD_PATH
-    }
+pub fn get_next_load_path() -> Option<ArrayString<512>> {
+    G_NEXT_LOAD_PATH
+        .lock()
+        .as_ref()
+        .map(|s: &&mut ArrayString<512>| *(*s))
 }
 
 /// Gets the next load argv, AKA the argv of the homebrew NRO which will be executed after this one exits
-/// 
+///
 /// This value will only be set/useful if the current code is running through HBL
-pub fn get_next_load_argv() -> &'static str {
-    unsafe {
-        G_NEXT_LOAD_ARGV
-    }
+pub fn get_next_load_argv() -> Option<ArrayString<2048>> {
+    G_NEXT_LOAD_ARGV
+        .lock()
+        .as_ref()
+        .map(|s: &&mut ArrayString<2048>| *(*s))
 }
 
 /// Sets the next homebrew NRO (path and argv) to execute after this one exits
-/// 
+///
 /// This will only make any effect if the current code is running through HB
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `next_load_path`: NRO path
 /// * `next_load_argv`: NRO argv
-pub fn set_next_load_entry(next_load_path: &'static str, next_load_argv: &'static str) {
-    unsafe {
-        // Note: using this system to copy the strings since we must preserve the string pointers HBL sent us
-        G_NEXT_LOAD_PATH = util::str_copy(G_NEXT_LOAD_PATH, next_load_path);
-        G_NEXT_LOAD_ARGV = util::str_copy(G_NEXT_LOAD_ARGV, next_load_argv);
-    }
+///
+/// Returns true if the buffers have been initialized, else false.
+///
+pub fn set_next_load_entry(
+    next_load_path: &'static str,
+    next_load_argv: &'static str,
+) -> Result<(bool, bool)> {
+    Ok((
+        {
+            let mut path_handle = G_NEXT_LOAD_PATH.lock();
+            if let Some(buffer) = path_handle.as_mut() {
+                (*buffer).set_str(next_load_path)?;
+                true
+            } else {
+                false
+            }
+        },
+        {
+            let mut argv_handle = G_NEXT_LOAD_ARGV.lock();
+            if let Some(buffer) = argv_handle.as_mut() {
+                (*buffer).set_str(next_load_argv)?;
+                true
+            } else {
+                false
+            }
+        },
+    ))
 }
 
-static mut G_RANDOM_SEED: (u64, u64) = (0, 0);
+static G_RANDOM_SEED: RwLock<(u64, u64)> = RwLock::new((0, 0));
 
 pub(crate) fn set_random_seed(seed: (u64, u64)) {
-    unsafe {
-        G_RANDOM_SEED = seed;
-    }
+    *G_RANDOM_SEED.write() = seed;
 }
 
 /// Gets the random seed values sent by HBL
-/// 
+///
 /// This values will only be set/useful if the current code is running through HBL
 pub fn get_random_seed() -> (u64, u64) {
-    unsafe {
-        G_RANDOM_SEED
-    }
+    *G_RANDOM_SEED.read()
 }

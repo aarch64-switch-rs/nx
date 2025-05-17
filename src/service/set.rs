@@ -1,27 +1,14 @@
+use crate::ipc::sf::sm;
 use crate::result::*;
-use crate::ipc::sf::{self, sm};
-use crate::ipc::sf::mii;
 use crate::service;
 
 pub use crate::ipc::sf::set::*;
 
-ipc_client_define_object_default!(SystemSettingsServer);
+ipc_client_define_client_default!(SystemSettingsService);
 
-impl ISystemSettingsServer for SystemSettingsServer {
-    fn get_firmware_version(&mut self, out_version: sf::OutFixedPointerBuffer<FirmwareVersion>) -> Result<()> {
-        ipc_client_send_request_command!([self.session.object_info; 3] (out_version) => ())
-    }
+impl ISystemSettingsClient for SystemSettingsService {}
 
-    fn get_firmware_version_2(&mut self, out_version: sf::OutFixedPointerBuffer<FirmwareVersion>) -> Result<()> {
-        ipc_client_send_request_command!([self.session.object_info; 4] (out_version) => ())
-    }
-
-    fn get_mii_author_id(&mut self) -> Result<mii::CreateId> {
-        ipc_client_send_request_command!([self.session.object_info; 90] () => (id: mii::CreateId))
-    }
-}
-
-impl service::IService for SystemSettingsServer {
+impl service::IService for SystemSettingsService {
     fn get_name() -> sm::ServiceName {
         sm::ServiceName::new("set:sys")
     }

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":["ApplicationDisplayService","ApplicationRootService","ManagerDisplayService","ManagerRootService","SystemDisplayService","SystemRootService"]};

@@ -1,13 +1,13 @@
 #![macro_use]
 
 /// Creates a result definition
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```
 /// // Defines "ResultDemo" result definition
 /// result_define!(Demo: 345, 6789);
-/// 
+///
 /// // Creates a "ResultCode" of value "2345-6789"
 /// let rc = ResultDemo::make();
 /// ```
@@ -18,6 +18,7 @@ macro_rules! result_define {
         $name:ident: $module:expr, $description:expr
     ) => {
         paste::paste! {
+            #[allow(missing_docs)]
             $(#[$meta])*
             pub struct [<Result $name>];
 
@@ -35,16 +36,16 @@ macro_rules! result_define {
 }
 
 /// Creates a group of result definitions (all under the same module)
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```
 /// // Defines "ResultDemo1" and "ResultDemo2"
 /// result_define_group!(345 => {
 ///     Demo1: 12,
 ///     Demo2: 15
 /// });
-/// 
+///
 /// // Creates a "ResultCode" of value "2345-0012"
 /// let rc1 = ResultDemo1::make();
 /// // Creates a "ResultCode" of value "2345-0015"
@@ -58,16 +59,16 @@ macro_rules! result_define_group {
 }
 
 /// Creates a group of result definitions (all under the same module and submodule)
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```
 /// // Defines "ResultDemo1" and "ResultDemo2"
 /// result_define_subgroup!(345, 6000 => {
 ///     Demo1: 12,
 ///     Demo2: 15
 /// });
-/// 
+///
 /// // Creates a "ResultCode" of value "2345-6012"
 /// let rc1 = ResultDemo1::make();
 /// // Creates a "ResultCode" of value "2345-6015"
@@ -85,19 +86,19 @@ macro_rules! result_define_subgroup {
 }
 
 /// Returns a given result if the given condition is true
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```
 /// fn demo() -> Result<()> {
 ///     let cond: bool = (...);
-/// 
+///
 ///     // Specifying result definition types
 ///     result_return_if!(cond, ResultTest);
-/// 
+///
 ///     // Giving raw values
 ///     result_return_if!(cond, 0xBABE);
-/// 
+///
 ///     Ok(())
 /// }
 /// ```
@@ -119,19 +120,19 @@ macro_rules! result_return_if {
 }
 
 /// Returns a given result unless the given condition is true
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```
 /// fn demo() -> Result<()> {
 ///     let cond: bool = (...);
-/// 
+///
 ///     // Specifying result definition types
 ///     result_return_unless!(cond, ResultTest);
-/// 
+///
 ///     // Giving raw values
 ///     result_return_unless!(cond, 0xBABE);
-/// 
+///
 ///     Ok(())
 /// }
 /// ```
@@ -147,19 +148,19 @@ macro_rules! result_return_unless {
 }
 
 /// Wraps and returns a given result if it's not successful
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```
 /// fn demo() -> Result<()> {
 ///     // Won't do anything
 ///     result_try!(ResultCode::new(0));
 ///     result_try!(ResultSuccess::make());    
-/// 
+///
 ///     // Will exit with the given results
 ///     result_try!(ResultCode::new(0xCAFE));
 ///     result_try!(ResultDemo::make());
-/// 
+///
 ///     Ok(())
 /// }
 /// ```

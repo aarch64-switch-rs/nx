@@ -1,7 +1,9 @@
 //! Common result support
 
-use core::result;
 use core::fmt;
+use core::result;
+
+use nx_derive::{Request, Response};
 
 const MODULE_BITS: u32 = 9;
 const DESCRIPTION_BITS: u32 = 13;
@@ -24,23 +26,23 @@ const fn unpack_description(value: u32) -> u32 {
 }
 
 /// Represents a (raw) result value used all over the OS
-/// 
+///
 /// These are referred as `Result` on docs/official code, but we intentionally name it as [`ResultCode`] to distinguish it from the [`Result`] enum type
-/// 
+///
 /// Results are often displayed/shown, for example, like `2168-0002`, which corresponds to `<2000 + module>-<description>`
-/// 
+///
 /// [`Debug`][`fmt::Debug`] formatting formats the results as a hex-value (`0x4A8`), while [`Display`][`fmt::Display`] formatting formats the result in the format described above (`2168-0002`)
-#[derive(Copy, Clone, PartialEq, Eq, Default)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Default)]
 #[repr(C)]
 pub struct ResultCode {
-    value: u32
+    value: u32,
 }
 
 impl ResultCode {
     /// Creates a [`ResultCode`] from a raw value
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `value`: The raw value
     #[inline]
     pub const fn new(value: u32) -> Self {
@@ -48,43 +50,43 @@ impl ResultCode {
     }
 
     /// Wrapper for creating a new [`Result::Err`] value with the following raw result
-    /// 
+    ///
     /// # Arguments
-    /// 
-    /// * `value`: The raw value, note that it mustn't be `0`/success (that would be undefined behaviour)
+    ///
+    /// * `value`: The raw value, note that it mustn't be `0`/success (that would be undefined behavior)
     #[inline]
     pub const fn new_err<T>(value: u32) -> Result<T> {
         Err(Self::new(value))
     }
-    
+
     /// Returns whether the [`ResultCode`] is successful
-    /// 
+    ///
     /// A result value of `0` is a successful value, this essentially checks that
     #[inline]
     pub const fn is_success(&self) -> bool {
         self.value == SUCCESS_VALUE
     }
-    
+
     /// Returns whether the [`ResultCode`] is not successful
-    /// 
+    ///
     /// This is the exact opposite of [`is_success`][`ResultCode::is_success`]
     #[inline]
     pub const fn is_failure(&self) -> bool {
         !self.is_success()
     }
-    
+
     /// Gets the raw value of the [`ResultCode`]
     #[inline]
     pub const fn get_value(&self) -> u32 {
         self.value
     }
-    
+
     /// Gets the module of the [`ResultCode`]
     #[inline]
     pub const fn get_module(&self) -> u32 {
         unpack_module(self.value)
     }
-    
+
     /// Gets the description of the [`ResultCode`]
     #[inline]
     pub const fn get_description(&self) -> u32 {
@@ -100,7 +102,12 @@ impl fmt::Debug for ResultCode {
 
 impl fmt::Display for ResultCode {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> result::Result<(), fmt::Error> {
-        write!(fmt, "{:0>4}-{:0>4}", 2000 + self.get_module(), self.get_description())
+        write!(
+            fmt,
+            "{:0>4}-{:0>4}",
+            2000 + self.get_module(),
+            self.get_description()
+        )
     }
 }
 
@@ -108,31 +115,30 @@ impl fmt::Display for ResultCode {
 pub type Result<T> = result::Result<T, ResultCode>;
 
 /// Produces a `Result` whose value will depend on whether the supplied [`ResultCode`] was successful
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `rc`: The [`ResultCode`] value
 /// * `value`: The value to pack if the [`ResultCode`] is successful
 #[inline(always)]
 pub fn pack<T>(rc: ResultCode, value: T) -> Result<T> {
     if rc.is_success() {
         Ok(value)
-    }
-    else {
+    } else {
         Err(rc)
     }
 }
 
 /// Produces the [`ResultCode`] corresponding to a packed result
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `rc`: The [`Result`] to unpack
 #[inline(always)]
 pub fn unpack<T>(rc: &Result<T>) -> ResultCode {
     match rc {
         Ok(_) => ResultSuccess::make(),
-        Err(rc) => *rc
+        Err(rc) => *rc,
     }
 }
 
@@ -163,9 +169,9 @@ pub trait ResultBase {
     }
 
     /// Returns whether the given [`ResultCode`] matches this result definition
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `rc`: The [`ResultCode`] to check
     #[inline(always)]
     fn matches(rc: ResultCode) -> bool {

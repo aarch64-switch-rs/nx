@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["AppletId","LibraryAppletMode","ScreenShotPermission"],"struct":["AppletAttribute"],"trait":["IAllSystemAppletProxiesService","ILibraryAppletAccessor","ILibraryAppletCreator","ILibraryAppletProxy","ISelfController","IStorage","IStorageAccessor","IWindowController"],"type":["AppletResourceUserId"]};

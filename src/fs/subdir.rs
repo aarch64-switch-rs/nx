@@ -13,8 +13,7 @@ use crate::fs::sf as fs_sf;
 
 /// Represents an IPC [`IFileSystem`] object wrapping around a FS subdirectory path
 pub struct FileSystem {
-    sub_dir: String,
-    dummy_session: sf::Session
+    sub_dir: String
 }
 
 impl FileSystem {
@@ -25,22 +24,13 @@ impl FileSystem {
     /// * `sub_dir`: The subdirectory path to wrap
     pub fn new(sub_dir: String) -> Self {
         Self {
-            sub_dir,
-            dummy_session: sf::Session::new()
+            sub_dir
         }
     }
 
     fn make_path(&self, path_buf: &sf::InFixedPointerBuffer<fsp::Path>) -> Result<String> {
         let fs_path = path_buf.get_var().get_string()?;
         Ok(format!("{}/{}", self.sub_dir, fs_path))
-    }
-}
-
-impl sf::IObject for FileSystem {
-    ipc_sf_object_impl_default_command_metadata!();
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.dummy_session
     }
 }
 
@@ -87,13 +77,13 @@ impl IFileSystem for FileSystem {
         super::get_entry_type(path)
     }
     
-    fn open_file(&mut self, mode: fsp::FileOpenMode, path_buf: sf::InFixedPointerBuffer<fsp::Path>) -> Result<mem::Shared<dyn fsp::IFile>> {
+    fn open_file(&mut self, mode: fsp::FileOpenMode, path_buf: sf::InFixedPointerBuffer<fsp::Path>) -> Result<fs_sf::File> {
         let path = self.make_path(&path_buf)?;
         let file_accessor = super::open_file(path, super::convert_file_open_mode_to_option(mode))?;
-        Ok(mem::Shared::new(fs_sf::File::new(file_accessor.get_object())))
+        Ok(fs_sf::File::new(file_accessor.get_object()))
     }
 
-    fn open_directory(&mut self, mode: fsp::DirectoryOpenMode, path_buf: sf::InFixedPointerBuffer<fsp::Path>) -> Result<mem::Shared<dyn fsp::IDirectory>> {
+    fn open_directory(&mut self, mode: fsp::DirectoryOpenMode, path_buf: sf::InFixedPointerBuffer<fsp::Path>) -> Result<mem::Shared<fs_sf::Directory>> {
         let path = self.make_path(&path_buf)?;
         let dir_accessor = super::open_directory(path, mode)?;
         Ok(mem::Shared::new(fs_sf::Directory::new(dir_accessor.get_object())))

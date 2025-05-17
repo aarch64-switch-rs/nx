@@ -1,55 +1,52 @@
 //! `LogManager` logger implementation
 
 use super::*;
-use crate::rrt0;
-use crate::mem;
 use crate::ipc::sf;
+use crate::rrt0;
 use crate::service;
-use crate::service::lm;
-use crate::service::lm::ILogService;
-use crate::service::lm::ILogger;
+use crate::service::lm::{self, ILoggerClient, ILoggingClient, LoggingService};
 use crate::svc;
 
-/// Represents a logger through [`LogService`][`lm::LogService`] services
+/// Represents a logger through [`LogService`][`lm::LoggingService`] services
 pub struct LmLogger {
-    logger: Option<mem::Shared<dyn ILogger>>
+    logger: Option<lm::Logger>,
 }
 
 impl Logger for LmLogger {
     fn new() -> Self {
-        let logger = match service::new_service_object::<lm::LogService>() {
-            Ok(log_srv) => {
-                match log_srv.get().open_logger(sf::ProcessId::new()) {
-                    Ok(logger_obj) => Some(logger_obj),
-                    Err(_) => None
-                }
-            },
-            Err(_) => None
-        };
-
-        Self { logger }
+        Self {
+            logger: service::new_service_object::<LoggingService>()
+                .map(|mut log_srv| {
+                    log_srv.open_logger(
+                        // The standard logging service doesn't use the provided value,
+                        // so just use a dummy value.
+                        0,
+                    ).ok()
+                })
+                .ok().flatten()
+        }
     }
 
     fn log(&mut self, metadata: &LogMetadata) {
-        if let Some(logger_obj) = &self.logger {
+        if let Some(logger_obj) = self.logger.as_mut() {
             let mut log_packet = logpacket::LogPacket::new();
 
             if let Ok(process_id) = svc::get_process_id(svc::CURRENT_PROCESS_PSEUDO_HANDLE) {
                 log_packet.set_process_id(process_id);
             }
 
-            let cur_thread = thread::get_current_thread();
-            if let Ok(thread_id) = cur_thread.get_id() {
+            let cur_thread = unsafe { thread::current().as_ref().unwrap() };
+            if let Ok(thread_id) = cur_thread.id() {
                 log_packet.set_thread_id(thread_id);
             }
 
             log_packet.set_file_name(String::from(metadata.file_name));
             log_packet.set_function_name(String::from(metadata.fn_name));
             log_packet.set_line_number(metadata.line_number);
-    
-            let mod_name = match rrt0::get_module_name().path.get_string() {
+
+            let mod_name = match rrt0::get_module_name().get_name().get_string() {
                 Ok(name) => name,
-                Err(_) => String::from("aarch64-switch-rs (invalid module name)")
+                Err(_) => String::from("aarch64-switch-rs (invalid module name)"),
             };
             log_packet.set_module_name(mod_name);
 
@@ -62,7 +59,7 @@ impl Logger for LmLogger {
             log_packet.set_thread_name(String::from(thread_name));
 
             for packet in log_packet.encode_packet() {
-                let _ = logger_obj.get().log(sf::Buffer::from_array(&packet));
+                let _ = logger_obj.log(sf::Buffer::from_array(&packet));
             }
         }
     }

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":[["Header","Represents the `MOD0` header structure"]]};

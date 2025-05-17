@@ -1,273 +1,266 @@
 //! Synchronization support and utils
 
-use crate::diag::abort;
-use crate::svc;
-use crate::thread;
 use core::cell::UnsafeCell;
-use core::arch::asm;
 
-const HANDLE_WAIT_MASK: u32 = 0x40000000;
+pub mod sys;
+use sys::mutex::Mutex as RawMutex;
+use sys::rwlock::RwLock as RawRwLock;
 
-#[inline(always)]
-fn get_current_thread_handle() -> u32 {
-    thread::get_current_thread().get_handle()
-}
-
-#[inline(always)]
-fn load_exclusive(ptr: *mut u32) -> u32 {
-    let value: u32;
-    unsafe {
-        asm!(
-            "ldaxr {0:w}, [{1:x}]",
-            out(reg) value,
-            in(reg) ptr
-        );
-    }
-    value
-}
-
-#[inline(always)]
-fn store_exclusive(ptr: *mut u32, value: u32) -> i32 {
-    let res: i32;
-    unsafe {
-        asm!(
-            "stlxr {0:w}, {1:w}, [{2:x}]",
-            out(reg) res,
-            in(reg) value,
-            in(reg) ptr
-        );
-    }
-    res
-}
-
-#[inline(always)]
-fn clear_exclusive() {
-    unsafe {
-        asm!("clrex");
-    }
-}
-
-fn lock_impl(handle_ref: *mut u32) {
-    let thr_handle = get_current_thread_handle();
-    
-    let mut value = load_exclusive(handle_ref);
-    loop {
-        if value == svc::INVALID_HANDLE {
-            if store_exclusive(handle_ref, thr_handle) != 0 {
-                value = load_exclusive(handle_ref);
-                continue;
-            }
-            break;
-        }
-        if (value & HANDLE_WAIT_MASK) == 0 && store_exclusive(handle_ref, value | HANDLE_WAIT_MASK) != 0 {
-            value = load_exclusive(handle_ref);
-            continue;
-        }
-
-        match svc::arbitrate_lock(value & !HANDLE_WAIT_MASK, handle_ref as *mut u8, thr_handle) {
-            Err(rc) => abort::abort(abort::AbortLevel::SvcBreak(), rc),
-            _ => {}
-        };
-
-        value = load_exclusive(handle_ref);
-        if (value & !HANDLE_WAIT_MASK) == thr_handle {
-            clear_exclusive();
-            break;
-        }
-    }
-}
-
-fn unlock_impl(handle_ref: *mut u32) {
-    let thr_handle = get_current_thread_handle();
-    
-    let mut value = load_exclusive(handle_ref);
-    loop {
-        if value != thr_handle {
-            clear_exclusive();
-            break;
-        }
-
-        if store_exclusive(handle_ref, 0) == 0 {
-            break;
-        }
-
-        value = load_exclusive(handle_ref);
-    }
-
-    if (value & HANDLE_WAIT_MASK) != 0 {
-        // TODO: handle this instead of unwrapping it?
-        svc::arbitrate_unlock(handle_ref as *mut u8).unwrap();
-    }
-}
-
-fn try_lock_impl(handle_ref: *mut u32) -> bool {
-    let thr_handle = get_current_thread_handle();
-
-    loop {
-        let value = load_exclusive(handle_ref);
-        if value != svc::INVALID_HANDLE {
-            break;
-        }
-
-        if store_exclusive(handle_ref, thr_handle) == 0 {
-            return true;
-        }
-    }
-
-    clear_exclusive();
-
-    false
-}
-
-/// Represents a locking/unlocking type
-pub struct Mutex {
-    value: u32,
-    is_recursive: bool,
-    counter: u32,
-    thread_handle: u32,
-}
-
-impl Mutex {
-    /// Creates a new [`Mutex`]
-    /// 
-    /// # Arguments
-    /// 
-    /// * `is_recursive`: Whether the [`Mutex`] is recursive (in that case, multiple (un)locking attempts in the same thread are allowed)
-    #[inline]
-    pub const fn new(is_recursive: bool) -> Self {
-        Self { value: 0, is_recursive, counter: 0, thread_handle: 0 }
-    }
-
-    /// Locks the [`Mutex`]
-    pub fn lock(&mut self) {
-        let mut do_lock = true;
-        if self.is_recursive {
-            do_lock = false;
-            let thr_handle = get_current_thread_handle();
-            if self.thread_handle != thr_handle {
-                do_lock = true;
-                self.thread_handle = thr_handle;
-            }
-            self.counter += 1;
-        }
-
-        if do_lock {
-            lock_impl(&mut self.value);
-        }
-    }
-
-    /// Unlocks the [`Mutex`]
-    pub fn unlock(&mut self) {
-        let mut do_unlock = true;
-        if self.is_recursive {
-            do_unlock = false;
-            self.counter -= 1;
-            if self.counter == 0 {
-                self.thread_handle = 0;
-                do_unlock = true;
-            }
-        }
-
-        if do_unlock {
-            unlock_impl(&mut self.value);
-        }
-    }
-
-    /// Attempts to lock the [`Mutex`], returning whether it was successful
-    pub fn try_lock(&mut self) -> bool {
-        if self.is_recursive {
-            let thr_handle = get_current_thread_handle();
-            if self.thread_handle != thr_handle {
-                if !try_lock_impl(&mut self.value) {
-                    return false;
-                }
-                self.thread_handle = thr_handle;
-            }
-            self.counter += 1;
-            true
-        }
-        else {
-            try_lock_impl(&mut self.value)
-        }
-    }
+#[macro_export]
+macro_rules! acquire {
+    ($x:expr) => {
+        atomic::fence(Acquire)
+    };
 }
 
 /// Represents a type which will lock a given [`Mutex`] on creation and unlock it on destruction, effectively guarding it
 pub struct ScopedLock<'a> {
-    lock: &'a mut Mutex,
+    lock: &'a mut RawMutex,
 }
 
 impl<'a> ScopedLock<'a> {
     /// Creates a new [`ScopedLock`] for a given [`Mutex`]
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `lock`: The [`Mutex`] to guard
-    pub fn new(lock: &'a mut Mutex) -> Self {
+    pub fn new(lock: &'a mut RawMutex) -> Self {
         lock.lock();
         Self { lock }
     }
 }
 
-impl<'a> Drop for ScopedLock<'a> {
+impl Drop for ScopedLock<'_> {
     /// Unlocks the [`Mutex`] as the [`ScopedLock`] is destroyed (likely out of scope)
     fn drop(&mut self) {
-        self.lock.unlock();
+        // SAFETY: variant upheld that the lock should actually be locked
+        unsafe { self.lock.unlock() };
     }
 }
 
+//////////// MUTEX
+
 /// Represents a value whose access is controlled by an inner [`Mutex`]
-pub struct Locked<T> {
-    lock_cell: UnsafeCell<Mutex>,
-    object_cell: UnsafeCell<T>,
+pub struct Mutex<T: ?Sized> {
+    pub(self) raw_lock: RawMutex,
+    pub(self) object_cell: UnsafeCell<T>,
 }
 
-impl<T> Locked<T> {
-    /// Creates a new [`Locked`] with a value
-    /// 
+impl<T> Mutex<T> {
+    pub fn is_locked(&self) -> bool {
+        self.raw_lock.is_locked()
+    }
+    /// Creates a new [`RwLock`] with a value
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `is_recursive`: Whether the inner [`Mutex`] is recursive
     /// * `t`: The value to store
     #[inline]
-    pub const fn new(is_recursive: bool, t: T) -> Self {
-        Self { lock_cell: UnsafeCell::new(Mutex::new(is_recursive)), object_cell: UnsafeCell::new(t) }
-    }
-
-    /// Gets a reference to the inner [`Mutex`]
-    #[inline]
-    pub const fn get_lock(&self) -> &mut Mutex {
-        unsafe {
-            &mut *self.lock_cell.get()
+    pub const fn new(t: T) -> Self {
+        Self {
+            raw_lock: RawMutex::new(),
+            object_cell: UnsafeCell::new(t),
         }
     }
 
-    /// Gets a reference of the value, doing a lock-unlock operation in the process
-    pub fn get(&self) -> &mut T {
-        self.get_lock().lock();
-        let obj_ref = unsafe {
-            &mut *self.object_cell.get()
-        };
-        self.get_lock().unlock();
-        obj_ref
+    /// Sets a value, doing a lock-unlock operation in the process
+    pub fn set(&self, t: T) {
+        unsafe {
+            self.raw_lock.lock();
+            let _to_drop = core::mem::replace(self.object_cell.get().as_mut().unwrap(), t);
+            self.raw_lock.unlock();
+        }
+    }
+}
+
+impl<T: ?Sized> Mutex<T> {
+    /// Locks the Mutex and returns a guarded reference to the inner value
+    pub fn lock(&self) -> MutexGuard<'_, T> {
+        self.raw_lock.lock();
+        MutexGuard { lock: self }
+    }
+
+    pub fn try_lock(&self) -> Option<MutexGuard<'_, T>> {
+        if self.raw_lock.try_lock() {
+            Some(MutexGuard { lock: self })
+        } else {
+            None
+        }
+    }
+}
+
+impl<T: Copy> Mutex<T> {
+    /// Gets a copy of the value, doing a lock-unlock operation in the process
+    pub fn get_val(&self) -> T {
+        unsafe {
+            self.raw_lock.lock();
+            let obj_copy = *self.object_cell.get();
+            self.raw_lock.unlock();
+            obj_copy
+        }
+    }
+}
+
+// we only have a bound on Sync instead of Send, because we don't implement into_inner
+unsafe impl<T: ?Sized + Sync> Sync for Mutex<T> {}
+unsafe impl<T: ?Sized + Sync> Send for Mutex<T> {}
+
+pub struct MutexGuard<'borrow, T: ?Sized> {
+    pub(self) lock: &'borrow Mutex<T>,
+}
+
+unsafe impl<T: ?Sized + Sync> Sync for MutexGuard<'_, T> {}
+
+impl<'borrow, T: ?Sized> MutexGuard<'borrow, T> {
+    pub fn new(lock: &'borrow Mutex<T>) -> Self {
+        lock.raw_lock.lock();
+        Self { lock }
+    }
+}
+
+impl<T: ?Sized> core::ops::Deref for MutexGuard<'_, T> {
+    type Target = T;
+
+    fn deref(&self) -> &T {
+        unsafe { self.lock.object_cell.get().as_ref().unwrap_unchecked() }
+    }
+}
+
+impl<T: ?Sized> core::ops::DerefMut for MutexGuard<'_, T> {
+    fn deref_mut(&mut self) -> &mut T {
+        unsafe {
+            self.lock
+                .object_cell
+                .get()
+                .as_mut()
+                // We know the pointer is valid as we have a valid ref to the parent
+                .unwrap()
+        }
+    }
+}
+
+impl<T: ?Sized> Drop for MutexGuard<'_, T> {
+    fn drop(&mut self) {
+        unsafe { self.lock.raw_lock.unlock() };
+    }
+}
+//////////// MUTEX
+
+//////////// RWLOCK
+
+pub struct RwLock<T: ?Sized> {
+    pub(self) raw_lock: RawRwLock,
+    pub(self) object_cell: UnsafeCell<T>,
+}
+
+impl<T: ?Sized> core::fmt::Debug for RwLock<T> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.write_str("RwLock<")?;
+        f.write_str(core::any::type_name::<T>())?;
+        f.write_str(">(...)")
+    }
+}
+
+impl<T> RwLock<T> {
+    /// Creates a new [`RwLock`] with a value
+    ///
+    /// # Arguments
+    ///
+    /// * `is_recursive`: Whether the inner [`Mutex`] is recursive
+    /// * `t`: The value to store
+    #[inline]
+    pub const fn new(t: T) -> Self {
+        Self {
+            raw_lock: RawRwLock::new(),
+            object_cell: UnsafeCell::new(t),
+        }
     }
 
     /// Sets a value, doing a lock-unlock operation in the process
     pub fn set(&mut self, t: T) {
-        self.get_lock().lock();
-        self.object_cell = UnsafeCell::new(t);
-        self.get_lock().unlock();
+        unsafe {
+            self.raw_lock.write();
+            self.object_cell = UnsafeCell::new(t);
+            self.raw_lock.write_unlock();
+        }
+    }
+
+    /// Locks the value for writing and returns a guarded reference to the inner value
+    pub fn write(&self) -> WriteGuard<'_, T> {
+        self.raw_lock.write();
+        WriteGuard { lock: self }
+    }
+
+    /// Locks the value for reading and returns a guarded reference to the inner value
+    pub fn read(&self) -> ReadGuard<'_, T> {
+        self.raw_lock.read();
+        ReadGuard { lock: self }
     }
 }
 
-impl<T: Copy> Locked<T> {
+impl<T: Copy> RwLock<T> {
     /// Gets a copy of the value, doing a lock-unlock operation in the process
     pub fn get_val(&self) -> T {
-        self.get_lock().lock();
-        let obj_copy = unsafe {
-            *self.object_cell.get()
-        };
-        self.get_lock().unlock();
-        obj_copy
+        unsafe {
+            self.raw_lock.read();
+            let obj_copy = *self.object_cell.get();
+            self.raw_lock.read_unlock();
+            obj_copy
+        }
+    }
+}
+unsafe impl<T: ?Sized + Send> Sync for RwLock<T> {}
+unsafe impl<T: ?Sized + Send> Send for RwLock<T> {}
+
+pub struct ReadGuard<'borrow, T: ?Sized> {
+    pub(self) lock: &'borrow RwLock<T>,
+}
+
+pub struct WriteGuard<'borrow, T: ?Sized> {
+    pub(self) lock: &'borrow RwLock<T>,
+}
+
+unsafe impl<T: ?Sized + Sync> Sync for ReadGuard<'_, T> {}
+unsafe impl<T: ?Sized + Sync> Sync for WriteGuard<'_, T> {}
+
+impl<'borrow, T: ?Sized> ReadGuard<'borrow, T> {
+    pub fn new(lock: &'borrow RwLock<T>) -> Self {
+        lock.raw_lock.read();
+        Self { lock }
+    }
+}
+
+impl<T> core::ops::Deref for ReadGuard<'_, T> {
+    type Target = T;
+
+    fn deref(&self) -> &T {
+        unsafe { &*self.lock.object_cell.get() }
+    }
+}
+
+impl<T> core::ops::Deref for WriteGuard<'_, T> {
+    type Target = T;
+
+    fn deref(&self) -> &T {
+        unsafe { &*self.lock.object_cell.get() }
+    }
+}
+
+impl<T> core::ops::DerefMut for WriteGuard<'_, T> {
+    fn deref_mut(&mut self) -> &mut T {
+        unsafe { &mut *self.lock.object_cell.get() }
+    }
+}
+
+impl<T: ?Sized> Drop for ReadGuard<'_, T> {
+    fn drop(&mut self) {
+        unsafe { self.lock.raw_lock.read_unlock() };
+    }
+}
+
+impl<T: ?Sized> Drop for WriteGuard<'_, T> {
+    fn drop(&mut self) {
+        unsafe { self.lock.raw_lock.write_unlock() };
     }
 }

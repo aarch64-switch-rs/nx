@@ -1,22 +1,67 @@
 [package]
 name = "nx"
-version = "0.1.0"
-authors = ["XorTroll"]
-edition = "2021"
+version = "0.2.0"
+authors = ["XorTroll", "Pantsman0"]
+edition = "2024"
+include = [
+    "src",
+    "nx_derive"
+]
 
 [dependencies]
 paste = "1.0"
 logpacket = { git = "https://github.com/aarch64-switch-rs/logpacket" }
-linked_list_allocator = { version = "0.10.5", default-features = false, features = [ "const_mut_refs" ] }
-arrayvec = { version = "0.7.4", default-features = false, features = [] }
+arrayvec = { version = "0.7.4", default-features = false }
 static_assertions = "1.1.0"
+lock_api = { version = "0.4.12", features = ["nightly"] }
+atomic_enum = "0.3.0"
+zeroize = { version = "1.8.1", features = ["aarch64"] }
+nx-derive = { path = "nx-derive/" }
+num-traits = { version = "0.2.19", default-features = false, features = ["libm"]}
+bitfield-struct = "0.11.0"
+num-derive = "0.4.2"
+
+[dependencies.line_drawing]
+optional = true
+version = "1.0.1"
+
+[dependencies.ab_glyph]
+optional = true
+version = "0.2"
+default-features = false
+features = ["variable-fonts", "libm"]
+
+[dependencies.font8x8]
+optional = true
+version = "0.3"
+default-features = false
+features = ["unicode"]
+
+[dependencies.unwinding]
+version = "0.2.6"
+default-features = false
+features = ["unwinder", "panic", "fde-custom", "personality"]
+
+[dependencies.linked_list_allocator]
+version = "0.10.5"
+default-features = false
+features = [ "const_mut_refs", "alloc_ref", "use_spin" ]
+
+[dependencies.rand]
+optional = true
+version = "0.9"
+default-features = false
+features = ["alloc"]
 
 [features]
+default = []
 services = []
-crypto = []
 smc = []
 gpu = ["services"]
+canvas = ["gpu", "dep:line_drawing"]
+fonts = ["canvas", "dep:ab_glyph", "dep:font8x8"]
+truetype = ["fonts"]
 fs = ["services"]
 input = ["services"]
 la = ["services"]
-rand = ["services"]
+rand = ["services", "dep:rand"]

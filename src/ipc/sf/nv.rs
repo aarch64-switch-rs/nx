@@ -1,8 +1,9 @@
-use crate::result::*;
 use crate::ipc::sf;
 use crate::version;
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+use nx_derive::{Request, Response};
+
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u32)]
 pub enum ErrorCode {
     #[default]
@@ -24,10 +25,10 @@ pub enum ErrorCode {
     CountMismatch = 16,
     SharedMemoryTooSmall = 0x1000,
     FileOperationFailed = 0x30003,
-    IoctlFailed = 0x3000F
+    IoctlFailed = 0x3000F,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
 pub enum IoctlId {
     NvMapCreate = 0xC0080101,
@@ -37,16 +38,17 @@ pub enum IoctlId {
     NvMapParam = 0xC00C0109,
     NvMapGetId = 0xC008010E,
 
-    NvHostCtrlSyncptWait = 0xC00C0016
+    NvHostCtrlSyncptWait = 0xC00C0016,
 }
 
 pub type Fd = u32;
 
+//ipc_sf_define_default_client_for_interface!(NvDrvServices);
 ipc_sf_define_interface_trait! {
-    trait INvDrvServices {
-        open [0, version::VersionInterval::all()]: (path: sf::InMapAliasBuffer<u8>) => (fd: Fd, error_code: ErrorCode);
-        ioctl [1, version::VersionInterval::all()]: (fd: Fd, id: IoctlId, in_buf: sf::InAutoSelectBuffer<u8>, out_buf: sf::OutAutoSelectBuffer<u8>) => (error_code: ErrorCode);
-        close [2, version::VersionInterval::all()]: (fd: Fd) => (error_code: ErrorCode);
-        initialize [3, version::VersionInterval::all()]: (transfer_mem_size: u32, self_process_handle: sf::CopyHandle, transfer_mem_handle: sf::CopyHandle) => (error_code: ErrorCode);
+    trait NvDrv {
+        open [0, version::VersionInterval::all()]: (path: sf::InMapAliasBuffer<u8>) =>  (fd: Fd, error_code: ErrorCode) (fd: Fd, error_code: ErrorCode);
+        ioctl [1, version::VersionInterval::all()]: (fd: Fd, id: IoctlId, in_buf: sf::InAutoSelectBuffer<u8>, out_buf: sf::OutAutoSelectBuffer<u8>) =>  (error_code: ErrorCode) (error_code: ErrorCode);
+        close [2, version::VersionInterval::all()]: (fd: Fd) =>  (error_code: ErrorCode) (error_code: ErrorCode);
+        initialize [3, version::VersionInterval::all()]: (transfer_mem_size: u32, self_process_handle: sf::CopyHandle, transfer_mem_handle: sf::CopyHandle) =>  (error_code: ErrorCode) (error_code: ErrorCode);
     }
 }

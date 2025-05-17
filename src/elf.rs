@@ -1,15 +1,21 @@
 //! ELF (aarch64) support and utils
 
-use crate::result::*;
+use core::sync::atomic::AtomicUsize;
+use core::sync::atomic::Ordering::SeqCst;
 
+use unwinding::custom_eh_frame_finder::{FrameInfo, FrameInfoKind};
+
+pub mod mod0;
 pub mod rc;
 
-/// Represents ELF tags
+/// Represents ELF tags.
+/// Cherry picked from [valid relocation types](https://github.com/cole14/rust-elf/blob/cdc67691a79a18995e74ce7b65682db4c59c260c/src/abi.rs#L817-1017).
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(i64)]
+#[allow(missing_docs)]
 pub enum Tag {
     #[default]
-    Invalid = 0,
+    Null = 0,
     Needed = 1,
     PltRelSize = 2,
     Hash = 4,
@@ -29,78 +35,76 @@ pub enum Tag {
     InitArraySize = 27,
     FiniArraySize = 28,
     RelaCount = 0x6FFFFFF9,
-    RelCount = 0x6FFFFFFA
+    RelCount = 0x6FFFFFFA,
 }
 
-/// Represents ELF relocation types
+/// Represents ELF relocation types.
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
+#[allow(missing_docs)]
 pub enum RelocationType {
     AArch64Abs64 = 257,
     AArch64GlobDat = 1025,
     AArch64JumpSlot = 1026,
-    AArch64Relative = 1027
+    AArch64Relative = 1027,
 }
 
-/// Represents an ELF dynamic entry
+/// Represents an ELF dynamic entry.
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
+#[allow(missing_docs)]
 pub struct Dyn {
-    /// The entry tag
     pub tag: Tag,
-    /// The entry value
-    pub val_ptr: usize
+    pub val_ptr: usize,
 }
 
-/// Represents an ELF info symbol
+/// Represents an ELF info symbol.
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]
+#[allow(missing_docs)]
 pub struct InfoSymbol {
-    /// The relocation type
     pub relocation_type: RelocationType,
-    /// The symbol value
-    pub symbol: u32
+    pub symbol: u32,
 }
 
-/// Represents an info value
+/// Represents an ELF info value.
 #[derive(Copy, Clone)]
 #[repr(C)]
+#[allow(missing_docs)]
 pub union Info {
-    /// The value
     pub value: u64,
-    /// The symbol
-    pub symbol: InfoSymbol
+    pub symbol: InfoSymbol,
 }
 
-/// Represents a rel type
+/// Represents an ELF Rel type.
 #[derive(Copy, Clone)]
 #[repr(C)]
+#[allow(missing_docs)]
 pub struct Rel {
-    /// The offset
     pub offset: usize,
-    /// The info
-    pub info: Info
+    pub info: Info,
 }
 
-/// Represents a rela type
+/// Represents an ELF Rela type.
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct Rela {
-    /// The offset
     pub offset: usize,
-    /// The info
     pub info: Info,
-    /// The addend value
-    pub addend: i64
+    pub addend: i64,
 }
 
-/// Relocates a base address with its corresponding [`Dyn`] reference
+/// Relocates a base address with its corresponding [`Dyn`] reference.
+///
+/// # Arguments:
+///
+/// * `base_address`: The base address to relocate.
+/// * `start_dyn`: Pointer to the start of the [`Dyn`] list.
 /// 
-/// # Arguments
+/// # Safety
 /// 
-/// * `base_address`: The base address to relocate
-/// * `start_dyn`: The [`Dyn`] reference
-pub fn relocate_with_dyn(base_address: *const u8, start_dyn: *const Dyn) -> Result<()> {
+/// The caller is responsible for providing valid pointers for `base_address` and `start_dyn`
+pub unsafe fn relocate_with_dyn(base_address: *mut u8, start_dyn: *const Dyn) {
     unsafe {
         let mut rel_offset_v: Option<usize> = None;
         let mut rel_entry_size_v: Option<usize> = None;
@@ -112,14 +116,14 @@ pub fn relocate_with_dyn(base_address: *const u8, start_dyn: *const Dyn) -> Resu
         let mut cur_dyn = start_dyn;
         loop {
             match (*cur_dyn).tag {
-                Tag::Invalid => break,
+                Tag::Null => break,
                 Tag::RelOffset => rel_offset_v = Some((*cur_dyn).val_ptr),
                 Tag::RelEntrySize => rel_entry_size_v = Some((*cur_dyn).val_ptr),
                 Tag::RelCount => rel_count_v = Some((*cur_dyn).val_ptr),
                 Tag::RelaOffset => rela_offset_v = Some((*cur_dyn).val_ptr),
                 Tag::RelaEntrySize => rela_entry_size_v = Some((*cur_dyn).val_ptr),
                 Tag::RelaCount => rela_count_v = Some((*cur_dyn).val_ptr),
-                _ => {}
+                _ => { /* ignore */ }
             };
 
             cur_dyn = cur_dyn.add(1);
@@ -127,37 +131,64 @@ pub fn relocate_with_dyn(base_address: *const u8, start_dyn: *const Dyn) -> Resu
 
         if let (Some(rel_offset), Some(rel_count)) = (rel_offset_v, rel_count_v) {
             let rel_entry_size = rel_entry_size_v.unwrap_or(core::mem::size_of::<Rel>());
-            let rel_base = base_address.offset(rel_offset as isize);
+            let rel_base = base_address.add(rel_offset);
 
             for i in 0..rel_count {
-                let rel = rel_base.offset((i * rel_entry_size) as isize) as *const Rel;
-                match (*rel).info.symbol.relocation_type {
-                    RelocationType::AArch64Relative => {
-                        let relocation_offset = base_address.offset((*rel).offset as isize) as *mut *const u8;
-                        *relocation_offset = base_address;
-                    },
-                    _ => {}
+                let rel = rel_base.add(i * rel_entry_size) as *const Rel;
+                if (*rel).info.symbol.relocation_type == RelocationType::AArch64Relative {
+                    let relocation_offset = base_address.add((*rel).offset) as *mut *const u8;
+                    *relocation_offset = base_address;
                 }
             }
         }
-        
+
         if let (Some(rela_offset), Some(rela_count)) = (rela_offset_v, rela_count_v) {
             let rela_entry_size = rela_entry_size_v.unwrap_or(core::mem::size_of::<Rela>());
-            let rela_base = base_address.offset(rela_offset as isize);
+            let rela_base = base_address.add(rela_offset);
 
             for i in 0..rela_count {
-                let rela = rela_base.offset((i * rela_entry_size) as isize) as *const Rela;
-                match (*rela).info.symbol.relocation_type {
-                    RelocationType::AArch64Relative => {
-                        let relocation_offset = base_address.offset((*rela).offset as isize) as *mut *const u8;
-                        *relocation_offset = base_address.offset((*rela).addend as isize);
-                    },
-                    _ => {}
+                let rela = rela_base.add(i * rela_entry_size) as *const Rela;
+                if (*rela).info.symbol.relocation_type == RelocationType::AArch64Relative {
+                    let relocation_offset = base_address.add((*rela).offset) as *mut *const u8;
+                    *relocation_offset = base_address.offset((*rela).addend as isize);
                 }
             }
         }
     }
-    Ok(())
 }
 
-pub mod mod0;
+/// A struct containing a pointer sized int, representing a pointer to the start of the eh_frame_hdr elf section.
+/// This is obviously not a great option to use with Rust's upcoming strict/exposed providence APIs, but works fine here as
+/// the Switch has a single address space and the memory will have a static lifetime that is longer than the currently running code.
+#[derive(Debug)]
+pub struct EhFrameHdrPtr(AtomicUsize);
+
+impl EhFrameHdrPtr {
+    pub const fn new() -> Self {
+        Self(AtomicUsize::new(0))
+    }
+
+    pub fn set(&self, val: *const u8) {
+        self.0.store(val as usize, SeqCst);
+    }
+}
+
+impl Default for EhFrameHdrPtr {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+unsafe impl Sync for EhFrameHdrPtr {}
+
+unsafe impl unwinding::custom_eh_frame_finder::EhFrameFinder for EhFrameHdrPtr {
+    fn find(&self, _pc: usize) -> Option<unwinding::custom_eh_frame_finder::FrameInfo> {
+        match self.0.load(SeqCst) {
+            0 => None,
+            ptr => Some(FrameInfo {
+                text_base: None,
+                kind: FrameInfoKind::EhFrameHdr(ptr),
+            }),
+        }
+    }
+}

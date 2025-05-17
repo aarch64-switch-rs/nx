@@ -1,6 +1,4 @@
-use crate::result::*;
 use crate::ipc::sf;
-use crate::mem;
 use crate::version;
 
 define_bit_enum! {
@@ -12,15 +10,17 @@ define_bit_enum! {
     }
 }
 
+ipc_sf_define_default_client_for_interface!(Logger);
 ipc_sf_define_interface_trait! {
-    trait ILogger {
-        log [0, version::VersionInterval::all()]: (log_buf: sf::InAutoSelectBuffer<u8>) => ();
-        set_destination [1, version::VersionInterval::from(version::Version::new(3,0,0))]: (log_destination: LogDestination) => ();
+    trait Logger {
+        log [0, version::VersionInterval::all()]: (log_buf: sf::InAutoSelectBuffer<u8>) =>  () ();
+        set_destination [1, version::VersionInterval::from(version::Version::new(3,0,0)), mut]: (log_destination: LogDestination) =>  () ();
     }
 }
 
+//ipc_sf_define_default_client_for_interface!(LogService);
 ipc_sf_define_interface_trait! {
-    trait ILogService {
-        open_logger [0, version::VersionInterval::all()]: (process_id: sf::ProcessId) => (logger: mem::Shared<dyn ILogger>);
+    trait Logging {
+        open_logger [0, version::VersionInterval::all(), mut]: (raw_process_id: u64) =>  (logger: Logger) (logger: session_type!(Logger));
     }
 }
