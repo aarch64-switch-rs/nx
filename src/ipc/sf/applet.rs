@@ -229,7 +229,7 @@ ipc_sf_define_interface_trait! {
 ipc_sf_define_default_client_for_interface!(LibraryAppletProxy);
 ipc_sf_define_interface_trait! {
     trait LibraryAppletProxy {
-        get_common_state_getter [0, version::VersionInterval::all()]: () => (common_state_getter: CommonStateGetter) (commond_state_getter: session_type!(CommonStateGetter));
+        get_common_state_getter [0, version::VersionInterval::all()]: () => (common_state_getter: CommonStateGetter) (command_state_getter: session_type!(CommonStateGetter));
         get_self_controller [1, version::VersionInterval::all()]: () => (self_controller: SelfController) (self_controller: session_type!(SelfController));
         get_window_controller [2, version::VersionInterval::all()]: () => (window_controller: WindowController) (window_controller: session_type!(WindowController));
         get_audio_controller [3, version::VersionInterval::all()]: () => (window_controller: AudioController) (window_controller: session_type!(AudioController));
@@ -242,7 +242,7 @@ ipc_sf_define_interface_trait! {
 ipc_sf_define_default_client_for_interface!(ApplicationProxy);
 ipc_sf_define_interface_trait! {
     trait ApplicationProxy {
-        get_common_state_getter [0, version::VersionInterval::all()]: () => (common_state_getter: CommonStateGetter) (commond_state_getter: session_type!(CommonStateGetter));
+        get_common_state_getter [0, version::VersionInterval::all()]: () => (common_state_getter: CommonStateGetter) (command_state_getter: session_type!(CommonStateGetter));
         get_self_controller [1, version::VersionInterval::all()]: () => (self_controller: SelfController) (self_controller: session_type!(SelfController));
         get_window_controller [2, version::VersionInterval::all()]: () => (window_controller: WindowController) (window_controller: session_type!(WindowController));
         get_audio_controller [3, version::VersionInterval::all()]: () => (window_controller: AudioController) (window_controller: session_type!(AudioController));
@@ -255,7 +255,7 @@ ipc_sf_define_interface_trait! {
 ipc_sf_define_default_client_for_interface!(SystemAppletProxy);
 ipc_sf_define_interface_trait! {
     trait SystemAppletProxy {
-        get_common_state_getter [0, version::VersionInterval::all()]: () => (common_state_getter: CommonStateGetter) (commond_state_getter: session_type!(CommonStateGetter));
+        get_common_state_getter [0, version::VersionInterval::all()]: () => (common_state_getter: CommonStateGetter) (command_state_getter: session_type!(CommonStateGetter));
         get_self_controller [1, version::VersionInterval::all()]: () => (self_controller: SelfController) (self_controller: session_type!(SelfController));
         get_window_controller [2, version::VersionInterval::all()]: () => (window_controller: WindowController) (window_controller: session_type!(WindowController));
         get_audio_controller [3, version::VersionInterval::all()]: () => (window_controller: AudioController) (window_controller: session_type!(AudioController));
@@ -268,7 +268,7 @@ ipc_sf_define_interface_trait! {
 ipc_sf_define_default_client_for_interface!(OverlayAppletProxy);
 ipc_sf_define_interface_trait! {
     trait OverlayAppletProxy {
-        get_common_state_getter [0, version::VersionInterval::all()]: () => (common_state_getter: CommonStateGetter) (commond_state_getter: session_type!(CommonStateGetter));
+        get_common_state_getter [0, version::VersionInterval::all()]: () => (common_state_getter: CommonStateGetter) (command_state_getter: session_type!(CommonStateGetter));
         get_self_controller [1, version::VersionInterval::all()]: () => (self_controller: SelfController) (self_controller: session_type!(SelfController));
         get_window_controller [2, version::VersionInterval::all()]: () => (window_controller: WindowController) (window_controller: session_type!(WindowController));
         get_audio_controller [3, version::VersionInterval::all()]: () => (window_controller: AudioController) (window_controller: session_type!(AudioController));
@@ -281,7 +281,7 @@ ipc_sf_define_interface_trait! {
 ipc_sf_define_default_client_for_interface!(SystemApplicationProxy);
 ipc_sf_define_interface_trait! {
     trait SystemApplicationProxy {
-        get_common_state_getter [0, version::VersionInterval::all()]: () => (common_state_getter: CommonStateGetter) (commond_state_getter: session_type!(CommonStateGetter));
+        get_common_state_getter [0, version::VersionInterval::all()]: () => (common_state_getter: CommonStateGetter) (command_state_getter: session_type!(CommonStateGetter));
         get_self_controller [1, version::VersionInterval::all()]: () => (self_controller: SelfController) (self_controller: session_type!(SelfController));
         get_window_controller [2, version::VersionInterval::all()]: () => (window_controller: WindowController) (window_controller: session_type!(WindowController));
         get_audio_controller [3, version::VersionInterval::all()]: () => (window_controller: AudioController) (window_controller: session_type!(AudioController));
