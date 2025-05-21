@@ -1,6 +1,7 @@
 use super::*;
-use crate::mem;
+use crate::sync::Mutex;
 use crate::wait;
+use alloc::sync::Arc;
 use alloc::vec::Vec;
 use sf::hipc::IHipcManager;
 use sf::hipc::IMitmQueryServiceServer;
@@ -26,7 +27,7 @@ const MAX_COUNT: usize = wait::MAX_OBJECT_COUNT as usize;
 pub struct ServerContext<'ctx> {
     pub ctx: &'ctx mut CommandContext,
     pub raw_data_walker: DataWalker,
-    pub domain_table: Option<mem::Shared<DomainTable>>,
+    pub domain_table: Option<Arc<Mutex<DomainTable>>>,
     pub new_sessions: &'ctx mut Vec<ServerHolder>,
 }
 
@@ -34,7 +35,7 @@ impl<'ctx> ServerContext<'ctx> {
     pub const fn new(
         ctx: &'ctx mut CommandContext,
         raw_data_walker: DataWalker,
-        domain_table: Option<mem::Shared<DomainTable>>,
+        domain_table: Option<Arc<Mutex<DomainTable>>>,
         new_sessions: &'ctx mut Vec<ServerHolder>,
     ) -> Self {
         Self {
@@ -173,15 +174,6 @@ impl RequestCommandParameter<sf::AppletResourceUserId> for sf::AppletResourceUse
 
 //impl !ResponseCommandParameter for sf::AppletResourceUserId {}
 
-impl<S: super::client::IClientObject + ?Sized> RequestCommandParameter<mem::Shared<S>>
-    for mem::Shared<S>
-{
-    fn after_request_read(_ctx: &mut ServerContext) -> Result<Self> {
-        // TODO: implement this (added this placeholder impl for interfaces to actually be valid)
-        sf::hipc::rc::ResultUnsupportedOperation::make_err()
-    }
-}
-
 impl<S: ISessionObject + 'static> ResponseCommandParameter for S {
     type CarryState = u32;
     fn before_response_write(_session: &Self, ctx: &mut ServerContext) -> Result<u32> {
@@ -217,12 +209,12 @@ impl<S: ISessionObject + 'static> ResponseCommandParameter for S {
                 .push(ServerHolder::new_domain_session(
                     0,
                     carry_state,
-                    mem::Shared::new(session),
+                    Arc::new(Mutex::new(session)),
                 ))
         } else {
             ctx.new_sessions.push(ServerHolder::new_session(
                 carry_state,
-                mem::Shared::new(session),
+                Arc::new(Mutex::new(session)),
             ));
         }
         Ok(())
@@ -250,18 +242,18 @@ pub trait IMitmServerObject: ISessionObject {
         Self: Sized;
 }
 
-pub type NewServerFn = fn() -> mem::Shared<dyn ISessionObject>;
+pub type NewServerFn = fn() -> Arc<Mutex<dyn ISessionObject>>;
 
-fn create_server_object_impl<S: IServerObject + 'static>() -> mem::Shared<dyn ISessionObject> {
-    mem::Shared::new(S::new())
+fn create_server_object_impl<S: IServerObject + 'static>() -> Arc<Mutex<dyn ISessionObject>> {
+    Arc::new(Mutex::new(S::new()))
 }
 
-pub type NewMitmServerFn = fn(sm::mitm::MitmProcessInfo) -> mem::Shared<dyn ISessionObject>;
+pub type NewMitmServerFn = fn(sm::mitm::MitmProcessInfo) -> Arc<Mutex<dyn ISessionObject>>;
 
 fn create_mitm_server_object_impl<S: IMitmServerObject + 'static>(
     info: sm::mitm::MitmProcessInfo,
-) -> mem::Shared<dyn ISessionObject> {
-    mem::Shared::new(S::new(info))
+) -> Arc<Mutex<dyn ISessionObject>>{
+    Arc::new(Mutex::new(S::new(info)))
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -312,7 +304,7 @@ impl DomainTable {
     pub fn find_domain(
         &mut self,
         id: cmif::DomainObjectId,
-    ) -> Result<mem::Shared<dyn ISessionObject>> {
+    ) -> Result<Arc<Mutex<dyn ISessionObject>>> {
         for holder in &self.domains {
             if holder.info.domain_object_id == id {
                 return holder
@@ -333,7 +325,7 @@ impl DomainTable {
 }
 
 pub struct ServerHolder {
-    pub server: Option<mem::Shared<dyn ISessionObject>>,
+    pub server: Option<Arc<Mutex<dyn ISessionObject>>>,
     pub info: ObjectInfo,
     pub new_server_fn: Option<NewServerFn>,
     pub new_mitm_server_fn: Option<NewMitmServerFn>,
@@ -341,11 +333,11 @@ pub struct ServerHolder {
     pub mitm_forward_info: ObjectInfo,
     pub is_mitm_service: bool,
     pub service_name: sm::ServiceName,
-    pub domain_table: Option<mem::Shared<DomainTable>>,
+    pub domain_table: Option<Arc<Mutex<DomainTable>>>,
 }
 
 impl ServerHolder {
-    pub fn new_session(handle: svc::Handle, object: mem::Shared<dyn ISessionObject>) -> Self {
+    pub fn new_session(handle: svc::Handle, object: Arc<Mutex<dyn ISessionObject>>) -> Self {
         Self {
             server: Some(object),
             info: ObjectInfo::from_handle(handle),
@@ -362,7 +354,7 @@ impl ServerHolder {
     pub fn new_domain_session(
         handle: svc::Handle,
         domain_object_id: cmif::DomainObjectId,
-        object: mem::Shared<dyn ISessionObject>,
+        object: Arc<Mutex<dyn ISessionObject>>,
     ) -> Self {
         Self {
             server: Some(object),
@@ -484,7 +476,7 @@ impl ServerHolder {
         result_return_if!(self.info.is_domain(), rc::ResultAlreadyDomain);
 
         // Since we're a base domain object now, create a domain table
-        let dom_table = mem::Shared::new(DomainTable::new());
+        let dom_table = Arc::new(Mutex::new(DomainTable::new()));
         self.domain_table = Some(dom_table.clone());
 
         let domain_object_id = match self.is_mitm_service {
@@ -709,7 +701,7 @@ impl<const P: usize> ServerManager<P> {
         command_type: cmif::CommandType,
         domain_command_type: cmif::DomainCommandType,
         ipc_buf_backup: &[u8],
-        domain_table: Option<mem::Shared<DomainTable>>,
+        domain_table: Option<Arc<Mutex<DomainTable>>>,
     ) -> Result<()> {
         let is_domain = ctx.object_info.is_domain();
         let domain_table_clone = domain_table.clone();
@@ -903,7 +895,7 @@ impl<const P: usize> ServerManager<P> {
         let mut domain_cmd_type = cmif::DomainCommandType::Invalid;
         let mut rq_id: u32 = 0;
         let mut ipc_buf_backup: [u8; 0x100] = [0; 0x100];
-        let mut domain_table: Option<mem::Shared<DomainTable>> = None;
+        let mut domain_table: Option<Arc<Mutex<DomainTable>>> = None;
 
         for server_holder in &mut self.server_holders {
             let server_info = server_holder.info;
@@ -1083,7 +1075,7 @@ impl<const P: usize> ServerManager<P> {
     pub fn register_session<S: ISessionObject + 'static>(
         &mut self,
         handle: svc::Handle,
-        session_obj: mem::Shared<S>,
+        session_obj: Arc<Mutex<S>>,
     ) {
         self.server_holders
             .push(ServerHolder::new_session(handle, session_obj));
@@ -1109,8 +1101,8 @@ impl<const P: usize> ServerManager<P> {
 
         self.register_mitm_server::<S>(mitm_handle.handle, service_name);
 
-        let mitm_query_srv: mem::Shared<MitmQueryService<S>> =
-            mem::Shared::new(MitmQueryService::<S>::new());
+        let mitm_query_srv: Arc<Mutex<MitmQueryService<S>>> =
+            Arc::new(Mutex::new(MitmQueryService::<S>::new()));
         self.register_session(query_handle.handle, mitm_query_srv);
 
         sm.atmosphere_clear_future_mitm(service_name)?;

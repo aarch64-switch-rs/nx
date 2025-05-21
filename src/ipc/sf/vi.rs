@@ -105,7 +105,3 @@ ipc_sf_define_interface_trait! {
         get_display_service [2, version::VersionInterval::all()]: (mode: DisplayServiceMode) =>  (display_service: ApplicationDisplay) (display_service: session_type!(ApplicationDisplay));
     }
 }
-
-pub(crate) trait CommonDisplayRootClient {
-    fn get_display_service(&self) -> crate::result::Result<ApplicationDisplay>;
-}

@@ -163,10 +163,10 @@ ipc_sf_define_interface_trait! {
 ipc_sf_define_default_client_for_interface!(LibraryAppletAccessor);
 ipc_sf_define_interface_trait! {
     trait LibraryAppletAccessor {
-        get_applet_state_changed_event [0, version::VersionInterval::all()]: () => (applet_state_changed_event: sf::CopyHandle) (applet_state_changed_event: sf::CopyHandle);
-        start [10, version::VersionInterval::all()]: () => () ();
-        push_in_data [100, version::VersionInterval::all()]: (storage: Storage) =>  () ();
-        pop_out_data [101, version::VersionInterval::all()]: () => (storage: Storage) (storage: Storage);
+        get_applet_state_changed_event [0, version::VersionInterval::all(), mut]: () => (applet_state_changed_event: sf::CopyHandle) (applet_state_changed_event: sf::CopyHandle);
+        start [10, version::VersionInterval::all(), mut]: () => () ();
+        push_in_data [100, version::VersionInterval::all(), mut]: (storage: Storage) =>  () ();
+        pop_out_data [101, version::VersionInterval::all(), mut]: () => (storage: Storage) (storage: Storage);
     }
 }
 
