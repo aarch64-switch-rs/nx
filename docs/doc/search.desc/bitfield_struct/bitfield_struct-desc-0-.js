@@ -1,1 +1,0 @@
-searchState.loadedDescShard("bitfield_struct", 0, "Bitfield Struct\nCreates a bitfield for this struct.")

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["simple_panic_handler","str_ptr_len"],"mod":["rc"],"struct":["ArrayString","ArrayWideString","ConstPointerAndSize","PointerAndSize","Uuid"]};

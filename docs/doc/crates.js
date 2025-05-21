@@ -1,2 +1,2 @@
-window.ALL_CRATES = ["atomic_enum","bitfield_struct","num_derive","nx_derive","paste","proc_macro2","quote","syn","unicode_ident"];
-//{"start":21,"fragment_lengths":[13,18,13,12,8,14,8,6,16]}
+window.ALL_CRATES = ["ab_glyph","ab_glyph_rasterizer","arrayvec","core_maths","font8x8","gimli","libm","line_drawing","linked_list_allocator","lock_api","logpacket","num_traits","nx","owned_ttf_parser","rand","rand_core","scopeguard","spinning_top","static_assertions","ttf_parser","unwinding","zerocopy","zeroize"];
+//{"start":21,"fragment_lengths":[10,22,11,13,10,8,7,15,24,11,12,13,5,19,7,12,13,15,20,13,12,11,10]}

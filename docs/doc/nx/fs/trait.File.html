@@ -1,0 +1,93 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Represents a file, abstracted from the IPC client API."><title>File in nx::fs - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-c233d2bd.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.88.0-nightly (6bc57c6bf 2025-04-22)" data-channel="nightly" data-search-js="search-f7877310.js" data-settings-js="settings-5514c975.js" ><script src="../../static.files/storage-4e99c027.js"></script><script defer src="sidebar-items.js"></script><script defer src="../../static.files/main-7ef8a74a.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc trait"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../../nx/index.html">nx</a><span class="version">0.2.0</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">File</a></h2><h3><a href="#required-methods">Required Methods</a></h3><ul class="block"><li><a href="#tymethod.flush" title="flush">flush</a></li><li><a href="#tymethod.get_size" title="get_size">get_size</a></li><li><a href="#tymethod.operate_range" title="operate_range">operate_range</a></li><li><a href="#tymethod.operate_range_with_buffer" title="operate_range_with_buffer">operate_range_with_buffer</a></li><li><a href="#tymethod.read" title="read">read</a></li><li><a href="#tymethod.set_size" title="set_size">set_size</a></li><li><a href="#tymethod.write" title="write">write</a></li></ul><h3><a href="#implementors">Implementors</a></h3></section><div id="rustdoc-modnav"><h2><a href="index.html">In nx::fs</a></h2></div></div></nav><div class="sidebar-resizer"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../index.html">nx</a>::<wbr><a href="index.html">fs</a></div><h1>Trait <span class="trait">File</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../src/nx/fs.rs.html#36-101">Source</a> </span></div><pre class="rust item-decl"><code>pub trait File: Sync {
+    // Required methods
+    fn <a href="#tymethod.read" class="fn">read</a>(
+        &amp;mut self,
+        offset: usize,
+        out_buf: &amp;mut [u8],
+        option: <a class="struct" href="../ipc/sf/fsp/struct.FileReadOption.html" title="struct nx::ipc::sf::fsp::FileReadOption">FileReadOption</a>,
+    ) -&gt; <a class="type" href="../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;usize&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.write" class="fn">write</a>(
+        &amp;mut self,
+        offset: usize,
+        buf: &amp;[u8],
+        option: <a class="struct" href="../ipc/sf/fsp/struct.FileWriteOption.html" title="struct nx::ipc::sf::fsp::FileWriteOption">FileWriteOption</a>,
+    ) -&gt; <a class="type" href="../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;()&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.flush" class="fn">flush</a>(&amp;mut self) -&gt; <a class="type" href="../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;()&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.set_size" class="fn">set_size</a>(&amp;mut self, size: usize) -&gt; <a class="type" href="../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;()&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.get_size" class="fn">get_size</a>(&amp;mut self) -&gt; <a class="type" href="../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;usize&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.operate_range" class="fn">operate_range</a>(
+        &amp;mut self,
+        operation_id: <a class="enum" href="../ipc/sf/fsp/enum.OperationId.html" title="enum nx::ipc::sf::fsp::OperationId">OperationId</a>,
+        offset: usize,
+        size: usize,
+    ) -&gt; <a class="type" href="../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;<a class="struct" href="../ipc/sf/fsp/struct.FileQueryRangeInfo.html" title="struct nx::ipc::sf::fsp::FileQueryRangeInfo">FileQueryRangeInfo</a>&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.operate_range_with_buffer" class="fn">operate_range_with_buffer</a>(
+        &amp;mut self,
+        operation_id: <a class="enum" href="../ipc/sf/fsp/enum.OperationId.html" title="enum nx::ipc::sf::fsp::OperationId">OperationId</a>,
+        offset: usize,
+        size: usize,
+        in_buf: &amp;[u8],
+        out_buf: &amp;mut [u8],
+    ) -&gt; <a class="type" href="../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;()&gt;;
+}</code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Represents a file, abstracted from the IPC client API.</p>
+</div></details><h2 id="required-methods" class="section-header">Required Methods<a href="#required-methods" class="anchor">§</a></h2><div class="methods"><details class="toggle method-toggle" open><summary><section id="tymethod.read" class="method"><a class="src rightside" href="../../src/nx/fs.rs.html#44">Source</a><h4 class="code-header">fn <a href="#tymethod.read" class="fn">read</a>(
+    &amp;mut self,
+    offset: usize,
+    out_buf: &amp;mut [u8],
+    option: <a class="struct" href="../ipc/sf/fsp/struct.FileReadOption.html" title="struct nx::ipc::sf::fsp::FileReadOption">FileReadOption</a>,
+) -&gt; <a class="type" href="../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;usize&gt;</h4></section></summary><div class="docblock"><p>Reads data from the file, returning the actual read size.</p>
+<h5 id="arguments"><a class="doc-anchor" href="#arguments">§</a>Arguments:</h5>
+<ul>
+<li><code>offset</code>: The absolute offset.</li>
+<li><code>out_buf</code>: The output slice to fill.</li>
+<li><code>option</code>: <a href="../ipc/sf/fsp/struct.FileReadOption.html" title="struct nx::ipc::sf::fsp::FileReadOption"><code>FileReadOption</code></a> for file reading flags.</li>
+</ul>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.write" class="method"><a class="src rightside" href="../../src/nx/fs.rs.html#53">Source</a><h4 class="code-header">fn <a href="#tymethod.write" class="fn">write</a>(
+    &amp;mut self,
+    offset: usize,
+    buf: &amp;[u8],
+    option: <a class="struct" href="../ipc/sf/fsp/struct.FileWriteOption.html" title="struct nx::ipc::sf::fsp::FileWriteOption">FileWriteOption</a>,
+) -&gt; <a class="type" href="../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;()&gt;</h4></section></summary><div class="docblock"><p>Writes data to a file (this one doesn’t return the actual written size, thanks N).</p>
+<h5 id="arguments-1"><a class="doc-anchor" href="#arguments-1">§</a>Arguments.</h5>
+<ul>
+<li><code>offset</code>: The absolute offset.</li>
+<li><code>buf</code>: The input data to write into the file.</li>
+<li><code>option</code>: <a href="../ipc/sf/fsp/struct.FileWriteOption.html" title="struct nx::ipc::sf::fsp::FileWriteOption"><code>FileWriteOption</code></a> value.</li>
+</ul>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.flush" class="method"><a class="src rightside" href="../../src/nx/fs.rs.html#56">Source</a><h4 class="code-header">fn <a href="#tymethod.flush" class="fn">flush</a>(&amp;mut self) -&gt; <a class="type" href="../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;()&gt;</h4></section></summary><div class="docblock"><p>Flushes the pending file writes.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.set_size" class="method"><a class="src rightside" href="../../src/nx/fs.rs.html#65">Source</a><h4 class="code-header">fn <a href="#tymethod.set_size" class="fn">set_size</a>(&amp;mut self, size: usize) -&gt; <a class="type" href="../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;()&gt;</h4></section></summary><div class="docblock"><p>Sets the file size.</p>
+<p>This effectively truncates the file.</p>
+<h5 id="arguments-2"><a class="doc-anchor" href="#arguments-2">§</a>Arguments.</h5>
+<ul>
+<li><code>size</code>: The new file size.</li>
+</ul>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.get_size" class="method"><a class="src rightside" href="../../src/nx/fs.rs.html#68">Source</a><h4 class="code-header">fn <a href="#tymethod.get_size" class="fn">get_size</a>(&amp;mut self) -&gt; <a class="type" href="../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;usize&gt;</h4></section></summary><div class="docblock"><p>Gets the current file size.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.operate_range" class="method"><a class="src rightside" href="../../src/nx/fs.rs.html#77-82">Source</a><h4 class="code-header">fn <a href="#tymethod.operate_range" class="fn">operate_range</a>(
+    &amp;mut self,
+    operation_id: <a class="enum" href="../ipc/sf/fsp/enum.OperationId.html" title="enum nx::ipc::sf::fsp::OperationId">OperationId</a>,
+    offset: usize,
+    size: usize,
+) -&gt; <a class="type" href="../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;<a class="struct" href="../ipc/sf/fsp/struct.FileQueryRangeInfo.html" title="struct nx::ipc::sf::fsp::FileQueryRangeInfo">FileQueryRangeInfo</a>&gt;</h4></section></summary><div class="docblock"><p>Performs a range-operation on the file, returning corresponding result data.</p>
+<h5 id="arguments-3"><a class="doc-anchor" href="#arguments-3">§</a>Arguments:</h5>
+<ul>
+<li><code>operation_id</code>: The ID of the file operation to perform on the specified range.</li>
+<li><code>offset</code>: The absolute offset.</li>
+<li><code>size</code>: The file data size in which to operate. i.e. we are operating in the range <code>[offset, offset+size)</code>.</li>
+</ul>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.operate_range_with_buffer" class="method"><a class="src rightside" href="../../src/nx/fs.rs.html#93-100">Source</a><h4 class="code-header">fn <a href="#tymethod.operate_range_with_buffer" class="fn">operate_range_with_buffer</a>(
+    &amp;mut self,
+    operation_id: <a class="enum" href="../ipc/sf/fsp/enum.OperationId.html" title="enum nx::ipc::sf::fsp::OperationId">OperationId</a>,
+    offset: usize,
+    size: usize,
+    in_buf: &amp;[u8],
+    out_buf: &amp;mut [u8],
+) -&gt; <a class="type" href="../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;()&gt;</h4></section></summary><div class="docblock"><p>Performs a range-operation on the file with custom input/output data.</p>
+<h5 id="arguments-4"><a class="doc-anchor" href="#arguments-4">§</a>Arguments:</h5>
+<ul>
+<li><code>operation_id</code>: The ID of the file operation to perform on the specified range.</li>
+<li><code>offset</code>: The absolute offset.</li>
+<li><code>size</code>: The file data size in which to operate. i.e. we are operating in the range <code>[offset, offset+size)</code>.</li>
+<li><code>in_buf</code>: Input data buffer.</li>
+<li><code>out_buf</code>: Output data buffer.</li>
+</ul>
+</div></details></div><h2 id="implementors" class="section-header">Implementors<a href="#implementors" class="anchor">§</a></h2><div id="implementors-list"><section id="impl-File-for-ProxyFile" class="impl"><a class="src rightside" href="../../src/nx/fs.rs.html#271-323">Source</a><a href="#impl-File-for-ProxyFile" class="anchor">§</a><h3 class="code-header">impl <a class="trait" href="trait.File.html" title="trait nx::fs::File">File</a> for <a class="struct" href="struct.ProxyFile.html" title="struct nx::fs::ProxyFile">ProxyFile</a></h3></section></div><script src="../../trait.impl/nx/fs/trait.File.js" async></script></section></div></main></body></html>

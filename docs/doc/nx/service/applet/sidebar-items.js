@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["AppletProxy"],"fn":["get_applet_proxy","get_system_proxy_service","get_window_controller","initialize","is_initialized"],"static":["APPLET_ATTRIBUTE","GLOBAL_ARUID"]};

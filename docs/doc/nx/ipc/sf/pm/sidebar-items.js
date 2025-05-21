@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["DebugMonitorInterface","InformationInterface"],"trait":["IDebugMonitorInterfaceClient","IDebugMonitorInterfaceServer","IInformationInterfaceClient","IInformationInterfaceServer"]};
