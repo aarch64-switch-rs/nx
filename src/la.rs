@@ -2,7 +2,6 @@
 
 use crate::arm;
 use crate::ipc::sf;
-use crate::mem;
 use crate::result::*;
 use crate::service::applet;
 use crate::service::applet::ILibraryAppletAccessorClient;
@@ -12,6 +11,7 @@ use crate::service::sm::rc;
 use crate::svc;
 use crate::sync::{Mutex, MutexGuard};
 use crate::wait;
+use alloc::boxed::Box;
 use applet::LibraryAppletCreator;
 use core::mem as cmem;
 
@@ -39,7 +39,7 @@ pub struct CommonArguments {
 
 /// Represents a wrapper type for using library applets
 pub struct LibraryAppletHolder {
-    accessor: mem::Shared<dyn ILibraryAppletAccessorClient>,
+    accessor: Box<dyn ILibraryAppletAccessorClient>,
     state_changed_event_handle: svc::Handle,
 }
 
@@ -47,8 +47,8 @@ impl LibraryAppletHolder {
     /// Creates a [`LibraryAppletHolder`] from an existing [`ILibraryAppletAccessorClient`] shared object
     ///
     /// This shouldn't be manually created unless the accessor object was obtained manually (see [`create_library_applet`])
-    pub fn new(accessor: mem::Shared<dyn ILibraryAppletAccessorClient>) -> Result<Self> {
-        let state_changed_event_h = accessor.lock().get_applet_state_changed_event()?;
+    pub fn new(mut accessor: Box<dyn ILibraryAppletAccessorClient>) -> Result<Self> {
+        let state_changed_event_h = accessor.get_applet_state_changed_event()?;
 
         Ok(Self {
             accessor,
@@ -56,16 +56,22 @@ impl LibraryAppletHolder {
         })
     }
 
-    /// Gets the underlying [`ILibraryAppletAccessorClient`] shared object
+    /// Gets a reference to the underlying [`ILibraryAppletAccessorClient`] shared object
     #[inline]
-    pub fn get_accessor(&self) -> mem::Shared<dyn ILibraryAppletAccessorClient> {
-        self.accessor.clone()
+    pub fn get_accessor(&self) -> &dyn ILibraryAppletAccessorClient {
+        &*self.accessor
+    }
+
+    /// Gets a mutable reference to the underlying [`ILibraryAppletAccessorClient`] shared object
+    #[inline]
+    pub fn get_accessor_mut(&mut self) -> &dyn ILibraryAppletAccessorClient {
+        &mut *self.accessor
     }
 
     /// Pushes an input [`IStorageClient`] shared object to the library applet
     #[inline]
     pub fn push_in_data_storage(&mut self, storage: Storage) -> Result<()> {
-        self.accessor.lock().push_in_data(storage)
+        self.accessor.push_in_data(storage)
     }
 
     /// Pushes input data to the library applet
@@ -79,22 +85,22 @@ impl LibraryAppletHolder {
     /// Starts the library applet
     #[inline]
     pub fn start(&mut self) -> Result<()> {
-        self.accessor.lock().start()
+        self.accessor.start()
     }
 
     /// Waits until the library applet's state-changed event signals
     ///
-    /// This effectively waits until the library applet exits
+    /// This effectively waits until the library applet exits or the timeout expires
     #[inline]
-    pub fn join(&mut self) -> Result<()> {
-        wait::wait_handles(&[self.state_changed_event_handle], -1)?;
+    pub fn join(&mut self, timeout: Option<i64>) -> Result<()> {
+        wait::wait_handles(&[self.state_changed_event_handle], timeout.unwrap_or(-1))?;
         Ok(())
     }
 
     /// Pops an output [`IStorageClient`] shared object from the library applet
     #[inline]
     pub fn pop_out_data_storage(&mut self) -> Result<Storage> {
-        self.accessor.lock().pop_out_data()
+        self.accessor.pop_out_data()
     }
 
     /// Pops output data from the library applet
@@ -225,7 +231,7 @@ pub fn create_library_applet(
         .unwrap()
         .create_library_applet(id, mode)?;
 
-    let mut holder = LibraryAppletHolder::new(mem::Shared::new(accessor))?;
+    let mut holder = LibraryAppletHolder::new(Box::new(accessor))?;
 
     common_args.system_tick = arm::get_system_tick();
     holder.push_in_data(common_args)?;
@@ -248,12 +254,13 @@ pub fn launch_wait_library_applet<I: Copy, O: Copy>(
     id: applet::AppletId,
     common_args: CommonArguments,
     input: I,
+    timeout: Option<i64>
 ) -> Result<O> {
     let mut holder =
         create_library_applet(id, applet::LibraryAppletMode::AllForeground, common_args)?;
     holder.push_in_data(input)?;
     holder.start()?;
-    holder.join()?;
+    holder.join(timeout)?;
     holder.pop_out_data()
 }
 

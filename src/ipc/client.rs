@@ -1,7 +1,6 @@
 use sf::hipc;
 
 use super::*;
-use crate::mem;
 
 pub trait RequestCommandParameter {
     fn before_request_write(
@@ -149,34 +148,6 @@ impl RequestCommandParameter for sf::AppletResourceUserId {
 }
 
 //impl !ResponseCommandParameter<sf::AppletResourceUserId> for sf::AppletResourceUserId {}
-
-impl<S: IClientObject + ?Sized> RequestCommandParameter for mem::Shared<S> {
-    fn before_request_write(
-        session: &Self,
-        _walker: &mut DataWalker,
-        ctx: &mut CommandContext,
-    ) -> Result<()> {
-        ctx.in_params
-            .add_object(session.lock().get_session().object_info)
-    }
-
-    fn before_send_sync_request(
-        _session: &Self,
-        _walker: &mut DataWalker,
-        _ctx: &mut CommandContext,
-    ) -> Result<()> {
-        Ok(())
-    }
-}
-
-impl<S: IClientObject + 'static + Sized> ResponseCommandParameter<mem::Shared<S>>
-    for mem::Shared<S>
-{
-    fn after_response_read(_walker: &mut DataWalker, ctx: &mut CommandContext) -> Result<Self> {
-        let object_info = ctx.pop_object()?;
-        Ok(mem::Shared::new(S::new(sf::Session::from(object_info))))
-    }
-}
 
 pub trait IClientObject {
     fn new(session: sf::Session) -> Self

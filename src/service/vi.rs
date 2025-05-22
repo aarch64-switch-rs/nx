@@ -53,21 +53,3 @@ impl service::IService for ManagerDisplayRootService {
         Ok(())
     }
 }
-
-impl CommonDisplayRootClient for ApplicationDisplayRootService {
-    fn get_display_service(&self) -> Result<ApplicationDisplay> {
-        <Self as IApplicationDisplayRootClient>::get_display_service(self, DisplayServiceMode::User)
-    }
-}
-
-impl CommonDisplayRootClient for SystemDisplayRootService {
-    fn get_display_service(&self) -> Result<ApplicationDisplay> {
-        <Self as ISystemDisplayRootClient>::get_display_service(self, DisplayServiceMode::Privileged)
-    }
-}
-
-impl CommonDisplayRootClient for ManagerDisplayRootService {
-    fn get_display_service(&self) -> Result<ApplicationDisplay> {
-        <Self as IManagerDisplayRootClient>::get_display_service(self, DisplayServiceMode::Privileged)
-    }
-}

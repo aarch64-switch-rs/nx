@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["ShellInterface"],"trait":["IShellInterfaceClient","IShellInterfaceServer"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["MAX_OBJECT_COUNT"],"enum":["WaiterType"],"fn":["wait","wait_handles"],"struct":["RemoteEvent","SystemEvent","Waiter"]};

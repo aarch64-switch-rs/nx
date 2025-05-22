@@ -1,9 +1,9 @@
 (function() {
-    var implementors = Object.fromEntries([["proc_macro2",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/str/traits/trait.FromStr.html\" title=\"trait core::str::traits::FromStr\">FromStr</a> for <a class=\"struct\" href=\"proc_macro2/struct.Literal.html\" title=\"struct proc_macro2::Literal\">Literal</a>"],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/str/traits/trait.FromStr.html\" title=\"trait core::str::traits::FromStr\">FromStr</a> for <a class=\"struct\" href=\"proc_macro2/struct.TokenStream.html\" title=\"struct proc_macro2::TokenStream\">TokenStream</a>"]]]]);
+    var implementors = Object.fromEntries([["arrayvec",[["impl&lt;const CAP: usize&gt; FromStr for <a class=\"struct\" href=\"arrayvec/struct.ArrayString.html\" title=\"struct arrayvec::ArrayString\">ArrayString</a>&lt;CAP&gt;"]]],["nx",[["impl&lt;const S: usize&gt; FromStr for <a class=\"struct\" href=\"nx/util/struct.ArrayWideString.html\" title=\"struct nx::util::ArrayWideString\">ArrayWideString</a>&lt;S&gt;"]]]]);
     if (window.register_implementors) {
         window.register_implementors(implementors);
     } else {
         window.pending_implementors = implementors;
     }
 })()
-//{"start":57,"fragment_lengths":[581]}
+//{"start":57,"fragment_lengths":[187,189]}

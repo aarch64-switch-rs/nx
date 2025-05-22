@@ -3,11 +3,6 @@
 extern crate alloc as core_alloc;
 use crate::result::ResultBase;
 use crate::svc;
-use crate::sync::Mutex;
-use ::alloc::sync::Arc;
-use core::marker::Unsize;
-use core::ops::CoerceUnsized;
-use core::ops::Deref;
 
 pub mod alloc;
 
@@ -60,31 +55,3 @@ pub fn wait_for_permission(
         let _ = crate::thread::sleep(100_000);
     }
 }
-
-#[repr(transparent)]
-pub struct Shared<T: ?Sized> {
-    pub(crate) inner: Arc<Mutex<T>>,
-}
-impl<T> Shared<T> {
-    pub fn new(val: T) -> Self {
-        Self {
-            inner: Arc::new(Mutex::new(val)),
-        }
-    }
-}
-impl<T: ?Sized> Clone for Shared<T> {
-    fn clone(&self) -> Self {
-        Self {
-            inner: self.inner.clone(),
-        }
-    }
-}
-
-impl<T: ?Sized> Deref for Shared<T> {
-    type Target = Mutex<T>;
-    fn deref(&self) -> &Self::Target {
-        &self.inner
-    }
-}
-
-impl<T: ?Sized + Unsize<U>, U: ?Sized> CoerceUnsized<Shared<U>> for Shared<T> {}

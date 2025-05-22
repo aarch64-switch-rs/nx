@@ -1,0 +1,56 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Unwinding library in Rust and for Rust"><title>unwinding - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../static.files/rustdoc-c233d2bd.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="unwinding" data-themes="" data-resource-suffix="" data-rustdoc-version="1.88.0-nightly (6bc57c6bf 2025-04-22)" data-channel="nightly" data-search-js="search-f7877310.js" data-settings-js="settings-5514c975.js" ><script src="../static.files/storage-4e99c027.js"></script><script defer src="../crates.js"></script><script defer src="../static.files/main-7ef8a74a.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-044be391.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../unwinding/index.html">unwinding</a><span class="version">0.2.6</span></h2></div><div class="sidebar-elems"><ul class="block"><li><a id="all-types" href="all.html">All Items</a></li></ul><section id="rustdoc-toc"><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#unwinding-library-in-rust-and-for-rust" title="Unwinding library in Rust and for Rust">Unwinding library in Rust and for Rust</a><ul><li><a href="#unwinder" title="Unwinder">Unwinder</a></li><li><a href="#personality-and-other-utilities" title="Personality and other utilities">Personality and other utilities</a></li><li><a href="#baremetal" title="Baremetal">Baremetal</a></li></ul></li></ul><h3><a href="#modules">Crate Items</a></h3><ul class="block"><li><a href="#modules" title="Modules">Modules</a></li></ul></section><div id="rustdoc-modnav"></div></div></nav><div class="sidebar-resizer"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1>Crate <span>unwinding</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../src/unwinding/lib.rs.html#1-58">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><h2 id="unwinding-library-in-rust-and-for-rust"><a class="doc-anchor" href="#unwinding-library-in-rust-and-for-rust">§</a>Unwinding library in Rust and for Rust</h2>
+<p><a href="https://crates.io/crates/unwinding"><img src="https://img.shields.io/crates/v/unwinding.svg" alt="crates.io" /></a>
+<a href="https://docs.rs/unwinding"><img src="https://docs.rs/unwinding/badge.svg" alt="docs.rs" /></a>
+<a href="https://crates.io/crates/unwinding"><img src="https://img.shields.io/crates/l/unwinding.svg" alt="license" /></a></p>
+<p>This library serves two purposes:</p>
+<ol>
+<li>Provide a pure Rust alternative to libgcc_eh or libunwind.</li>
+<li>Provide easier unwinding support for <code>#![no_std]</code> targets.</li>
+</ol>
+<p>Currently supports x86_64, x86, RV64, RV32 and AArch64.</p>
+<h3 id="unwinder"><a class="doc-anchor" href="#unwinder">§</a>Unwinder</h3>
+<p>The unwinder can be enabled with <code>unwinder</code> feature. Here are the feature gates related to the unwinder:</p>
+<div><table><thead><tr><th>Feature</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>unwinder</td><td>Yes</td><td>The primary feature gate to enable the unwinder</td></tr>
+<tr><td>fde-phdr-dl</td><td>Yes</td><td>Use <code>dl_iterator_phdr</code> to retrieve frame unwind table. Depends on libc.</td></tr>
+<tr><td>fde-phdr-aux</td><td>No</td><td>Use ELF auxiliary vector to retrieve frame unwind table. Depends on libc.</td></tr>
+<tr><td>fde-registry</td><td>Yes</td><td>Provide <code>__register__frame</code> and others for dynamic registration. Requires either <code>libc</code> or <code>spin</code> for a mutex implementation.</td></tr>
+<tr><td>fde-gnu-eh-frame-hdr</td><td>No</td><td>Use <code>__executable_start</code>, <code>__etext</code> and <code>__GNU_EH_FRAME_HDR</code> to retrieve frame unwind table. The former two symbols are usually provided by the linker, while the last one is provided if GNU LD is used and –eh-frame-hdr option is enabled.</td></tr>
+<tr><td>fde-static</td><td>No</td><td>Use <code>__executable_start</code>, <code>__etext</code> and <code>__eh_frame</code> to retrieve frame unwind table. The former two symbols are usually provided by the linker, while the last one would need to be provided by the user via linker script.</td></tr>
+<tr><td>fde-custom</td><td>No</td><td>Allow the program to provide a custom means of retrieving frame unwind table at runtime via the <code>set_custom_eh_frame_finder</code> function.</td></tr>
+<tr><td>dwarf-expr</td><td>Yes</td><td>Enable the dwarf expression evaluator. Usually not necessary for Rust</td></tr>
+<tr><td>hide-trace</td><td>Yes</td><td>Hide unwinder frames in back trace</td></tr>
+</tbody></table>
+</div>
+<p>If you want to use the unwinder for other Rust (C++, or any programs that utilize the unwinder), you can build the <a href="cdylib"><code>unwinding_dyn</code></a> crate provided, and use <code>LD_PRELOAD</code> to replace the system unwinder with it.</p>
+<div class="example-wrap"><pre class="language-sh"><code>cd cdylib
+cargo build --release
+# Test the unwinder using rustc. Why not :)
+LD_PRELOAD=`../target/release/libunwinding_dyn.so` rustc +nightly -Ztreat-err-as-bug</code></pre></div>
+<p>If you want to link to the unwinder in a Rust binary, simply add</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">extern crate </span>unwinding;</code></pre></div>
+<h3 id="personality-and-other-utilities"><a class="doc-anchor" href="#personality-and-other-utilities">§</a>Personality and other utilities</h3>
+<p>The library also provides Rust personality function. This can work with the unwinder described above or with a different unwinder. This can be handy if you are working on a <code>#![no_std]</code> binary/staticlib/cdylib and you still want unwinding support.</p>
+<p>Here are the feature gates related:</p>
+<div><table><thead><tr><th>Feature</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>personality</td><td>No</td><td>Provides <code>#[lang = eh_personality]</code></td></tr>
+<tr><td>print</td><td>No</td><td>Provides <code>(e)?print(ln)?</code>. This is really only here because panic handler needs to print things. Depends on libc.</td></tr>
+<tr><td>panicking</td><td>No</td><td>Provides a generic <code>begin_panic</code> and <code>catch_unwind</code>. Only stack unwinding functionality is provided, memory allocation and panic handling is left to the user.</td></tr>
+<tr><td>panic</td><td>No</td><td>Provides Rust <code>begin_panic</code> and <code>catch_unwind</code>. Only stack unwinding functionality is provided and no printing is done, because this feature does not depend on libc.</td></tr>
+<tr><td>panic-handler</td><td>No</td><td>Provides <code>#[panic_handler]</code>. Provides similar behaviour on panic to std, with <code>RUST_BACKTRACE</code> support as well. Stack trace won’t have symbols though. Depends on libc.</td></tr>
+<tr><td>system-alloc</td><td>No</td><td>Provides a global allocator which calls <code>malloc</code> and friends. Provided for convience.</td></tr>
+</tbody></table>
+</div>
+<p>If you are writing a <code>#![no_std]</code> program, simply enable <code>personality</code>, <code>panic-handler</code> and <code>system-alloc</code> in addition to the defaults, you instantly obtains the ability to do unwinding! An example is given in the <a href="example"><code>example/</code> folder</a>.</p>
+<h3 id="baremetal"><a class="doc-anchor" href="#baremetal">§</a>Baremetal</h3>
+<p>To use this library for baremetal projects, disable default features and enable <code>unwinder</code>, <code>fde-static</code>, <code>personality</code>, <code>panic</code>. <code>dwarf-expr</code> and <code>hide-trace</code> are optional. Modify the linker script by</p>
+<div class="example-wrap"><pre class="language-ld"><code>/* Inserting these two lines */
+. = ALIGN(8);
+PROVIDE(__eh_frame = .);
+/* before .eh_frame rule */
+.eh_frame : { KEEP (*(.eh_frame)) *(.eh_frame.*) }</code></pre></div>
+<p>And that’s it! After you ensured that the global allocator is functional, you can use <code>unwinding::panic::begin_panic</code> to initiate an unwing and catch using <code>unwinding::panic::catch_unwind</code>, as if you have a <code>std</code>.</p>
+<p>If your linker supports <code>--eh-frame-hdr</code> you can also try to use <code>fde-gnu-eh-frame-hdr</code> instead of <code>fde-static</code>. GNU LD will provides a <code>__GNU_EH_FRAME_HDR</code> magic symbol so you don’t have to provide <code>__eh_frame</code> through linker script.</p>
+<p>If you have your own version of <code>thread_local</code> and <code>println!</code> working, you can port <a href="src/panic_handler.rs"><code>panic_handler.rs</code></a> for double-panic protection and stack traces!</p>
+</div></details><h2 id="modules" class="section-header">Modules<a href="#modules" class="anchor">§</a></h2><dl class="item-table"><dt><a class="mod" href="abi/index.html" title="mod unwinding::abi">abi</a></dt><dt><a class="mod" href="custom_eh_frame_finder/index.html" title="mod unwinding::custom_eh_frame_finder">custom_<wbr>eh_<wbr>frame_<wbr>finder</a></dt><dt><a class="mod" href="panic/index.html" title="mod unwinding::panic">panic</a></dt><dt><a class="mod" href="panicking/index.html" title="mod unwinding::panicking">panicking</a></dt></dl></section></div></main></body></html>
