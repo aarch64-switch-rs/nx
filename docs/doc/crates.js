@@ -1,2 +1,0 @@
-window.ALL_CRATES = ["ab_glyph","ab_glyph_rasterizer","arrayvec","core_maths","font8x8","gimli","libm","line_drawing","linked_list_allocator","lock_api","logpacket","num_traits","nx","owned_ttf_parser","rand","rand_core","scopeguard","spinning_top","static_assertions","ttf_parser","unwinding","zerocopy","zeroize"];
-//{"start":21,"fragment_lengths":[10,22,11,13,10,8,7,15,24,11,12,13,5,19,7,12,13,15,20,13,12,11,10]}

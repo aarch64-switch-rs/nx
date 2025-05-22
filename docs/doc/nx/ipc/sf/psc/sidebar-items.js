@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["ModuleId","State"],"struct":["PmModule","PmService"],"trait":["IPmModuleClient","IPmModuleServer","IPmServiceClient","IPmServiceServer"]};

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":["LogDestination","Logger"],"trait":["ILoggerClient","ILoggerServer","ILoggingClient","ILoggingServer"]};

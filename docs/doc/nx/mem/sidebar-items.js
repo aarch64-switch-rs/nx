@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["flush_data_cache","wait_for_permission"],"mod":["alloc"]};

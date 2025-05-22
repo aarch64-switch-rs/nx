@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["PlatformId"],"struct":["Name","Names","NamesIter","Table"]};

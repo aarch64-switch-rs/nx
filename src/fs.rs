@@ -892,7 +892,7 @@ pub fn remove_dir(path: &str) -> Result<()> {
 /// * `path`: The path to use
 pub fn remove_dir_all(path: &str) -> Result<()> {
     let (fs, processed_path) = format_path(path)?;
-    fs.remove_dir(processed_path)
+    fs.remove_dir_all(processed_path)
 }
 
 /// Deletes all the children files/directories inside a directory
