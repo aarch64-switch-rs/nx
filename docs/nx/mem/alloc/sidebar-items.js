@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["PAGE_ALIGNMENT"],"fn":["configure_heap","initialize","is_enabled"],"mod":["rc"],"static":["HEAP_SIZE"],"struct":["Buffer","Layout"],"trait":["AllocatorEx"]};

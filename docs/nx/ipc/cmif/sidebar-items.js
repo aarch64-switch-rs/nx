@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["IN_DATA_HEADER_MAGIC","OUT_DATA_HEADER_MAGIC"],"enum":["CommandType","ControlRequestId","DomainCommandType"],"fn":["convert_command_type"],"mod":["client","rc","server"],"struct":["DataHeader","DomainInDataHeader","DomainOutDataHeader"],"type":["DomainObjectId"]};

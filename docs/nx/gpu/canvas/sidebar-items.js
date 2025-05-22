@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["AlphaBlend"],"struct":["BufferedCanvas","CanvasManager","RGBA4","RGBA8","UnbufferedCanvas"],"trait":["Canvas"],"type":["Font"]};

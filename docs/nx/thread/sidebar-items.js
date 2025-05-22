@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ThreadPriority","ThreadStartCore","ThreadState","YieldType"],"fn":["available_parallelism","exit","get_current_thread_name","get_thread_local_region","set_current_thread","set_current_thread_name","sleep","spawn","yield"],"mod":["imp","rc","scoped"],"struct":["Builder","JoinHandle","Thread","ThreadLocalRegion"],"type":["Result","ThreadName"]};

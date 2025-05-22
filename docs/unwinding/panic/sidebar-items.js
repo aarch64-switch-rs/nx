@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["begin_panic","catch_unwind"]};

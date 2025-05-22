@@ -1,0 +1,142 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `Canvas` trait in crate `nx`."><title>Canvas in nx::gpu::canvas - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-0ce1a80b.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.89.0-nightly (16d2276fa 2025-05-16)" data-channel="nightly" data-search-js="search-f7877310.js" data-settings-js="settings-5514c975.js" ><script src="../../../static.files/storage-4e99c027.js"></script><script defer src="sidebar-items.js"></script><script defer src="../../../static.files/main-7ef8a74a.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc trait"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../../../nx/index.html">nx</a><span class="version">0.2.0</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Canvas</a></h2><h3><a href="#required-associated-types">Required Associated Types</a></h3><ul class="block"><li><a href="#associatedtype.ColorFormat" title="ColorFormat">ColorFormat</a></li></ul><h3><a href="#required-methods">Required Methods</a></h3><ul class="block"><li><a href="#tymethod.draw_single" title="draw_single">draw_single</a></li><li><a href="#tymethod.height" title="height">height</a></li><li><a href="#tymethod.width" title="width">width</a></li></ul><h3><a href="#provided-methods">Provided Methods</a></h3><ul class="block"><li><a href="#method.clear" title="clear">clear</a></li><li><a href="#method.draw_ascii_bitmap_text" title="draw_ascii_bitmap_text">draw_ascii_bitmap_text</a></li><li><a href="#method.draw_bitmap_text" title="draw_bitmap_text">draw_bitmap_text</a></li><li><a href="#method.draw_circle" title="draw_circle">draw_circle</a></li><li><a href="#method.draw_circle_filled" title="draw_circle_filled">draw_circle_filled</a></li><li><a href="#method.draw_font_text" title="draw_font_text">draw_font_text</a></li><li><a href="#method.draw_line" title="draw_line">draw_line</a></li><li><a href="#method.draw_rect" title="draw_rect">draw_rect</a></li></ul><h3><a href="#dyn-compatibility">Dyn Compatibility</a></h3><h3><a href="#implementors">Implementors</a></h3></section><div id="rustdoc-modnav"><h2><a href="index.html">In nx::<wbr>gpu::<wbr>canvas</a></h2></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../../index.html">nx</a>::<wbr><a href="../index.html">gpu</a>::<wbr><a href="index.html">canvas</a></div><h1>Trait <span class="trait">Canvas</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../../src/nx/gpu/canvas.rs.html#349-569">Source</a> </span></div><pre class="rust item-decl"><code>pub trait Canvas {
+    type <a href="#associatedtype.ColorFormat" class="associatedtype">ColorFormat</a>: CanvasColorFormat;
+
+    // Required methods
+    fn <a href="#tymethod.draw_single" class="fn">draw_single</a>(
+        &amp;mut self,
+        x: i32,
+        y: i32,
+        color: Self::<a class="associatedtype" href="trait.Canvas.html#associatedtype.ColorFormat" title="type nx::gpu::canvas::Canvas::ColorFormat">ColorFormat</a>,
+        blend: <a class="enum" href="enum.AlphaBlend.html" title="enum nx::gpu::canvas::AlphaBlend">AlphaBlend</a>,
+    );
+<span class="item-spacer"></span>    fn <a href="#tymethod.height" class="fn">height</a>(&amp;self) -&gt; u32;
+<span class="item-spacer"></span>    fn <a href="#tymethod.width" class="fn">width</a>(&amp;self) -&gt; u32;
+
+    // Provided methods
+    fn <a href="#method.clear" class="fn">clear</a>(&amp;mut self, color: Self::<a class="associatedtype" href="trait.Canvas.html#associatedtype.ColorFormat" title="type nx::gpu::canvas::Canvas::ColorFormat">ColorFormat</a>) { ... }
+<span class="item-spacer"></span>    fn <a href="#method.draw_rect" class="fn">draw_rect</a>(
+        &amp;mut self,
+        x: i32,
+        y: i32,
+        width: u32,
+        height: u32,
+        color: Self::<a class="associatedtype" href="trait.Canvas.html#associatedtype.ColorFormat" title="type nx::gpu::canvas::Canvas::ColorFormat">ColorFormat</a>,
+        blend: <a class="enum" href="enum.AlphaBlend.html" title="enum nx::gpu::canvas::AlphaBlend">AlphaBlend</a>,
+    ) { ... }
+<span class="item-spacer"></span>    fn <a href="#method.draw_line" class="fn">draw_line</a>(
+        &amp;mut self,
+        start: (i32, i32),
+        end: (i32, i32),
+        width: u32,
+        color: Self::<a class="associatedtype" href="trait.Canvas.html#associatedtype.ColorFormat" title="type nx::gpu::canvas::Canvas::ColorFormat">ColorFormat</a>,
+        blend: <a class="enum" href="enum.AlphaBlend.html" title="enum nx::gpu::canvas::AlphaBlend">AlphaBlend</a>,
+    ) { ... }
+<span class="item-spacer"></span>    fn <a href="#method.draw_circle" class="fn">draw_circle</a>(
+        &amp;mut self,
+        x: i32,
+        y: i32,
+        r: u32,
+        line_width: u32,
+        color: Self::<a class="associatedtype" href="trait.Canvas.html#associatedtype.ColorFormat" title="type nx::gpu::canvas::Canvas::ColorFormat">ColorFormat</a>,
+        blend: <a class="enum" href="enum.AlphaBlend.html" title="enum nx::gpu::canvas::AlphaBlend">AlphaBlend</a>,
+    ) { ... }
+<span class="item-spacer"></span>    fn <a href="#method.draw_circle_filled" class="fn">draw_circle_filled</a>(
+        &amp;mut self,
+        cx: i32,
+        cy: i32,
+        r: u32,
+        color: Self::<a class="associatedtype" href="trait.Canvas.html#associatedtype.ColorFormat" title="type nx::gpu::canvas::Canvas::ColorFormat">ColorFormat</a>,
+        blend: <a class="enum" href="enum.AlphaBlend.html" title="enum nx::gpu::canvas::AlphaBlend">AlphaBlend</a>,
+    ) { ... }
+<span class="item-spacer"></span>    fn <a href="#method.draw_font_text" class="fn">draw_font_text</a>(
+        &amp;mut self,
+        font: &amp;<a class="type" href="type.Font.html" title="type nx::gpu::canvas::Font">Font</a>&lt;'_&gt;,
+        text: impl AsRef&lt;str&gt;,
+        color: Self::<a class="associatedtype" href="trait.Canvas.html#associatedtype.ColorFormat" title="type nx::gpu::canvas::Canvas::ColorFormat">ColorFormat</a>,
+        size: f32,
+        x: i32,
+        y: i32,
+        blend: <a class="enum" href="enum.AlphaBlend.html" title="enum nx::gpu::canvas::AlphaBlend">AlphaBlend</a>,
+    ) { ... }
+<span class="item-spacer"></span>    fn <a href="#method.draw_ascii_bitmap_text" class="fn">draw_ascii_bitmap_text</a>(
+        &amp;mut self,
+        text: impl AsRef&lt;str&gt;,
+        color: Self::<a class="associatedtype" href="trait.Canvas.html#associatedtype.ColorFormat" title="type nx::gpu::canvas::Canvas::ColorFormat">ColorFormat</a>,
+        scale: u32,
+        x: i32,
+        y: i32,
+        blend: <a class="enum" href="enum.AlphaBlend.html" title="enum nx::gpu::canvas::AlphaBlend">AlphaBlend</a>,
+    ) { ... }
+<span class="item-spacer"></span>    fn <a href="#method.draw_bitmap_text" class="fn">draw_bitmap_text</a>(
+        &amp;mut self,
+        text: impl AsRef&lt;str&gt;,
+        character_set: &amp;<a class="struct" href="../../../font8x8/basic/struct.BasicFonts.html" title="struct font8x8::basic::BasicFonts">BasicFonts</a>,
+        color: Self::<a class="associatedtype" href="trait.Canvas.html#associatedtype.ColorFormat" title="type nx::gpu::canvas::Canvas::ColorFormat">ColorFormat</a>,
+        scale: u32,
+        x: i32,
+        y: i32,
+        blend: <a class="enum" href="enum.AlphaBlend.html" title="enum nx::gpu::canvas::AlphaBlend">AlphaBlend</a>,
+    ) { ... }
+}</code></pre><h2 id="required-associated-types" class="section-header">Required Associated Types<a href="#required-associated-types" class="anchor">§</a></h2><div class="methods"><section id="associatedtype.ColorFormat" class="method"><a class="src rightside" href="../../../src/nx/gpu/canvas.rs.html#350">Source</a><h4 class="code-header">type <a href="#associatedtype.ColorFormat" class="associatedtype">ColorFormat</a>: CanvasColorFormat</h4></section></div><h2 id="required-methods" class="section-header">Required Methods<a href="#required-methods" class="anchor">§</a></h2><div class="methods"><section id="tymethod.draw_single" class="method"><a class="src rightside" href="../../../src/nx/gpu/canvas.rs.html#352">Source</a><h4 class="code-header">fn <a href="#tymethod.draw_single" class="fn">draw_single</a>(
+    &amp;mut self,
+    x: i32,
+    y: i32,
+    color: Self::<a class="associatedtype" href="trait.Canvas.html#associatedtype.ColorFormat" title="type nx::gpu::canvas::Canvas::ColorFormat">ColorFormat</a>,
+    blend: <a class="enum" href="enum.AlphaBlend.html" title="enum nx::gpu::canvas::AlphaBlend">AlphaBlend</a>,
+)</h4></section><section id="tymethod.height" class="method"><a class="src rightside" href="../../../src/nx/gpu/canvas.rs.html#353">Source</a><h4 class="code-header">fn <a href="#tymethod.height" class="fn">height</a>(&amp;self) -&gt; u32</h4></section><section id="tymethod.width" class="method"><a class="src rightside" href="../../../src/nx/gpu/canvas.rs.html#354">Source</a><h4 class="code-header">fn <a href="#tymethod.width" class="fn">width</a>(&amp;self) -&gt; u32</h4></section></div><h2 id="provided-methods" class="section-header">Provided Methods<a href="#provided-methods" class="anchor">§</a></h2><div class="methods"><section id="method.clear" class="method"><a class="src rightside" href="../../../src/nx/gpu/canvas.rs.html#356-362">Source</a><h4 class="code-header">fn <a href="#method.clear" class="fn">clear</a>(&amp;mut self, color: Self::<a class="associatedtype" href="trait.Canvas.html#associatedtype.ColorFormat" title="type nx::gpu::canvas::Canvas::ColorFormat">ColorFormat</a>)</h4></section><section id="method.draw_rect" class="method"><a class="src rightside" href="../../../src/nx/gpu/canvas.rs.html#364-384">Source</a><h4 class="code-header">fn <a href="#method.draw_rect" class="fn">draw_rect</a>(
+    &amp;mut self,
+    x: i32,
+    y: i32,
+    width: u32,
+    height: u32,
+    color: Self::<a class="associatedtype" href="trait.Canvas.html#associatedtype.ColorFormat" title="type nx::gpu::canvas::Canvas::ColorFormat">ColorFormat</a>,
+    blend: <a class="enum" href="enum.AlphaBlend.html" title="enum nx::gpu::canvas::AlphaBlend">AlphaBlend</a>,
+)</h4></section><section id="method.draw_line" class="method"><a class="src rightside" href="../../../src/nx/gpu/canvas.rs.html#386-398">Source</a><h4 class="code-header">fn <a href="#method.draw_line" class="fn">draw_line</a>(
+    &amp;mut self,
+    start: (i32, i32),
+    end: (i32, i32),
+    width: u32,
+    color: Self::<a class="associatedtype" href="trait.Canvas.html#associatedtype.ColorFormat" title="type nx::gpu::canvas::Canvas::ColorFormat">ColorFormat</a>,
+    blend: <a class="enum" href="enum.AlphaBlend.html" title="enum nx::gpu::canvas::AlphaBlend">AlphaBlend</a>,
+)</h4></section><section id="method.draw_circle" class="method"><a class="src rightside" href="../../../src/nx/gpu/canvas.rs.html#400-413">Source</a><h4 class="code-header">fn <a href="#method.draw_circle" class="fn">draw_circle</a>(
+    &amp;mut self,
+    x: i32,
+    y: i32,
+    r: u32,
+    line_width: u32,
+    color: Self::<a class="associatedtype" href="trait.Canvas.html#associatedtype.ColorFormat" title="type nx::gpu::canvas::Canvas::ColorFormat">ColorFormat</a>,
+    blend: <a class="enum" href="enum.AlphaBlend.html" title="enum nx::gpu::canvas::AlphaBlend">AlphaBlend</a>,
+)</h4></section><section id="method.draw_circle_filled" class="method"><a class="src rightside" href="../../../src/nx/gpu/canvas.rs.html#415-436">Source</a><h4 class="code-header">fn <a href="#method.draw_circle_filled" class="fn">draw_circle_filled</a>(
+    &amp;mut self,
+    cx: i32,
+    cy: i32,
+    r: u32,
+    color: Self::<a class="associatedtype" href="trait.Canvas.html#associatedtype.ColorFormat" title="type nx::gpu::canvas::Canvas::ColorFormat">ColorFormat</a>,
+    blend: <a class="enum" href="enum.AlphaBlend.html" title="enum nx::gpu::canvas::AlphaBlend">AlphaBlend</a>,
+)</h4></section><section id="method.draw_font_text" class="method"><a class="src rightside" href="../../../src/nx/gpu/canvas.rs.html#439-503">Source</a><h4 class="code-header">fn <a href="#method.draw_font_text" class="fn">draw_font_text</a>(
+    &amp;mut self,
+    font: &amp;<a class="type" href="type.Font.html" title="type nx::gpu::canvas::Font">Font</a>&lt;'_&gt;,
+    text: impl AsRef&lt;str&gt;,
+    color: Self::<a class="associatedtype" href="trait.Canvas.html#associatedtype.ColorFormat" title="type nx::gpu::canvas::Canvas::ColorFormat">ColorFormat</a>,
+    size: f32,
+    x: i32,
+    y: i32,
+    blend: <a class="enum" href="enum.AlphaBlend.html" title="enum nx::gpu::canvas::AlphaBlend">AlphaBlend</a>,
+)</h4></section><section id="method.draw_ascii_bitmap_text" class="method"><a class="src rightside" href="../../../src/nx/gpu/canvas.rs.html#507-517">Source</a><h4 class="code-header">fn <a href="#method.draw_ascii_bitmap_text" class="fn">draw_ascii_bitmap_text</a>(
+    &amp;mut self,
+    text: impl AsRef&lt;str&gt;,
+    color: Self::<a class="associatedtype" href="trait.Canvas.html#associatedtype.ColorFormat" title="type nx::gpu::canvas::Canvas::ColorFormat">ColorFormat</a>,
+    scale: u32,
+    x: i32,
+    y: i32,
+    blend: <a class="enum" href="enum.AlphaBlend.html" title="enum nx::gpu::canvas::AlphaBlend">AlphaBlend</a>,
+)</h4></section><section id="method.draw_bitmap_text" class="method"><a class="src rightside" href="../../../src/nx/gpu/canvas.rs.html#520-568">Source</a><h4 class="code-header">fn <a href="#method.draw_bitmap_text" class="fn">draw_bitmap_text</a>(
+    &amp;mut self,
+    text: impl AsRef&lt;str&gt;,
+    character_set: &amp;<a class="struct" href="../../../font8x8/basic/struct.BasicFonts.html" title="struct font8x8::basic::BasicFonts">BasicFonts</a>,
+    color: Self::<a class="associatedtype" href="trait.Canvas.html#associatedtype.ColorFormat" title="type nx::gpu::canvas::Canvas::ColorFormat">ColorFormat</a>,
+    scale: u32,
+    x: i32,
+    y: i32,
+    blend: <a class="enum" href="enum.AlphaBlend.html" title="enum nx::gpu::canvas::AlphaBlend">AlphaBlend</a>,
+)</h4></section></div><h2 id="dyn-compatibility" class="section-header">Dyn Compatibility<a href="#dyn-compatibility" class="anchor">§</a></h2><div class="dyn-compatibility-info"><p>This trait is <b>not</b> <a href="https://doc.rust-lang.org/nightly/reference/items/traits.html#dyn-compatibility">dyn compatible</a>.</p><p><i>In older versions of Rust, dyn compatibility was called "object safety", so this trait is not object safe.</i></p></div><h2 id="implementors" class="section-header">Implementors<a href="#implementors" class="anchor">§</a></h2><div id="implementors-list"><details class="toggle implementors-toggle"><summary><section id="impl-Canvas-for-BufferedCanvas%3C'_,+ColorFormat%3E" class="impl"><a class="src rightside" href="../../../src/nx/gpu/canvas.rs.html#627-682">Source</a><a href="#impl-Canvas-for-BufferedCanvas%3C'_,+ColorFormat%3E" class="anchor">§</a><h3 class="code-header">impl&lt;ColorFormat: CanvasColorFormat&gt; <a class="trait" href="trait.Canvas.html" title="trait nx::gpu::canvas::Canvas">Canvas</a> for <a class="struct" href="struct.BufferedCanvas.html" title="struct nx::gpu::canvas::BufferedCanvas">BufferedCanvas</a>&lt;'_, ColorFormat&gt;</h3></section></summary><div class="impl-items"><section id="associatedtype.ColorFormat-1" class="associatedtype trait-impl"><a class="src rightside" href="../../../src/nx/gpu/canvas.rs.html#628">Source</a><a href="#associatedtype.ColorFormat-1" class="anchor">§</a><h4 class="code-header">type <a href="#associatedtype.ColorFormat" class="associatedtype">ColorFormat</a> = ColorFormat</h4></section></div></details><details class="toggle implementors-toggle"><summary><section id="impl-Canvas-for-UnbufferedCanvas%3C'_,+ColorFormat%3E" class="impl"><a class="src rightside" href="../../../src/nx/gpu/canvas.rs.html#773-802">Source</a><a href="#impl-Canvas-for-UnbufferedCanvas%3C'_,+ColorFormat%3E" class="anchor">§</a><h3 class="code-header">impl&lt;ColorFormat: CanvasColorFormat&gt; <a class="trait" href="trait.Canvas.html" title="trait nx::gpu::canvas::Canvas">Canvas</a> for <a class="struct" href="struct.UnbufferedCanvas.html" title="struct nx::gpu::canvas::UnbufferedCanvas">UnbufferedCanvas</a>&lt;'_, ColorFormat&gt;</h3></section></summary><div class="impl-items"><section id="associatedtype.ColorFormat-2" class="associatedtype trait-impl"><a class="src rightside" href="../../../src/nx/gpu/canvas.rs.html#774">Source</a><a href="#associatedtype.ColorFormat-2" class="anchor">§</a><h4 class="code-header">type <a href="#associatedtype.ColorFormat" class="associatedtype">ColorFormat</a> = ColorFormat</h4></section></div></details></div><script src="../../../trait.impl/nx/gpu/canvas/trait.Canvas.js" async></script></section></div></main></body></html>

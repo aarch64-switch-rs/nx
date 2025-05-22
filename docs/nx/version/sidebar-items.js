@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["get_version","set_version"],"struct":["Version","VersionInterval"]};

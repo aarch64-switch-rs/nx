@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["CommandType"],"mod":["client","server"]};
