@@ -1867,6 +1867,22 @@ impl StoreData {
     }
 }
 
+// TODO: fill this from emuiibo code
+
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
+#[repr(C)]
+pub struct Ver3StoreData {
+    pub data: [u8; 0x5C]
+}
+const_assert!(core::mem::size_of::<Ver3StoreData>() == 0x5C);
+
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[repr(C)]
+pub struct NfpStoreDataExtension {
+    pub data: [u8; 0x8]
+}
+const_assert!(core::mem::size_of::<NfpStoreDataExtension>() == 0x8);
+
 ipc_sf_define_default_client_for_interface!(DatabaseService);
 ipc_sf_define_interface_trait! {
     trait DatabaseService {

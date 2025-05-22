@@ -43,7 +43,6 @@ pub enum DeviceState {
     TagRemoved = 3,
     TagMounted = 4,
     Unavailable = 5,
-    Finalized = 6,
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
@@ -52,12 +51,11 @@ pub enum ModelType {
     Amiibo = 0,
 }
 
-#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
-#[repr(u32)]
-pub enum MountTarget {
-    Rom = 1,
-    Ram = 2,
-    All = 3,
+define_bit_enum! {
+    MountTarget (u32) {
+        Rom = bit!(0),
+        Ram = bit!(1)
+    }
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -71,10 +69,17 @@ const_assert!(core::mem::size_of::<Date>() == 0x4);
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]
-pub struct TagInfo {
+pub struct TagId {
     pub uuid: [u8; 10],
     pub uuid_length: u8,
     pub reserved_1: [u8; 0x15],
+}
+const_assert!(core::mem::size_of::<TagId>() == 0x20);
+
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
+#[repr(C)]
+pub struct TagInfo {
+    pub uid: TagId,
     pub protocol: u32,
     pub tag_type: u32,
     pub reserved_2: [u8; 0x30],
@@ -107,11 +112,10 @@ const_assert!(core::mem::size_of::<CommonInfo>() == 0x40);
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]
 pub struct ModelInfo {
-    pub game_character_id: u16,
-    pub character_variant: u8,
-    pub series: u8,
-    pub model_number: u16,
-    pub figure_type: u8,
+    pub character_id: [u8; 3],
+    pub series_id: u8,
+    pub numbering_id: u16,
+    pub nfp_type: u8,
     pub reserved: [u8; 0x39],
 }
 const_assert!(core::mem::size_of::<ModelInfo>() == 0x40);
@@ -121,15 +125,13 @@ pub type AccessId = u32;
 define_bit_enum! {
     AdminInfoFlags (u8) { // Note: plain amiibo flags shifted 4 bits (original bits 0-3 are discarded)
         IsInitialized = bit!(0),
-        HasApplicationArea = bit!(1),
-        Unk_2 = bit!(2),
-        Unk_3 = bit!(3)
+        HasApplicationArea = bit!(1)
     }
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
-pub enum ConsoleFamily {
+pub enum ApplicationAreaVersion {
     // Note: unofficial name
     #[default]
     Default = 0,
@@ -141,12 +143,12 @@ pub enum ConsoleFamily {
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]
 pub struct AdminInfo {
-    pub program_id: ncm::ProgramId,
+    pub app_id: ncm::ProgramId,
     pub access_id: AccessId,
-    pub crc32_change_counter: u16,
+    pub terminal_id_crc32_change_counter: u16,
     pub flags: AdminInfoFlags,
-    pub tag_type: u8,
-    pub console_family: ConsoleFamily,
+    pub unk: u8,
+    pub app_area_version: ApplicationAreaVersion,
     pub pad: [u8; 0x7],
     pub reserved: [u8; 0x28],
 }
@@ -158,7 +160,7 @@ pub struct RegisterInfoPrivate {
     pub mii_store_data: mii::StoreData,
     pub first_write_date: Date,
     pub name: util::ArrayString<41>,
-    pub unk: u8,
+    pub font_region: u8,
     pub reserved: [u8; 0x8E],
 }
 const_assert!(core::mem::size_of::<RegisterInfoPrivate>() == 0x100);
@@ -166,31 +168,30 @@ const_assert!(core::mem::size_of::<RegisterInfoPrivate>() == 0x100);
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]
 pub struct NfpData {
-    // TODO: finish REing this type...
-    pub magic: u8,
-    pub maybe_pad: u8,
-    pub write_counter: u8,
-    pub maybe_pad_2: u8,
-    pub settings_crc: u32,
-    pub maybe_reserved: [u8; 56],
-    pub last_write_date: Date,
-    pub application_write_counter: u16,
-    pub version: u16,
-    pub app_area_size: u32,
-    pub maybe_pad_3: [u8; 4],
-    pub maybe_reserved_2: [u8; 0x30],
-    pub mii_3ds_format: [u8; 0x60],
-    pub unk_v5: [u8; 0x8],
+    pub header_magic: u8,
+    pub reserved: u8,
+    pub header_write_counter: u16,
+    pub terminal_id_crc32: u32,
+    pub reserved_2: [u8; 0x38],
+    pub common_info: CommonInfo,
+    pub mii_v3: mii::Ver3StoreData,
+    pub pad: [u8; 2],
+    pub mii_crc16: u16,
+    pub mii_store_data_extension: mii::NfpStoreDataExtension,
     pub first_write_date: Date,
     pub name: util::ArrayWideString<11>,
-    pub unk_v6: u8,
-    pub unk_v7: u8,
-    pub register_info_crc: u32,
-    pub unk_v9: u64,
-    pub unk_v10: u64,
-    pub unk_v11: u32,
-    pub maybe_reserved_3: [u8; 100],
-    pub admin_info: AdminInfo,
+    pub font_region: u8,
+    pub unk_1: u8,
+    pub mii_crc32: u32,
+    pub unk_2: [u8; 0x14],
+    pub reserved_3: [u8; 100],
+    pub modified_app_id: u64,
+    pub access_id: AccessId,
+    pub terminal_id_crc32_change_counter: u16,
+    pub flags: AdminInfoFlags,
+    pub unk_3: u8,
+    pub app_id_byte: u8,
+    pub reserved_4: [u8; 0x2E],
     pub app_area: [u8; 0xD8],
 }
 const_assert!(core::mem::size_of::<NfpData>() == 0x298);
@@ -198,9 +199,10 @@ const_assert!(core::mem::size_of::<NfpData>() == 0x298);
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
 pub enum BreakType {
-    Unk0 = 0,
-    Unk1 = 1,
-    Unk2 = 2,
+    // Note: unofficial names
+    FlushOnly = 0,
+    BreakDataHash = 1,
+    BreakHeaderMagic = 2,
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
