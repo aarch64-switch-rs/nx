@@ -53,7 +53,7 @@ impl<FS: fs::FileSystem> fs::FileSystem for SubDir<FS> {
     }
 
     fn get_file_time_stamp_raw(&self, path: &str) -> Result<fs::FileTimeStampRaw> {
-        self.get_file_time_stamp_raw(self.make_path(path).as_str())
+        self.fs.get_file_time_stamp_raw(self.make_path(path).as_str())
     }
 
     fn get_free_space_size(&self, path: &str) -> Result<usize> {
