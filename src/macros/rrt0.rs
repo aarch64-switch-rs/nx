@@ -39,3 +39,13 @@ macro_rules! rrt0_define_default_module_name {
         rrt0_define_module_name!(env!("CARGO_PKG_NAME"));
     };
 }
+
+/// Defines a default heap initialization function for NROs (homebrew loaded apps)
+#[macro_export]
+macro_rules! rrt0_initialize_heap {
+    () => {
+        #[unsafe(no_mangle)]
+        #[inline(always)]
+        pub fn initialize_heap(heap: $crate::util::PointerAndSize) -> $crate::util::PointerAndSize { $crate::mem::alloc::configure_heap(heap) }
+    };
+}

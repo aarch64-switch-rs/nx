@@ -33,6 +33,7 @@ pub static HEAP_SIZE: usize = 0;
 
 /// Default implementation
 #[linkage = "weak"]
+#[unsafe(export_name = "__nx_mem_alloc_configure_heap")]
 pub fn configure_heap(heap_override: PointerAndSize) -> PointerAndSize {
     if heap_override.is_valid() {
         heap_override

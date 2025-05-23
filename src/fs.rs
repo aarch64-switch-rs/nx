@@ -1135,6 +1135,8 @@ pub fn set_concatenation_file_attribute(path: &str) -> Result<()> {
     query_entry(path, QueryId::SetConcatenationFileAttribute, &[], &mut [])
 }
 
+pub mod subdir;
+
 //pub mod pfs0;
 
 //pub mod nca;

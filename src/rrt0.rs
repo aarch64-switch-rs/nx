@@ -43,13 +43,7 @@ use crate::version;
 use crate::vmem;
 
 #[cfg(feature = "services")]
-use crate::ipc::sf;
-
-#[cfg(feature = "services")]
-use crate::service;
-
-#[cfg(feature = "services")]
-use crate::service::set;
+use crate::{ipc::sf, service, service::set};
 
 use core::arch::asm;
 use core::mem;
@@ -62,6 +56,7 @@ use atomic_enum::atomic_enum;
 
 unsafe extern "Rust" {
     fn main() -> Result<()>;
+    fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize;
 }
 
 /// Represents the fn pointer used for exiting
@@ -168,9 +163,9 @@ pub fn exit(rc: ResultCode) -> ! {
     }
 }
 
-#[unsafe(no_mangle)]
 #[linkage = "weak"]
-fn initialize_version(hbl_hos_version_opt: Option<hbl::Version>) {
+#[unsafe(export_name = "__nx__rrt0_initialize_version")]
+pub fn initialize_version(hbl_hos_version_opt: Option<hbl::Version>) {
     if let Some(hbl_hos_version) = hbl_hos_version_opt {
         unsafe { version::set_version(hbl_hos_version.to_version()) };
     } else {
@@ -304,7 +299,7 @@ unsafe fn normal_entry(loader_mode: LoaderMode, exit_config: Option<ExitFn>) -> 
     *G_EXIT_FN.lock() = exit_config;
 
     // Initialize heap and memory allocation
-    heap = alloc::configure_heap(heap);
+    heap = initialize_heap(heap);
     alloc::initialize(heap);
 
     let main_thread: thread::Thread = thread::Thread::new_remote("MainThread", main_thread_handle);
