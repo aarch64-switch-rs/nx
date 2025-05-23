@@ -17,11 +17,7 @@ impl Logger for LmLogger {
         Self {
             logger: service::new_service_object::<LoggingService>()
                 .map(|mut log_srv| {
-                    log_srv.open_logger(
-                        // The standard logging service doesn't use the provided value,
-                        // so just use a dummy value.
-                        0,
-                    ).ok()
+                    log_srv.open_logger(sf::ProcessId::new()).ok()
                 })
                 .ok().flatten()
         }
