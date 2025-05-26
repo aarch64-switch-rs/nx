@@ -1886,17 +1886,17 @@ const_assert!(core::mem::size_of::<NfpStoreDataExtension>() == 0x8);
 ipc_sf_define_default_client_for_interface!(DatabaseService);
 ipc_sf_define_interface_trait! {
     trait DatabaseService {
-        is_updated [0, version::VersionInterval::all()]: (flag: SourceFlag) =>  (updated: bool) (updated: bool);
-        is_full [1, version::VersionInterval::all()]: () => (full: bool) (full: bool);
-        get_count [2, version::VersionInterval::all()]: (flag: SourceFlag) =>  (count: u32) (count: u32);
-        get_1 [4, version::VersionInterval::all()]: (flag: SourceFlag, out_char_infos: sf::OutMapAliasBuffer<CharInfo>) =>  (count: u32) (count: u32);
-        build_random [6, version::VersionInterval::all()]: (age: sf::EnumAsPrimitiveType<Age, u32>, gender: sf::EnumAsPrimitiveType<Gender, u32>, race: sf::EnumAsPrimitiveType<FaceColor, u32>) =>  (char_info: CharInfo) (char_info: CharInfo);
+        is_updated [0, version::VersionInterval::all()]: (flag: SourceFlag) => (updated: bool);
+        is_full [1, version::VersionInterval::all()]: () => (full: bool);
+        get_count [2, version::VersionInterval::all()]: (flag: SourceFlag) => (count: u32);
+        get_1 [4, version::VersionInterval::all()]: (flag: SourceFlag, out_char_infos: sf::OutMapAliasBuffer<CharInfo>) => (count: u32);
+        build_random [6, version::VersionInterval::all()]: (age: sf::EnumAsPrimitiveType<Age, u32>, gender: sf::EnumAsPrimitiveType<Gender, u32>, race: sf::EnumAsPrimitiveType<FaceColor, u32>) => (char_info: CharInfo);
     }
 }
 
 ipc_sf_define_default_client_for_interface!(StaticService);
 ipc_sf_define_interface_trait! {
     trait StaticService {
-        get_database_service [0, version::VersionInterval::all()]: (key_code: SpecialKeyCode) =>  (database_service: DatabaseService) (database_service: session_type!(DatabaseService));
+        get_database_service [0, version::VersionInterval::all()]: (key_code: SpecialKeyCode) => (database_service: DatabaseService | session_type!(DatabaseService) );
     }
 }

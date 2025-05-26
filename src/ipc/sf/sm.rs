@@ -58,19 +58,19 @@ impl core::fmt::Debug for ServiceName {
 ipc_sf_define_default_client_for_interface!(UserInterface);
 ipc_sf_define_interface_trait! {
     trait UserInterface {
-        register_client [0, version::VersionInterval::all()]: (process_id: sf::ProcessId) =>  () ();
-        get_service_handle [1, version::VersionInterval::all()]: (name: ServiceName) =>  (service_handle: sf::MoveHandle) (service_handle: sf::MoveHandle);
-        register_service [2, version::VersionInterval::all()]: (name: ServiceName, is_light: bool, max_sessions: i32) =>  (port_handle: sf::MoveHandle) (port_handle: sf::MoveHandle);
-        unregister_service [3, version::VersionInterval::all()]: (name: ServiceName) =>  () ();
-        detach_client [4, version::VersionInterval::from(version::Version::new(11,0,0)), mut]: (process_id: sf::ProcessId) =>  () ();
-        atmosphere_install_mitm [65000, version::VersionInterval::all()]: (name: ServiceName) =>  (port_handle: sf::MoveHandle, query_handle: sf::MoveHandle) (port_handle: sf::MoveHandle, query_handle: sf::MoveHandle);
-        atmosphere_uninstall_mitm [65001, version::VersionInterval::all()]: (name: ServiceName) =>  () ();
-        atmosphere_acknowledge_mitm_session [65003, version::VersionInterval::all()]: (name: ServiceName) =>  (info: mitm::MitmProcessInfo, session_handle: sf::MoveHandle) (info: mitm::MitmProcessInfo, session_handle: sf::MoveHandle);
-        atmosphere_has_mitm [65004, version::VersionInterval::all()]: (name: ServiceName) =>  (has: bool) (has: bool);
-        atmosphere_wait_mitm [65005, version::VersionInterval::all()]: (name: ServiceName) =>  () ();
-        atmosphere_declare_future_mitm [65006, version::VersionInterval::all()]: (name: ServiceName) =>  () ();
-        atmosphere_clear_future_mitm [65007, version::VersionInterval::all()]: (name: ServiceName) =>  () ();
-        atmosphere_has_service [65100, version::VersionInterval::all()]: (name: ServiceName) =>  (has: bool) (has: bool);
-        atmosphere_wait_service [65101, version::VersionInterval::all()]: (name: ServiceName) =>  () ();
+        register_client [0, version::VersionInterval::all()]: (process_id: sf::ProcessId) => ();
+        get_service_handle [1, version::VersionInterval::all()]: (name: ServiceName) => (service_handle: sf::MoveHandle);
+        register_service [2, version::VersionInterval::all()]: (name: ServiceName, is_light: bool, max_sessions: i32) => (port_handle: sf::MoveHandle);
+        unregister_service [3, version::VersionInterval::all()]: (name: ServiceName) => ();
+        detach_client [4, version::VersionInterval::from(version::Version::new(11,0,0)), mut]: (process_id: sf::ProcessId) => ();
+        atmosphere_install_mitm [65000, version::VersionInterval::all()]: (name: ServiceName) =>  (port_handle: sf::MoveHandle, query_handle: sf::MoveHandle);
+        atmosphere_uninstall_mitm [65001, version::VersionInterval::all()]: (name: ServiceName) => ();
+        atmosphere_acknowledge_mitm_session [65003, version::VersionInterval::all()]: (name: ServiceName) =>  (info: mitm::MitmProcessInfo, session_handle: sf::MoveHandle);
+        atmosphere_has_mitm [65004, version::VersionInterval::all()]: (name: ServiceName) => (has: bool);
+        atmosphere_wait_mitm [65005, version::VersionInterval::all()]: (name: ServiceName) => ();
+        atmosphere_declare_future_mitm [65006, version::VersionInterval::all()]: (name: ServiceName) => ();
+        atmosphere_clear_future_mitm [65007, version::VersionInterval::all()]: (name: ServiceName) => ();
+        atmosphere_has_service [65100, version::VersionInterval::all()]: (name: ServiceName) => (has: bool);
+        atmosphere_wait_service [65101, version::VersionInterval::all()]: (name: ServiceName) => ();
     }
 }

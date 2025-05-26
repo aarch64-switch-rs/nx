@@ -147,159 +147,159 @@ pub enum AppletMessage {
 ipc_sf_define_default_client_for_interface!(StorageAccessor);
 ipc_sf_define_interface_trait! {
     trait StorageAccessor {
-        get_size [0, version::VersionInterval::all()]: () => (size: usize) (size: usize);
-        write [10, version::VersionInterval::all()]: (offset: usize, buf: sf::InAutoSelectBuffer<u8>) =>  () ();
-        read [11, version::VersionInterval::all()]: (offset: usize, buf: sf::OutAutoSelectBuffer<u8>) =>  () ();
+        get_size [0, version::VersionInterval::all()]: () => (size: usize);
+        write [10, version::VersionInterval::all()]: (offset: usize, buf: sf::InAutoSelectBuffer<u8>) => ();
+        read [11, version::VersionInterval::all()]: (offset: usize, buf: sf::OutAutoSelectBuffer<u8>) => ();
     }
 }
 
 ipc_sf_define_default_client_for_interface!(Storage);
 ipc_sf_define_interface_trait! {
     trait Storage {
-        open [0, version::VersionInterval::all()]: () => (storage_accessor: StorageAccessor) (storage_accessor: StorageAccessor);
+        open [0, version::VersionInterval::all()]: () => (storage_accessor: StorageAccessor);
     }
 }
 
 ipc_sf_define_default_client_for_interface!(LibraryAppletAccessor);
 ipc_sf_define_interface_trait! {
     trait LibraryAppletAccessor {
-        get_applet_state_changed_event [0, version::VersionInterval::all(), mut]: () => (applet_state_changed_event: sf::CopyHandle) (applet_state_changed_event: sf::CopyHandle);
-        start [10, version::VersionInterval::all(), mut]: () => () ();
-        push_in_data [100, version::VersionInterval::all(), mut]: (storage: Storage) =>  () ();
-        pop_out_data [101, version::VersionInterval::all(), mut]: () => (storage: Storage) (storage: Storage);
+        get_applet_state_changed_event [0, version::VersionInterval::all(), mut]: () => (applet_state_changed_event:  sf::CopyHandle);
+        start [10, version::VersionInterval::all(), mut]: () => ();
+        push_in_data [100, version::VersionInterval::all(), mut]: (storage: Storage) => ();
+        pop_out_data [101, version::VersionInterval::all(), mut]: () => (storage: Storage);
     }
 }
 
 ipc_sf_define_default_client_for_interface!(LibraryAppletCreator);
 ipc_sf_define_interface_trait! {
     trait LibraryAppletCreator {
-        create_library_applet [0, version::VersionInterval::all()]: (applet_id: AppletId, applet_mode: LibraryAppletMode) =>  (library_applet_accessor: LibraryAppletAccessor) (library_applet_accessor: session_type!(LibraryAppletAccessor));
-        create_storage [10, version::VersionInterval::all()]: (size: usize) =>  (storage: Storage) (storage: Storage);
+        create_library_applet [0, version::VersionInterval::all()]: (applet_id: AppletId, applet_mode: LibraryAppletMode) => (library_applet_accessor: LibraryAppletAccessor | session_type!(LibraryAppletAccessor) );
+        create_storage [10, version::VersionInterval::all()]: (size: usize) => (storage: Storage);
     }
 }
 
 ipc_sf_define_default_client_for_interface!(WindowController);
 ipc_sf_define_interface_trait! {
     trait WindowController {
-        get_applet_resource_user_id [1, version::VersionInterval::all()]: () => (aruid: u64) (aruid: u64);
-        acquire_foreground_rights [10, version::VersionInterval::all()]: () => () ();
+        get_applet_resource_user_id [1, version::VersionInterval::all()]: () => (raw_aruid: u64);
+        acquire_foreground_rights [10, version::VersionInterval::all()]: () => ();
     }
 }
 
 ipc_sf_define_default_client_for_interface!(SelfController);
 ipc_sf_define_interface_trait! {
     trait SelfController {
-        set_screenshot_permission [10, version::VersionInterval::all()]: (permission: ScreenShotPermission) =>  () ();
-        create_managed_display_layer [40, version::VersionInterval::all()]: () =>  (layer_id: u64) (layer_id: u64);
+        set_screenshot_permission [10, version::VersionInterval::all()]: (permission: ScreenShotPermission) => ();
+        create_managed_display_layer [40, version::VersionInterval::all()]: () => (layer_id: u64);
     }
 }
 
 ipc_sf_define_default_client_for_interface!(AudioController);
 ipc_sf_define_interface_trait! {
     trait AudioController {
-        set_expected_master_volume [0, version::VersionInterval::all()]: (main_applet_level: f32, library_applet_level: f32) =>  () ();
-        get_main_applet_volume [1, version::VersionInterval::all()]: () => (main_applet_level: f32) (main_applet_level: f32);
-        get_library_applet_volume [2, version::VersionInterval::all()]: () => (library_applet_level: f32) (library_applet_level: f32);
-        change_main_applet_volume [3, version::VersionInterval::all()]: (main_applet_level: f32, unknown: u64) => () ();
-        set_transparent_volume_rate [4, version::VersionInterval::all()]: (rate: f32) => () ();
+        set_expected_master_volume [0, version::VersionInterval::all()]: (main_applet_level: f32, library_applet_level: f32) => ();
+        get_main_applet_volume [1, version::VersionInterval::all()]: () => (main_applet_level: f32);
+        get_library_applet_volume [2, version::VersionInterval::all()]: () => (library_applet_level: f32);
+        change_main_applet_volume [3, version::VersionInterval::all()]: (main_applet_level: f32, unknown: u64) => ();
+        set_transparent_volume_rate [4, version::VersionInterval::all()]: (rate: f32) => ();
     }
 }
 
 ipc_sf_define_default_client_for_interface!(DisplayController);
 ipc_sf_define_interface_trait! {
     trait DisplayController {
-        update_caller_applet_capture_image [3, version::VersionInterval::all()]: () =>  () ();
+        update_caller_applet_capture_image [3, version::VersionInterval::all()]: () => ();
     }
 }
 ipc_sf_define_default_client_for_interface!(ProcessWindingController);
 ipc_sf_define_interface_trait! {
     trait ProcessWindingController {
-        get_launch_reason [0, version::VersionInterval::all()]: () => (launch_reason: AppletProcessLaunchReason) (launch_reason: AppletProcessLaunchReason);
+        get_launch_reason [0, version::VersionInterval::all()]: () => (launch_reason: AppletProcessLaunchReason);
     }
 }
 
 ipc_sf_define_default_client_for_interface!(CommonStateGetter);
 ipc_sf_define_interface_trait! {
     trait CommonStateGetter {
-        get_event_handle [0, version::VersionInterval::all()]: () => (handle: Handle) (handle: Handle);
-        receive_message [1, version::VersionInterval::all()]: () => (applet_message: AppletMessage) (applet_message: AppletMessage);
+        get_event_handle [0, version::VersionInterval::all()]: () => (handle: Handle);
+        receive_message [1, version::VersionInterval::all()]: () => (applet_message: AppletMessage);
         }
 }
 
 ipc_sf_define_default_client_for_interface!(LibraryAppletProxy);
 ipc_sf_define_interface_trait! {
     trait LibraryAppletProxy {
-        get_common_state_getter [0, version::VersionInterval::all()]: () => (common_state_getter: CommonStateGetter) (command_state_getter: session_type!(CommonStateGetter));
-        get_self_controller [1, version::VersionInterval::all()]: () => (self_controller: SelfController) (self_controller: session_type!(SelfController));
-        get_window_controller [2, version::VersionInterval::all()]: () => (window_controller: WindowController) (window_controller: session_type!(WindowController));
-        get_audio_controller [3, version::VersionInterval::all()]: () => (window_controller: AudioController) (window_controller: session_type!(AudioController));
-        get_display_controller [4, version::VersionInterval::all()]: () => (window_controller: DisplayController) (window_controller: session_type!(DisplayController));
-        get_process_winding_controller [10, version::VersionInterval::all()]: () => (window_controller: ProcessWindingController) (window_controller: session_type!(ProcessWindingController));
-        get_library_applet_creator [11, version::VersionInterval::all()]: () => (library_applet_creator: LibraryAppletCreator) (library_applet_creator: session_type!(AllSystemAppletProxiesService));
+        get_common_state_getter [0, version::VersionInterval::all()]: () => (common_state_getter: CommonStateGetter | session_type!(CommonStateGetter) );
+        get_self_controller [1, version::VersionInterval::all()]: () => (self_controller: SelfController | session_type!(SelfController) );
+        get_window_controller [2, version::VersionInterval::all()]: () => (window_controller: WindowController | session_type!(WindowController) );
+        get_audio_controller [3, version::VersionInterval::all()]: () => (window_controller: AudioController | session_type!(AudioController) );
+        get_display_controller [4, version::VersionInterval::all()]: () => (window_controller: DisplayController | session_type!(DisplayController) );
+        get_process_winding_controller [10, version::VersionInterval::all()]: () => (window_controller: ProcessWindingController | session_type!(ProcessWindingController) );
+        get_library_applet_creator [11, version::VersionInterval::all()]: () => (library_applet_creator: LibraryAppletCreator | session_type!(AllSystemAppletProxiesService) );
     }
 }
 
 ipc_sf_define_default_client_for_interface!(ApplicationProxy);
 ipc_sf_define_interface_trait! {
     trait ApplicationProxy {
-        get_common_state_getter [0, version::VersionInterval::all()]: () => (common_state_getter: CommonStateGetter) (command_state_getter: session_type!(CommonStateGetter));
-        get_self_controller [1, version::VersionInterval::all()]: () => (self_controller: SelfController) (self_controller: session_type!(SelfController));
-        get_window_controller [2, version::VersionInterval::all()]: () => (window_controller: WindowController) (window_controller: session_type!(WindowController));
-        get_audio_controller [3, version::VersionInterval::all()]: () => (window_controller: AudioController) (window_controller: session_type!(AudioController));
-        get_display_controller [4, version::VersionInterval::all()]: () => (window_controller: DisplayController) (window_controller: session_type!(DisplayController));
-        get_process_winding_controller [10, version::VersionInterval::all()]: () => (window_controller: ProcessWindingController) (window_controller: session_type!(ProcessWindingController));
-        get_library_applet_creator [11, version::VersionInterval::all()]: () => (library_applet_creator: LibraryAppletCreator) (library_applet_creator: session_type!(AllSystemAppletProxiesService));
+        get_common_state_getter [0, version::VersionInterval::all()]: () => (common_state_getter: CommonStateGetter | session_type!(CommonStateGetter) );
+        get_self_controller [1, version::VersionInterval::all()]: () => (self_controller: SelfController | session_type!(SelfController) );
+        get_window_controller [2, version::VersionInterval::all()]: () => (window_controller: WindowController | session_type!(WindowController) );
+        get_audio_controller [3, version::VersionInterval::all()]: () => (window_controller: AudioController | session_type!(AudioController) );
+        get_display_controller [4, version::VersionInterval::all()]: () => (window_controller: DisplayController | session_type!(DisplayController) );
+        get_process_winding_controller [10, version::VersionInterval::all()]: () => (window_controller: ProcessWindingController | session_type!(ProcessWindingController) );
+        get_library_applet_creator [11, version::VersionInterval::all()]: () => (library_applet_creator: LibraryAppletCreator | session_type!(AllSystemAppletProxiesService) );
     }
 }
 
 ipc_sf_define_default_client_for_interface!(SystemAppletProxy);
 ipc_sf_define_interface_trait! {
     trait SystemAppletProxy {
-        get_common_state_getter [0, version::VersionInterval::all()]: () => (common_state_getter: CommonStateGetter) (command_state_getter: session_type!(CommonStateGetter));
-        get_self_controller [1, version::VersionInterval::all()]: () => (self_controller: SelfController) (self_controller: session_type!(SelfController));
-        get_window_controller [2, version::VersionInterval::all()]: () => (window_controller: WindowController) (window_controller: session_type!(WindowController));
-        get_audio_controller [3, version::VersionInterval::all()]: () => (window_controller: AudioController) (window_controller: session_type!(AudioController));
-        get_display_controller [4, version::VersionInterval::all()]: () => (window_controller: DisplayController) (window_controller: session_type!(DisplayController));
-        get_process_winding_controller [10, version::VersionInterval::all()]: () => (window_controller: ProcessWindingController) (window_controller: session_type!(ProcessWindingController));
-        get_library_applet_creator [11, version::VersionInterval::all()]: () => (library_applet_creator: LibraryAppletCreator) (library_applet_creator: session_type!(AllSystemAppletProxiesService));
+        get_common_state_getter [0, version::VersionInterval::all()]: () => (common_state_getter: CommonStateGetter | session_type!(CommonStateGetter) );
+        get_self_controller [1, version::VersionInterval::all()]: () => (self_controller: SelfController | session_type!(SelfController) );
+        get_window_controller [2, version::VersionInterval::all()]: () => (window_controller: WindowController | session_type!(WindowController) );
+        get_audio_controller [3, version::VersionInterval::all()]: () => (window_controller: AudioController | session_type!(AudioController) );
+        get_display_controller [4, version::VersionInterval::all()]: () => (window_controller: DisplayController | session_type!(DisplayController) );
+        get_process_winding_controller [10, version::VersionInterval::all()]: () => (window_controller: ProcessWindingController | session_type!(ProcessWindingController) );
+        get_library_applet_creator [11, version::VersionInterval::all()]: () => (library_applet_creator: LibraryAppletCreator | session_type!(AllSystemAppletProxiesService) );
     }
 }
 
 ipc_sf_define_default_client_for_interface!(OverlayAppletProxy);
 ipc_sf_define_interface_trait! {
     trait OverlayAppletProxy {
-        get_common_state_getter [0, version::VersionInterval::all()]: () => (common_state_getter: CommonStateGetter) (command_state_getter: session_type!(CommonStateGetter));
-        get_self_controller [1, version::VersionInterval::all()]: () => (self_controller: SelfController) (self_controller: session_type!(SelfController));
-        get_window_controller [2, version::VersionInterval::all()]: () => (window_controller: WindowController) (window_controller: session_type!(WindowController));
-        get_audio_controller [3, version::VersionInterval::all()]: () => (window_controller: AudioController) (window_controller: session_type!(AudioController));
-        get_display_controller [4, version::VersionInterval::all()]: () => (window_controller: DisplayController) (window_controller: session_type!(DisplayController));
-        get_process_winding_controller [10, version::VersionInterval::all()]: () => (window_controller: ProcessWindingController) (window_controller: session_type!(ProcessWindingController));
-        get_library_applet_creator [11, version::VersionInterval::all()]: () => (library_applet_creator: LibraryAppletCreator) (library_applet_creator: session_type!(AllSystemAppletProxiesService));
+        get_common_state_getter [0, version::VersionInterval::all()]: () => (common_state_getter: CommonStateGetter | session_type!(CommonStateGetter) );
+        get_self_controller [1, version::VersionInterval::all()]: () => (self_controller: SelfController | session_type!(SelfController) );
+        get_window_controller [2, version::VersionInterval::all()]: () => (window_controller: WindowController | session_type!(WindowController) );
+        get_audio_controller [3, version::VersionInterval::all()]: () => (window_controller: AudioController | session_type!(AudioController) );
+        get_display_controller [4, version::VersionInterval::all()]: () => (window_controller: DisplayController | session_type!(DisplayController) );
+        get_process_winding_controller [10, version::VersionInterval::all()]: () => (window_controller: ProcessWindingController | session_type!(ProcessWindingController) );
+        get_library_applet_creator [11, version::VersionInterval::all()]: () => (library_applet_creator: LibraryAppletCreator | session_type!(AllSystemAppletProxiesService) );
     }
 }
 
 ipc_sf_define_default_client_for_interface!(SystemApplicationProxy);
 ipc_sf_define_interface_trait! {
     trait SystemApplicationProxy {
-        get_common_state_getter [0, version::VersionInterval::all()]: () => (common_state_getter: CommonStateGetter) (command_state_getter: session_type!(CommonStateGetter));
-        get_self_controller [1, version::VersionInterval::all()]: () => (self_controller: SelfController) (self_controller: session_type!(SelfController));
-        get_window_controller [2, version::VersionInterval::all()]: () => (window_controller: WindowController) (window_controller: session_type!(WindowController));
-        get_audio_controller [3, version::VersionInterval::all()]: () => (window_controller: AudioController) (window_controller: session_type!(AudioController));
-        get_display_controller [4, version::VersionInterval::all()]: () => (window_controller: DisplayController) (window_controller: session_type!(DisplayController));
-        get_process_winding_controller [10, version::VersionInterval::all()]: () => (window_controller: ProcessWindingController) (window_controller: session_type!(ProcessWindingController));
-        get_library_applet_creator [11, version::VersionInterval::all()]: () => (library_applet_creator: LibraryAppletCreator) (library_applet_creator: session_type!(AllSystemAppletProxiesService));
+        get_common_state_getter [0, version::VersionInterval::all()]: () => (common_state_getter: CommonStateGetter | session_type!(CommonStateGetter) );
+        get_self_controller [1, version::VersionInterval::all()]: () => (self_controller: SelfController | session_type!(SelfController) );
+        get_window_controller [2, version::VersionInterval::all()]: () => (window_controller: WindowController | session_type!(WindowController) );
+        get_audio_controller [3, version::VersionInterval::all()]: () => (window_controller: AudioController | session_type!(AudioController) );
+        get_display_controller [4, version::VersionInterval::all()]: () => (window_controller: DisplayController | session_type!(DisplayController) );
+        get_process_winding_controller [10, version::VersionInterval::all()]: () => (window_controller: ProcessWindingController | session_type!(ProcessWindingController) );
+        get_library_applet_creator [11, version::VersionInterval::all()]: () => (library_applet_creator: LibraryAppletCreator | session_type!(AllSystemAppletProxiesService) );
     }
 }
 
 ipc_sf_define_default_client_for_interface!(AllSystemAppletProxiesService);
 ipc_sf_define_interface_trait! {
     trait AllSystemAppletProxiesService {
-        open_application_proxy [0, version::VersionInterval::all()]: (process_id: sf::ProcessId, self_process_handle: sf::CopyHandle) =>  (library_applet_proxy: ApplicationProxy) (library_applet_proxy: session_type!(ApplicationProxy));
-        open_system_applet_proxy [100, version::VersionInterval::all()]: (process_id: sf::ProcessId, self_process_handle: sf::CopyHandle) =>  (library_applet_proxy: SystemAppletProxy) (library_applet_proxy: session_type!(SystemAppletProxy));
-        open_library_applet_proxy_old [200, version::VersionInterval::from(version::Version::new(3,0,0))]: (process_id: sf::ProcessId, self_process_handle: sf::CopyHandle) =>  (library_applet_proxy: LibraryAppletProxy) (library_applet_proxy: session_type!(LibraryAppletProxy));
-        open_library_applet_proxy [201, version::VersionInterval::from(version::Version::new(3,0,0))]: (process_id: sf::ProcessId, self_process_handle: sf::CopyHandle, applet_attribute: sf::InMapAliasBuffer<AppletAttribute>) =>  (library_applet_proxy: LibraryAppletProxy) (library_applet_proxy: session_type!(LibraryAppletProxy));
-        open_overlay_applet_proxy [300, version::VersionInterval::all()]: (process_id: sf::ProcessId, self_process_handle: sf::CopyHandle) =>  (library_applet_proxy: OverlayAppletProxy) (library_applet_proxy: session_type!(OverlayAppletProxy));
-        open_system_application_proxy [350, version::VersionInterval::all()]: (process_id: sf::ProcessId, self_process_handle: sf::CopyHandle) =>  (library_applet_proxy: SystemApplicationProxy) (library_applet_proxy: session_type!(SystemApplicationProxy));
+        open_application_proxy [0, version::VersionInterval::all()]: (process_id: sf::ProcessId, self_process_handle: sf::CopyHandle) => (library_applet_proxy: ApplicationProxy | session_type!(ApplicationProxy) );
+        open_system_applet_proxy [100, version::VersionInterval::all()]: (process_id: sf::ProcessId, self_process_handle: sf::CopyHandle) => (library_applet_proxy: SystemAppletProxy | session_type!(SystemAppletProxy) );
+        open_library_applet_proxy_old [200, version::VersionInterval::from(version::Version::new(3,0,0))]: (process_id: sf::ProcessId, self_process_handle: sf::CopyHandle) => (library_applet_proxy: LibraryAppletProxy | session_type!(LibraryAppletProxy) );
+        open_library_applet_proxy [201, version::VersionInterval::from(version::Version::new(3,0,0))]: (process_id: sf::ProcessId, self_process_handle: sf::CopyHandle, applet_attribute: sf::InMapAliasBuffer<AppletAttribute>) => (library_applet_proxy: LibraryAppletProxy | session_type!(LibraryAppletProxy) );
+        open_overlay_applet_proxy [300, version::VersionInterval::all()]: (process_id: sf::ProcessId, self_process_handle: sf::CopyHandle) => (library_applet_proxy: OverlayAppletProxy | session_type!(OverlayAppletProxy) );
+        open_system_application_proxy [350, version::VersionInterval::all()]: (process_id: sf::ProcessId, self_process_handle: sf::CopyHandle) => (library_applet_proxy: SystemApplicationProxy | session_type!(SystemApplicationProxy) );
     }
 }
 

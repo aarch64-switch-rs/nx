@@ -542,34 +542,34 @@ define_bit_enum! {
 ipc_sf_define_default_client_for_interface!(AppletResource);
 ipc_sf_define_interface_trait! {
     trait AppletResource {
-        get_shared_memory_handle [0, version::VersionInterval::all(), mut]: () => (shmem_handle: sf::CopyHandle) (shmem_handle: sf::CopyHandle);
+        get_shared_memory_handle [0, version::VersionInterval::all(), mut]: () => (shmem_handle:  sf::CopyHandle);
     }
 }
 
 //ipc_sf_define_default_client_for_interface!(Hid);
 ipc_sf_define_interface_trait! {
     trait Hid {
-        create_applet_resource [0, version::VersionInterval::all(), mut]: (aruid: AppletResourceUserId) =>  (applet_resource: AppletResource) (applet_resource: session_type!(AppletResource));
-        set_supported_npad_style_set [100, version::VersionInterval::all(), mut]: (npad_style_tag: NpadStyleTag, aruid: AppletResourceUserId) =>  () ();
-        get_supported_npad_style_set [101, version::VersionInterval::all()]: (aruid: AppletResourceUserId) =>  (npad_style_tag: NpadStyleTag) (npad_style_tag: NpadStyleTag);
-        set_supported_npad_id_type [102, version::VersionInterval::all(), mut]: (aruid: AppletResourceUserId, npad_ids: sf::InPointerBuffer<NpadIdType>) =>  () ();
-        activate_npad [103, version::VersionInterval::all(), mut]: (aruid: AppletResourceUserId) =>  () ();
-        deactivate_npad [104, version::VersionInterval::all(), mut]: (aruid: AppletResourceUserId) =>  () ();
-        activate_npad_with_revision [109, version::VersionInterval::all(), mut]: (revision: i32, aruid: AppletResourceUserId) =>  () ();
-        set_npad_joy_assignment_mode_single [123, version::VersionInterval::all(), mut]: (npad_id: NpadIdType, aruid: AppletResourceUserId, joy_type: NpadJoyDeviceType) =>  () ();
-        set_npad_joy_assignment_mode_dual [124, version::VersionInterval::all(), mut]: (npad_id: NpadIdType, aruid: AppletResourceUserId) =>  () ();
+        create_applet_resource [0, version::VersionInterval::all(), mut]: (aruid: AppletResourceUserId) => (applet_resource: AppletResource | session_type!(AppletResource) );
+        set_supported_npad_style_set [100, version::VersionInterval::all(), mut]: (npad_style_tag: NpadStyleTag, aruid: AppletResourceUserId) => ();
+        get_supported_npad_style_set [101, version::VersionInterval::all()]: (aruid: AppletResourceUserId) => (npad_style_tag: NpadStyleTag);
+        set_supported_npad_id_type [102, version::VersionInterval::all(), mut]: (aruid: AppletResourceUserId, npad_ids: sf::InPointerBuffer<NpadIdType>) => ();
+        activate_npad [103, version::VersionInterval::all(), mut]: (aruid: AppletResourceUserId) => ();
+        deactivate_npad [104, version::VersionInterval::all(), mut]: (aruid: AppletResourceUserId) => ();
+        activate_npad_with_revision [109, version::VersionInterval::all(), mut]: (revision: i32, aruid: AppletResourceUserId) => ();
+        set_npad_joy_assignment_mode_single [123, version::VersionInterval::all(), mut]: (npad_id: NpadIdType, aruid: AppletResourceUserId, joy_type: NpadJoyDeviceType) => ();
+        set_npad_joy_assignment_mode_dual [124, version::VersionInterval::all(), mut]: (npad_id: NpadIdType, aruid: AppletResourceUserId) => ();
     }
 }
 
 //ipc_sf_define_default_client_for_interface!(HidSys);
 ipc_sf_define_interface_trait! {
     trait HidSys {
-        send_keyboard_lock_key_event [31, version::VersionInterval::all()]: (flags: LockKeyFlags) => () ();
-        acquire_home_button_event_handle [101, version::VersionInterval::all()]: (aruid: AppletResourceUserId) =>  (handle: CopyHandle) (handle: CopyHandle);
-        activate_home_button [111, version::VersionInterval::all()]: (aruid: AppletResourceUserId) => () ();
-        acquire_sleep_button_event_handle [121, version::VersionInterval::all()]: (aruid: AppletResourceUserId) =>  (handle: CopyHandle) (handle: CopyHandle);
-        activate_sleep_button [131, version::VersionInterval::all()]: (aruid: AppletResourceUserId) => () ();
-        acquire_capture_button_event_handle [141, version::VersionInterval::all()]: (aruid: AppletResourceUserId) =>  (handle: CopyHandle) (handle: CopyHandle);
-        activate_capture_button [151, version::VersionInterval::all()]: (aruid: AppletResourceUserId) => () ();
+        send_keyboard_lock_key_event [31, version::VersionInterval::all()]: (flags: LockKeyFlags) => ();
+        acquire_home_button_event_handle [101, version::VersionInterval::all()]: (aruid: AppletResourceUserId) => (handle: CopyHandle);
+        activate_home_button [111, version::VersionInterval::all()]: (aruid: AppletResourceUserId) => ();
+        acquire_sleep_button_event_handle [121, version::VersionInterval::all()]: (aruid: AppletResourceUserId) => (handle: CopyHandle);
+        activate_sleep_button [131, version::VersionInterval::all()]: (aruid: AppletResourceUserId) => ();
+        acquire_capture_button_event_handle [141, version::VersionInterval::all()]: (aruid: AppletResourceUserId) => (handle: CopyHandle);
+        activate_capture_button [151, version::VersionInterval::all()]: (aruid: AppletResourceUserId) => ();
     }
 }

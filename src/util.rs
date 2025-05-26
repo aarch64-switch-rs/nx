@@ -342,14 +342,11 @@ impl<const S: usize> ArrayString<S> {
         // we're writing a c-string, so we can't have internal nuls
         result_return_if!(string.find('\0').is_some(), rc::ResultInvalidUtf8Conversion);
 
-        self.c_str = [0; S];
         let string = string.as_bytes();
-        let len = const_usize_min(S - 1, string.len());
-        let mut offset = 0;
-        while offset < len {
-            self.c_str[offset] = string[offset];
-            offset += 1;
-        }
+        let len = string.len().min(S-1);
+
+        self.c_str = [0; S];
+        self.c_str[..len].copy_from_slice(&string[..len]);
 
         Ok(())
     }

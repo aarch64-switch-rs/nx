@@ -25,17 +25,17 @@ pub enum State {
 ipc_sf_define_default_client_for_interface!(PmModule);
 ipc_sf_define_interface_trait! {
     trait PmModule {
-        initialize [0, version::VersionInterval::all()]: (id: ModuleId, dependencies: sf::InMapAliasBuffer<ModuleId>) =>  (event_handle: sf::CopyHandle) (event_handle: sf::CopyHandle);
-        get_request [1, version::VersionInterval::all()]: () => (state: State, flags: u32) (state: State, flags: u32);
-        acknowledge [2, version::VersionInterval::all()]: () => () ();
-        finalize [3, version::VersionInterval::all()]: () => () ();
-        acknowledge_ex [4, version::VersionInterval::from(version::Version::new(5,1,0))]: (state: State) =>  () ();
+        initialize [0, version::VersionInterval::all()]: (id: ModuleId, dependencies: sf::InMapAliasBuffer<ModuleId>) =>  (event_handle: sf::CopyHandle);
+        get_request [1, version::VersionInterval::all()]: () => (state: State, flags: u32);
+        acknowledge [2, version::VersionInterval::all()]: () => ();
+        finalize [3, version::VersionInterval::all()]: () => ();
+        acknowledge_ex [4, version::VersionInterval::from(version::Version::new(5,1,0))]: (state: State) => ();
     }
 }
 
 ipc_sf_define_default_client_for_interface!(PmService);
 ipc_sf_define_interface_trait! {
     trait PmService {
-        get_pm_module [0, version::VersionInterval::all()]: () => (pm_module: PmModule) (pm_module: session_type!(PmModule));
+        get_pm_module [0, version::VersionInterval::all()]: () => (pm_module: PmModule | session_type!(PmModule) );
     }
 }

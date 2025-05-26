@@ -26,8 +26,8 @@ const_assert!(core::mem::size_of::<FirmwareVersion>() == 0x100);
 //ipc_sf_define_default_client_for_interface!(SystemSettings);
 ipc_sf_define_interface_trait! {
     trait SystemSettings {
-        get_firmware_version [3, version::VersionInterval::all()]: (out_version: sf::OutFixedPointerBuffer<FirmwareVersion>) =>  () ();
-        get_firmware_version_2 [4, version::VersionInterval::from(version::Version::new(3,0,0))]: (out_version: sf::OutFixedPointerBuffer<FirmwareVersion>) =>  () ();
-        get_mii_author_id [90, version::VersionInterval::all()]: () => (id: mii::CreateId) (id: mii::CreateId);
+        get_firmware_version [3, version::VersionInterval::all()]: (out_version: sf::OutFixedPointerBuffer<FirmwareVersion>) => ();
+        get_firmware_version_2 [4, version::VersionInterval::from(version::Version::new(3,0,0))]: (out_version: sf::OutFixedPointerBuffer<FirmwareVersion>) => ();
+        get_mii_author_id [90, version::VersionInterval::all()]: () => (id: mii::CreateId);
     }
 }

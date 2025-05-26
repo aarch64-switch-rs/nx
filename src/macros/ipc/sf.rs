@@ -1,5 +1,18 @@
 #![macro_use]
 
+macro_rules! return_param_server {
+    (
+        $client_type:ty, $server_type:ty
+    ) => {
+        $server_type
+    };
+    (
+        $one_type:ty
+    ) => {
+        $one_type
+    }
+}
+
 /// Defines a trait meant to be used for IPC interfaces
 ///
 /// # Examples
@@ -22,7 +35,7 @@ macro_rules! ipc_sf_define_interface_trait {
     (
         trait $intf:ident {
             $(
-                $name:ident [$rq_id:expr, $ver_intv:expr $(, $noalias:tt)?]: ( $( $in_param_name:ident: $in_param_type:ty ),* ) => ( $( $client_out_param_name:ident: $client_out_param_type:ty ),* ) ( $( $server_out_param_name:ident: $server_out_param_type:ty ),* )
+                $name:ident [$rq_id:expr, $ver_intv:expr $(, $noalias:tt)?]: ( $( $in_param_name:ident: $in_param_type:ty ),* ) => ( $( $out_param_name:ident: $out_param_type_client:ty $(| $out_param_type_server:ty)? ),* )
             );* $(;)* // Note: trick to allow last trailing ';' for proper styling
         }
     ) => {
@@ -33,7 +46,7 @@ macro_rules! ipc_sf_define_interface_trait {
                     #[allow(unused_parens)]
                     #[allow(clippy::too_many_arguments)]
                     #[allow(missing_docs)]
-                    fn $name(& $($noalias)? self, $( $in_param_name: $in_param_type ),* ) -> $crate::result::Result<( $( $client_out_param_type ),* )> {
+                    fn $name(& $($noalias)? self, $( $in_param_name: $in_param_type ),* ) -> $crate::result::Result<( $( $out_param_type_client ),* )> {
                         let mut ctx = $crate::ipc::CommandContext::new_client(self.get_session().object_info);
 
                         let mut walker = $crate::ipc::DataWalker::new(core::ptr::null_mut());
@@ -56,9 +69,9 @@ macro_rules! ipc_sf_define_interface_trait {
                         };
 
                         walker.reset_with(ctx.out_params.data_offset);
-                        $( let $client_out_param_name = <$client_out_param_type as $crate::ipc::client::ResponseCommandParameter<_>>::after_response_read(&mut walker, &mut ctx)?; )*
+                        $( let $out_param_name = <$out_param_type_client as $crate::ipc::client::ResponseCommandParameter<_>>::after_response_read(&mut walker, &mut ctx)?; )*
 
-                        Ok(( $( $client_out_param_name as _ ),* ))
+                        Ok(( $( $out_param_name as _ ),* ))
                     }
                 )*
             }
@@ -69,7 +82,7 @@ macro_rules! ipc_sf_define_interface_trait {
                     #[allow(unused_parens)]
                     #[allow(clippy::too_many_arguments)]
                     #[allow(missing_docs)]
-                    fn $name(&mut self, $( $in_param_name: $in_param_type ),* ) -> $crate::result::Result<( $( $server_out_param_type ),* )>;
+                    fn $name(&mut self, $( $in_param_name: $in_param_type ),* ) -> $crate::result::Result<( $( return_param_server!($out_param_type_client $(, $out_param_type_server)?) ),* )>;
 
                     #[allow(unused_assignments)]
                     #[allow(unused_parens)]
@@ -81,10 +94,10 @@ macro_rules! ipc_sf_define_interface_trait {
                         ctx.raw_data_walker = $crate::ipc::DataWalker::new(ctx.ctx.in_params.data_offset);
                         $( let $in_param_name = <$in_param_type as $crate::ipc::server::RequestCommandParameter<_>>::after_request_read(&mut ctx)?; )*
 
-                        let ( $( $server_out_param_name ),* ) = self.$name( $( $in_param_name ),* )?;
+                        let ( $( $out_param_name ),* ) = self.$name( $( $in_param_name ),* )?;
 
                         ctx.raw_data_walker = $crate::ipc::DataWalker::new(core::ptr::null_mut());
-                        $( let [<$server_out_param_name _carry_state>] = $crate::ipc::server::ResponseCommandParameter::before_response_write(&$server_out_param_name, &mut ctx)?; )*
+                        $( let [<$out_param_name _carry_state>] = $crate::ipc::server::ResponseCommandParameter::before_response_write(&$out_param_name, &mut ctx)?; )*
                         ctx.ctx.out_params.data_size = ctx.raw_data_walker.get_offset() as u32;
 
                         match protocol {
@@ -97,7 +110,7 @@ macro_rules! ipc_sf_define_interface_trait {
                         };
 
                         ctx.raw_data_walker = $crate::ipc::DataWalker::new(ctx.ctx.out_params.data_offset);
-                        $( $crate::ipc::server::ResponseCommandParameter::after_response_write($server_out_param_name, [<$server_out_param_name _carry_state>], &mut ctx)?; )*
+                        $( $crate::ipc::server::ResponseCommandParameter::after_response_write($out_param_name, [<$out_param_name _carry_state>], &mut ctx)?; )*
 
                         Ok(())
                     }

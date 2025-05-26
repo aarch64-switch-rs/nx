@@ -111,52 +111,52 @@ pub enum OperationId {
 ipc_sf_define_default_client_for_interface!(File);
 ipc_sf_define_interface_trait! {
     trait File {
-        read [0, version::VersionInterval::all(), mut]: (option: FileReadOption, offset: usize, size: usize, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) =>  (read_size: usize) (read_size: usize);
-        write [1, version::VersionInterval::all(), mut]: (option: FileWriteOption, offset: usize, size: usize, buf: sf::InNonSecureMapAliasBuffer<u8>) =>  () ();
-        flush [2, version::VersionInterval::all(), mut]: () => () ();
-        set_size [3, version::VersionInterval::all(), mut]: (size: usize) =>  () ();
-        get_size [4, version::VersionInterval::all(), mut]: () => (size: usize) (size: usize);
-        operate_range [5, version::VersionInterval::from(version::Version::new(4,0,0)), mut]: (operation_id: OperationId, offset: usize, size: usize) =>  (info: FileQueryRangeInfo) (info: FileQueryRangeInfo);
-        operate_range_with_buffer [6, version::VersionInterval::from(version::Version::new(12,0,0)), mut]: (operation_id: OperationId, offset: usize, size: usize, in_buf: sf::InNonSecureMapAliasBuffer<u8>, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) =>  () ();
+        read [0, version::VersionInterval::all(), mut]: (option: FileReadOption, offset: usize, size: usize, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) => (read_size: usize);
+        write [1, version::VersionInterval::all(), mut]: (option: FileWriteOption, offset: usize, size: usize, buf: sf::InNonSecureMapAliasBuffer<u8>) => ();
+        flush [2, version::VersionInterval::all(), mut]: () => ();
+        set_size [3, version::VersionInterval::all(), mut]: (size: usize) => ();
+        get_size [4, version::VersionInterval::all(), mut]: () => (size: usize);
+        operate_range [5, version::VersionInterval::from(version::Version::new(4,0,0)), mut]: (operation_id: OperationId, offset: usize, size: usize) => (info: FileQueryRangeInfo);
+        operate_range_with_buffer [6, version::VersionInterval::from(version::Version::new(12,0,0)), mut]: (operation_id: OperationId, offset: usize, size: usize, in_buf: sf::InNonSecureMapAliasBuffer<u8>, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) => ();
     }
 }
 
 ipc_sf_define_default_client_for_interface!(Directory);
 ipc_sf_define_interface_trait! {
     trait Directory {
-        read [0, version::VersionInterval::all()]: (out_entries: sf::OutMapAliasBuffer<DirectoryEntry>) =>  (read_count: u64) (read_count: u64);
-        get_entry_count [1, version::VersionInterval::all()]: () => (count: u64) (count: u64);
+        read [0, version::VersionInterval::all()]: (out_entries: sf::OutMapAliasBuffer<DirectoryEntry>) => (read_count: u64);
+        get_entry_count [1, version::VersionInterval::all()]: () => (count: u64);
     }
 }
 
 ipc_sf_define_default_client_for_interface!(FileSystem);
 ipc_sf_define_interface_trait! {
     trait FileSystem {
-        create_file [0, version::VersionInterval::all()]: (attribute: FileAttribute, size: usize, path_buf: sf::InFixedPointerBuffer<Path>) =>  () ();
-        delete_file [1, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer<Path>) =>  () ();
-        create_directory [2, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer<Path>) =>  () ();
-        delete_directory [3, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer<Path>) =>  () ();
-        delete_directory_recursively [4, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer<Path>) =>  () ();
-        rename_file [5, version::VersionInterval::all()]: (old_path_buf: sf::InFixedPointerBuffer<Path>, new_path_buf: sf::InFixedPointerBuffer<Path>) =>  () ();
-        rename_directory [6, version::VersionInterval::all()]: (old_path_buf: sf::InFixedPointerBuffer<Path>, new_path_buf: sf::InFixedPointerBuffer<Path>) =>  () ();
-        get_entry_type [7, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer<Path>) =>  (entry_type: DirectoryEntryType) (entry_type: DirectoryEntryType);
-        open_file [8, version::VersionInterval::all()]: (mode: FileOpenMode, path_buf: sf::InFixedPointerBuffer<Path>) =>  (file: File) (file: session_type!(File));
-        open_directory [9, version::VersionInterval::all()]: (mode: DirectoryOpenMode, path_buf: sf::InFixedPointerBuffer<Path>) =>  (dir: Directory) (dir: session_type!(Directory));
-        commit [10, version::VersionInterval::all()]: () => () ();
-        get_free_space_size [11, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer<Path>) =>  (size: usize) (size: usize);
-        get_total_space_size [12, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer<Path>) =>  (size: usize) (size: usize);
-        clean_directory_recursively [13, version::VersionInterval::from(version::Version::new(3,0,0))]: (path_buf: sf::InFixedPointerBuffer<Path>) =>  () ();
-        get_file_time_stamp_raw [14, version::VersionInterval::from(version::Version::new(3,0,0))]: (path_buf: sf::InFixedPointerBuffer<Path>) =>  (time_stamp: FileTimeStampRaw) (time_stamp: FileTimeStampRaw);
-        query_entry [15, version::VersionInterval::from(version::Version::new(4,0,0))]: (path_buf: sf::InFixedPointerBuffer<Path>, query_id: QueryId, in_buf: sf::InNonSecureMapAliasBuffer<u8>, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) =>  () ();
+        create_file [0, version::VersionInterval::all()]: (attribute: FileAttribute, size: usize, path_buf: sf::InFixedPointerBuffer<Path>) => ();
+        delete_file [1, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer<Path>) => ();
+        create_directory [2, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer<Path>) => ();
+        delete_directory [3, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer<Path>) => ();
+        delete_directory_recursively [4, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer<Path>) => ();
+        rename_file [5, version::VersionInterval::all()]: (old_path_buf: sf::InFixedPointerBuffer<Path>, new_path_buf: sf::InFixedPointerBuffer<Path>) => ();
+        rename_directory [6, version::VersionInterval::all()]: (old_path_buf: sf::InFixedPointerBuffer<Path>, new_path_buf: sf::InFixedPointerBuffer<Path>) => ();
+        get_entry_type [7, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer<Path>) => (entry_type: DirectoryEntryType);
+        open_file [8, version::VersionInterval::all()]: (mode: FileOpenMode, path_buf: sf::InFixedPointerBuffer<Path>) => (file: File | session_type!(File) );
+        open_directory [9, version::VersionInterval::all()]: (mode: DirectoryOpenMode, path_buf: sf::InFixedPointerBuffer<Path>) => (dir: Directory | session_type!(Directory) );
+        commit [10, version::VersionInterval::all()]: () => ();
+        get_free_space_size [11, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer<Path>) => (size: usize);
+        get_total_space_size [12, version::VersionInterval::all()]: (path_buf: sf::InFixedPointerBuffer<Path>) => (size: usize);
+        clean_directory_recursively [13, version::VersionInterval::from(version::Version::new(3,0,0))]: (path_buf: sf::InFixedPointerBuffer<Path>) => ();
+        get_file_time_stamp_raw [14, version::VersionInterval::from(version::Version::new(3,0,0))]: (path_buf: sf::InFixedPointerBuffer<Path>) => (time_stamp: FileTimeStampRaw);
+        query_entry [15, version::VersionInterval::from(version::Version::new(4,0,0))]: (path_buf: sf::InFixedPointerBuffer<Path>, query_id: QueryId, in_buf: sf::InNonSecureMapAliasBuffer<u8>, out_buf: sf::OutNonSecureMapAliasBuffer<u8>) => ();
     }
 }
 
 ipc_sf_define_default_client_for_interface!(FileSystemProxy);
 ipc_sf_define_interface_trait! {
     trait FileSystemProxy {
-        set_current_process [1, version::VersionInterval::all()]: (process_id: sf::ProcessId) =>  () ();
-        open_sd_card_filesystem [18, version::VersionInterval::all()]: () => (sd_filesystem: FileSystem) (sd_filesystem: session_type!(FileSystem));
-        output_access_log_to_sd_card [1006, version::VersionInterval::all()]: (log_buf: sf::InMapAliasBuffer<u8>) =>  () ();
+        set_current_process [1, version::VersionInterval::all()]: (process_id: sf::ProcessId) => ();
+        open_sd_card_filesystem [18, version::VersionInterval::all()]: () => (sd_filesystem: FileSystem | session_type!(FileSystem) );
+        output_access_log_to_sd_card [1006, version::VersionInterval::all()]: (log_buf: sf::InMapAliasBuffer<u8>) => ();
     }
 }
 
