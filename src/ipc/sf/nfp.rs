@@ -216,7 +216,6 @@ ipc_sf_define_default_client_for_interface!(User);
 ipc_sf_define_interface_trait! {
     trait User {
         initialize [0, version::VersionInterval::all()]: (aruid: applet::AppletResourceUserId, mcu_data: sf::InMapAliasBuffer<McuVersionData>) => ();
-        initialize_2 [400, version::VersionInterval::all()]: (aruid: applet::AppletResourceUserId, mcu_data: sf::InMapAliasBuffer<McuVersionData>) => ();
         finalize [1, version::VersionInterval::all()]: () => ();
         list_devices [2, version::VersionInterval::all()]: (out_devices: sf::OutPointerBuffer<DeviceHandle>) => (count: u32);
         start_detection [3, version::VersionInterval::all()]: (device_handle: DeviceHandle) => ();
