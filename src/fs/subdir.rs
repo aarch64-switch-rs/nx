@@ -8,14 +8,14 @@ use alloc::{boxed::Box, string::String};
 
 // TODO: subdir FS object, non-IPC version?
 
-/// Represents an IPC [`IFileSystem`] object wrapping around a FS subdirectory path
+/// Represents an IPC [`FileSystem`][`fs::FileSystem`] object wrapping around a FS subdirectory path
 pub struct SubDir<FS: fs::FileSystem> {
     fs: FS,
     base: String
 }
 
 impl<FS: fs::FileSystem> SubDir<FS> {
-    /// Creates a new [`FileSystem`]
+    /// Creates a new [`FileSystem`][`fs::FileSystem`]
     ///
     /// # Arguments
     ///

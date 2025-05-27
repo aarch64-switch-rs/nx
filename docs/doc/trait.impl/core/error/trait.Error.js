@@ -1,0 +1,9 @@
+(function() {
+    var implementors = Object.fromEntries([["zerocopy",[["impl&lt;A, S, V&gt; Error for <a class=\"enum\" href=\"zerocopy/error/enum.ConvertError.html\" title=\"enum zerocopy::error::ConvertError\">ConvertError</a>&lt;A, S, V&gt;<div class=\"where\">where\n    A: Display + Debug,\n    S: Display + Debug,\n    V: Display + Debug,</div>"],["impl&lt;Src, Dst&gt; Error for <a class=\"struct\" href=\"zerocopy/error/struct.AlignmentError.html\" title=\"struct zerocopy::error::AlignmentError\">AlignmentError</a>&lt;Src, Dst&gt;<div class=\"where\">where\n    Src: Deref,\n    Dst: <a class=\"trait\" href=\"zerocopy/trait.KnownLayout.html\" title=\"trait zerocopy::KnownLayout\">KnownLayout</a> + ?Sized,</div>"],["impl&lt;Src, Dst&gt; Error for <a class=\"struct\" href=\"zerocopy/error/struct.SizeError.html\" title=\"struct zerocopy::error::SizeError\">SizeError</a>&lt;Src, Dst&gt;<div class=\"where\">where\n    Src: Deref,\n    Dst: <a class=\"trait\" href=\"zerocopy/trait.KnownLayout.html\" title=\"trait zerocopy::KnownLayout\">KnownLayout</a> + ?Sized,</div>"],["impl&lt;Src, Dst&gt; Error for <a class=\"struct\" href=\"zerocopy/error/struct.ValidityError.html\" title=\"struct zerocopy::error::ValidityError\">ValidityError</a>&lt;Src, Dst&gt;<div class=\"where\">where\n    Src: Deref,\n    Dst: <a class=\"trait\" href=\"zerocopy/trait.KnownLayout.html\" title=\"trait zerocopy::KnownLayout\">KnownLayout</a> + <a class=\"trait\" href=\"zerocopy/trait.TryFromBytes.html\" title=\"trait zerocopy::TryFromBytes\">TryFromBytes</a> + ?Sized,</div>"]]]]);
+    if (window.register_implementors) {
+        window.register_implementors(implementors);
+    } else {
+        window.pending_implementors = implementors;
+    }
+})()
+//{"start":57,"fragment_lengths":[1517]}
