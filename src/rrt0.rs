@@ -72,18 +72,6 @@ pub enum ExecutableType {
     Nro,
 }
 
-/*
-pub enum ExecutableType {
-    None = -2,
-    #[default]
-    Default = -1,
-    Application = 0,
-    SystemApplet = 1,
-    LibraryApplet = 2,
-    OverlayApplet = 3,
-    SystemApplication = 4
-}*/
-
 static G_EXECUTABLE_TYPE: AtomicExecutableType = AtomicExecutableType::new(ExecutableType::None);
 
 pub(crate) fn set_executable_type(exec_type: ExecutableType) {

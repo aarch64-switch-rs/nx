@@ -594,11 +594,6 @@ impl Thread {
         let inner = unsafe {
             let mut arc = Arc::<Inner>::new_uninit();
             let ptr = Arc::get_mut(&mut arc).unwrap_unchecked().as_mut_ptr();
-            /*addr_of_mut!((*ptr).real_thread.name).write(name);
-            addr_of_mut!((*ptr).real_thread.name).write(name);
-            addr_of_mut!((*ptr).real_thread.name_ptr).write(addr_of!((*ptr).real_thread.name) as *const _);
-            addr_of_mut!((*ptr).real_thread.__nx_thread_pointer).write(addr_of!((*ptr).real_thread.__nx_thread) as *const _);
-            addr_of_mut!((*ptr).real_thread.__nx_thread.handle).write(svc::INVALID_HANDLE);*/
             addr_of_mut!((*ptr).name).write(name);
             addr_of_mut!((*ptr).thread_handle).write(UnsafeCell::new(svc::INVALID_HANDLE));
             Pin::new_unchecked(arc.assume_init())
@@ -680,7 +675,7 @@ impl fmt::Debug for Thread {
 
 struct Inner {
     name: ThreadName,
-    thread_handle: UnsafeCell<svc::Handle>, //imp::Thread
+    thread_handle: UnsafeCell<svc::Handle>,
 }
 
 unsafe impl Sync for Inner {}
@@ -1174,6 +1169,8 @@ pub mod imp {
         pub fn name(&self) -> ThreadName {
             self.name
         }
+
+        #[inline(always)]
         pub fn set_name<S: AsRef<str>>(&mut self, name: S) {
             self.name = name.as_ref().into()
         }
@@ -1280,8 +1277,8 @@ pub mod imp {
                 arc.__nx_thread.handle = handle;
                 arc.entry = Some(thread_wrapper);
                 arc.arguments = entry_args_raw;
-                arc.name_ptr = addr_of!(arc.name).cast();
-                arc.__nx_thread_pointer = addr_of!(arc.__nx_thread);
+                arc.name_ptr = (&raw const arc.name).cast();
+                arc.__nx_thread_pointer = &raw const arc.__nx_thread;
                 arc.state = ThreadState::Initialized;
             }
 

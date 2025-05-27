@@ -984,7 +984,7 @@ pub fn get_debug_thread_context(
 ) -> Result<arm::ThreadContext> {
     unsafe extern "C" {
         fn __nx_svc_get_debug_thread_context(
-            thread_context: *mut u8,  //*mut arm::ThreadContext
+            thread_context: *mut u8,  // *mut arm::ThreadContext
             debug_handle: Handle,
             thread_id: u64,
             register_group: u32,
@@ -1015,7 +1015,7 @@ pub fn set_debug_thread_context(
         fn __nx_svc_set_debug_thread_context(
             debug_handle: Handle,
             thread_id: u64,
-            thread_context: *const u8, //*const arm::ThreadContext
+            thread_context: *const u8, // *const arm::ThreadContext
             register_group: u32,
         ) -> ResultCode;
     }

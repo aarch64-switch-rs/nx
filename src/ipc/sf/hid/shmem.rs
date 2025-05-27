@@ -38,25 +38,11 @@ pub struct AtomicSample<T: Copy + Clone + Debug> {
     pub storage: T,
 }
 
-/*
-impl<T: Debug> core::fmt::Debug for AtomicSample<T> {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        f.debug_struct("LifoStorageAtomicContainer")
-        .field("sampling_size", &self.sampling_size.load(Ordering::Relaxed))
-        .field("storage", &self.storage)
-        .finish()
-    }
-} */
-
 impl<T: Copy + Debug, const S: usize> RingLifo<T, S> {
     pub fn get_tail_item(&self) -> T {
         let mut out_value: MaybeUninit<T> = MaybeUninit::uninit();
         loop {
             let tail_index = self.tail.load(Ordering::Acquire);
-            /*debug_assert!(
-                tail_index < self.count.load(Ordering::Acquire),
-                "We are somehow loading from a tail index that hasn't been written to yet."
-            );*/
             let sampling_value_before =
                 self.items[tail_index].sampling_size.load(Ordering::Acquire);
             // We read through a volatile pointer since it basically an uncached memcpy for our purposes.
