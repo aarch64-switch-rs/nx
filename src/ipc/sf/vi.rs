@@ -87,7 +87,6 @@ ipc_sf_define_interface_trait! {
     }
 }
 
-//ipc_sf_define_default_client_for_interface!(ApplicationRootService);
 ipc_sf_define_interface_trait! {
     trait ApplicationDisplayRoot {
         get_display_service [0, version::VersionInterval::all()]: (mode: DisplayServiceMode) => (display_service: ApplicationDisplay | session_type!(ApplicationDisplay) );

@@ -43,7 +43,6 @@ pub enum IoctlId {
 
 pub type Fd = u32;
 
-//ipc_sf_define_default_client_for_interface!(NvDrvServices);
 ipc_sf_define_interface_trait! {
     trait NvDrv {
         open [0, version::VersionInterval::all()]: (path: sf::InMapAliasBuffer<u8>) =>  (fd: Fd, error_code: ErrorCode);

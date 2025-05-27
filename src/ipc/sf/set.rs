@@ -23,7 +23,6 @@ pub struct FirmwareVersion {
 }
 const_assert!(core::mem::size_of::<FirmwareVersion>() == 0x100);
 
-//ipc_sf_define_default_client_for_interface!(SystemSettings);
 ipc_sf_define_interface_trait! {
     trait SystemSettings {
         get_firmware_version [3, version::VersionInterval::all()]: (out_version: sf::OutFixedPointerBuffer<FirmwareVersion>) => ();
