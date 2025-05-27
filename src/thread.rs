@@ -1080,7 +1080,7 @@ pub mod imp {
     use core::{
         alloc::{Allocator, Layout},
         pin::Pin,
-        ptr::{NonNull, addr_of, null, null_mut},
+        ptr::{NonNull, null, null_mut},
     };
 
     use alloc::{alloc::Global, boxed::Box, sync::Arc};
