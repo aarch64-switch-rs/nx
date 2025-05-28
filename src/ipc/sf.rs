@@ -5,7 +5,7 @@ use alloc::{
     vec::Vec,
 };
 
-pub use nx_derive::{Request, Response};
+pub use nx_derive::{Request, Response, ipc_trait};
 
 pub struct Buffer<
     const IN: bool,
