@@ -62,16 +62,16 @@ pub trait ResponseCommandParameter {
 }
 
 impl<
-        const IN: bool,
-        const OUT: bool,
-        const MAP_ALIAS: bool,
-        const POINTER: bool,
-        const FIXED_SIZE: bool,
-        const AUTO_SELECT: bool,
-        const ALLOW_NON_SECURE: bool,
-        const ALLOW_NON_DEVICE: bool,
-        T,
-    >
+    const IN: bool,
+    const OUT: bool,
+    const MAP_ALIAS: bool,
+    const POINTER: bool,
+    const FIXED_SIZE: bool,
+    const AUTO_SELECT: bool,
+    const ALLOW_NON_SECURE: bool,
+    const ALLOW_NON_DEVICE: bool,
+    T,
+>
     RequestCommandParameter<
         sf::Buffer<
             IN,
@@ -252,7 +252,7 @@ pub type NewMitmServerFn = fn(sm::mitm::MitmProcessInfo) -> Arc<Mutex<dyn ISessi
 
 fn create_mitm_server_object_impl<S: IMitmServerObject + 'static>(
     info: sm::mitm::MitmProcessInfo,
-) -> Arc<Mutex<dyn ISessionObject>>{
+) -> Arc<Mutex<dyn ISessionObject>> {
     Arc::new(Mutex::new(S::new(info)))
 }
 

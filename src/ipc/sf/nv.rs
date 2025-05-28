@@ -1,5 +1,4 @@
 use crate::ipc::sf;
-use crate::version;
 
 use nx_derive::{Request, Response};
 
@@ -44,11 +43,25 @@ pub enum IoctlId {
 pub type Fd = u32;
 
 //ipc_sf_define_default_client_for_interface!(NvDrvServices);
-ipc_sf_define_interface_trait! {
-    trait NvDrv {
-        open [0, version::VersionInterval::all()]: (path: sf::InMapAliasBuffer<u8>) =>  (fd: Fd, error_code: ErrorCode) (fd: Fd, error_code: ErrorCode);
-        ioctl [1, version::VersionInterval::all()]: (fd: Fd, id: IoctlId, in_buf: sf::InAutoSelectBuffer<u8>, out_buf: sf::OutAutoSelectBuffer<u8>) =>  (error_code: ErrorCode) (error_code: ErrorCode);
-        close [2, version::VersionInterval::all()]: (fd: Fd) =>  (error_code: ErrorCode) (error_code: ErrorCode);
-        initialize [3, version::VersionInterval::all()]: (transfer_mem_size: u32, self_process_handle: sf::CopyHandle, transfer_mem_handle: sf::CopyHandle) =>  (error_code: ErrorCode) (error_code: ErrorCode);
-    }
+#[nx_derive::ipc_trait]
+pub trait NvDrv {
+    #[ipc_rid(0)]
+    fn open(&self, path: sf::InMapAliasBuffer<u8>) -> (Fd, ErrorCode);
+    #[ipc_rid(1)]
+    fn ioctl(
+        &self,
+        fd: Fd,
+        id: IoctlId,
+        in_buf: sf::InAutoSelectBuffer<u8>,
+        out_buf: sf::OutAutoSelectBuffer<u8>,
+    ) -> ErrorCode;
+    #[ipc_rid(2)]
+    fn close(&self, fd: Fd) -> ErrorCode;
+    #[ipc_rid(3)]
+    fn initialize(
+        &self,
+        transfer_mem_size: u32,
+        self_process_handle: sf::CopyHandle,
+        transfer_mem_handle: sf::CopyHandle,
+    ) -> ErrorCode;
 }

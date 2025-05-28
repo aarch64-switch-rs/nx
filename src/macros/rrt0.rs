@@ -46,6 +46,8 @@ macro_rules! rrt0_initialize_heap {
     () => {
         #[unsafe(no_mangle)]
         #[inline(always)]
-        pub fn initialize_heap(heap: $crate::util::PointerAndSize) -> $crate::util::PointerAndSize { $crate::mem::alloc::configure_heap(heap) }
+        pub fn initialize_heap(heap: $crate::util::PointerAndSize) -> $crate::util::PointerAndSize {
+            $crate::mem::alloc::configure_heap(heap)
+        }
     };
 }

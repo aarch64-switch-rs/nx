@@ -86,7 +86,7 @@ fn do_abort(level: AbortLevel, rc: ResultCode) {
             )
         };
     }
-    
+
     // return so we can try the next level.
 }
 

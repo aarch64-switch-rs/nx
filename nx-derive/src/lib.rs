@@ -1,4 +1,3 @@
-
 #![feature(let_chains)]
 
 use proc_macro::TokenStream;
@@ -64,11 +63,10 @@ pub fn derive_response(input: TokenStream) -> TokenStream {
     ));
 }
 
-
 #[proc_macro_attribute]
 pub fn ipc_trait(args: TokenStream, ipc_trait: TokenStream) -> TokenStream {
     match ipc_traits::ipc_trait(args.into(), ipc_trait.into()) {
         Ok(ts) => ts.into(),
-        Err(e) => e.into_compile_error().into()
+        Err(e) => e.into_compile_error().into(),
     }
 }

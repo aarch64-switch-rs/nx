@@ -1,6 +1,9 @@
 use super::*;
 use crate::util;
-use alloc::{string::{String, ToString}, vec::Vec};
+use alloc::{
+    string::{String, ToString},
+    vec::Vec,
+};
 
 pub use nx_derive::{Request, Response};
 
@@ -20,16 +23,16 @@ pub struct Buffer<
 }
 
 impl<
-        const IN: bool,
-        const OUT: bool,
-        const MAP_ALIAS: bool,
-        const POINTER: bool,
-        const FIXED_SIZE: bool,
-        const AUTO_SELECT: bool,
-        const ALLOW_NON_SECURE: bool,
-        const ALLOW_NON_DEVICE: bool,
-        T,
-    >
+    const IN: bool,
+    const OUT: bool,
+    const MAP_ALIAS: bool,
+    const POINTER: bool,
+    const FIXED_SIZE: bool,
+    const AUTO_SELECT: bool,
+    const ALLOW_NON_SECURE: bool,
+    const ALLOW_NON_DEVICE: bool,
+    T,
+>
     Buffer<
         IN,
         OUT,
@@ -107,13 +110,13 @@ impl<
     }
 
     /// Converts a Buffer from one flag set to another
-    /// 
+    ///
     /// # Arguments:
-    /// 
+    ///
     /// * `other`: The other buffer to clone
-    /// 
+    ///
     /// # Safety
-    /// 
+    ///
     /// Since this clones the raw pointer, this can be used to get 2 mutable references to the same data.
     /// The caller _MUST_ ensure that only one the passed `other` buffer or the produced buffer is ever
     /// read/written while the other is alive.
@@ -156,7 +159,7 @@ impl<
     }
 
     pub const fn get_var(&self) -> &T {
-        unsafe { self.buf.as_ref().unwrap()}
+        unsafe { self.buf.as_ref().unwrap() }
     }
 
     pub fn get_mut_var(&mut self) -> &mut T {
@@ -165,7 +168,7 @@ impl<
 
     pub fn set_var(&mut self, t: T) {
         unsafe {
-            *self.buf.as_mut().unwrap()= t;
+            *self.buf.as_mut().unwrap() = t;
         }
     }
 
@@ -181,21 +184,24 @@ impl<
     }
 
     pub fn as_slice(&self) -> Result<&[T]> {
-        result_return_unless!(self.buf.is_aligned() && !self.buf.is_null(), rc::ResultInvalidBufferPointer);
+        result_return_unless!(
+            self.buf.is_aligned() && !self.buf.is_null(),
+            rc::ResultInvalidBufferPointer
+        );
         Ok(unsafe { core::slice::from_raw_parts(self.buf, self.count) })
     }
 }
 
 impl<
-        const IN: bool,
-        const MAP_ALIAS: bool,
-        const POINTER: bool,
-        const FIXED_SIZE: bool,
-        const AUTO_SELECT: bool,
-        const ALLOW_NON_SECURE: bool,
-        const ALLOW_NON_DEVICE: bool,
-        T,
-    >
+    const IN: bool,
+    const MAP_ALIAS: bool,
+    const POINTER: bool,
+    const FIXED_SIZE: bool,
+    const AUTO_SELECT: bool,
+    const ALLOW_NON_SECURE: bool,
+    const ALLOW_NON_DEVICE: bool,
+    T,
+>
     Buffer<
         IN,
         true,
@@ -209,21 +215,24 @@ impl<
     >
 {
     pub fn as_slice_mut(&mut self) -> Result<&mut [T]> {
-        result_return_unless!(self.buf.is_aligned() && !self.buf.is_null(), rc::ResultInvalidBufferPointer);
+        result_return_unless!(
+            self.buf.is_aligned() && !self.buf.is_null(),
+            rc::ResultInvalidBufferPointer
+        );
         Ok(unsafe { core::slice::from_raw_parts_mut(self.buf, self.count) })
     }
 }
 
 impl<
-        const IN: bool,
-        const OUT: bool,
-        const MAP_ALIAS: bool,
-        const POINTER: bool,
-        const FIXED_SIZE: bool,
-        const AUTO_SELECT: bool,
-        const ALLOW_NON_SECURE: bool,
-        const ALLOW_NON_DEVICE: bool,
-    >
+    const IN: bool,
+    const OUT: bool,
+    const MAP_ALIAS: bool,
+    const POINTER: bool,
+    const FIXED_SIZE: bool,
+    const AUTO_SELECT: bool,
+    const ALLOW_NON_SECURE: bool,
+    const ALLOW_NON_DEVICE: bool,
+>
     Buffer<
         IN,
         OUT,
@@ -237,21 +246,21 @@ impl<
     >
 {
     pub fn get_string(&self) -> String {
-        let cstr = unsafe {core::ffi::CStr::from_ptr(self.buf as _)};
+        let cstr = unsafe { core::ffi::CStr::from_ptr(self.buf as _) };
 
         String::from_utf8_lossy(cstr.to_bytes()).to_string()
     }
 }
 
 impl<
-        const IN: bool,
-        const MAP_ALIAS: bool,
-        const POINTER: bool,
-        const FIXED_SIZE: bool,
-        const AUTO_SELECT: bool,
-        const ALLOW_NON_SECURE: bool,
-        const ALLOW_NON_DEVICE: bool,
-    >
+    const IN: bool,
+    const MAP_ALIAS: bool,
+    const POINTER: bool,
+    const FIXED_SIZE: bool,
+    const AUTO_SELECT: bool,
+    const ALLOW_NON_SECURE: bool,
+    const ALLOW_NON_DEVICE: bool,
+>
     Buffer<
         IN,
         true,

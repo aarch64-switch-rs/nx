@@ -152,7 +152,8 @@ impl RwLock {
     #[inline]
     pub fn write(&self) {
         if self
-            .state.0
+            .state
+            .0
             .compare_exchange_weak(0, WRITE_LOCKED, Acquire, Relaxed)
             .is_err()
         {
@@ -251,7 +252,6 @@ impl RwLock {
         }
     }
 
-    
     /// Wakes up waiting threads after unlocking.
     ///
     /// If both are waiting, this will wake up only one writer, but will fall
@@ -286,7 +286,12 @@ impl RwLock {
         // If both writers and readers are waiting, leave the readers waiting
         // and only wake up one writer.
         if state == READERS_WAITING + WRITERS_WAITING {
-            if self.state.0.compare_exchange(state, READERS_WAITING, Relaxed, Relaxed).is_err() {
+            if self
+                .state
+                .0
+                .compare_exchange(state, READERS_WAITING, Relaxed, Relaxed)
+                .is_err()
+            {
                 // The lock got locked. Not our problem anymore.
                 return;
             }
@@ -297,11 +302,15 @@ impl RwLock {
         }
 
         // If readers are waiting, wake them all up.
-        if state == READERS_WAITING && self.state.0.compare_exchange(state, 0, Relaxed, Relaxed).is_ok() {
-                self.state.signal_all();
+        if state == READERS_WAITING
+            && self
+                .state
+                .0
+                .compare_exchange(state, 0, Relaxed, Relaxed)
+                .is_ok()
+        {
+            self.state.signal_all();
         }
-
-        
     }
 }
 

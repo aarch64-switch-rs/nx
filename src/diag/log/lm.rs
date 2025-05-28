@@ -16,10 +16,9 @@ impl Logger for LmLogger {
     fn new() -> Self {
         Self {
             logger: service::new_service_object::<LoggingService>()
-                .map(|mut log_srv| {
-                    log_srv.open_logger(sf::ProcessId::new()).ok()
-                })
-                .ok().flatten()
+                .map(|mut log_srv| log_srv.open_logger(sf::ProcessId::new()).ok())
+                .ok()
+                .flatten(),
         }
     }
 

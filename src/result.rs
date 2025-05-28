@@ -122,11 +122,7 @@ pub type Result<T> = result::Result<T, ResultCode>;
 /// * `value`: The value to pack if the [`ResultCode`] is successful
 #[inline(always)]
 pub fn pack<T>(rc: ResultCode, value: T) -> Result<T> {
-    if rc.is_success() {
-        Ok(value)
-    } else {
-        Err(rc)
-    }
+    if rc.is_success() { Ok(value) } else { Err(rc) }
 }
 
 /// Produces the [`ResultCode`] corresponding to a packed result

@@ -1,17 +1,16 @@
 //! Helper object types for treating FS subdirectories as IPC filesystems
 
-use crate::result::*;
 use crate::fs;
+use crate::result::*;
 use alloc::string::ToString;
 use alloc::{boxed::Box, string::String};
-
 
 // TODO: subdir FS object, non-IPC version?
 
 /// Represents an IPC [`IFileSystem`] object wrapping around a FS subdirectory path
 pub struct SubDir<FS: fs::FileSystem> {
     fs: FS,
-    base: String
+    base: String,
 }
 
 impl<FS: fs::FileSystem> SubDir<FS> {
@@ -45,7 +44,8 @@ impl<FS: fs::FileSystem> fs::FileSystem for SubDir<FS> {
     }
 
     fn create_file(&self, path: &str, attribute: fs::FileAttribute, size: usize) -> Result<()> {
-        self.fs.create_file(self.make_path(path).as_str(), attribute, size)
+        self.fs
+            .create_file(self.make_path(path).as_str(), attribute, size)
     }
 
     fn get_entry_type(&self, path: &str) -> Result<fs::DirectoryEntryType> {
@@ -53,7 +53,8 @@ impl<FS: fs::FileSystem> fs::FileSystem for SubDir<FS> {
     }
 
     fn get_file_time_stamp_raw(&self, path: &str) -> Result<fs::FileTimeStampRaw> {
-        self.fs.get_file_time_stamp_raw(self.make_path(path).as_str())
+        self.fs
+            .get_file_time_stamp_raw(self.make_path(path).as_str())
     }
 
     fn get_free_space_size(&self, path: &str) -> Result<usize> {
@@ -66,7 +67,11 @@ impl<FS: fs::FileSystem> fs::FileSystem for SubDir<FS> {
         self.fs.get_total_space_size(path)
     }
 
-    fn open_directory(&self, path: &str, mode: fs::DirectoryOpenMode) -> Result<Box<dyn fs::Directory>> {
+    fn open_directory(
+        &self,
+        path: &str,
+        mode: fs::DirectoryOpenMode,
+    ) -> Result<Box<dyn fs::Directory>> {
         self.fs.open_directory(self.make_path(path).as_str(), mode)
     }
 
@@ -75,19 +80,20 @@ impl<FS: fs::FileSystem> fs::FileSystem for SubDir<FS> {
     }
 
     fn query_entry(
-            &self,
-            path: &str,
-            query_id: fs::QueryId,
-            in_buf: &[u8],
-            out_buf: &mut [u8],
-        ) -> Result<()> {
-            self.fs.query_entry(self.make_path(path).as_str(), query_id, in_buf, out_buf)
+        &self,
+        path: &str,
+        query_id: fs::QueryId,
+        in_buf: &[u8],
+        out_buf: &mut [u8],
+    ) -> Result<()> {
+        self.fs
+            .query_entry(self.make_path(path).as_str(), query_id, in_buf, out_buf)
     }
 
     fn remove_children_all(&self, path: &str) -> Result<()> {
         self.fs.remove_children_all(self.make_path(path).as_str())
     }
-    
+
     fn remove_dir(&self, path: &str) -> Result<()> {
         self.fs.remove_dir(self.make_path(path).as_str())
     }
@@ -101,11 +107,16 @@ impl<FS: fs::FileSystem> fs::FileSystem for SubDir<FS> {
     }
 
     fn rename_directory(&self, old_path: &str, new_path: &str) -> Result<()> {
-        self.fs.rename_directory(self.make_path(old_path).as_str(), self.make_path(new_path).as_str())
+        self.fs.rename_directory(
+            self.make_path(old_path).as_str(),
+            self.make_path(new_path).as_str(),
+        )
     }
 
     fn rename_file(&self, old_path: &str, new_path: &str) -> Result<()> {
-        self.fs.rename_file(self.make_path(old_path).as_str(), self.make_path(new_path).as_str())
+        self.fs.rename_file(
+            self.make_path(old_path).as_str(),
+            self.make_path(new_path).as_str(),
+        )
     }
 }
-

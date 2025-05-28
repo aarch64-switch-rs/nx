@@ -146,37 +146,95 @@ pub struct ContentMetaInfo {
 }
 
 ipc_sf_define_default_client_for_interface!(ContentMetaDatabase);
-ipc_sf_define_interface_trait! {
-    trait ContentMetaDatabase {
-        set [0, version::VersionInterval::all()]: (meta_key: ContentMetaKey, in_rec_buf: sf::InMapAliasBuffer<u8>) =>  () ();
-        get [1, version::VersionInterval::all()]: (meta_key: ContentMetaKey, out_rec_buf: sf::OutMapAliasBuffer<u8>) =>  (size: usize) (size: usize);
-        remove [2, version::VersionInterval::all()]: (meta_key: ContentMetaKey) =>  () ();
-        get_content_id_by_type [3, version::VersionInterval::all()]: (meta_key: ContentMetaKey, cnt_type: ContentType) =>  (id: ContentId) (id: ContentId);
-        list_content_info [4, version::VersionInterval::all()]: (out_rec_buf: sf::OutMapAliasBuffer<ContentInfo>, meta_key: ContentMetaKey, offset: u32) =>  (count: u32) (count: u32);
-        list [5, version::VersionInterval::all()]: (out_meta_keys: sf::OutMapAliasBuffer<ContentMetaKey>, meta_type: ContentMetaType, program_id: ProgramId, program_id_min: ProgramId, program_id_max: ProgramId, install_type: ContentInstallType) =>  (total: u32, written: u32) (total: u32, written: u32);
-        get_latest_content_meta_key [6, version::VersionInterval::all()]: (program_id: ProgramId) =>  (meta_key: ContentMetaKey) (meta_key: ContentMetaKey);
-        list_application [7, version::VersionInterval::all()]: (out_app_meta_keys: sf::OutMapAliasBuffer<ApplicationContentMetaKey>, meta_type: ContentMetaType) =>  (total: u32, written: u32) (total: u32, written: u32);
-        has [8, version::VersionInterval::all()]: (meta_key: ContentMetaKey) =>  (has: bool) (has: bool);
-        has_all [9, version::VersionInterval::all()]: (meta_keys_buf: sf::InMapAliasBuffer<ContentMetaKey>) =>  (has: bool) (has: bool);
-        get_size [10, version::VersionInterval::all()]: (meta_key: ContentMetaKey) =>  (size: usize) (size: usize);
-        get_required_system_version [11, version::VersionInterval::all()]: (meta_key: ContentMetaKey) =>  (version: u32) (version: u32);
-        get_patch_content_meta_id [12, version::VersionInterval::all()]: (meta_key: ContentMetaKey) =>  (patch_id: ProgramId) (patch_id: ProgramId);
-        disable_forcibly [13, version::VersionInterval::all()]: () => () ();
-        lookup_orphan_content [14, version::VersionInterval::all()]: (content_ids_buf: sf::InMapAliasBuffer<ContentId>, out_orphaned_buf: sf::OutMapAliasBuffer<bool>) =>  () ();
-        commit [15, version::VersionInterval::all()]: () => () ();
-        has_content [16, version::VersionInterval::all()]: (meta_key: ContentMetaKey, id: ContentId) =>  (has: bool) (has: bool);
-        list_content_meta_info [17, version::VersionInterval::all()]: (out_meta_infos: sf::OutMapAliasBuffer<ContentMetaInfo>, meta_key: ContentMetaKey, offset: u32) =>  (written: u32) (written: u32);
-        get_attributes [18, version::VersionInterval::all()]: (meta_key: ContentMetaKey) =>  (attrs: u8) (attrs: u8);
-        get_required_application_version [19, version::VersionInterval::from(version::Version::new(2, 0, 0))]: (meta_key: ContentMetaKey) =>  (version: u32) (version: u32);
-        get_content_id_by_type_and_offset [20, version::VersionInterval::from(version::Version::new(5, 0, 0))]: (meta_key: ContentMetaKey, cnt_type: ContentType, id_offset: u8) =>  (id: ContentId) (id: ContentId);
-        get_count [21, version::VersionInterval::from(version::Version::new(10, 0, 0))]: () => (count: u32) (count: u32);
-        get_owner_application_id [22, version::VersionInterval::from(version::Version::new(10, 0, 0))]: (meta_key: ContentMetaKey) =>  (app_id: ApplicationId) (app_id: ApplicationId);
-    }
+#[nx_derive::ipc_trait]
+pub trait ContentMetaDatabase {
+    #[ipc_rid(0)]
+    fn set(&self, meta_key: ContentMetaKey, in_rec_buf: sf::InMapAliasBuffer<u8>);
+    #[ipc_rid(1)]
+    fn get(&self, meta_key: ContentMetaKey, out_rec_buf: sf::OutMapAliasBuffer<u8>) -> usize;
+    #[ipc_rid(2)]
+    fn remove(&self, meta_key: ContentMetaKey);
+    #[ipc_rid(3)]
+    fn get_content_id_by_type(&self, meta_key: ContentMetaKey, cnt_type: ContentType) -> ContentId;
+    #[ipc_rid(4)]
+    fn list_content_info(
+        &self,
+        out_rec_buf: sf::OutMapAliasBuffer<ContentInfo>,
+        meta_key: ContentMetaKey,
+        offset: u32,
+    ) -> u32;
+    #[ipc_rid(5)]
+    fn list(
+        &self,
+        out_meta_keys: sf::OutMapAliasBuffer<ContentMetaKey>,
+        meta_type: ContentMetaType,
+        program_id: ProgramId,
+        program_id_min: ProgramId,
+        program_id_max: ProgramId,
+        install_type: ContentInstallType,
+    ) -> (u32, u32);
+    #[ipc_rid(6)]
+    fn get_latest_content_meta_key(&self, program_id: ProgramId) -> ContentMetaKey;
+    #[ipc_rid(7)]
+    fn list_application(
+        &self,
+        out_app_meta_keys: sf::OutMapAliasBuffer<ApplicationContentMetaKey>,
+        meta_type: ContentMetaType,
+    ) -> (u32, u32);
+    #[ipc_rid(8)]
+    fn has(&self, meta_key: ContentMetaKey) -> bool;
+    #[ipc_rid(9)]
+    fn has_all(&self, meta_keys_buf: sf::InMapAliasBuffer<ContentMetaKey>) -> bool;
+    #[ipc_rid(10)]
+    fn get_size(&self, meta_key: ContentMetaKey) -> usize;
+    #[ipc_rid(11)]
+    fn get_required_system_version(&self, meta_key: ContentMetaKey) -> u32;
+    #[ipc_rid(12)]
+    fn get_patch_content_meta_id(&self, meta_key: ContentMetaKey) -> ProgramId;
+    #[ipc_rid(13)]
+    fn disable_forcibly(&self);
+    #[ipc_rid(14)]
+    fn lookup_orphan_content(
+        &self,
+        content_ids_buf: sf::InMapAliasBuffer<ContentId>,
+        out_orphaned_buf: sf::OutMapAliasBuffer<bool>,
+    );
+    #[ipc_rid(15)]
+    fn commit(&self);
+    #[ipc_rid(16)]
+    fn has_content(&self, meta_key: ContentMetaKey, id: ContentId) -> bool;
+    #[ipc_rid(17)]
+    fn list_content_meta_info(
+        &self,
+        out_meta_infos: sf::OutMapAliasBuffer<ContentMetaInfo>,
+        meta_key: ContentMetaKey,
+        offset: u32,
+    ) -> u32;
+    #[ipc_rid(18)]
+    fn get_attributes(&self, meta_key: ContentMetaKey) -> u8;
+    #[ipc_rid(19)]
+    #[version(version::VersionInterval::from(version::Version::new(2, 0, 0)))]
+    fn get_required_application_version(&self, meta_key: ContentMetaKey) -> u32;
+    #[ipc_rid(20)]
+    #[version(version::VersionInterval::from(version::Version::new(5, 0, 0)))]
+    fn get_content_id_by_type_and_offset(
+        &self,
+        meta_key: ContentMetaKey,
+        cnt_type: ContentType,
+        id_offset: u8,
+    ) -> ContentId;
+    #[ipc_rid(21)]
+    #[version(version::VersionInterval::from(version::Version::new(10, 0, 0)))]
+    fn get_count(&self) -> u32;
+    #[ipc_rid(22)]
+    #[version(version::VersionInterval::from(version::Version::new(10, 0, 0)))]
+    fn get_owner_application_id(&self, meta_key: ContentMetaKey) -> ApplicationId;
 }
 
 ipc_sf_define_default_client_for_interface!(ContentManager);
-ipc_sf_define_interface_trait! {
-    trait ContentManager {
-        open_content_meta_database [0, version::VersionInterval::all()]: (storage_id: StorageId) =>  (meta_db: ContentMetaDatabase) (meta_db: session_type!(ContentMetaDatabase));
-    }
+#[nx_derive::ipc_trait]
+pub trait ContentManager {
+    #[ipc_rid(0)]
+    #[return_session]
+    fn open_content_meta_database(&self, storage_id: StorageId) -> ContentMetaDatabase;
 }

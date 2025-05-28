@@ -109,9 +109,9 @@ impl Parcel {
     ///
     /// * `out_data`: Out data buffer
     /// * `data_size`: Out data size
-    /// 
+    ///
     /// # Safety
-    /// 
+    ///
     /// The caller is responsible for providing a pointer valid to write `out_size` bytes
     pub unsafe fn read_raw_unaligned(&mut self, out_data: *mut u8, data_size: usize) -> Result<()> {
         result_return_if!(
@@ -138,9 +138,9 @@ impl Parcel {
     ///
     /// * `out_data`: Out data buffer
     /// * `data_size`: Out data size
-    /// 
+    ///
     /// # Safety
-    /// 
+    ///
     /// The caller is responsible for providing a pointer valid to write `out_size` bytes
     #[inline]
     pub unsafe fn read_raw(&mut self, out_data: *mut u8, data_size: usize) -> Result<()> {
@@ -155,9 +155,9 @@ impl Parcel {
     ///
     /// * `data`: In data buffer
     /// * `data_size`: In data size
-    /// 
+    ///
     /// # Safety
-    /// 
+    ///
     /// The caller is responsible for providing a pointer valid to read `out_size` bytes
     pub unsafe fn write_raw_unaligned(&mut self, data: *const u8, data_size: usize) -> Result<()> {
         result_return_if!(
@@ -201,9 +201,9 @@ impl Parcel {
     ///
     /// * `data`: In data buffer
     /// * `data_size`: In data size
-    /// 
+    ///
     /// # Safety
-    /// 
+    ///
     /// The caller must provide a pointer valid for reading `data_size` bytes
     #[inline]
     pub unsafe fn write_raw(&mut self, data: *const u8, data_size: usize) -> Result<()> {
@@ -258,12 +258,12 @@ impl Parcel {
     ///
     /// * `string`: The string to write
     pub fn write_str(&mut self, string: &str) -> Result<()> {
-        let encoded:Vec<u16> = string.encode_utf16().collect();
+        let encoded: Vec<u16> = string.encode_utf16().collect();
         let len = encoded.len();
         self.write(len as u32)?;
         let str_write_buf = self.write_reserve_raw((len + 1) * 2)? as *mut u16;
 
-        unsafe {core::ptr::copy(encoded.as_ptr(), str_write_buf, encoded.len())};
+        unsafe { core::ptr::copy(encoded.as_ptr(), str_write_buf, encoded.len()) };
         Ok(())
     }
 
@@ -286,9 +286,9 @@ impl Parcel {
     ///
     /// * `out_data`: Out data buffer
     /// * `out_size`: The maximum size in bytes that can be read into `out_data`
-    /// 
+    ///
     /// # Safety
-    /// 
+    ///
     /// The caller is responsible for providing a pointer valid to read `out_size` bytes
     pub unsafe fn read_sized_raw(&mut self, out_data: *mut u8, out_size: usize) -> Result<usize> {
         let len = self.read::<i32>()? as usize;
@@ -317,9 +317,9 @@ impl Parcel {
     ///
     /// * `data`: In data buffer
     /// * `data size`: In data size
-    /// 
+    ///
     /// # Safety
-    /// 
+    ///
     /// The caller must provide a pointer valid for reading `data_size` bytes
     pub unsafe fn write_sized_raw(&mut self, data: *const u8, data_size: usize) -> Result<()> {
         let len = data_size as i32;

@@ -154,7 +154,7 @@ pub struct Buffer<T, A: Allocator = Global> {
     allocator: A,
 }
 
-impl <T> Buffer<T> {
+impl<T> Buffer<T> {
     /// Creates a new [`Buffer`] using the global allocator
     ///
     /// # Arguments
@@ -216,13 +216,13 @@ impl<T, A: Allocator> Buffer<T, A> {
             no_drop.layout.size() / mem::size_of::<T>(),
         )
     }
-    
+
     /// Releases the [`Buffer`]
     ///
     /// The [`Buffer`] becomes invalid after this
-    /// 
+    ///
     /// # Safety
-    /// 
+    ///
     /// The buffer must never be read after this, as the internal buffer pointer is wiped. The buffer must also be for
     pub unsafe fn release(&mut self) {
         if self.is_valid() {

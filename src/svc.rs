@@ -1,5 +1,5 @@
 //! This module wraps svc calls provided by `svc.s`.
-//! There is no function-level Safety docs, but the core requirement is that all raw pointers provided must be 
+//! There is no function-level Safety docs, but the core requirement is that all raw pointers provided must be
 //! validated by the caller.
 
 use crate::arm;
@@ -472,7 +472,7 @@ pub unsafe fn map_shared_memory(
 pub unsafe fn unmap_shared_memory(handle: Handle, address: Address, size: Size) -> Result<()> {
     unsafe extern "C" {
         fn __nx_svc_unmap_shared_memory(handle: Handle, address: Address, size: Size)
-            -> ResultCode;
+        -> ResultCode;
     }
     unsafe {
         let rc = __nx_svc_unmap_shared_memory(handle, address, size);
@@ -984,7 +984,7 @@ pub fn get_debug_thread_context(
 ) -> Result<arm::ThreadContext> {
     unsafe extern "C" {
         fn __nx_svc_get_debug_thread_context(
-            thread_context: *mut u8,  //*mut arm::ThreadContext
+            thread_context: *mut u8, //*mut arm::ThreadContext
             debug_handle: Handle,
             thread_id: u64,
             register_group: u32,

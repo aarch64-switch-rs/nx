@@ -4,12 +4,23 @@ use crate::version;
 use super::ncm;
 
 ipc_sf_define_default_client_for_interface!(ShellInterface);
-ipc_sf_define_interface_trait! {
-    trait ShellInterface {
-        set_program_argument_deprecated [0, version::VersionInterval::to(version::Version::new(10,2,0))]: (program_id: ncm::ProgramId, args_size: u32, args_buf: sf::InPointerBuffer<u8>) =>  () ();
-        set_program_argument [0, version::VersionInterval::from(version::Version::new(11,0,0))]: (program_id: ncm::ProgramId, args_buf: sf::InPointerBuffer<u8>) =>  () ();
-        flush_arguments [1, version::VersionInterval::all()]: () => () ();
-        atmosphere_register_external_code [65000, version::VersionInterval::all()]: (program_id: ncm::ProgramId) =>  (session_handle: sf::MoveHandle) (session_handle: sf::MoveHandle);
-        atmosphere_unregister_external_code [65001, version::VersionInterval::all()]: (program_id: ncm::ProgramId) =>  () ();
-    }
+#[nx_derive::ipc_trait]
+pub trait ShellInterface {
+    #[ipc_rid(0)]
+    #[version(version::VersionInterval::to(version::Version::new(10, 2, 0)))]
+    fn set_program_argument_deprecated(
+        &self,
+        program_id: ncm::ProgramId,
+        args_size: u32,
+        args_buf: sf::InPointerBuffer<u8>,
+    );
+    #[ipc_rid(0)]
+    #[version(version::VersionInterval::from(version::Version::new(11, 0, 0)))]
+    fn set_program_argument(&self, program_id: ncm::ProgramId, args_buf: sf::InPointerBuffer<u8>);
+    #[ipc_rid(1)]
+    fn flush_arguments(&self);
+    #[ipc_rid(65000)]
+    fn atmosphere_register_external_code(&self, program_id: ncm::ProgramId) -> sf::MoveHandle;
+    #[ipc_rid(65001)]
+    fn atmosphere_unregister_external_code(&self, program_id: ncm::ProgramId);
 }

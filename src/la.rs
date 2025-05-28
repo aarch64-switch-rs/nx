@@ -6,7 +6,7 @@ use crate::result::*;
 use crate::service::applet;
 use crate::service::applet::ILibraryAppletAccessorClient;
 use crate::service::applet::ILibraryAppletCreatorClient;
-use crate::service::applet::{IStorageClient, IStorageAccessorClient, Storage};
+use crate::service::applet::{IStorageAccessorClient, IStorageClient, Storage};
 use crate::service::sm::rc;
 use crate::svc;
 use crate::sync::{Mutex, MutexGuard};
@@ -254,7 +254,7 @@ pub fn launch_wait_library_applet<I: Copy, O: Copy>(
     id: applet::AppletId,
     common_args: CommonArguments,
     input: I,
-    timeout: Option<i64>
+    timeout: Option<i64>,
 ) -> Result<O> {
     let mut holder =
         create_library_applet(id, applet::LibraryAppletMode::AllForeground, common_args)?;

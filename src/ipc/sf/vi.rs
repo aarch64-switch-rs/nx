@@ -1,6 +1,5 @@
 use crate::ipc::sf;
 use crate::util;
-use crate::version;
 
 use super::applet::AppletResourceUserId;
 
@@ -51,57 +50,94 @@ pub enum LayerStackId {
 }
 
 ipc_sf_define_default_client_for_interface!(ManagerDisplay);
-ipc_sf_define_interface_trait! {
-    trait ManagerDisplay {
-        create_managed_layer [2010, version::VersionInterval::all(), mut]: (flags: LayerFlags, display_id: DisplayId, raw_aruid: u64) =>  (id: LayerId) (id: LayerId);
-        destroy_managed_layer [2011, version::VersionInterval::all()]: (id: LayerId) =>  () ();
-        add_to_layer_stack [6000, version::VersionInterval::all()]: (stack: LayerStackId, layer: LayerId) =>  () ();
-    }
+#[nx_derive::ipc_trait]
+pub trait ManagerDisplay {
+    #[ipc_rid(2010)]
+    fn create_managed_layer(
+        &mut self,
+        flags: LayerFlags,
+        display_id: DisplayId,
+        raw_aruid: u64,
+    ) -> LayerId;
+    #[ipc_rid(2011)]
+    fn destroy_managed_layer(&self, id: LayerId);
+    #[ipc_rid(6000)]
+    fn add_to_layer_stack(&self, stack: LayerStackId, layer: LayerId);
 }
 
 ipc_sf_define_default_client_for_interface!(SystemDisplay);
-ipc_sf_define_interface_trait! {
-    trait SystemDisplay {
-        get_z_order_count_min [1200, version::VersionInterval::all()]: (display_id: DisplayId) =>  (z: i64) (z: i64);
-        get_z_order_count_max [1202, version::VersionInterval::all()]: (display_id: DisplayId) =>  (z: i64) (z: i64);
-        set_layer_position [2201, version::VersionInterval::all(), mut]: (x: f32, y: f32, id: LayerId) =>  () ();
-        set_layer_size [2203, version::VersionInterval::all(), mut]: (id: LayerId, width: u64, height: u64) =>  () ();
-        set_layer_z [2205, version::VersionInterval::all(), mut]: (id: LayerId, z: i64) =>  () ();
-        set_layer_visibility [2207, version::VersionInterval::all(), mut]: (visible: bool, id: LayerId) =>  () ();
-    }
+#[nx_derive::ipc_trait]
+pub trait SystemDisplay {
+    #[ipc_rid(1200)]
+    fn get_z_order_count_min(&self, display_id: DisplayId) -> i64;
+    #[ipc_rid(1202)]
+    fn get_z_order_count_max(&self, display_id: DisplayId) -> i64;
+    #[ipc_rid(2201)]
+    fn set_layer_position(&mut self, x: f32, y: f32, id: LayerId);
+    #[ipc_rid(2203)]
+    fn set_layer_size(&mut self, id: LayerId, width: u64, height: u64);
+    #[ipc_rid(2205)]
+    fn set_layer_z(&mut self, id: LayerId, z: i64);
+    #[ipc_rid(2207)]
+    fn set_layer_visibility(&mut self, visible: bool, id: LayerId);
 }
 
 ipc_sf_define_default_client_for_interface!(ApplicationDisplay);
-ipc_sf_define_interface_trait! {
-    trait ApplicationDisplay {
-        get_relay_service [100, version::VersionInterval::all()]: () => (relay_service: sf::dispdrv::HOSBinderDriver) (relay_service: sf::dispdrv::HOSBinderDriver);
-        get_system_display_service [101, version::VersionInterval::all()]: () => (system_display_service: SystemDisplay) (system_display_service: session_type!(SystemDisplay));
-        get_manager_display_service [102, version::VersionInterval::all()]: () => (manager_display_service: ManagerDisplay) (manager_display_service: session_type!(ManagerDisplay));
-        open_display [1010, version::VersionInterval::all(), mut]: (name: DisplayName) =>  (id: DisplayId) (id: DisplayId);
-        close_display [1020, version::VersionInterval::all(), mut]: (id: DisplayId) =>  () ();
-        open_layer [2020, version::VersionInterval::all(), mut]: (name: DisplayName, id: LayerId, aruid: AppletResourceUserId, out_native_window: sf::OutMapAliasBuffer<u8>) =>  (native_window_size: usize) (native_window_size: usize);
-        set_scaling_mode [2101, version::VersionInterval::all(), mut]: (scaling_mode: ScalingMode, layer_id: LayerId)  => ()  ();
-        create_stray_layer [2030, version::VersionInterval::all(), mut]: (flags: LayerFlags, display_id: DisplayId, out_native_window: sf::OutMapAliasBuffer<u8>) =>  (id: LayerId, native_window_size: usize) (id: LayerId, native_window_size: usize);
-        destroy_stray_layer [2031, version::VersionInterval::all(), mut]: (id: LayerId) =>  () ();
-        get_display_vsync_event [5202, version::VersionInterval::all()]: (id: DisplayId) =>  (event_handle: sf::CopyHandle) (event_handle: sf::CopyHandle);
-    }
+#[nx_derive::ipc_trait]
+pub trait ApplicationDisplay {
+    #[ipc_rid(100)]
+    fn get_relay_service(&self) -> sf::dispdrv::HOSBinderDriver;
+    #[ipc_rid(101)]
+    #[return_session]
+    fn get_system_display_service(&self) -> SystemDisplay;
+    #[ipc_rid(102)]
+    #[return_session]
+    fn get_manager_display_service(&self) -> ManagerDisplay;
+    #[ipc_rid(1010)]
+    fn open_display(&mut self, name: DisplayName) -> DisplayId;
+    #[ipc_rid(1020)]
+    fn close_display(&mut self, id: DisplayId);
+    #[ipc_rid(2020)]
+    fn open_layer(
+        &mut self,
+        name: DisplayName,
+        id: LayerId,
+        aruid: AppletResourceUserId,
+        out_native_window: sf::OutMapAliasBuffer<u8>,
+    ) -> usize;
+    #[ipc_rid(2021)]
+    fn set_scaling_mode(&mut self, scaling_mode: ScalingMode, layer_id: LayerId);
+    #[ipc_rid(2030)]
+    fn create_stray_layer(
+        &mut self,
+        flags: LayerFlags,
+        display_id: DisplayId,
+        out_native_window: sf::OutMapAliasBuffer<u8>,
+    ) -> (LayerId, usize);
+    #[ipc_rid(2031)]
+    fn destroy_stray_layer(&mut self, id: LayerId);
+    #[ipc_rid(5202)]
+    fn get_display_vsync_event(&self, id: DisplayId) -> sf::CopyHandle;
 }
 
 //ipc_sf_define_default_client_for_interface!(ApplicationRootService);
-ipc_sf_define_interface_trait! {
-    trait ApplicationDisplayRoot {
-        get_display_service [0, version::VersionInterval::all()]: (mode: DisplayServiceMode) =>  (display_service: ApplicationDisplay) (display_service: session_type!(ApplicationDisplay));
-    }
+#[nx_derive::ipc_trait]
+pub trait ApplicationDisplayRoot {
+    #[ipc_rid(0)]
+    #[return_session]
+    fn get_display_service(&self, mode: DisplayServiceMode) -> ApplicationDisplay;
 }
 
-ipc_sf_define_interface_trait! {
-    trait SystemDisplayRoot {
-        get_display_service [1, version::VersionInterval::all()]: (mode: DisplayServiceMode) =>  (display_service: ApplicationDisplay) (display_service: session_type!(ApplicationDisplay));
-    }
+#[nx_derive::ipc_trait]
+pub trait SystemDisplayRoot {
+    #[ipc_rid(1)]
+    #[return_session]
+    fn get_display_service(&self, mode: DisplayServiceMode) -> ApplicationDisplay;
 }
 
-ipc_sf_define_interface_trait! {
-    trait ManagerDisplayRoot {
-        get_display_service [2, version::VersionInterval::all()]: (mode: DisplayServiceMode) =>  (display_service: ApplicationDisplay) (display_service: session_type!(ApplicationDisplay));
-    }
+#[nx_derive::ipc_trait]
+pub trait ManagerDisplayRoot {
+    #[ipc_rid(2)]
+    #[return_session]
+    fn get_display_service(&self, mode: DisplayServiceMode) -> ApplicationDisplay;
 }

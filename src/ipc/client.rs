@@ -20,16 +20,16 @@ pub trait ResponseCommandParameter<O> {
 }
 
 impl<
-        const IN: bool,
-        const OUT: bool,
-        const MAP_ALIAS: bool,
-        const POINTER: bool,
-        const FIXED_SIZE: bool,
-        const AUTO_SELECT: bool,
-        const ALLOW_NON_SECURE: bool,
-        const ALLOW_NON_DEVICE: bool,
-        T,
-    > RequestCommandParameter
+    const IN: bool,
+    const OUT: bool,
+    const MAP_ALIAS: bool,
+    const POINTER: bool,
+    const FIXED_SIZE: bool,
+    const AUTO_SELECT: bool,
+    const ALLOW_NON_SECURE: bool,
+    const ALLOW_NON_DEVICE: bool,
+    T,
+> RequestCommandParameter
     for sf::Buffer<
         IN,
         OUT,

@@ -457,9 +457,9 @@ pub fn get_msg_buffer() -> *mut u8 {
 /// * `buffer`: In data buffer
 /// * `count`:In data size in T-count, not bytes
 /// * `array`: The ipc array to read the data from
-/// 
+///
 /// # Safety
-/// 
+///
 /// The caller is responsible for providing a pointer valid to read `count * size_of::<T>()` bytes
 pub unsafe fn read_array_from_buffer<T: Copy, const LEN: usize>(
     buffer: *mut u8,
@@ -482,7 +482,6 @@ pub unsafe fn read_array_from_buffer<T: Copy, const LEN: usize>(
     }
 }
 
-
 /// Reads an IPC array into a provided buffer
 ///
 /// # Arguments
@@ -490,9 +489,9 @@ pub unsafe fn read_array_from_buffer<T: Copy, const LEN: usize>(
 /// * `buffer`: Out data buffer
 /// * `count`: Out data size in T-count, not bytes
 /// * `array`: The ipc array to read the data from
-/// 
+///
 /// # Safety
-/// 
+///
 /// The caller is responsible for providing a pointer valid to write `count * size_of::<T>()` bytes
 #[inline(always)]
 pub unsafe fn write_array_to_buffer<T: Copy, const LEN: usize>(

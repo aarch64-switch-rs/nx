@@ -3,7 +3,11 @@ use std::str::FromStr;
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 use syn::{
-    punctuated::Punctuated, spanned::Spanned, token::{Gt, Lt, PathSep}, AngleBracketedGenericArguments, FnArg, GenericArgument, Path, PathSegment, ReturnType, TraitItem, TraitItemFn, Type, TypePath
+    punctuated::Punctuated,
+    spanned::Spanned,
+    token::{Gt, Lt, Mut, PathSep},
+    AngleBracketedGenericArguments, FnArg, GenericArgument, Path, PathSegment, ReturnType,
+    TraitItem, TraitItemFn, Type, TypePath,
 };
 
 pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<TokenStream> {
@@ -221,6 +225,15 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
         // fix the return type for the server function types if
         let mut server_fn = fn_item.clone();
         server_fn.attrs = vec![];
+        
+        if let Some(FnArg::Receiver(r)) = server_fn.sig.inputs.iter_mut().next() {
+            // all server functions are considered &mut borrowing
+            r.mutability = Some(Mut::default());
+            r.ty = Box::new(syn::parse2(quote! {&mut Self}).unwrap());
+
+        } else {
+            return Err(stringify_error(server_fn.span(), "IPC traits with associated functions is not supported."));
+        }
 
         if return_type_is_session {
             if let ReturnType::Type(_, bty) = server_fn.sig.output.clone()
@@ -283,7 +296,10 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
         server_fns.push(server_fn);
 
         let server_impl_fn_name = format_ident!("sf_server_impl_{}", fn_name);
-        let carry_state_names: Vec<Ident> = out_param_names.iter().map(|ident| format_ident!("{}_carry_state", ident)).collect();
+        let carry_state_names: Vec<Ident> = out_param_names
+            .iter()
+            .map(|ident| format_ident!("{}_carry_state", ident))
+            .collect();
         let server_internal_fn: TraitItemFn = syn::parse2(quote! {
             #[allow(unused_assignments)]
             #[allow(unused_parens)]
@@ -316,7 +332,7 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
                 Ok(())
             }
         })?;
-        
+
         server_fns.push(server_internal_fn);
         handle_request_matches.push(quote! {
             #ipc_rid if (#version_req).contains(version) => {
@@ -338,7 +354,7 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
         }
 
         #vis trait #server_trait: ::nx::ipc::server::ISessionObject + Sync {
-            #( 
+            #(
                 #[allow(unused_parens)]
                 #[allow(clippy::too_many_arguments)]
                 #[allow(missing_docs)]

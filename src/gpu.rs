@@ -1071,11 +1071,11 @@ impl Context {
         } {
             Ok(binder) => binder,
             Err(rc) => {
-                let _ =nvdrv_srv.close(nvhost_fd);
-                let _ =nvdrv_srv.close(nvmap_fd);
-                let _ =nvdrv_srv.close(nvhostctrl_fd);
+                let _ = nvdrv_srv.close(nvhost_fd);
+                let _ = nvdrv_srv.close(nvmap_fd);
+                let _ = nvdrv_srv.close(nvhostctrl_fd);
 
-                let _ =nvdrv_srv.close(transfer_mem_handle);
+                let _ = nvdrv_srv.close(transfer_mem_handle);
                 nvdrv_srv.get_session_mut().close();
                 svc::close_handle(transfer_mem_handle).unwrap();
                 let _ = wait_for_permission(transfer_mem.ptr, MemoryPermission::Write(), None);
@@ -1107,12 +1107,14 @@ impl Context {
     }
 
     /// Gets the underlying [`IApplicationDisplayClient`] object
-    pub fn get_application_display_service(&self) -> & dyn vi::IApplicationDisplayClient {
+    pub fn get_application_display_service(&self) -> &dyn vi::IApplicationDisplayClient {
         self.application_display_service.as_ref()
     }
 
     /// Gets the underlying [`IApplicationDisplayClient`] object mutably
-    pub fn get_application_display_service_mut(&mut self) -> &mut dyn vi::IApplicationDisplayClient {
+    pub fn get_application_display_service_mut(
+        &mut self,
+    ) -> &mut dyn vi::IApplicationDisplayClient {
         self.application_display_service.as_mut()
     }
 
