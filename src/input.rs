@@ -9,13 +9,13 @@ use crate::service;
 use crate::service::applet;
 use crate::service::applet::AppletResourceUserId;
 use crate::service::hid;
-use crate::service::hid::shmem;
-use crate::service::hid::shmem::SharedMemoryFormat;
 use crate::service::hid::AnalogStickState;
 use crate::service::hid::AppletResource;
 use crate::service::hid::HidService;
 use crate::service::hid::IAppletResourceClient;
 use crate::service::hid::IHidClient;
+use crate::service::hid::shmem;
+use crate::service::hid::shmem::SharedMemoryFormat;
 use crate::svc;
 use crate::version;
 use crate::vmem;
@@ -335,10 +335,7 @@ impl Context {
     /// * `supported_style_tags`: Supported [`NpadStyleTag`][`hid::NpadStyleTag`] flags
     /// * `supported_npad_ids`: Supported [`NpadIdType`][`hid::NpadIdType`] values
     pub fn new(supported_style_tags: hid::NpadStyleTag, mut player_count: usize) -> Result<Self> {
-        result_return_unless!(
-            (1..=8).contains(&player_count),
-            ResultInvalidControllerId
-        );
+        result_return_unless!((1..=8).contains(&player_count), ResultInvalidControllerId);
 
         let mut players: [hid::NpadIdType; 9] = [hid::NpadIdType::No1; 9];
 

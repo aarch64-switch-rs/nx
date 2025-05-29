@@ -2,18 +2,23 @@ use crate::version;
 
 use super::ncm;
 
-ipc_sf_define_default_client_for_interface!(InformationInterface);
-ipc_sf_define_interface_trait! {
-    trait InformationInterface {
-        get_program_id [0, version::VersionInterval::all()]: (process_id: u64) =>  (program_id: ncm::ProgramId) (program_id: ncm::ProgramId);
-    }
+#[nx_derive::ipc_trait]
+#[default_client]
+pub trait InformationInterface {
+    #[ipc_rid(0)]
+    fn get_program_id(&self, process_id: u64) -> ncm::ProgramId;
 }
 
-ipc_sf_define_default_client_for_interface!(DebugMonitorInterface);
-ipc_sf_define_interface_trait! {
-    trait DebugMonitorInterface {
-        get_application_process_id_deprecated [5, version::VersionInterval::to(version::Version::new(4,1,0))]: () => (process_id: u64) (process_id: u64);
-        get_application_process_id [4, version::VersionInterval::from(version::Version::new(5,0,0))]: () => (process_id: u64) (process_id: u64);
-        get_program_id [7, version::VersionInterval::from(version::Version::new(14, 0, 0))]: (raw_process_id: u64) => (program_id: ncm::ProgramId) (program_id: ncm::ProgramId);
-    }
+#[nx_derive::ipc_trait]
+#[default_client]
+pub trait DebugMonitorInterface {
+    #[ipc_rid(5)]
+    #[version(version::VersionInterval::to(version::Version::new(4, 1, 0)))]
+    fn get_application_process_id_deprecated(&self) -> u64;
+    #[ipc_rid(4)]
+    #[version(version::VersionInterval::from(version::Version::new(5, 0, 0)))]
+    fn get_application_process_id(&self) -> u64;
+    #[ipc_rid(7)]
+    #[version(version::VersionInterval::from(version::Version::new(14, 0, 0)))]
+    fn get_program_id(&self, raw_process_id: u64) -> ncm::ProgramId;
 }

@@ -94,66 +94,269 @@ pub struct XferReport {
 }
 const_assert!(core::mem::size_of::<XferReport>() == 0x18);
 
-ipc_sf_define_default_client_for_interface!(ClientEpSession);
-ipc_sf_define_interface_trait! {
-    trait ClientEpSession {
-        submit_out_request [0, version::VersionInterval::to(version::Version::new(1,0,0))]: (size: u32, unk: u32, buf: sf::InMapAliasBuffer<u8>) =>  (transferred_size: u32) (transferred_size: u32);
-        re_open [0, version::VersionInterval::from(version::Version::new(2,0,0))]: () => () ();
-        submit_in_request [1, version::VersionInterval::to(version::Version::new(1,0,0))]: (size: u32, unk: u32, out_buf: sf::OutMapAliasBuffer<u8>) =>  (transferred_size: u32) (transferred_size: u32);
-        close [1, version::VersionInterval::from(version::Version::new(2,0,0))]: () => () ();
-        reset [2, version::VersionInterval::to(version::Version::new(1,0,0))]: () => () ();
-        get_completion_event [2, version::VersionInterval::from(version::Version::new(2,0,0))]: () => (event_handle: sf::CopyHandle) (event_handle: sf::CopyHandle);
-        close_deprecated [3, version::VersionInterval::to(version::Version::new(1,0,0))]: () => () ();
-        populate_ring [3, version::VersionInterval::from(version::Version::new(2,0,0))]: () => () ();
-        post_buffer_async [4, version::VersionInterval::from(version::Version::new(2,0,0))]: (size: u32, buf_addr: u64, unk: u64) =>  (xfer_id: u32) (xfer_id: u32);
-        get_xfer_report_deprecated [5, version::VersionInterval::from_to(version::Version::new(2,0,0), version::Version::new(2,3,0))]: (count: u32, out_reports_buf: sf::OutMapAliasBuffer<XferReport>) =>  (got_count: u32) (got_count: u32);
-        get_xfer_report [5, version::VersionInterval::from(version::Version::new(3,0,0))]: (count: u32, out_reports_buf: sf::OutAutoSelectBuffer<XferReport>) =>  (got_count: u32) (got_count: u32);
-        batch_buffer_async_deprecated [6, version::VersionInterval::from_to(version::Version::new(2,0,0), version::Version::new(2,3,0))]: (urb_count: u32, unk_1: u32, unk_2: u32, buf_addr: u64, unk_3: u64, urb_sizes_buf: sf::InMapAliasBuffer<u32>) =>  (xfer_id: u32) (xfer_id: u32);
-        batch_buffer_async [6, version::VersionInterval::from(version::Version::new(3,0,0))]: (urb_count: u32, unk_1: u32, unk_2: u32, buf_addr: u64, unk_3: u64, urb_sizes_buf: sf::InAutoSelectBuffer<u32>) =>  (xfer_id: u32) (xfer_id: u32);
-        create_smmu_space [7, version::VersionInterval::from(version::Version::new(4,0,0))]: (unk: [u8; 0x10]) =>  () ();
-        share_report_ring [8, version::VersionInterval::from(version::Version::new(4,0,0))]: (unk: [u8; 0x4], unk_handle: sf::CopyHandle) =>  () ();
-    }
+#[nx_derive::ipc_trait]
+#[default_client]
+pub trait ClientEpSession {
+    #[ipc_rid(0)]
+    #[version(version::VersionInterval::to(version::Version::new(1, 0, 0)))]
+    fn submit_out_request(&self, size: u32, unk: u32, buf: sf::InMapAliasBuffer<u8>) -> u32;
+    #[ipc_rid(0)]
+    #[version(version::VersionInterval::from(version::Version::new(2, 0, 0)))]
+    fn re_open(&self);
+    #[ipc_rid(1)]
+    #[version(version::VersionInterval::to(version::Version::new(1, 0, 0)))]
+    fn submit_in_request(&self, size: u32, unk: u32, out_buf: sf::OutMapAliasBuffer<u8>) -> u32;
+    #[ipc_rid(1)]
+    #[version(version::VersionInterval::from(version::Version::new(2, 0, 0)))]
+    fn close(&self);
+    #[ipc_rid(2)]
+    #[version(version::VersionInterval::to(version::Version::new(1, 0, 0)))]
+    fn reset(&self);
+    #[ipc_rid(2)]
+    #[version(version::VersionInterval::from(version::Version::new(2, 0, 0)))]
+    fn get_completion_event(&self) -> sf::CopyHandle;
+    #[ipc_rid(3)]
+    #[version(version::VersionInterval::to(version::Version::new(1, 0, 0)))]
+    fn close_deprecated(&self);
+    #[ipc_rid(3)]
+    #[version(version::VersionInterval::from(version::Version::new(2, 0, 0)))]
+    fn populate_ring(&self);
+    #[ipc_rid(4)]
+    #[version(version::VersionInterval::from(version::Version::new(2, 0, 0)))]
+    fn post_buffer_async(&self, size: u32, buf_addr: u64, unk: u64) -> u32;
+    #[ipc_rid(5)]
+    #[version(version::VersionInterval::from_to(
+        version::Version::new(2, 0, 0),
+        version::Version::new(2, 3, 0)
+    ))]
+    fn get_xfer_report_deprecated(
+        &self,
+        count: u32,
+        out_reports_buf: sf::OutMapAliasBuffer<XferReport>,
+    ) -> u32;
+    #[ipc_rid(5)]
+    #[version(version::VersionInterval::from(version::Version::new(3, 0, 0)))]
+    fn get_xfer_report(
+        &self,
+        count: u32,
+        out_reports_buf: sf::OutAutoSelectBuffer<XferReport>,
+    ) -> u32;
+    #[ipc_rid(6)]
+    #[version(version::VersionInterval::from_to(
+        version::Version::new(2, 0, 0),
+        version::Version::new(2, 3, 0)
+    ))]
+    fn batch_buffer_async_deprecated(
+        &self,
+        urb_count: u32,
+        unk_1: u32,
+        unk_2: u32,
+        buf_addr: u64,
+        unk_3: u64,
+        urb_sizes_buf: sf::InMapAliasBuffer<u32>,
+    ) -> u32;
+    #[ipc_rid(6)]
+    #[version(version::VersionInterval::from(version::Version::new(3, 0, 0)))]
+    fn batch_buffer_async(
+        &self,
+        urb_count: u32,
+        unk_1: u32,
+        unk_2: u32,
+        buf_addr: u64,
+        unk_3: u64,
+        urb_sizes_buf: sf::InAutoSelectBuffer<u32>,
+    ) -> u32;
+    #[ipc_rid(7)]
+    #[version(version::VersionInterval::from(version::Version::new(4, 0, 0)))]
+    fn create_smmu_space(&self, unk: [u8; 0x10]);
+    #[ipc_rid(8)]
+    #[version(version::VersionInterval::from(version::Version::new(4, 0, 0)))]
+    fn share_report_ring(&self, unk: [u8; 0x4], unk_handle: sf::CopyHandle);
 }
 
-ipc_sf_define_default_client_for_interface!(ClientIfSession);
-ipc_sf_define_interface_trait! {
-    trait ClientIfSession {
-        get_state_change_event [0, version::VersionInterval::all()]: () => (event_handle: sf::CopyHandle) (event_handle: sf::CopyHandle);
-        set_interface [1, version::VersionInterval::all()]: (unk: u8, profile_buf: sf::InMapAliasBuffer<InterfaceProfile>) =>  () ();
-        get_interface [2, version::VersionInterval::all()]: (out_profile_buf: sf::OutMapAliasBuffer<InterfaceProfile>) =>  () ();
-        get_alternate_interface [3, version::VersionInterval::all()]: (unk: u8, out_profile_buf: sf::OutMapAliasBuffer<InterfaceProfile>) =>  () ();
-        get_current_frame_deprecated [5, version::VersionInterval::to(version::Version::new(1,0,0))]: () => (cur_frame: u32) (cur_frame: u32);
-        get_current_frame [4, version::VersionInterval::from(version::Version::new(2,0,0))]: () => (cur_frame: u32) (cur_frame: u32);
-        ctrl_xfer_async [5, version::VersionInterval::from(version::Version::new(2,0,0))]: (request_type: u8, request: u8, val: u16, idx: u16, length: u16, buf_addr: u64) =>  () ();
-        submit_control_in_request [6, version::VersionInterval::to(version::Version::new(1,0,0))]: (request: u8, request_type: u8, val: u16, idx: u16, length: u16, timeout_ms: u32, out_buf: sf::OutMapAliasBuffer<u8>) =>  (transferred_size: u32) (transferred_size: u32);
-        get_ctrl_xfer_completion_event [6, version::VersionInterval::from(version::Version::new(2,0,0))]: () => (event_handle: sf::CopyHandle) (event_handle: sf::CopyHandle);
-        submit_control_out_request [7, version::VersionInterval::to(version::Version::new(1,0,0))]: (request: u8, request_type: u8, val: u16, idx: u16, length: u16, timeout_ms: u32, buf: sf::InMapAliasBuffer<u8>) =>  (transferred_size: u32) (transferred_size: u32);
-        get_ctrl_xfer_report [7, version::VersionInterval::from(version::Version::new(2,0,0))]: (out_report_buf: sf::OutMapAliasBuffer<XferReport>) =>  () ();
-        reset_device [8, version::VersionInterval::all()]: (unk: u32) =>  () ();
-        open_usb_ep_deprecated [4, version::VersionInterval::to(version::Version::new(1,0,0))]: (max_urb_count: u16, ep_type: u32, ep_number: u32, ep_direction: u32, max_xfer_size: u32) =>  (ep_desc: super::EndPointDescriptor, ep_session: ClientEpSession) (ep_desc: super::EndPointDescriptor, ep_session: ClientEpSession);
-        open_usb_ep [9, version::VersionInterval::from(version::Version::new(2,0,0))]: (max_urb_count: u16, ep_type: u32, ep_number: u32, ep_direction: u32, max_xfer_size: u32) =>  (ep_desc: super::EndPointDescriptor, ep_session: ClientEpSession) (ep_desc: super::EndPointDescriptor, ep_session: ClientEpSession);
-    }
+#[nx_derive::ipc_trait]
+#[default_client]
+pub trait ClientIfSession {
+    #[ipc_rid(0)]
+    fn get_state_change_event(&self) -> sf::CopyHandle;
+    #[ipc_rid(1)]
+    fn set_interface(&self, unk: u8, profile_buf: sf::InMapAliasBuffer<InterfaceProfile>);
+    #[ipc_rid(2)]
+    fn get_interface(&self, out_profile_buf: sf::OutMapAliasBuffer<InterfaceProfile>);
+    #[ipc_rid(3)]
+    fn get_alternate_interface(
+        &self,
+        unk: u8,
+        out_profile_buf: sf::OutMapAliasBuffer<InterfaceProfile>,
+    );
+    #[ipc_rid(5)]
+    #[version(version::VersionInterval::to(version::Version::new(1, 0, 0)))]
+    fn get_current_frame_deprecated(&self) -> u32;
+    #[ipc_rid(4)]
+    #[version(version::VersionInterval::from(version::Version::new(2, 0, 0)))]
+    fn get_current_frame(&self) -> u32;
+    #[ipc_rid(5)]
+    #[version(version::VersionInterval::from(version::Version::new(2, 0, 0)))]
+    fn ctrl_xfer_async(
+        &self,
+        request_type: u8,
+        request: u8,
+        val: u16,
+        idx: u16,
+        length: u16,
+        buf_addr: u64,
+    );
+    #[ipc_rid(6)]
+    #[version(version::VersionInterval::to(version::Version::new(1, 0, 0)))]
+    fn submit_control_in_request(
+        &self,
+        request: u8,
+        request_type: u8,
+        val: u16,
+        idx: u16,
+        length: u16,
+        timeout_ms: u32,
+        out_buf: sf::OutMapAliasBuffer<u8>,
+    ) -> u32;
+    #[ipc_rid(6)]
+    #[version(version::VersionInterval::from(version::Version::new(2, 0, 0)))]
+    fn get_ctrl_xfer_completion_event(&self) -> sf::CopyHandle;
+    #[ipc_rid(7)]
+    #[version(version::VersionInterval::to(version::Version::new(1, 0, 0)))]
+    fn submit_control_out_request(
+        &self,
+        request: u8,
+        request_type: u8,
+        val: u16,
+        idx: u16,
+        length: u16,
+        timeout_ms: u32,
+        buf: sf::InMapAliasBuffer<u8>,
+    ) -> u32;
+    #[ipc_rid(7)]
+    #[version(version::VersionInterval::from(version::Version::new(2, 0, 0)))]
+    fn get_ctrl_xfer_report(&self, out_report_buf: sf::OutMapAliasBuffer<XferReport>);
+    #[ipc_rid(8)]
+    fn reset_device(&self, unk: u32);
+    #[ipc_rid(4)]
+    #[version(version::VersionInterval::to(version::Version::new(1, 0, 0)))]
+    fn open_usb_ep_deprecated(
+        &self,
+        max_urb_count: u16,
+        ep_type: u32,
+        ep_number: u32,
+        ep_direction: u32,
+        max_xfer_size: u32,
+    ) -> (super::EndPointDescriptor, ClientEpSession);
+    #[ipc_rid(9)]
+    #[version(version::VersionInterval::from(version::Version::new(2, 0, 0)))]
+    fn open_usb_ep(
+        &self,
+        max_urb_count: u16,
+        ep_type: u32,
+        ep_number: u32,
+        ep_direction: u32,
+        max_xfer_size: u32,
+    ) -> (super::EndPointDescriptor, ClientEpSession);
 }
 
-ipc_sf_define_default_client_for_interface!(ClientRootSession);
-ipc_sf_define_interface_trait! {
-    trait ClientRootSession {
-        bind_client_process [0, version::VersionInterval::from(version::Version::new(2,0,0))]: (self_process_handle: sf::CopyHandle) =>  () ();
-        query_all_interfaces_deprecated [0, version::VersionInterval::to(version::Version::new(1,0,0))]: (filter: DeviceFilter, out_intfs: sf::OutMapAliasBuffer<InterfaceQueryOutput>) =>  (count: u32) (count: u32);
-        query_all_interfaces [1, version::VersionInterval::from(version::Version::new(2,0,0))]: (filter: DeviceFilter, out_intfs: sf::OutMapAliasBuffer<InterfaceQueryOutput>) =>  (count: u32) (count: u32);
-        query_available_interfaces_deprecated [1, version::VersionInterval::to(version::Version::new(1,0,0))]: (filter: DeviceFilter, out_intfs: sf::OutMapAliasBuffer<InterfaceQueryOutput>) =>  (count: u32) (count: u32);
-        query_available_interfaces [2, version::VersionInterval::from(version::Version::new(2,0,0))]: (filter: DeviceFilter, out_intfs: sf::OutMapAliasBuffer<InterfaceQueryOutput>) =>  (count: u32) (count: u32);
-        query_acquired_interfaces_deprecated [2, version::VersionInterval::to(version::Version::new(1,0,0))]: (out_intfs: sf::OutMapAliasBuffer<InterfaceQueryOutput>) =>  (count: u32) (count: u32);
-        query_acquired_interfaces [3, version::VersionInterval::from(version::Version::new(2,0,0))]: (out_intfs: sf::OutMapAliasBuffer<InterfaceQueryOutput>) =>  (count: u32) (count: u32);
-        create_interface_available_event_deprecated [3, version::VersionInterval::to(version::Version::new(1,0,0))]: (event_id: InterfaceAvailableEventId, filter: DeviceFilter) =>  (event_handle: sf::CopyHandle) (event_handle: sf::CopyHandle);
-        create_interface_available_event [4, version::VersionInterval::from(version::Version::new(2,0,0))]: (event_id: InterfaceAvailableEventId, filter: DeviceFilter) =>  (event_handle: sf::CopyHandle) (event_handle: sf::CopyHandle);
-        destroy_interface_available_event_deprecated [4, version::VersionInterval::to(version::Version::new(1,0,0))]: (event_id: InterfaceAvailableEventId) =>  () ();
-        destroy_interface_available_event [5, version::VersionInterval::from(version::Version::new(2,0,0))]: (event_id: InterfaceAvailableEventId) =>  () ();
-        get_interface_state_change_event_deprecated [5, version::VersionInterval::to(version::Version::new(1,0,0))]: () => (event_handle: sf::CopyHandle) (event_handle: sf::CopyHandle);
-        get_interface_state_change_event [6, version::VersionInterval::from(version::Version::new(2,0,0))]: () => (event_handle: sf::CopyHandle) (event_handle: sf::CopyHandle);
-        acquire_usb_if_deprecated [6, version::VersionInterval::to(version::Version::new(1,0,0))]: (id: u32, out_profile_buf: sf::OutMapAliasBuffer<InterfaceProfile>) =>  (if_session: ClientIfSession) (if_session: ClientIfSession);
-        acquire_usb_if [7, version::VersionInterval::from(version::Version::new(2,0,0))]: (id: u32, out_info_buf: sf::OutMapAliasBuffer<InterfaceInfo>, out_profile_buf: sf::OutMapAliasBuffer<InterfaceProfile>) =>  (if_session: ClientIfSession) (if_session: ClientIfSession);
-        get_descriptor_string [7, version::VersionInterval::to(version::Version::new(1,0,0))]: (unk_1: u8, unk_2: bool, unk_maybe_id: u32, out_desc_buf: sf::OutMapAliasBuffer<u8>) =>  (unk_maybe_desc_len: u32) (unk_maybe_desc_len: u32);
-        reset_device [8, version::VersionInterval::to(version::Version::new(1,0,0))]: (unk: u32) =>  () ();
-    }
+#[nx_derive::ipc_trait]
+#[default_client]
+pub trait ClientRootSession {
+    #[ipc_rid(0)]
+    #[version(version::VersionInterval::from(version::Version::new(2, 0, 0)))]
+    fn bind_client_process(&self, self_process_handle: sf::CopyHandle);
+    #[ipc_rid(0)]
+    #[version(version::VersionInterval::to(version::Version::new(1, 0, 0)))]
+    fn query_all_interfaces_deprecated(
+        &self,
+        filter: DeviceFilter,
+        out_intfs: sf::OutMapAliasBuffer<InterfaceQueryOutput>,
+    ) -> u32;
+    #[ipc_rid(1)]
+    #[version(version::VersionInterval::from(version::Version::new(2, 0, 0)))]
+    fn query_all_interfaces(
+        &self,
+        filter: DeviceFilter,
+        out_intfs: sf::OutMapAliasBuffer<InterfaceQueryOutput>,
+    ) -> u32;
+    #[ipc_rid(1)]
+    #[version(version::VersionInterval::to(version::Version::new(1, 0, 0)))]
+    fn query_available_interfaces_deprecated(
+        &self,
+        filter: DeviceFilter,
+        out_intfs: sf::OutMapAliasBuffer<InterfaceQueryOutput>,
+    ) -> u32;
+    #[ipc_rid(2)]
+    #[version(version::VersionInterval::from(version::Version::new(2, 0, 0)))]
+    fn query_available_interfaces(
+        &self,
+        filter: DeviceFilter,
+        out_intfs: sf::OutMapAliasBuffer<InterfaceQueryOutput>,
+    ) -> u32;
+    #[ipc_rid(2)]
+    #[version(version::VersionInterval::to(version::Version::new(1, 0, 0)))]
+    fn query_acquired_interfaces_deprecated(
+        &self,
+        out_intfs: sf::OutMapAliasBuffer<InterfaceQueryOutput>,
+    ) -> u32;
+    #[ipc_rid(3)]
+    #[version(version::VersionInterval::from(version::Version::new(2, 0, 0)))]
+    fn query_acquired_interfaces(
+        &self,
+        out_intfs: sf::OutMapAliasBuffer<InterfaceQueryOutput>,
+    ) -> u32;
+    #[ipc_rid(3)]
+    #[version(version::VersionInterval::to(version::Version::new(1, 0, 0)))]
+    fn create_interface_available_event_deprecated(
+        &self,
+        event_id: InterfaceAvailableEventId,
+        filter: DeviceFilter,
+    ) -> sf::CopyHandle;
+    #[ipc_rid(4)]
+    #[version(version::VersionInterval::from(version::Version::new(2, 0, 0)))]
+    fn create_interface_available_event(
+        &self,
+        event_id: InterfaceAvailableEventId,
+        filter: DeviceFilter,
+    ) -> sf::CopyHandle;
+    #[ipc_rid(4)]
+    #[version(version::VersionInterval::to(version::Version::new(1, 0, 0)))]
+    fn destroy_interface_available_event_deprecated(&self, event_id: InterfaceAvailableEventId);
+    #[ipc_rid(5)]
+    #[version(version::VersionInterval::from(version::Version::new(2, 0, 0)))]
+    fn destroy_interface_available_event(&self, event_id: InterfaceAvailableEventId);
+    #[ipc_rid(5)]
+    #[version(version::VersionInterval::to(version::Version::new(1, 0, 0)))]
+    fn get_interface_state_change_event_deprecated(&self) -> sf::CopyHandle;
+    #[ipc_rid(6)]
+    #[version(version::VersionInterval::from(version::Version::new(2, 0, 0)))]
+    fn get_interface_state_change_event(&self) -> sf::CopyHandle;
+    #[ipc_rid(6)]
+    #[version(version::VersionInterval::to(version::Version::new(1, 0, 0)))]
+    fn acquire_usb_if_deprecated(
+        &self,
+        id: u32,
+        out_profile_buf: sf::OutMapAliasBuffer<InterfaceProfile>,
+    ) -> ClientIfSession;
+    #[ipc_rid(7)]
+    #[version(version::VersionInterval::from(version::Version::new(2, 0, 0)))]
+    fn acquire_usb_if(
+        &self,
+        id: u32,
+        out_info_buf: sf::OutMapAliasBuffer<InterfaceInfo>,
+        out_profile_buf: sf::OutMapAliasBuffer<InterfaceProfile>,
+    ) -> ClientIfSession;
+    #[ipc_rid(7)]
+    #[version(version::VersionInterval::to(version::Version::new(1, 0, 0)))]
+    fn get_descriptor_string(
+        &self,
+        unk_1: u8,
+        unk_2: bool,
+        unk_maybe_id: u32,
+        out_desc_buf: sf::OutMapAliasBuffer<u8>,
+    ) -> u32;
+    #[ipc_rid(8)]
+    #[version(version::VersionInterval::to(version::Version::new(1, 0, 0)))]
+    fn reset_device(&self, unk: u32);
 }

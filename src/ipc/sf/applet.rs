@@ -144,163 +144,284 @@ pub enum AppletMessage {
     RecordingSaved = 93,
 }
 
-ipc_sf_define_default_client_for_interface!(StorageAccessor);
-ipc_sf_define_interface_trait! {
-    trait StorageAccessor {
-        get_size [0, version::VersionInterval::all()]: () => (size: usize) (size: usize);
-        write [10, version::VersionInterval::all()]: (offset: usize, buf: sf::InAutoSelectBuffer<u8>) =>  () ();
-        read [11, version::VersionInterval::all()]: (offset: usize, buf: sf::OutAutoSelectBuffer<u8>) =>  () ();
-    }
+#[nx_derive::ipc_trait]
+#[default_client]
+pub trait StorageAccessor {
+    #[ipc_rid(0)]
+    fn get_size(&self) -> usize;
+    #[ipc_rid(10)]
+    fn write(&self, offset: usize, buf: sf::InAutoSelectBuffer<u8>);
+    #[ipc_rid(11)]
+    fn read(&self, offset: usize, buf: sf::OutAutoSelectBuffer<u8>);
 }
 
-ipc_sf_define_default_client_for_interface!(Storage);
-ipc_sf_define_interface_trait! {
-    trait Storage {
-        open [0, version::VersionInterval::all()]: () => (storage_accessor: StorageAccessor) (storage_accessor: StorageAccessor);
-    }
+#[nx_derive::ipc_trait]
+#[default_client]
+pub trait Storage {
+    #[ipc_rid(0)]
+    fn open(&self) -> StorageAccessor;
 }
 
-ipc_sf_define_default_client_for_interface!(LibraryAppletAccessor);
-ipc_sf_define_interface_trait! {
-    trait LibraryAppletAccessor {
-        get_applet_state_changed_event [0, version::VersionInterval::all(), mut]: () => (applet_state_changed_event: sf::CopyHandle) (applet_state_changed_event: sf::CopyHandle);
-        start [10, version::VersionInterval::all(), mut]: () => () ();
-        push_in_data [100, version::VersionInterval::all(), mut]: (storage: Storage) =>  () ();
-        pop_out_data [101, version::VersionInterval::all(), mut]: () => (storage: Storage) (storage: Storage);
-    }
+#[nx_derive::ipc_trait]
+#[default_client]
+pub trait LibraryAppletAccessor {
+    #[ipc_rid(0)]
+    fn get_applet_state_changed_event(&mut self) -> sf::CopyHandle;
+    #[ipc_rid(10)]
+    fn start(&mut self);
+    #[ipc_rid(100)]
+    fn push_in_data(&mut self, storage: Storage);
+    #[ipc_rid(101)]
+    fn pop_out_data(&mut self) -> Storage;
 }
 
-ipc_sf_define_default_client_for_interface!(LibraryAppletCreator);
-ipc_sf_define_interface_trait! {
-    trait LibraryAppletCreator {
-        create_library_applet [0, version::VersionInterval::all()]: (applet_id: AppletId, applet_mode: LibraryAppletMode) =>  (library_applet_accessor: LibraryAppletAccessor) (library_applet_accessor: session_type!(LibraryAppletAccessor));
-        create_storage [10, version::VersionInterval::all()]: (size: usize) =>  (storage: Storage) (storage: Storage);
-    }
+#[nx_derive::ipc_trait]
+#[default_client]
+pub trait LibraryAppletCreator {
+    #[ipc_rid(0)]
+    #[return_session]
+    fn create_library_applet(
+        &self,
+        applet_id: AppletId,
+        applet_mode: LibraryAppletMode,
+    ) -> LibraryAppletAccessor;
+    #[ipc_rid(10)]
+    fn create_storage(&self, size: usize) -> Storage;
 }
 
-ipc_sf_define_default_client_for_interface!(WindowController);
-ipc_sf_define_interface_trait! {
-    trait WindowController {
-        get_applet_resource_user_id [1, version::VersionInterval::all()]: () => (aruid: u64) (aruid: u64);
-        acquire_foreground_rights [10, version::VersionInterval::all()]: () => () ();
-    }
+#[nx_derive::ipc_trait]
+#[default_client]
+pub trait WindowController {
+    #[ipc_rid(1)]
+    fn get_applet_resource_user_id(&self) -> u64;
+    #[ipc_rid(10)]
+    fn acquire_foreground_rights(&self);
 }
 
-ipc_sf_define_default_client_for_interface!(SelfController);
-ipc_sf_define_interface_trait! {
-    trait SelfController {
-        set_screenshot_permission [10, version::VersionInterval::all()]: (permission: ScreenShotPermission) =>  () ();
-        create_managed_display_layer [40, version::VersionInterval::all()]: () =>  (layer_id: u64) (layer_id: u64);
-    }
+#[nx_derive::ipc_trait]
+#[default_client]
+pub trait SelfController {
+    #[ipc_rid(10)]
+    fn set_screenshot_permission(&self, permission: ScreenShotPermission);
+    #[ipc_rid(40)]
+    fn create_managed_display_layer(&self) -> u64;
 }
 
-ipc_sf_define_default_client_for_interface!(AudioController);
-ipc_sf_define_interface_trait! {
-    trait AudioController {
-        set_expected_master_volume [0, version::VersionInterval::all()]: (main_applet_level: f32, library_applet_level: f32) =>  () ();
-        get_main_applet_volume [1, version::VersionInterval::all()]: () => (main_applet_level: f32) (main_applet_level: f32);
-        get_library_applet_volume [2, version::VersionInterval::all()]: () => (library_applet_level: f32) (library_applet_level: f32);
-        change_main_applet_volume [3, version::VersionInterval::all()]: (main_applet_level: f32, unknown: u64) => () ();
-        set_transparent_volume_rate [4, version::VersionInterval::all()]: (rate: f32) => () ();
-    }
+#[nx_derive::ipc_trait]
+#[default_client]
+pub trait AudioController {
+    #[ipc_rid(0)]
+    fn set_expected_master_volume(&self, main_applet_level: f32, library_applet_level: f32);
+    #[ipc_rid(1)]
+    fn get_main_applet_volume(&self) -> f32;
+    #[ipc_rid(2)]
+    fn get_library_applet_volume(&self) -> f32;
+    #[ipc_rid(3)]
+    fn change_main_applet_volume(&self, main_applet_level: f32, unknown: u64);
+    #[ipc_rid(4)]
+    fn set_transparent_volume_rate(&self, rate: f32);
 }
 
-ipc_sf_define_default_client_for_interface!(DisplayController);
-ipc_sf_define_interface_trait! {
-    trait DisplayController {
-        update_caller_applet_capture_image [3, version::VersionInterval::all()]: () =>  () ();
-    }
+#[nx_derive::ipc_trait]
+#[default_client]
+pub trait DisplayController {
+    #[ipc_rid(3)]
+    fn update_caller_applet_capture_image(&self);
 }
-ipc_sf_define_default_client_for_interface!(ProcessWindingController);
-ipc_sf_define_interface_trait! {
-    trait ProcessWindingController {
-        get_launch_reason [0, version::VersionInterval::all()]: () => (launch_reason: AppletProcessLaunchReason) (launch_reason: AppletProcessLaunchReason);
-    }
-}
-
-ipc_sf_define_default_client_for_interface!(CommonStateGetter);
-ipc_sf_define_interface_trait! {
-    trait CommonStateGetter {
-        get_event_handle [0, version::VersionInterval::all()]: () => (handle: Handle) (handle: Handle);
-        receive_message [1, version::VersionInterval::all()]: () => (applet_message: AppletMessage) (applet_message: AppletMessage);
-        }
+#[nx_derive::ipc_trait]
+#[default_client]
+pub trait ProcessWindingController {
+    #[ipc_rid(0)]
+    fn get_launch_reason(&self) -> AppletProcessLaunchReason;
 }
 
-ipc_sf_define_default_client_for_interface!(LibraryAppletProxy);
-ipc_sf_define_interface_trait! {
-    trait LibraryAppletProxy {
-        get_common_state_getter [0, version::VersionInterval::all()]: () => (common_state_getter: CommonStateGetter) (command_state_getter: session_type!(CommonStateGetter));
-        get_self_controller [1, version::VersionInterval::all()]: () => (self_controller: SelfController) (self_controller: session_type!(SelfController));
-        get_window_controller [2, version::VersionInterval::all()]: () => (window_controller: WindowController) (window_controller: session_type!(WindowController));
-        get_audio_controller [3, version::VersionInterval::all()]: () => (window_controller: AudioController) (window_controller: session_type!(AudioController));
-        get_display_controller [4, version::VersionInterval::all()]: () => (window_controller: DisplayController) (window_controller: session_type!(DisplayController));
-        get_process_winding_controller [10, version::VersionInterval::all()]: () => (window_controller: ProcessWindingController) (window_controller: session_type!(ProcessWindingController));
-        get_library_applet_creator [11, version::VersionInterval::all()]: () => (library_applet_creator: LibraryAppletCreator) (library_applet_creator: session_type!(AllSystemAppletProxiesService));
-    }
+#[nx_derive::ipc_trait]
+#[default_client]
+pub trait CommonStateGetter {
+    #[ipc_rid(0)]
+    fn get_event_handle(&self) -> Handle;
+    #[ipc_rid(1)]
+    fn receive_message(&self) -> AppletMessage;
 }
 
-ipc_sf_define_default_client_for_interface!(ApplicationProxy);
-ipc_sf_define_interface_trait! {
-    trait ApplicationProxy {
-        get_common_state_getter [0, version::VersionInterval::all()]: () => (common_state_getter: CommonStateGetter) (command_state_getter: session_type!(CommonStateGetter));
-        get_self_controller [1, version::VersionInterval::all()]: () => (self_controller: SelfController) (self_controller: session_type!(SelfController));
-        get_window_controller [2, version::VersionInterval::all()]: () => (window_controller: WindowController) (window_controller: session_type!(WindowController));
-        get_audio_controller [3, version::VersionInterval::all()]: () => (window_controller: AudioController) (window_controller: session_type!(AudioController));
-        get_display_controller [4, version::VersionInterval::all()]: () => (window_controller: DisplayController) (window_controller: session_type!(DisplayController));
-        get_process_winding_controller [10, version::VersionInterval::all()]: () => (window_controller: ProcessWindingController) (window_controller: session_type!(ProcessWindingController));
-        get_library_applet_creator [11, version::VersionInterval::all()]: () => (library_applet_creator: LibraryAppletCreator) (library_applet_creator: session_type!(AllSystemAppletProxiesService));
-    }
+#[nx_derive::ipc_trait]
+#[default_client]
+pub trait LibraryAppletProxy {
+    #[ipc_rid(0)]
+    #[return_session]
+    fn get_common_state_getter(&self) -> CommonStateGetter;
+    #[ipc_rid(1)]
+    #[return_session]
+    fn get_self_controller(&self) -> SelfController;
+    #[ipc_rid(2)]
+    #[return_session]
+    fn get_window_controller(&self) -> WindowController;
+    #[ipc_rid(3)]
+    #[return_session]
+    fn get_audio_controller(&self) -> AudioController;
+    #[ipc_rid(4)]
+    #[return_session]
+    fn get_display_controller(&self) -> DisplayController;
+    #[ipc_rid(10)]
+    #[return_session]
+    fn get_process_winding_controller(&self) -> ProcessWindingController;
+    #[ipc_rid(11)]
+    #[return_session]
+    fn get_library_applet_creator(&self) -> LibraryAppletCreator;
 }
 
-ipc_sf_define_default_client_for_interface!(SystemAppletProxy);
-ipc_sf_define_interface_trait! {
-    trait SystemAppletProxy {
-        get_common_state_getter [0, version::VersionInterval::all()]: () => (common_state_getter: CommonStateGetter) (command_state_getter: session_type!(CommonStateGetter));
-        get_self_controller [1, version::VersionInterval::all()]: () => (self_controller: SelfController) (self_controller: session_type!(SelfController));
-        get_window_controller [2, version::VersionInterval::all()]: () => (window_controller: WindowController) (window_controller: session_type!(WindowController));
-        get_audio_controller [3, version::VersionInterval::all()]: () => (window_controller: AudioController) (window_controller: session_type!(AudioController));
-        get_display_controller [4, version::VersionInterval::all()]: () => (window_controller: DisplayController) (window_controller: session_type!(DisplayController));
-        get_process_winding_controller [10, version::VersionInterval::all()]: () => (window_controller: ProcessWindingController) (window_controller: session_type!(ProcessWindingController));
-        get_library_applet_creator [11, version::VersionInterval::all()]: () => (library_applet_creator: LibraryAppletCreator) (library_applet_creator: session_type!(AllSystemAppletProxiesService));
-    }
+#[nx_derive::ipc_trait]
+#[default_client]
+pub trait ApplicationProxy {
+    #[ipc_rid(0)]
+    #[return_session]
+    fn get_common_state_getter(&self) -> CommonStateGetter;
+    #[ipc_rid(1)]
+    #[return_session]
+    fn get_self_controller(&self) -> SelfController;
+    #[ipc_rid(2)]
+    #[return_session]
+    fn get_window_controller(&self) -> WindowController;
+    #[ipc_rid(3)]
+    #[return_session]
+    fn get_audio_controller(&self) -> AudioController;
+    #[ipc_rid(4)]
+    #[return_session]
+    fn get_display_controller(&self) -> DisplayController;
+    #[ipc_rid(10)]
+    #[return_session]
+    fn get_process_winding_controller(&self) -> ProcessWindingController;
+    #[ipc_rid(11)]
+    #[return_session]
+    fn get_library_applet_creator(&self) -> LibraryAppletCreator;
 }
 
-ipc_sf_define_default_client_for_interface!(OverlayAppletProxy);
-ipc_sf_define_interface_trait! {
-    trait OverlayAppletProxy {
-        get_common_state_getter [0, version::VersionInterval::all()]: () => (common_state_getter: CommonStateGetter) (command_state_getter: session_type!(CommonStateGetter));
-        get_self_controller [1, version::VersionInterval::all()]: () => (self_controller: SelfController) (self_controller: session_type!(SelfController));
-        get_window_controller [2, version::VersionInterval::all()]: () => (window_controller: WindowController) (window_controller: session_type!(WindowController));
-        get_audio_controller [3, version::VersionInterval::all()]: () => (window_controller: AudioController) (window_controller: session_type!(AudioController));
-        get_display_controller [4, version::VersionInterval::all()]: () => (window_controller: DisplayController) (window_controller: session_type!(DisplayController));
-        get_process_winding_controller [10, version::VersionInterval::all()]: () => (window_controller: ProcessWindingController) (window_controller: session_type!(ProcessWindingController));
-        get_library_applet_creator [11, version::VersionInterval::all()]: () => (library_applet_creator: LibraryAppletCreator) (library_applet_creator: session_type!(AllSystemAppletProxiesService));
-    }
+#[nx_derive::ipc_trait]
+#[default_client]
+pub trait SystemAppletProxy {
+    #[ipc_rid(0)]
+    #[return_session]
+    fn get_common_state_getter(&self) -> CommonStateGetter;
+    #[ipc_rid(1)]
+    #[return_session]
+    fn get_self_controller(&self) -> SelfController;
+    #[ipc_rid(2)]
+    #[return_session]
+    fn get_window_controller(&self) -> WindowController;
+    #[ipc_rid(3)]
+    #[return_session]
+    fn get_audio_controller(&self) -> AudioController;
+    #[ipc_rid(4)]
+    #[return_session]
+    fn get_display_controller(&self) -> DisplayController;
+    #[ipc_rid(10)]
+    #[return_session]
+    fn get_process_winding_controller(&self) -> ProcessWindingController;
+    #[ipc_rid(11)]
+    #[return_session]
+    fn get_library_applet_creator(&self) -> LibraryAppletCreator;
 }
 
-ipc_sf_define_default_client_for_interface!(SystemApplicationProxy);
-ipc_sf_define_interface_trait! {
-    trait SystemApplicationProxy {
-        get_common_state_getter [0, version::VersionInterval::all()]: () => (common_state_getter: CommonStateGetter) (command_state_getter: session_type!(CommonStateGetter));
-        get_self_controller [1, version::VersionInterval::all()]: () => (self_controller: SelfController) (self_controller: session_type!(SelfController));
-        get_window_controller [2, version::VersionInterval::all()]: () => (window_controller: WindowController) (window_controller: session_type!(WindowController));
-        get_audio_controller [3, version::VersionInterval::all()]: () => (window_controller: AudioController) (window_controller: session_type!(AudioController));
-        get_display_controller [4, version::VersionInterval::all()]: () => (window_controller: DisplayController) (window_controller: session_type!(DisplayController));
-        get_process_winding_controller [10, version::VersionInterval::all()]: () => (window_controller: ProcessWindingController) (window_controller: session_type!(ProcessWindingController));
-        get_library_applet_creator [11, version::VersionInterval::all()]: () => (library_applet_creator: LibraryAppletCreator) (library_applet_creator: session_type!(AllSystemAppletProxiesService));
-    }
+#[nx_derive::ipc_trait]
+#[default_client]
+pub trait OverlayAppletProxy {
+    #[ipc_rid(0)]
+    #[return_session]
+    fn get_common_state_getter(&self) -> CommonStateGetter;
+    #[ipc_rid(1)]
+    #[return_session]
+    fn get_self_controller(&self) -> SelfController;
+    #[ipc_rid(2)]
+    #[return_session]
+    fn get_window_controller(&self) -> WindowController;
+    #[ipc_rid(3)]
+    #[return_session]
+    fn get_audio_controller(&self) -> AudioController;
+    #[ipc_rid(4)]
+    #[return_session]
+    fn get_display_controller(&self) -> DisplayController;
+    #[ipc_rid(10)]
+    #[return_session]
+    fn get_process_winding_controller(&self) -> ProcessWindingController;
+    #[ipc_rid(11)]
+    #[return_session]
+    fn get_library_applet_creator(&self) -> LibraryAppletCreator;
 }
 
-ipc_sf_define_default_client_for_interface!(AllSystemAppletProxiesService);
-ipc_sf_define_interface_trait! {
-    trait AllSystemAppletProxiesService {
-        open_application_proxy [0, version::VersionInterval::all()]: (process_id: sf::ProcessId, self_process_handle: sf::CopyHandle) =>  (library_applet_proxy: ApplicationProxy) (library_applet_proxy: session_type!(ApplicationProxy));
-        open_system_applet_proxy [100, version::VersionInterval::all()]: (process_id: sf::ProcessId, self_process_handle: sf::CopyHandle) =>  (library_applet_proxy: SystemAppletProxy) (library_applet_proxy: session_type!(SystemAppletProxy));
-        open_library_applet_proxy_old [200, version::VersionInterval::from(version::Version::new(3,0,0))]: (process_id: sf::ProcessId, self_process_handle: sf::CopyHandle) =>  (library_applet_proxy: LibraryAppletProxy) (library_applet_proxy: session_type!(LibraryAppletProxy));
-        open_library_applet_proxy [201, version::VersionInterval::from(version::Version::new(3,0,0))]: (process_id: sf::ProcessId, self_process_handle: sf::CopyHandle, applet_attribute: sf::InMapAliasBuffer<AppletAttribute>) =>  (library_applet_proxy: LibraryAppletProxy) (library_applet_proxy: session_type!(LibraryAppletProxy));
-        open_overlay_applet_proxy [300, version::VersionInterval::all()]: (process_id: sf::ProcessId, self_process_handle: sf::CopyHandle) =>  (library_applet_proxy: OverlayAppletProxy) (library_applet_proxy: session_type!(OverlayAppletProxy));
-        open_system_application_proxy [350, version::VersionInterval::all()]: (process_id: sf::ProcessId, self_process_handle: sf::CopyHandle) =>  (library_applet_proxy: SystemApplicationProxy) (library_applet_proxy: session_type!(SystemApplicationProxy));
-    }
+#[nx_derive::ipc_trait]
+#[default_client]
+pub trait SystemApplicationProxy {
+    #[ipc_rid(0)]
+    #[return_session]
+    fn get_common_state_getter(&self) -> CommonStateGetter;
+    #[ipc_rid(1)]
+    #[return_session]
+    fn get_self_controller(&self) -> SelfController;
+    #[ipc_rid(2)]
+    #[return_session]
+    fn get_window_controller(&self) -> WindowController;
+    #[ipc_rid(3)]
+    #[return_session]
+    fn get_audio_controller(&self) -> AudioController;
+    #[ipc_rid(4)]
+    #[return_session]
+    fn get_display_controller(&self) -> DisplayController;
+    #[ipc_rid(10)]
+    #[return_session]
+    fn get_process_winding_controller(&self) -> ProcessWindingController;
+    #[ipc_rid(11)]
+    #[return_session]
+    fn get_library_applet_creator(&self) -> LibraryAppletCreator;
+}
+
+#[nx_derive::ipc_trait]
+#[default_client]
+pub trait AllSystemAppletProxiesService {
+    #[ipc_rid(0)]
+    #[return_session]
+    fn open_application_proxy(
+        &self,
+        process_id: sf::ProcessId,
+        self_process_handle: sf::CopyHandle,
+    ) -> ApplicationProxy;
+    #[ipc_rid(100)]
+    #[return_session]
+    fn open_system_applet_proxy(
+        &self,
+        process_id: sf::ProcessId,
+        self_process_handle: sf::CopyHandle,
+    ) -> SystemAppletProxy;
+    #[ipc_rid(200)]
+    #[return_session]
+    #[version(version::VersionInterval::from(version::Version::new(3, 0, 0)))]
+    fn open_library_applet_proxy_old(
+        &self,
+        process_id: sf::ProcessId,
+        self_process_handle: sf::CopyHandle,
+    ) -> LibraryAppletProxy;
+    #[ipc_rid(201)]
+    #[return_session]
+    #[version(version::VersionInterval::from(version::Version::new(3, 0, 0)))]
+    fn open_library_applet_proxy(
+        &self,
+        process_id: sf::ProcessId,
+        self_process_handle: sf::CopyHandle,
+        applet_attribute: sf::InMapAliasBuffer<AppletAttribute>,
+    ) -> LibraryAppletProxy;
+    #[ipc_rid(300)]
+    #[return_session]
+    fn open_overlay_applet_proxy(
+        &self,
+        process_id: sf::ProcessId,
+        self_process_handle: sf::CopyHandle,
+    ) -> OverlayAppletProxy;
+    #[ipc_rid(350)]
+    #[return_session]
+    fn open_system_application_proxy(
+        &self,
+        process_id: sf::ProcessId,
+        self_process_handle: sf::CopyHandle,
+    ) -> SystemApplicationProxy;
 }
 
 pub trait ProxyCommon {

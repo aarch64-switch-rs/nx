@@ -154,7 +154,11 @@ impl Surface {
 
         match scaling {
             ScaleMode::None => {
-                system_display_service.set_layer_size(layer_id, framebuffer_width as u64, framebuffer_height as u64)?;
+                system_display_service.set_layer_size(
+                    layer_id,
+                    framebuffer_width as u64,
+                    framebuffer_height as u64,
+                )?;
                 gpu_guard
                     .application_display_service
                     .set_scaling_mode(vi::ScalingMode::FitToLayer, layer_id)?
@@ -166,7 +170,12 @@ impl Surface {
                     .set_scaling_mode(vi::ScalingMode::FitToLayer, layer_id)?;
             }
             ScaleMode::PreseveAspect { height } => {
-                system_display_service.set_layer_size(layer_id, (framebuffer_width as f32 * (height as f32) / (framebuffer_height as f32)) as u64, height as u64)?;
+                system_display_service.set_layer_size(
+                    layer_id,
+                    (framebuffer_width as f32 * (height as f32) / (framebuffer_height as f32))
+                        as u64,
+                    height as u64,
+                )?;
                 gpu_guard
                     .application_display_service
                     .set_scaling_mode(vi::ScalingMode::PreserveAspectRatio, layer_id)?;

@@ -1,6 +1,5 @@
 use core::fmt::Debug;
 use core::mem::MaybeUninit;
-use core::ptr::addr_of;
 use core::sync::atomic::Ordering;
 use core::sync::atomic::{AtomicU64, AtomicUsize};
 
@@ -38,35 +37,19 @@ pub struct AtomicSample<T: Copy + Clone + Debug> {
     pub storage: T,
 }
 
-/*
-impl<T: Debug> core::fmt::Debug for AtomicSample<T> {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        f.debug_struct("LifoStorageAtomicContainer")
-        .field("sampling_size", &self.sampling_size.load(Ordering::Relaxed))
-        .field("storage", &self.storage)
-        .finish()
-    }
-} */
-
 impl<T: Copy + Debug, const S: usize> RingLifo<T, S> {
     pub fn get_tail_item(&self) -> T {
         let mut out_value: MaybeUninit<T> = MaybeUninit::uninit();
         loop {
             let tail_index = self.tail.load(Ordering::Acquire);
-            /*debug_assert!(
-                tail_index < self.count.load(Ordering::Acquire),
-                "We are somehow loading from a tail index that hasn't been written to yet."
-            );*/
             let sampling_value_before =
                 self.items[tail_index].sampling_size.load(Ordering::Acquire);
             // We read through a volatile pointer since it basically an uncached memcpy for our purposes.
             // The read is safe, as it is being constructed from a valid reference.
             unsafe {
-                out_value
-                    .as_mut_ptr()
-                    .write(core::ptr::read_volatile(addr_of!(
-                        self.items[tail_index].storage
-                    )))
+                out_value.as_mut_ptr().write(core::ptr::read_volatile(
+                    &raw const self.items[tail_index].storage,
+                ))
             };
             if sampling_value_before == self.items[tail_index].sampling_size.load(Ordering::Acquire)
             {
@@ -468,7 +451,7 @@ impl SharedMemoryFormat {
     /// * ptr - a const pointer to the controller's shared memory
     ///
     /// # Safety
-    /// 
+    ///
     ///  It is the caller's responsibility to make sure the returned struct does not outlive the shared memory mapping.
     pub unsafe fn from_shmem_ptr(ptr: *const u8) -> Result<Self> {
         result_return_if!(ptr.is_null() || !ptr.is_aligned_to(8), ResultInvalidAddress);
@@ -478,17 +461,29 @@ impl SharedMemoryFormat {
         // and the pointer->reference preconditions are checked above.
         unsafe {
             if SharedMemoryFormatV1::VERSION_INTERVAL.contains(firmware_version) {
-                Ok(Self::V1(ptr.cast::<SharedMemoryFormatV1>().as_ref_unchecked()))
+                Ok(Self::V1(
+                    ptr.cast::<SharedMemoryFormatV1>().as_ref_unchecked(),
+                ))
             } else if SharedMemoryFormatV2::VERSION_INTERVAL.contains(firmware_version) {
-                Ok(Self::V2(ptr.cast::<SharedMemoryFormatV2>().as_ref_unchecked()))
+                Ok(Self::V2(
+                    ptr.cast::<SharedMemoryFormatV2>().as_ref_unchecked(),
+                ))
             } else if SharedMemoryFormatV3::VERSION_INTERVAL.contains(firmware_version) {
-                Ok(Self::V3(ptr.cast::<SharedMemoryFormatV3>().as_ref_unchecked()))
+                Ok(Self::V3(
+                    ptr.cast::<SharedMemoryFormatV3>().as_ref_unchecked(),
+                ))
             } else if SharedMemoryFormatV4::VERSION_INTERVAL.contains(firmware_version) {
-                Ok(Self::V4(ptr.cast::<SharedMemoryFormatV4>().as_ref_unchecked()))
+                Ok(Self::V4(
+                    ptr.cast::<SharedMemoryFormatV4>().as_ref_unchecked(),
+                ))
             } else if SharedMemoryFormatV5::VERSION_INTERVAL.contains(firmware_version) {
-                Ok(Self::V5(ptr.cast::<SharedMemoryFormatV5>().as_ref_unchecked()))
+                Ok(Self::V5(
+                    ptr.cast::<SharedMemoryFormatV5>().as_ref_unchecked(),
+                ))
             } else if SharedMemoryFormatV6::VERSION_INTERVAL.contains(firmware_version) {
-                Ok(Self::V6(ptr.cast::<SharedMemoryFormatV6>().as_ref_unchecked()))
+                Ok(Self::V6(
+                    ptr.cast::<SharedMemoryFormatV6>().as_ref_unchecked(),
+                ))
             } else {
                 unreachable!(
                     "We should never have this happen as all versions should be covered by the above matching"
@@ -751,7 +746,7 @@ pub struct SharedMemoryFormatV1 {
     pub npad: NpadSharedMemoryFormatV1,
     pub gesture: GestureSharedMemoryFormat,
 }
-const_assert!(align_of::<SharedMemoryFormatV1>() <=8);
+const_assert!(align_of::<SharedMemoryFormatV1>() <= 8);
 
 impl SharedMemoryFormatV1 {
     pub const VERSION_INTERVAL: version::VersionInterval = version::VersionInterval::from_to(
@@ -776,7 +771,7 @@ pub struct SharedMemoryFormatV2 {
     pub npad: NpadSharedMemoryFormatV2,
     pub gesture: GestureSharedMemoryFormat,
 }
-const_assert!(align_of::<SharedMemoryFormatV2>() <=8);
+const_assert!(align_of::<SharedMemoryFormatV2>() <= 8);
 
 impl SharedMemoryFormatV2 {
     pub const VERSION_INTERVAL: version::VersionInterval = version::VersionInterval::from_to(
@@ -802,7 +797,7 @@ pub struct SharedMemoryFormatV3 {
     pub gesture: GestureSharedMemoryFormat,
     pub console_six_axis_sensor: ConsoleSixAxisSensorSharedMemoryFormat,
 }
-const_assert!(align_of::<SharedMemoryFormatV3>() <=8);
+const_assert!(align_of::<SharedMemoryFormatV3>() <= 8);
 
 impl SharedMemoryFormatV3 {
     pub const VERSION_INTERVAL: version::VersionInterval = version::VersionInterval::from_to(
@@ -828,7 +823,7 @@ pub struct SharedMemoryFormatV4 {
     pub gesture: GestureSharedMemoryFormat,
     pub console_six_axis_sensor: ConsoleSixAxisSensorSharedMemoryFormat,
 }
-const_assert!(align_of::<SharedMemoryFormatV4>() <=8);
+const_assert!(align_of::<SharedMemoryFormatV4>() <= 8);
 
 impl SharedMemoryFormatV4 {
     pub const VERSION_INTERVAL: version::VersionInterval = version::VersionInterval::from_to(
@@ -854,7 +849,7 @@ pub struct SharedMemoryFormatV5 {
     pub gesture: GestureSharedMemoryFormat,
     pub console_six_axis_sensor: ConsoleSixAxisSensorSharedMemoryFormat,
 }
-const_assert!(align_of::<SharedMemoryFormatV5>() <=8);
+const_assert!(align_of::<SharedMemoryFormatV5>() <= 8);
 
 impl SharedMemoryFormatV5 {
     pub const VERSION_INTERVAL: version::VersionInterval = version::VersionInterval::from_to(
@@ -880,7 +875,7 @@ pub struct SharedMemoryFormatV6 {
     pub gesture: GestureSharedMemoryFormat,
     pub console_six_axis_sensor: ConsoleSixAxisSensorSharedMemoryFormat,
 }
-const_assert!(align_of::<SharedMemoryFormatV6>() <=8);
+const_assert!(align_of::<SharedMemoryFormatV6>() <= 8);
 
 impl SharedMemoryFormatV6 {
     pub const VERSION_INTERVAL: version::VersionInterval =

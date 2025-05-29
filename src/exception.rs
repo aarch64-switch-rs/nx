@@ -1,4 +1,4 @@
-use crate::diag::abort::{abort, AbortLevel};
+use crate::diag::abort::{AbortLevel, abort};
 use crate::result::ResultCode;
 use crate::svc;
 

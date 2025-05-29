@@ -114,12 +114,11 @@ impl Mutex {
         // and/or a MutexGuard that is Sync/Send
         // assert_eq!(current_thread, state & !WAIT_MASK, "We are unlocking a mutex that isn't owned by the current thread");
 
-        if state & WAIT_MASK != 0 {
-            if let Err(rc) =
+        if state & WAIT_MASK != 0
+            && let Err(rc) =
                 unsafe { svc::arbitrate_unlock(&self.owner_thread_handle as *const _ as _) }
-            {
-                abort::abort(abort::AbortLevel::Panic(), rc);
-            }
+        {
+            abort::abort(abort::AbortLevel::Panic(), rc);
         }
     }
 }
@@ -150,7 +149,7 @@ unsafe impl lock_api::RawMutex for Mutex {
         self.try_lock()
     }
 
-    unsafe fn unlock(&self) { unsafe {
-        self.unlock()
-    }}
+    unsafe fn unlock(&self) {
+        unsafe { self.unlock() }
+    }
 }

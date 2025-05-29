@@ -1,7 +1,6 @@
 use crate::ipc::sf;
 use crate::result::*;
 use crate::util;
-use crate::version;
 
 #[cfg(feature = "services")]
 use crate::service;
@@ -1872,31 +1871,41 @@ impl StoreData {
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]
 pub struct Ver3StoreData {
-    pub data: [u8; 0x5C]
+    pub data: [u8; 0x5C],
 }
 const_assert!(core::mem::size_of::<Ver3StoreData>() == 0x5C);
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct NfpStoreDataExtension {
-    pub data: [u8; 0x8]
+    pub data: [u8; 0x8],
 }
 const_assert!(core::mem::size_of::<NfpStoreDataExtension>() == 0x8);
 
-ipc_sf_define_default_client_for_interface!(DatabaseService);
-ipc_sf_define_interface_trait! {
-    trait DatabaseService {
-        is_updated [0, version::VersionInterval::all()]: (flag: SourceFlag) =>  (updated: bool) (updated: bool);
-        is_full [1, version::VersionInterval::all()]: () => (full: bool) (full: bool);
-        get_count [2, version::VersionInterval::all()]: (flag: SourceFlag) =>  (count: u32) (count: u32);
-        get_1 [4, version::VersionInterval::all()]: (flag: SourceFlag, out_char_infos: sf::OutMapAliasBuffer<CharInfo>) =>  (count: u32) (count: u32);
-        build_random [6, version::VersionInterval::all()]: (age: sf::EnumAsPrimitiveType<Age, u32>, gender: sf::EnumAsPrimitiveType<Gender, u32>, race: sf::EnumAsPrimitiveType<FaceColor, u32>) =>  (char_info: CharInfo) (char_info: CharInfo);
-    }
+#[nx_derive::ipc_trait]
+#[default_client]
+pub trait DatabaseService {
+    #[ipc_rid(0)]
+    fn is_updated(&self, flag: SourceFlag) -> bool;
+    #[ipc_rid(1)]
+    fn is_full(&self) -> bool;
+    #[ipc_rid(2)]
+    fn get_count(&self, flag: SourceFlag) -> u32;
+    #[ipc_rid(4)]
+    fn get_1(&self, flag: SourceFlag, out_char_infos: sf::OutMapAliasBuffer<CharInfo>) -> u32;
+    #[ipc_rid(6)]
+    fn build_random(
+        &self,
+        age: sf::EnumAsPrimitiveType<Age, u32>,
+        gender: sf::EnumAsPrimitiveType<Gender, u32>,
+        race: sf::EnumAsPrimitiveType<FaceColor, u32>,
+    ) -> CharInfo;
 }
 
-ipc_sf_define_default_client_for_interface!(StaticService);
-ipc_sf_define_interface_trait! {
-    trait StaticService {
-        get_database_service [0, version::VersionInterval::all()]: (key_code: SpecialKeyCode) =>  (database_service: DatabaseService) (database_service: session_type!(DatabaseService));
-    }
+#[nx_derive::ipc_trait]
+#[default_client]
+pub trait StaticService {
+    #[ipc_rid(0)]
+    #[return_session]
+    fn get_database_service(&self, key_code: SpecialKeyCode) -> DatabaseService;
 }

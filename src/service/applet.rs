@@ -1,10 +1,10 @@
 use core::sync::atomic::AtomicU64;
 
 use crate::hbl::AppletType;
-use crate::ipc::sf::{self, InMapAliasBuffer};
 use crate::ipc::sf::sm;
+use crate::ipc::sf::{self, InMapAliasBuffer};
 use crate::sync::{ReadGuard, RwLock};
-use crate::version::{get_version, Version};
+use crate::version::{Version, get_version};
 use crate::{hbl, service};
 use crate::{result::*, svc};
 
@@ -126,13 +126,13 @@ pub fn initialize() -> Result<()> {
                     AppletProxy::LibraryApplet(app_proxy_service.open_library_applet_proxy(
                         sf::ProcessId::new(),
                         sf::CopyHandle::from(svc::CURRENT_PROCESS_PSEUDO_HANDLE),
-                        InMapAliasBuffer::from_other_var(&APPLET_ATTRIBUTE)
+                        InMapAliasBuffer::from_other_var(&APPLET_ATTRIBUTE),
                     )?)
                 }
                 AppletType::LibraryApplet => {
                     AppletProxy::LibraryApplet(app_proxy_service.open_library_applet_proxy_old(
                         sf::ProcessId::new(),
-                        sf::CopyHandle::from(svc::CURRENT_PROCESS_PSEUDO_HANDLE)
+                        sf::CopyHandle::from(svc::CURRENT_PROCESS_PSEUDO_HANDLE),
                     )?)
                 }
                 AppletType::SystemApplication => AppletProxy::SystemApplication(
@@ -142,7 +142,9 @@ pub fn initialize() -> Result<()> {
                     )?,
                 ),
                 AppletType::None => {
-                    panic!("Initialized applet service with applet type disabled (`None` applet type).")
+                    panic!(
+                        "Initialized applet service with applet type disabled (`None` applet type)."
+                    )
                 }
             }
         };

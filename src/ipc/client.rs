@@ -20,16 +20,16 @@ pub trait ResponseCommandParameter<O> {
 }
 
 impl<
-        const IN: bool,
-        const OUT: bool,
-        const MAP_ALIAS: bool,
-        const POINTER: bool,
-        const FIXED_SIZE: bool,
-        const AUTO_SELECT: bool,
-        const ALLOW_NON_SECURE: bool,
-        const ALLOW_NON_DEVICE: bool,
-        T,
-    > RequestCommandParameter
+    const IN: bool,
+    const OUT: bool,
+    const MAP_ALIAS: bool,
+    const POINTER: bool,
+    const FIXED_SIZE: bool,
+    const AUTO_SELECT: bool,
+    const ALLOW_NON_SECURE: bool,
+    const ALLOW_NON_DEVICE: bool,
+    T,
+> RequestCommandParameter
     for sf::Buffer<
         IN,
         OUT,
@@ -117,7 +117,7 @@ impl RequestCommandParameter for sf::ProcessId {
 
 impl RequestCommandParameter for sf::AppletResourceUserId {
     fn before_request_write(
-        aruid: &Self,
+        _aruid: &Self,
         walker: &mut DataWalker,
         ctx: &mut CommandContext,
     ) -> Result<()> {
@@ -129,20 +129,21 @@ impl RequestCommandParameter for sf::AppletResourceUserId {
         // signal to the kernel that we need a PID injected into the request
         ctx.in_params.send_process_id = true;
         walker.advance::<u64>();
-        // write the aruid into the slot
-        walker.advance_set(aruid.aruid);
         Ok(())
     }
 
     fn before_send_sync_request(
-        _aruid: &Self,
-        _walker: &mut DataWalker,
+        aruid: &Self,
+        walker: &mut DataWalker,
         ctx: &mut CommandContext,
     ) -> Result<()> {
         result_return_unless!(
             ctx.object_info.uses_cmif_protocol(),
             hipc::rc::ResultUnsupportedOperation
         );
+        
+        // write the aruid into the slot
+        walker.advance_set(aruid.aruid);
         Ok(())
     }
 }

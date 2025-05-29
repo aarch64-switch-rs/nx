@@ -713,16 +713,11 @@ impl<ColorFormat: sealed::CanvasColorFormat> UnbufferedCanvas<'_, ColorFormat> {
         }
 
         let pixel_offset = self.xy_to_gob_pixel_offset(x as u32, y as u32);
-        /*debug_assert!(
+        debug_assert!(
             pixel_offset * (ColorFormat::COLOR_FORMAT.bytes_per_pixel() as usize)
                 < self.buffer_size,
             "pixel offset is outside the buffer"
-        );*/
-
-        if pixel_offset * (ColorFormat::COLOR_FORMAT.bytes_per_pixel() as usize) >= self.buffer_size
-        {
-            panic!("pixel offset is outside the buffer");
-        }
+        );
 
         let pixel_pointer =
             unsafe { (self.base_pointer as *mut ColorFormat::RawType).add(pixel_offset) };

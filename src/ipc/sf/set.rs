@@ -23,11 +23,13 @@ pub struct FirmwareVersion {
 }
 const_assert!(core::mem::size_of::<FirmwareVersion>() == 0x100);
 
-//ipc_sf_define_default_client_for_interface!(SystemSettings);
-ipc_sf_define_interface_trait! {
-    trait SystemSettings {
-        get_firmware_version [3, version::VersionInterval::all()]: (out_version: sf::OutFixedPointerBuffer<FirmwareVersion>) =>  () ();
-        get_firmware_version_2 [4, version::VersionInterval::from(version::Version::new(3,0,0))]: (out_version: sf::OutFixedPointerBuffer<FirmwareVersion>) =>  () ();
-        get_mii_author_id [90, version::VersionInterval::all()]: () => (id: mii::CreateId) (id: mii::CreateId);
-    }
+#[nx_derive::ipc_trait]
+pub trait SystemSettings {
+    #[ipc_rid(3)]
+    fn get_firmware_version(&self, out_version: sf::OutFixedPointerBuffer<FirmwareVersion>);
+    #[ipc_rid(4)]
+    #[version(version::VersionInterval::from(version::Version::new(3, 0, 0)))]
+    fn get_firmware_version_2(&self, out_version: sf::OutFixedPointerBuffer<FirmwareVersion>);
+    #[ipc_rid(90)]
+    fn get_mii_author_id(&self) -> mii::CreateId;
 }

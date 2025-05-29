@@ -100,9 +100,9 @@ pub struct Rela {
 ///
 /// * `base_address`: The base address to relocate.
 /// * `start_dyn`: Pointer to the start of the [`Dyn`] list.
-/// 
+///
 /// # Safety
-/// 
+///
 /// The caller is responsible for providing valid pointers for `base_address` and `start_dyn`
 pub unsafe fn relocate_with_dyn(base_address: *mut u8, start_dyn: *const Dyn) {
     unsafe {

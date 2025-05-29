@@ -1,5 +1,7 @@
 //! `LogManager` logger implementation
 
+use alloc::string::ToString;
+
 use super::*;
 use crate::ipc::sf;
 use crate::rrt0;
@@ -16,10 +18,9 @@ impl Logger for LmLogger {
     fn new() -> Self {
         Self {
             logger: service::new_service_object::<LoggingService>()
-                .map(|mut log_srv| {
-                    log_srv.open_logger(sf::ProcessId::new()).ok()
-                })
-                .ok().flatten()
+                .map(|mut log_srv| log_srv.open_logger(sf::ProcessId::new()).ok())
+                .ok()
+                .flatten(),
         }
     }
 
@@ -40,18 +41,18 @@ impl Logger for LmLogger {
             log_packet.set_function_name(String::from(metadata.fn_name));
             log_packet.set_line_number(metadata.line_number);
 
-            let mod_name = match rrt0::get_module_name().get_name().get_string() {
-                Ok(name) => name,
-                Err(_) => String::from("aarch64-switch-rs (invalid module name)"),
-            };
+            let mod_name = rrt0::get_module_name()
+                .get_name()
+                .get_string()
+                .unwrap_or("aarch64-switch-rs (invalid module name)".to_string());
             log_packet.set_module_name(mod_name);
 
             log_packet.set_text_log(metadata.msg.clone());
 
-            let thread_name = match cur_thread.name.get_str() {
-                Ok(name) => name,
-                _ => "aarch64-switch-rs (invalid thread name)",
-            };
+            let thread_name = cur_thread
+                .name
+                .get_str()
+                .unwrap_or("aarch64-switch-rs (invalid thread name)");
             log_packet.set_thread_name(String::from(thread_name));
 
             for packet in log_packet.encode_packet() {

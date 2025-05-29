@@ -37,12 +37,39 @@ pub enum NativeHandleType {
 
 pub type BinderHandle = i32;
 
-ipc_sf_define_default_client_for_interface!(HOSBinderDriver);
-ipc_sf_define_interface_trait! {
-    trait HOSBinderDriver {
-        transact_parcel [0, version::VersionInterval::all()]: (binder_handle: BinderHandle, transaction_id: ParcelTransactionId, flags: u32, in_parcel: sf::InMapAliasBuffer<u8>, out_parcel: sf::OutMapAliasBuffer<u8>) =>  () ();
-        adjust_refcount [1, version::VersionInterval::all()]: (binder_handle: BinderHandle, add_value: i32, refcount_type: RefcountType) =>  () ();
-        get_native_handle [2, version::VersionInterval::all()]: (binder_handle: BinderHandle, handle_type: NativeHandleType) =>  (native_handle: sf::CopyHandle) (native_handle: sf::CopyHandle);
-        transact_parcel_auto [3, version::VersionInterval::from(version::Version::new(3,0,0))]: (binder_handle: BinderHandle, transaction_id: ParcelTransactionId, flags: u32, in_parcel: sf::InAutoSelectBuffer<u8>, out_parcel: sf::OutAutoSelectBuffer<u8>) =>  () ();
-    }
+#[nx_derive::ipc_trait]
+#[default_client]
+pub trait HOSBinderDriver {
+    #[ipc_rid(0)]
+    fn transact_parcel(
+        &self,
+        binder_handle: BinderHandle,
+        transaction_id: ParcelTransactionId,
+        flags: u32,
+        in_parcel: sf::InMapAliasBuffer<u8>,
+        out_parcel: sf::OutMapAliasBuffer<u8>,
+    );
+    #[ipc_rid(1)]
+    fn adjust_refcount(
+        &self,
+        binder_handle: BinderHandle,
+        add_value: i32,
+        refcount_type: RefcountType,
+    );
+    #[ipc_rid(2)]
+    fn get_native_handle(
+        &self,
+        binder_handle: BinderHandle,
+        handle_type: NativeHandleType,
+    ) -> sf::CopyHandle;
+    #[ipc_rid(3)]
+    #[version(version::VersionInterval::from(version::Version::new(3, 0, 0)))]
+    fn transact_parcel_auto(
+        &self,
+        binder_handle: BinderHandle,
+        transaction_id: ParcelTransactionId,
+        flags: u32,
+        in_parcel: sf::InAutoSelectBuffer<u8>,
+        out_parcel: sf::OutAutoSelectBuffer<u8>,
+    );
 }

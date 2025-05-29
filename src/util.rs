@@ -44,8 +44,8 @@ pub struct Uuid {
 #[cfg(feature = "rand")]
 impl Uuid {
     pub fn random() -> Result<Self> {
-        use crate::service::spl::{IRandomClient, RandomService};
         use crate::ipc::sf::Buffer;
+        use crate::service::spl::{IRandomClient, RandomService};
 
         let mut uuid = [8; 16];
         crate::service::new_service_object::<RandomService>()?
@@ -142,19 +142,11 @@ impl ConstPointerAndSize {
 
 pub(crate) const fn const_usize_min(a: usize, b: usize) -> usize {
     // TODO: const min traits
-    if a > b {
-        b
-    } else {
-        a
-    }
+    if a > b { b } else { a }
 }
 pub(crate) const fn const_usize_max(a: usize, b: usize) -> usize {
     // TODO: const min traits
-    if a < b {
-        b
-    } else {
-        a
-    }
+    if a < b { b } else { a }
 }
 
 /// Represents a C-like string of a given size (mostly like a C `char[S]` array)
@@ -229,16 +221,16 @@ impl<const S: usize> crate::ipc::client::ResponseCommandParameter<ArrayString<S>
 impl<const S: usize> fmt::Debug for ArrayString<S> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let str_data = self.get_str().unwrap_or("<invalid-str>");
-        write!(f, "{}", str_data)
+        write!(f, "{str_data}")
     }
 }
 
 impl<const S: usize> PartialEq for ArrayString<S> {
     fn eq(&self, other: &Self) -> bool {
-        if let Ok(self_str) = self.get_str() {
-            if let Ok(other_str) = other.get_str() {
-                return self_str == other_str;
-            }
+        if let Ok(self_str) = self.get_str()
+            && let Ok(other_str) = other.get_str()
+        {
+            return self_str == other_str;
         }
         false
     }
@@ -470,7 +462,7 @@ impl<const S: usize> crate::ipc::client::ResponseCommandParameter<ArrayWideStrin
 impl<const S: usize> fmt::Debug for ArrayWideString<S> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let str_data = self.get_string().unwrap_or("<invalid-str>".to_string());
-        write!(f, "{}", str_data)
+        write!(f, "{str_data}")
     }
 }
 
@@ -617,14 +609,14 @@ impl<const S: usize> core::str::FromStr for ArrayWideString<S> {
 /// # Arguments
 ///
 /// * `str_ptr`: The `const char*`-like ptr to use
-/// 
+///
 /// # Safety
 ///
 /// This is a wrapper around `Cstr::from_ptr`[`core::ffi::CStr::from_ptr`]
 /// so the same safety requirements apply.
 #[inline(always)]
-pub unsafe fn str_ptr_len(str_ptr: *const u8) -> usize { 
-    unsafe {core::ffi::CStr::from_ptr(str_ptr.cast()).to_bytes().len()}
+pub unsafe fn str_ptr_len(str_ptr: *const u8) -> usize {
+    unsafe { core::ffi::CStr::from_ptr(str_ptr.cast()).to_bytes().len() }
 }
 
 /// Simplified panic handler using a provided [`Logger`] type, available as a helpful default panic handler

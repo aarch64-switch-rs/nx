@@ -17,9 +17,9 @@ ipc_sf_define_control_interface_trait! {
     }
 }
 
-ipc_sf_define_default_client_for_interface!(MitmQueryService);
-ipc_sf_define_interface_trait! {
-    trait MitmQueryService {
-        should_mitm [65000, version::VersionInterval::all()]: (info: sm::mitm::MitmProcessInfo) =>  (should_mitm: bool) (should_mitm: bool);
-    }
+#[nx_derive::ipc_trait]
+#[default_client]
+pub trait MitmQueryService {
+    #[ipc_rid(65000)]
+    fn should_mitm(&self, info: sm::mitm::MitmProcessInfo) -> bool;
 }

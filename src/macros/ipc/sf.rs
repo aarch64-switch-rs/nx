@@ -11,7 +11,7 @@
 /// ipc_sf_define_interface_trait! {
 ///     trait ExampleInterface {
 ///         command_1 [1, VersionInterval::all()]: (in_32: u32) => (out_16: u16);
-///         command_2 [20, VersionInterval::all()]: (in_8: u8) => ();
+///         #[ipc_rid(20)] #[version(VersionInterval::all())] fn command_2(&self, in_8: u8);
 ///     }
 /// }
 ///

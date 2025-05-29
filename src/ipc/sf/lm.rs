@@ -10,17 +10,19 @@ define_bit_enum! {
     }
 }
 
-ipc_sf_define_default_client_for_interface!(Logger);
-ipc_sf_define_interface_trait! {
-    trait Logger {
-        log [0, version::VersionInterval::all()]: (log_buf: sf::InAutoSelectBuffer<u8>) =>  () ();
-        set_destination [1, version::VersionInterval::from(version::Version::new(3,0,0)), mut]: (log_destination: LogDestination) =>  () ();
-    }
+#[nx_derive::ipc_trait]
+#[default_client]
+pub trait Logger {
+    #[ipc_rid(0)]
+    fn log(&self, log_buf: sf::InAutoSelectBuffer<u8>);
+    #[ipc_rid(1)]
+    #[version(version::VersionInterval::from(version::Version::new(3, 0, 0)))]
+    fn set_destination(&mut self, log_destination: LogDestination);
 }
 
-//ipc_sf_define_default_client_for_interface!(LogService);
-ipc_sf_define_interface_trait! {
-    trait Logging {
-        open_logger [0, version::VersionInterval::all(), mut]: (process_id: sf::ProcessId) =>  (logger: Logger) (logger: session_type!(Logger));
-    }
+#[nx_derive::ipc_trait]
+pub trait Logging {
+    #[ipc_rid(0)]
+    #[return_session]
+    fn open_logger(&mut self, process_id: sf::ProcessId) -> Logger;
 }
