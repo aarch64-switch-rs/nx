@@ -1,0 +1,125 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `IClientIfSessionClient` trait in crate `nx`."><title>IClientIfSessionClient in nx::ipc::sf::usb::hs - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../../static.files/rustdoc-84e720fa.css"><meta name="rustdoc-vars" data-root-path="../../../../../" data-static-root-path="../../../../../static.files/" data-current-crate="nx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.89.0-nightly (45f256d9d 2025-05-27)" data-channel="nightly" data-search-js="search-f7877310.js" data-settings-js="settings-5514c975.js" ><script src="../../../../../static.files/storage-4e99c027.js"></script><script defer src="sidebar-items.js"></script><script defer src="../../../../../static.files/main-fd3af306.js"></script><noscript><link rel="stylesheet" href="../../../../../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc trait"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../../../../../nx/index.html">nx</a><span class="version">0.2.1</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">IClient<wbr>IfSession<wbr>Client</a></h2><h3><a href="#provided-methods">Provided Methods</a></h3><ul class="block"><li><a href="#method.ctrl_xfer_async" title="ctrl_xfer_async">ctrl_xfer_async</a></li><li><a href="#method.get_alternate_interface" title="get_alternate_interface">get_alternate_interface</a></li><li><a href="#method.get_ctrl_xfer_completion_event" title="get_ctrl_xfer_completion_event">get_ctrl_xfer_completion_event</a></li><li><a href="#method.get_ctrl_xfer_report" title="get_ctrl_xfer_report">get_ctrl_xfer_report</a></li><li><a href="#method.get_current_frame" title="get_current_frame">get_current_frame</a></li><li><a href="#method.get_current_frame_deprecated" title="get_current_frame_deprecated">get_current_frame_deprecated</a></li><li><a href="#method.get_interface" title="get_interface">get_interface</a></li><li><a href="#method.get_state_change_event" title="get_state_change_event">get_state_change_event</a></li><li><a href="#method.open_usb_ep" title="open_usb_ep">open_usb_ep</a></li><li><a href="#method.open_usb_ep_deprecated" title="open_usb_ep_deprecated">open_usb_ep_deprecated</a></li><li><a href="#method.reset_device" title="reset_device">reset_device</a></li><li><a href="#method.set_interface" title="set_interface">set_interface</a></li><li><a href="#method.submit_control_in_request" title="submit_control_in_request">submit_control_in_request</a></li><li><a href="#method.submit_control_out_request" title="submit_control_out_request">submit_control_out_request</a></li></ul><h3><a href="#implementors">Implementors</a></h3></section><div id="rustdoc-modnav"><h2><a href="index.html">In nx::<wbr>ipc::<wbr>sf::<wbr>usb::<wbr>hs</a></h2></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../../../../index.html">nx</a>::<wbr><a href="../../../index.html">ipc</a>::<wbr><a href="../../index.html">sf</a>::<wbr><a href="../index.html">usb</a>::<wbr><a href="index.html">hs</a></div><h1>Trait <span class="trait">IClientIfSessionClient</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../../../../src/nx/ipc\sf\usb/hs.rs.html#177">Source</a> </span></div><pre class="rust item-decl"><code>pub trait IClientIfSessionClient: <a class="trait" href="../../../client/trait.IClientObject.html" title="trait nx::ipc::client::IClientObject">IClientObject</a> + Sync {
+<details class="toggle type-contents-toggle"><summary class="hideme"><span>Show 14 methods</span></summary>    // Provided methods
+    fn <a href="#method.get_state_change_event" class="fn">get_state_change_event</a>(&amp;self) -&gt; <a class="type" href="../../../../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;<a class="type" href="../../type.CopyHandle.html" title="type nx::ipc::sf::CopyHandle">CopyHandle</a>&gt; { ... }
+<span class="item-spacer"></span>    fn <a href="#method.set_interface" class="fn">set_interface</a>(
+        &amp;self,
+        unk: u8,
+        profile_buf: <a class="type" href="../../type.InMapAliasBuffer.html" title="type nx::ipc::sf::InMapAliasBuffer">InMapAliasBuffer</a>&lt;<a class="struct" href="struct.InterfaceProfile.html" title="struct nx::ipc::sf::usb::hs::InterfaceProfile">InterfaceProfile</a>&gt;,
+    ) -&gt; <a class="type" href="../../../../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;()&gt; { ... }
+<span class="item-spacer"></span>    fn <a href="#method.get_interface" class="fn">get_interface</a>(
+        &amp;self,
+        out_profile_buf: <a class="type" href="../../type.OutMapAliasBuffer.html" title="type nx::ipc::sf::OutMapAliasBuffer">OutMapAliasBuffer</a>&lt;<a class="struct" href="struct.InterfaceProfile.html" title="struct nx::ipc::sf::usb::hs::InterfaceProfile">InterfaceProfile</a>&gt;,
+    ) -&gt; <a class="type" href="../../../../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;()&gt; { ... }
+<span class="item-spacer"></span>    fn <a href="#method.get_alternate_interface" class="fn">get_alternate_interface</a>(
+        &amp;self,
+        unk: u8,
+        out_profile_buf: <a class="type" href="../../type.OutMapAliasBuffer.html" title="type nx::ipc::sf::OutMapAliasBuffer">OutMapAliasBuffer</a>&lt;<a class="struct" href="struct.InterfaceProfile.html" title="struct nx::ipc::sf::usb::hs::InterfaceProfile">InterfaceProfile</a>&gt;,
+    ) -&gt; <a class="type" href="../../../../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;()&gt; { ... }
+<span class="item-spacer"></span>    fn <a href="#method.get_current_frame_deprecated" class="fn">get_current_frame_deprecated</a>(&amp;self) -&gt; <a class="type" href="../../../../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;u32&gt; { ... }
+<span class="item-spacer"></span>    fn <a href="#method.get_current_frame" class="fn">get_current_frame</a>(&amp;self) -&gt; <a class="type" href="../../../../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;u32&gt; { ... }
+<span class="item-spacer"></span>    fn <a href="#method.ctrl_xfer_async" class="fn">ctrl_xfer_async</a>(
+        &amp;self,
+        request_type: u8,
+        request: u8,
+        val: u16,
+        idx: u16,
+        length: u16,
+        buf_addr: u64,
+    ) -&gt; <a class="type" href="../../../../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;()&gt; { ... }
+<span class="item-spacer"></span>    fn <a href="#method.submit_control_in_request" class="fn">submit_control_in_request</a>(
+        &amp;self,
+        request: u8,
+        request_type: u8,
+        val: u16,
+        idx: u16,
+        length: u16,
+        timeout_ms: u32,
+        out_buf: <a class="type" href="../../type.OutMapAliasBuffer.html" title="type nx::ipc::sf::OutMapAliasBuffer">OutMapAliasBuffer</a>&lt;u8&gt;,
+    ) -&gt; <a class="type" href="../../../../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;u32&gt; { ... }
+<span class="item-spacer"></span>    fn <a href="#method.get_ctrl_xfer_completion_event" class="fn">get_ctrl_xfer_completion_event</a>(&amp;self) -&gt; <a class="type" href="../../../../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;<a class="type" href="../../type.CopyHandle.html" title="type nx::ipc::sf::CopyHandle">CopyHandle</a>&gt; { ... }
+<span class="item-spacer"></span>    fn <a href="#method.submit_control_out_request" class="fn">submit_control_out_request</a>(
+        &amp;self,
+        request: u8,
+        request_type: u8,
+        val: u16,
+        idx: u16,
+        length: u16,
+        timeout_ms: u32,
+        buf: <a class="type" href="../../type.InMapAliasBuffer.html" title="type nx::ipc::sf::InMapAliasBuffer">InMapAliasBuffer</a>&lt;u8&gt;,
+    ) -&gt; <a class="type" href="../../../../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;u32&gt; { ... }
+<span class="item-spacer"></span>    fn <a href="#method.get_ctrl_xfer_report" class="fn">get_ctrl_xfer_report</a>(
+        &amp;self,
+        out_report_buf: <a class="type" href="../../type.OutMapAliasBuffer.html" title="type nx::ipc::sf::OutMapAliasBuffer">OutMapAliasBuffer</a>&lt;<a class="struct" href="struct.XferReport.html" title="struct nx::ipc::sf::usb::hs::XferReport">XferReport</a>&gt;,
+    ) -&gt; <a class="type" href="../../../../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;()&gt; { ... }
+<span class="item-spacer"></span>    fn <a href="#method.reset_device" class="fn">reset_device</a>(&amp;self, unk: u32) -&gt; <a class="type" href="../../../../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;()&gt; { ... }
+<span class="item-spacer"></span>    fn <a href="#method.open_usb_ep_deprecated" class="fn">open_usb_ep_deprecated</a>(
+        &amp;self,
+        max_urb_count: u16,
+        ep_type: u32,
+        ep_number: u32,
+        ep_direction: u32,
+        max_xfer_size: u32,
+    ) -&gt; <a class="type" href="../../../../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;(<a class="struct" href="../struct.EndPointDescriptor.html" title="struct nx::ipc::sf::usb::EndPointDescriptor">EndPointDescriptor</a>, <a class="struct" href="struct.ClientEpSession.html" title="struct nx::ipc::sf::usb::hs::ClientEpSession">ClientEpSession</a>)&gt; { ... }
+<span class="item-spacer"></span>    fn <a href="#method.open_usb_ep" class="fn">open_usb_ep</a>(
+        &amp;self,
+        max_urb_count: u16,
+        ep_type: u32,
+        ep_number: u32,
+        ep_direction: u32,
+        max_xfer_size: u32,
+    ) -&gt; <a class="type" href="../../../../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;(<a class="struct" href="../struct.EndPointDescriptor.html" title="struct nx::ipc::sf::usb::EndPointDescriptor">EndPointDescriptor</a>, <a class="struct" href="struct.ClientEpSession.html" title="struct nx::ipc::sf::usb::hs::ClientEpSession">ClientEpSession</a>)&gt; { ... }
+</details>}</code></pre><h2 id="provided-methods" class="section-header">Provided Methods<a href="#provided-methods" class="anchor">§</a></h2><div class="methods"><section id="method.get_state_change_event" class="method"><a class="src rightside" href="../../../../../src/nx/ipc\sf\usb/hs.rs.html#177">Source</a><h4 class="code-header">fn <a href="#method.get_state_change_event" class="fn">get_state_change_event</a>(&amp;self) -&gt; <a class="type" href="../../../../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;<a class="type" href="../../type.CopyHandle.html" title="type nx::ipc::sf::CopyHandle">CopyHandle</a>&gt;</h4></section><section id="method.set_interface" class="method"><a class="src rightside" href="../../../../../src/nx/ipc\sf\usb/hs.rs.html#177">Source</a><h4 class="code-header">fn <a href="#method.set_interface" class="fn">set_interface</a>(
+    &amp;self,
+    unk: u8,
+    profile_buf: <a class="type" href="../../type.InMapAliasBuffer.html" title="type nx::ipc::sf::InMapAliasBuffer">InMapAliasBuffer</a>&lt;<a class="struct" href="struct.InterfaceProfile.html" title="struct nx::ipc::sf::usb::hs::InterfaceProfile">InterfaceProfile</a>&gt;,
+) -&gt; <a class="type" href="../../../../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;()&gt;</h4></section><section id="method.get_interface" class="method"><a class="src rightside" href="../../../../../src/nx/ipc\sf\usb/hs.rs.html#177">Source</a><h4 class="code-header">fn <a href="#method.get_interface" class="fn">get_interface</a>(
+    &amp;self,
+    out_profile_buf: <a class="type" href="../../type.OutMapAliasBuffer.html" title="type nx::ipc::sf::OutMapAliasBuffer">OutMapAliasBuffer</a>&lt;<a class="struct" href="struct.InterfaceProfile.html" title="struct nx::ipc::sf::usb::hs::InterfaceProfile">InterfaceProfile</a>&gt;,
+) -&gt; <a class="type" href="../../../../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;()&gt;</h4></section><section id="method.get_alternate_interface" class="method"><a class="src rightside" href="../../../../../src/nx/ipc\sf\usb/hs.rs.html#177">Source</a><h4 class="code-header">fn <a href="#method.get_alternate_interface" class="fn">get_alternate_interface</a>(
+    &amp;self,
+    unk: u8,
+    out_profile_buf: <a class="type" href="../../type.OutMapAliasBuffer.html" title="type nx::ipc::sf::OutMapAliasBuffer">OutMapAliasBuffer</a>&lt;<a class="struct" href="struct.InterfaceProfile.html" title="struct nx::ipc::sf::usb::hs::InterfaceProfile">InterfaceProfile</a>&gt;,
+) -&gt; <a class="type" href="../../../../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;()&gt;</h4></section><section id="method.get_current_frame_deprecated" class="method"><a class="src rightside" href="../../../../../src/nx/ipc\sf\usb/hs.rs.html#177">Source</a><h4 class="code-header">fn <a href="#method.get_current_frame_deprecated" class="fn">get_current_frame_deprecated</a>(&amp;self) -&gt; <a class="type" href="../../../../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;u32&gt;</h4></section><section id="method.get_current_frame" class="method"><a class="src rightside" href="../../../../../src/nx/ipc\sf\usb/hs.rs.html#177">Source</a><h4 class="code-header">fn <a href="#method.get_current_frame" class="fn">get_current_frame</a>(&amp;self) -&gt; <a class="type" href="../../../../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;u32&gt;</h4></section><section id="method.ctrl_xfer_async" class="method"><a class="src rightside" href="../../../../../src/nx/ipc\sf\usb/hs.rs.html#177">Source</a><h4 class="code-header">fn <a href="#method.ctrl_xfer_async" class="fn">ctrl_xfer_async</a>(
+    &amp;self,
+    request_type: u8,
+    request: u8,
+    val: u16,
+    idx: u16,
+    length: u16,
+    buf_addr: u64,
+) -&gt; <a class="type" href="../../../../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;()&gt;</h4></section><section id="method.submit_control_in_request" class="method"><a class="src rightside" href="../../../../../src/nx/ipc\sf\usb/hs.rs.html#177">Source</a><h4 class="code-header">fn <a href="#method.submit_control_in_request" class="fn">submit_control_in_request</a>(
+    &amp;self,
+    request: u8,
+    request_type: u8,
+    val: u16,
+    idx: u16,
+    length: u16,
+    timeout_ms: u32,
+    out_buf: <a class="type" href="../../type.OutMapAliasBuffer.html" title="type nx::ipc::sf::OutMapAliasBuffer">OutMapAliasBuffer</a>&lt;u8&gt;,
+) -&gt; <a class="type" href="../../../../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;u32&gt;</h4></section><section id="method.get_ctrl_xfer_completion_event" class="method"><a class="src rightside" href="../../../../../src/nx/ipc\sf\usb/hs.rs.html#177">Source</a><h4 class="code-header">fn <a href="#method.get_ctrl_xfer_completion_event" class="fn">get_ctrl_xfer_completion_event</a>(&amp;self) -&gt; <a class="type" href="../../../../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;<a class="type" href="../../type.CopyHandle.html" title="type nx::ipc::sf::CopyHandle">CopyHandle</a>&gt;</h4></section><section id="method.submit_control_out_request" class="method"><a class="src rightside" href="../../../../../src/nx/ipc\sf\usb/hs.rs.html#177">Source</a><h4 class="code-header">fn <a href="#method.submit_control_out_request" class="fn">submit_control_out_request</a>(
+    &amp;self,
+    request: u8,
+    request_type: u8,
+    val: u16,
+    idx: u16,
+    length: u16,
+    timeout_ms: u32,
+    buf: <a class="type" href="../../type.InMapAliasBuffer.html" title="type nx::ipc::sf::InMapAliasBuffer">InMapAliasBuffer</a>&lt;u8&gt;,
+) -&gt; <a class="type" href="../../../../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;u32&gt;</h4></section><section id="method.get_ctrl_xfer_report" class="method"><a class="src rightside" href="../../../../../src/nx/ipc\sf\usb/hs.rs.html#177">Source</a><h4 class="code-header">fn <a href="#method.get_ctrl_xfer_report" class="fn">get_ctrl_xfer_report</a>(
+    &amp;self,
+    out_report_buf: <a class="type" href="../../type.OutMapAliasBuffer.html" title="type nx::ipc::sf::OutMapAliasBuffer">OutMapAliasBuffer</a>&lt;<a class="struct" href="struct.XferReport.html" title="struct nx::ipc::sf::usb::hs::XferReport">XferReport</a>&gt;,
+) -&gt; <a class="type" href="../../../../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;()&gt;</h4></section><section id="method.reset_device" class="method"><a class="src rightside" href="../../../../../src/nx/ipc\sf\usb/hs.rs.html#177">Source</a><h4 class="code-header">fn <a href="#method.reset_device" class="fn">reset_device</a>(&amp;self, unk: u32) -&gt; <a class="type" href="../../../../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;()&gt;</h4></section><section id="method.open_usb_ep_deprecated" class="method"><a class="src rightside" href="../../../../../src/nx/ipc\sf\usb/hs.rs.html#177">Source</a><h4 class="code-header">fn <a href="#method.open_usb_ep_deprecated" class="fn">open_usb_ep_deprecated</a>(
+    &amp;self,
+    max_urb_count: u16,
+    ep_type: u32,
+    ep_number: u32,
+    ep_direction: u32,
+    max_xfer_size: u32,
+) -&gt; <a class="type" href="../../../../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;(<a class="struct" href="../struct.EndPointDescriptor.html" title="struct nx::ipc::sf::usb::EndPointDescriptor">EndPointDescriptor</a>, <a class="struct" href="struct.ClientEpSession.html" title="struct nx::ipc::sf::usb::hs::ClientEpSession">ClientEpSession</a>)&gt;</h4></section><section id="method.open_usb_ep" class="method"><a class="src rightside" href="../../../../../src/nx/ipc\sf\usb/hs.rs.html#177">Source</a><h4 class="code-header">fn <a href="#method.open_usb_ep" class="fn">open_usb_ep</a>(
+    &amp;self,
+    max_urb_count: u16,
+    ep_type: u32,
+    ep_number: u32,
+    ep_direction: u32,
+    max_xfer_size: u32,
+) -&gt; <a class="type" href="../../../../result/type.Result.html" title="type nx::result::Result">Result</a>&lt;(<a class="struct" href="../struct.EndPointDescriptor.html" title="struct nx::ipc::sf::usb::EndPointDescriptor">EndPointDescriptor</a>, <a class="struct" href="struct.ClientEpSession.html" title="struct nx::ipc::sf::usb::hs::ClientEpSession">ClientEpSession</a>)&gt;</h4></section></div><h2 id="implementors" class="section-header">Implementors<a href="#implementors" class="anchor">§</a></h2><div id="implementors-list"><section id="impl-IClientIfSessionClient-for-ClientIfSession" class="impl"><a class="src rightside" href="../../../../../src/nx/ipc\sf\usb/hs.rs.html#177">Source</a><a href="#impl-IClientIfSessionClient-for-ClientIfSession" class="anchor">§</a><h3 class="code-header">impl <a class="trait" href="trait.IClientIfSessionClient.html" title="trait nx::ipc::sf::usb::hs::IClientIfSessionClient">IClientIfSessionClient</a> for <a class="struct" href="struct.ClientIfSession.html" title="struct nx::ipc::sf::usb::hs::ClientIfSession">ClientIfSession</a></h3></section></div><script src="../../../../../trait.impl/nx/ipc/sf/usb/hs/trait.IClientIfSessionClient.js" async></script></section></div></main></body></html>

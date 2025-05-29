@@ -1,4 +1,4 @@
-use super::{/*current, park,*/ Builder, JoinInner, Result, Thread};
+use super::{Builder, JoinInner, Result, Thread};
 use ::alloc::sync::Arc;
 use core::fmt;
 use core::marker::PhantomData;
@@ -57,9 +57,6 @@ impl ScopeData {
         if panic {
             self.a_thread_panicked.store(true, Ordering::Relaxed);
         }
-        /*if self.num_running_threads.fetch_sub(1, Ordering::Release) == 1 {
-            self.main_thread.unpark();
-        }*/
     }
 }
 

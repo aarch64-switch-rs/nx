@@ -2,15 +2,15 @@ use super::ncm;
 use crate::ipc::sf;
 use crate::version;
 
-ipc_sf_define_default_client_for_interface!(LocationResolver);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait LocationResolver {
     #[ipc_rid(1)]
     fn redirect_program_path(&self, program_id: ncm::ProgramId, path_buf: sf::InPointerBuffer<u8>);
 }
 
-ipc_sf_define_default_client_for_interface!(RegisteredLocationResolver);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait RegisteredLocationResolver {
     #[ipc_rid(1)]
     #[version(version::VersionInterval::to(version::Version::new(8, 1, 1)))]
@@ -44,8 +44,8 @@ pub trait RegisteredLocationResolver {
     );
 }
 
-ipc_sf_define_default_client_for_interface!(LocationResolverManager);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait LocationResolverManager {
     #[ipc_rid(0)]
     #[return_session]

@@ -22,8 +22,8 @@ pub enum State {
     Invalid = 6,
 }
 
-ipc_sf_define_default_client_for_interface!(PmModule);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait PmModule {
     #[ipc_rid(0)]
     fn initialize(
@@ -42,8 +42,8 @@ pub trait PmModule {
     fn acknowledge_ex(&self, state: State);
 }
 
-ipc_sf_define_default_client_for_interface!(PmService);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait PmService {
     #[ipc_rid(0)]
     #[return_session]

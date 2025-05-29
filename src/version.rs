@@ -138,15 +138,16 @@ impl VersionInterval {
     ///
     /// * `ver`: The [`Version`] to check
     pub fn contains(&self, ver: Version) -> bool {
-        if let Some(min_v) = self.min {
-            if ver < min_v {
-                return false;
-            }
+        if let Some(min_v) = self.min
+            && ver < min_v
+        {
+            return false;
         }
-        if let Some(max_v) = self.max {
-            if ver > max_v {
-                return false;
-            }
+
+        if let Some(max_v) = self.max
+            && ver > max_v
+        {
+            return false;
         }
 
         true

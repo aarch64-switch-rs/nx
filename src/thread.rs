@@ -18,9 +18,6 @@ use core::marker::PhantomData;
 use core::mem;
 use core::mem::ManuallyDrop;
 use core::pin::Pin;
-use core::ptr::addr_of;
-use core::ptr::addr_of_mut;
-
 pub mod rc;
 //pub mod _local;
 pub mod scoped;
@@ -594,13 +591,8 @@ impl Thread {
         let inner = unsafe {
             let mut arc = Arc::<Inner>::new_uninit();
             let ptr = Arc::get_mut(&mut arc).unwrap_unchecked().as_mut_ptr();
-            /*addr_of_mut!((*ptr).real_thread.name).write(name);
-            addr_of_mut!((*ptr).real_thread.name).write(name);
-            addr_of_mut!((*ptr).real_thread.name_ptr).write(addr_of!((*ptr).real_thread.name) as *const _);
-            addr_of_mut!((*ptr).real_thread.__nx_thread_pointer).write(addr_of!((*ptr).real_thread.__nx_thread) as *const _);
-            addr_of_mut!((*ptr).real_thread.__nx_thread.handle).write(svc::INVALID_HANDLE);*/
-            addr_of_mut!((*ptr).name).write(name);
-            addr_of_mut!((*ptr).thread_handle).write(UnsafeCell::new(svc::INVALID_HANDLE));
+            (&raw mut (*ptr).name).write(name);
+            *(*ptr).thread_handle.get_mut() = svc::INVALID_HANDLE;
             Pin::new_unchecked(arc.assume_init())
         };
 
@@ -680,7 +672,7 @@ impl fmt::Debug for Thread {
 
 struct Inner {
     name: ThreadName,
-    thread_handle: UnsafeCell<svc::Handle>, //imp::Thread
+    thread_handle: UnsafeCell<svc::Handle>,
 }
 
 unsafe impl Sync for Inner {}
@@ -1085,7 +1077,7 @@ pub mod imp {
     use core::{
         alloc::{Allocator, Layout},
         pin::Pin,
-        ptr::{NonNull, addr_of, null, null_mut},
+        ptr::{NonNull, null, null_mut},
     };
 
     use alloc::{alloc::Global, boxed::Box, sync::Arc};
@@ -1280,8 +1272,8 @@ pub mod imp {
                 arc.__nx_thread.handle = handle;
                 arc.entry = Some(thread_wrapper);
                 arc.arguments = entry_args_raw;
-                arc.name_ptr = addr_of!(arc.name).cast();
-                arc.__nx_thread_pointer = addr_of!(arc.__nx_thread);
+                arc.name_ptr = (&raw const arc.name).cast();
+                arc.__nx_thread_pointer = &raw const arc.__nx_thread;
                 arc.state = ThreadState::Initialized;
             }
 
@@ -1417,7 +1409,7 @@ pub(crate) unsafe fn current() -> *mut imp::Thread {
 pub unsafe fn set_current_thread(thread_ref: *mut imp::Thread) {
     unsafe {
         (*thread_ref).state = ThreadState::Started;
-        (*thread_ref).name_ptr = addr_of!((*thread_ref).name) as *const _;
+        (*thread_ref).name_ptr = (&raw const (*thread_ref).name).cast();
         let tlr = get_thread_local_region();
         debug_assert!(
             !tlr.is_null(),

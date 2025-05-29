@@ -23,7 +23,6 @@ pub struct FirmwareVersion {
 }
 const_assert!(core::mem::size_of::<FirmwareVersion>() == 0x100);
 
-//ipc_sf_define_default_client_for_interface!(SystemSettings);
 #[nx_derive::ipc_trait]
 pub trait SystemSettings {
     #[ipc_rid(3)]

@@ -221,16 +221,16 @@ impl<const S: usize> crate::ipc::client::ResponseCommandParameter<ArrayString<S>
 impl<const S: usize> fmt::Debug for ArrayString<S> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let str_data = self.get_str().unwrap_or("<invalid-str>");
-        write!(f, "{}", str_data)
+        write!(f, "{str_data}")
     }
 }
 
 impl<const S: usize> PartialEq for ArrayString<S> {
     fn eq(&self, other: &Self) -> bool {
-        if let Ok(self_str) = self.get_str() {
-            if let Ok(other_str) = other.get_str() {
-                return self_str == other_str;
-            }
+        if let Ok(self_str) = self.get_str()
+            && let Ok(other_str) = other.get_str()
+        {
+            return self_str == other_str;
         }
         false
     }
@@ -462,7 +462,7 @@ impl<const S: usize> crate::ipc::client::ResponseCommandParameter<ArrayWideStrin
 impl<const S: usize> fmt::Debug for ArrayWideString<S> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let str_data = self.get_string().unwrap_or("<invalid-str>".to_string());
-        write!(f, "{}", str_data)
+        write!(f, "{str_data}")
     }
 }
 

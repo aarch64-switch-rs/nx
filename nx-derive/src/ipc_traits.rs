@@ -16,6 +16,98 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
     let name = input.ident;
     let vis = input.vis;
 
+    let client_trait = format_ident!("I{}Client", name);
+    let server_trait = format_ident!("I{}Server", name);
+
+    let build_default_client = input
+        .attrs
+        .iter()
+        .find(|&attr| {
+            if let syn::Attribute {
+                meta: syn::Meta::Path(p),
+                ..
+            } = attr
+            {
+                p.is_ident("default_client")
+            } else {
+                false
+            }
+        })
+        .is_some();
+
+    let default_client: TokenStream = if build_default_client {
+        quote! {
+            /// The default client for the `#name` trait. All implementors of the trait need to read their session in accordance with this Types IPC Parameter traits.
+            pub struct #name {
+                #[doc(hidden)]
+                pub (crate) session: ::nx::ipc::sf::Session
+            }
+
+            impl ::nx::ipc::client::IClientObject for #name {
+                fn new(session: ::nx::ipc::sf::Session) -> Self {
+                    Self { session }
+                }
+
+                fn get_session(&self) -> & ::nx::ipc::sf::Session {
+                    &self.session
+                }
+
+                fn get_session_mut(&mut self) -> &mut ::nx::ipc::sf::Session {
+                    &mut self.session
+                }
+            }
+
+            unsafe impl ::core::marker::Sync for #name {}
+            unsafe impl ::core::marker::Send for #name {}
+
+            impl ::nx::ipc::client::RequestCommandParameter for #name {
+                fn before_request_write(session: &Self, _walker: &mut ::nx::ipc::DataWalker, ctx: &mut ::nx::ipc::CommandContext) -> ::nx::result::Result<()> {
+                    ctx.in_params.add_object(session.session.object_info)
+                }
+
+                fn before_send_sync_request(_session: &Self, _walker: &mut ::nx::ipc::DataWalker, _ctx: &mut ::nx::ipc::CommandContext) -> ::nx::result::Result<()> {
+                    Ok(())
+                }
+            }
+
+            impl ::nx::ipc::client::ResponseCommandParameter<#name> for #name {
+                fn after_response_read(_walker: &mut ::nx::ipc::DataWalker, ctx: &mut ::nx::ipc::CommandContext) -> ::nx::result::Result<Self> {
+                    let object_info = ctx.pop_object()?;
+                    Ok(Self { session: ::nx::ipc::sf::Session::from(object_info)})
+                }
+            }
+            impl ::nx::ipc::server::RequestCommandParameter<#name> for #name {
+                fn after_request_read(_ctx: &mut ::nx::ipc::server::ServerContext) -> ::nx::result::Result<Self> {
+                    use ::nx::result::ResultBase;
+                    // TODO: determine if we need to do this, since this is a server side operation of a client object?
+                    // probably needs to be supported right?
+                    ::nx::ipc::sf::hipc::rc::ResultUnsupportedOperation::make_err()
+                }
+            }
+
+            impl ::nx::ipc::server::ResponseCommandParameter for #name {
+                type CarryState = ();
+                fn before_response_write(_session: &Self, _ctx: &mut ::nx::ipc::server::ServerContext) -> ::nx::result::Result<()> {
+                    use ::nx::result::ResultBase;
+                    // TODO: determine if we need to do this, since this is a server side operation of a client object?
+                    // probably needs to be supported right?
+                    ::nx::ipc::sf::hipc::rc::ResultUnsupportedOperation::make_err()
+                }
+
+                fn after_response_write(_session: Self, _carry_state: (), _ctx: &mut ::nx::ipc::server::ServerContext) -> ::nx::result::Result<()> {
+                    use ::nx::result::ResultBase;
+                    // TODO: determine if we need to do this, since this is a server side operation of a client object?
+                    // probably needs to be supported right?
+                    ::nx::ipc::sf::hipc::rc::ResultUnsupportedOperation::make_err()
+                }
+            }
+
+            impl #client_trait for #name {}
+        }
+    } else {
+        quote! {}
+    };
+
     for item in input.items.iter() {
         if !matches!(item, TraitItem::Fn(_)) {
             return Err(stringify_error(
@@ -225,14 +317,16 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
         // fix the return type for the server function types if
         let mut server_fn = fn_item.clone();
         server_fn.attrs = vec![];
-        
+
         if let Some(FnArg::Receiver(r)) = server_fn.sig.inputs.iter_mut().next() {
             // all server functions are considered &mut borrowing
             r.mutability = Some(Mut::default());
             r.ty = Box::new(syn::parse2(quote! {&mut Self}).unwrap());
-
         } else {
-            return Err(stringify_error(server_fn.span(), "IPC traits with associated functions is not supported."));
+            return Err(stringify_error(
+                server_fn.span(),
+                "IPC traits with associated functions is not supported.",
+            ));
         }
 
         if return_type_is_session {
@@ -341,9 +435,9 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
         });
     }
 
-    let client_trait = format_ident!("I{}Client", name);
-    let server_trait = format_ident!("I{}Server", name);
     Ok(quote! {
+        #default_client
+
         #vis trait #client_trait: ::nx::ipc::client::IClientObject + Sync {
             #(
                 #[allow(unused_parens)]

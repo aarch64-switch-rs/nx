@@ -709,17 +709,6 @@ define_bit_enum! {
         Append = bit!(3)
     }
 }
-/*
-/// Initializes `fsp-srv` support with a given [`IFileSystemProxyClient`] shared object
-///
-/// # Arguments
-///
-/// * `session`: The IPC client object
-pub fn initialize_fspsrv_session_with(session: Arc<dyn fsp::srv::IFileSystemProxyClient>) {
-    let mut guard = G_FSPSRV_SESSION.write();
-    debug_assert!(guard.is_none(), "Double initializing FSP session");
-    *guard = Some(session);
-}*/
 
 /// Initializes `fsp-srv` support instantiating a [`FileSystemProxy`][`fsp::srv::FileSystemProxy`] shared object
 #[inline]

@@ -3,8 +3,8 @@ use crate::version;
 
 use super::ncm;
 
-ipc_sf_define_default_client_for_interface!(ShellInterface);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait ShellInterface {
     #[ipc_rid(0)]
     #[version(version::VersionInterval::to(version::Version::new(10, 2, 0)))]

@@ -10,8 +10,8 @@ define_bit_enum! {
     }
 }
 
-ipc_sf_define_default_client_for_interface!(Logger);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait Logger {
     #[ipc_rid(0)]
     fn log(&self, log_buf: sf::InAutoSelectBuffer<u8>);
@@ -20,7 +20,6 @@ pub trait Logger {
     fn set_destination(&mut self, log_destination: LogDestination);
 }
 
-//ipc_sf_define_default_client_for_interface!(LogService);
 #[nx_derive::ipc_trait]
 pub trait Logging {
     #[ipc_rid(0)]

@@ -145,8 +145,8 @@ pub struct ContentMetaInfo {
     pub pad: [u8; 2],
 }
 
-ipc_sf_define_default_client_for_interface!(ContentMetaDatabase);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait ContentMetaDatabase {
     #[ipc_rid(0)]
     fn set(&self, meta_key: ContentMetaKey, in_rec_buf: sf::InMapAliasBuffer<u8>);
@@ -231,8 +231,8 @@ pub trait ContentMetaDatabase {
     fn get_owner_application_id(&self, meta_key: ContentMetaKey) -> ApplicationId;
 }
 
-ipc_sf_define_default_client_for_interface!(ContentManager);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait ContentManager {
     #[ipc_rid(0)]
     #[return_session]

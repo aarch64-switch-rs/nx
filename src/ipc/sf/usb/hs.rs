@@ -94,8 +94,8 @@ pub struct XferReport {
 }
 const_assert!(core::mem::size_of::<XferReport>() == 0x18);
 
-ipc_sf_define_default_client_for_interface!(ClientEpSession);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait ClientEpSession {
     #[ipc_rid(0)]
     #[version(version::VersionInterval::to(version::Version::new(1, 0, 0)))]
@@ -174,8 +174,8 @@ pub trait ClientEpSession {
     fn share_report_ring(&self, unk: [u8; 0x4], unk_handle: sf::CopyHandle);
 }
 
-ipc_sf_define_default_client_for_interface!(ClientIfSession);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait ClientIfSession {
     #[ipc_rid(0)]
     fn get_state_change_event(&self) -> sf::CopyHandle;
@@ -260,8 +260,8 @@ pub trait ClientIfSession {
     ) -> (super::EndPointDescriptor, ClientEpSession);
 }
 
-ipc_sf_define_default_client_for_interface!(ClientRootSession);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait ClientRootSession {
     #[ipc_rid(0)]
     #[version(version::VersionInterval::from(version::Version::new(2, 0, 0)))]

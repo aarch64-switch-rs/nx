@@ -937,48 +937,45 @@ impl CommandContext {
     > {
         if AUTO_SELECT {
             if IN {
-                if let Ok(static_desc) = self.pop_send_static() {
-                    if let Ok(send_desc) = self.pop_send_buffer() {
-                        if !static_desc.get_address().is_null() && (static_desc.get_size() > 0) {
-                            return Ok(sf::Buffer::new(
-                                static_desc.get_address(),
-                                static_desc.get_size(),
-                            ));
-                        }
-                        if !send_desc.get_address().is_null() && (send_desc.get_size() > 0) {
-                            return Ok(sf::Buffer::new(
-                                send_desc.get_address(),
-                                send_desc.get_size(),
-                            ));
-                        }
+                if let Ok(static_desc) = self.pop_send_static()
+                    && let Ok(send_desc) = self.pop_send_buffer()
+                {
+                    if !static_desc.get_address().is_null() && (static_desc.get_size() > 0) {
+                        return Ok(sf::Buffer::new(
+                            static_desc.get_address(),
+                            static_desc.get_size(),
+                        ));
+                    }
+                    if !send_desc.get_address().is_null() && (send_desc.get_size() > 0) {
+                        return Ok(sf::Buffer::new(
+                            send_desc.get_address(),
+                            send_desc.get_size(),
+                        ));
                     }
                 }
-            } else if OUT {
-                if let Ok(static_desc) = self.pop_receive_static() {
-                    if let Ok(recv_desc) = self.pop_receive_buffer() {
-                        if !static_desc.get_address().is_null() && (static_desc.get_size() > 0) {
-                            return Ok(sf::Buffer::new(
-                                static_desc.get_address(),
-                                static_desc.get_size(),
-                            ));
-                        }
-                        if !recv_desc.get_address().is_null() && (recv_desc.get_size() > 0) {
-                            return Ok(sf::Buffer::new(
-                                recv_desc.get_address(),
-                                recv_desc.get_size(),
-                            ));
-                        }
-                    }
-                }
-            }
-        } else if POINTER {
-            if IN {
-                if let Ok(static_desc) = self.pop_send_static() {
+            } else if OUT
+                && let Ok(static_desc) = self.pop_receive_static()
+                && let Ok(recv_desc) = self.pop_receive_buffer()
+            {
+                if !static_desc.get_address().is_null() && (static_desc.get_size() > 0) {
                     return Ok(sf::Buffer::new(
                         static_desc.get_address(),
                         static_desc.get_size(),
                     ));
                 }
+                if !recv_desc.get_address().is_null() && (recv_desc.get_size() > 0) {
+                    return Ok(sf::Buffer::new(
+                        recv_desc.get_address(),
+                        recv_desc.get_size(),
+                    ));
+                }
+            }
+        } else if POINTER {
+            if IN && let Ok(static_desc) = self.pop_send_static() {
+                return Ok(sf::Buffer::new(
+                    static_desc.get_address(),
+                    static_desc.get_size(),
+                ));
             } else if OUT {
                 let buf_size = match FIXED_SIZE {
                     true => sf::Buffer::<

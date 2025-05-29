@@ -108,8 +108,8 @@ pub enum OperationId {
     ReadLazyLoadFileForciblyForDebug = 10001,
 }
 
-ipc_sf_define_default_client_for_interface!(File);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait File {
     #[ipc_rid(0)]
     fn read(
@@ -153,8 +153,8 @@ pub trait File {
     );
 }
 
-ipc_sf_define_default_client_for_interface!(Directory);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait Directory {
     #[ipc_rid(0)]
     fn read(&self, out_entries: sf::OutMapAliasBuffer<DirectoryEntry>) -> u64;
@@ -162,8 +162,8 @@ pub trait Directory {
     fn get_entry_count(&self) -> u64;
 }
 
-ipc_sf_define_default_client_for_interface!(FileSystem);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait FileSystem {
     #[ipc_rid(0)]
     fn create_file(
@@ -228,8 +228,8 @@ pub trait FileSystem {
     );
 }
 
-ipc_sf_define_default_client_for_interface!(FileSystemProxy);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait FileSystemProxy {
     #[ipc_rid(1)]
     fn set_current_process(&self, process_id: sf::ProcessId);

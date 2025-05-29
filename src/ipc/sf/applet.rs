@@ -144,8 +144,8 @@ pub enum AppletMessage {
     RecordingSaved = 93,
 }
 
-ipc_sf_define_default_client_for_interface!(StorageAccessor);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait StorageAccessor {
     #[ipc_rid(0)]
     fn get_size(&self) -> usize;
@@ -155,15 +155,15 @@ pub trait StorageAccessor {
     fn read(&self, offset: usize, buf: sf::OutAutoSelectBuffer<u8>);
 }
 
-ipc_sf_define_default_client_for_interface!(Storage);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait Storage {
     #[ipc_rid(0)]
     fn open(&self) -> StorageAccessor;
 }
 
-ipc_sf_define_default_client_for_interface!(LibraryAppletAccessor);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait LibraryAppletAccessor {
     #[ipc_rid(0)]
     fn get_applet_state_changed_event(&mut self) -> sf::CopyHandle;
@@ -175,8 +175,8 @@ pub trait LibraryAppletAccessor {
     fn pop_out_data(&mut self) -> Storage;
 }
 
-ipc_sf_define_default_client_for_interface!(LibraryAppletCreator);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait LibraryAppletCreator {
     #[ipc_rid(0)]
     #[return_session]
@@ -189,8 +189,8 @@ pub trait LibraryAppletCreator {
     fn create_storage(&self, size: usize) -> Storage;
 }
 
-ipc_sf_define_default_client_for_interface!(WindowController);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait WindowController {
     #[ipc_rid(1)]
     fn get_applet_resource_user_id(&self) -> u64;
@@ -198,8 +198,8 @@ pub trait WindowController {
     fn acquire_foreground_rights(&self);
 }
 
-ipc_sf_define_default_client_for_interface!(SelfController);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait SelfController {
     #[ipc_rid(10)]
     fn set_screenshot_permission(&self, permission: ScreenShotPermission);
@@ -207,8 +207,8 @@ pub trait SelfController {
     fn create_managed_display_layer(&self) -> u64;
 }
 
-ipc_sf_define_default_client_for_interface!(AudioController);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait AudioController {
     #[ipc_rid(0)]
     fn set_expected_master_volume(&self, main_applet_level: f32, library_applet_level: f32);
@@ -222,21 +222,21 @@ pub trait AudioController {
     fn set_transparent_volume_rate(&self, rate: f32);
 }
 
-ipc_sf_define_default_client_for_interface!(DisplayController);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait DisplayController {
     #[ipc_rid(3)]
     fn update_caller_applet_capture_image(&self);
 }
-ipc_sf_define_default_client_for_interface!(ProcessWindingController);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait ProcessWindingController {
     #[ipc_rid(0)]
     fn get_launch_reason(&self) -> AppletProcessLaunchReason;
 }
 
-ipc_sf_define_default_client_for_interface!(CommonStateGetter);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait CommonStateGetter {
     #[ipc_rid(0)]
     fn get_event_handle(&self) -> Handle;
@@ -244,8 +244,8 @@ pub trait CommonStateGetter {
     fn receive_message(&self) -> AppletMessage;
 }
 
-ipc_sf_define_default_client_for_interface!(LibraryAppletProxy);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait LibraryAppletProxy {
     #[ipc_rid(0)]
     #[return_session]
@@ -270,8 +270,8 @@ pub trait LibraryAppletProxy {
     fn get_library_applet_creator(&self) -> LibraryAppletCreator;
 }
 
-ipc_sf_define_default_client_for_interface!(ApplicationProxy);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait ApplicationProxy {
     #[ipc_rid(0)]
     #[return_session]
@@ -296,8 +296,8 @@ pub trait ApplicationProxy {
     fn get_library_applet_creator(&self) -> LibraryAppletCreator;
 }
 
-ipc_sf_define_default_client_for_interface!(SystemAppletProxy);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait SystemAppletProxy {
     #[ipc_rid(0)]
     #[return_session]
@@ -322,8 +322,8 @@ pub trait SystemAppletProxy {
     fn get_library_applet_creator(&self) -> LibraryAppletCreator;
 }
 
-ipc_sf_define_default_client_for_interface!(OverlayAppletProxy);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait OverlayAppletProxy {
     #[ipc_rid(0)]
     #[return_session]
@@ -348,8 +348,8 @@ pub trait OverlayAppletProxy {
     fn get_library_applet_creator(&self) -> LibraryAppletCreator;
 }
 
-ipc_sf_define_default_client_for_interface!(SystemApplicationProxy);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait SystemApplicationProxy {
     #[ipc_rid(0)]
     #[return_session]
@@ -374,8 +374,8 @@ pub trait SystemApplicationProxy {
     fn get_library_applet_creator(&self) -> LibraryAppletCreator;
 }
 
-ipc_sf_define_default_client_for_interface!(AllSystemAppletProxiesService);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait AllSystemAppletProxiesService {
     #[ipc_rid(0)]
     #[return_session]

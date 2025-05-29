@@ -1882,8 +1882,8 @@ pub struct NfpStoreDataExtension {
 }
 const_assert!(core::mem::size_of::<NfpStoreDataExtension>() == 0x8);
 
-ipc_sf_define_default_client_for_interface!(DatabaseService);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait DatabaseService {
     #[ipc_rid(0)]
     fn is_updated(&self, flag: SourceFlag) -> bool;
@@ -1902,8 +1902,8 @@ pub trait DatabaseService {
     ) -> CharInfo;
 }
 
-ipc_sf_define_default_client_for_interface!(StaticService);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait StaticService {
     #[ipc_rid(0)]
     #[return_session]

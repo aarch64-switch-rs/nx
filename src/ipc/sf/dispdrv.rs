@@ -37,8 +37,8 @@ pub enum NativeHandleType {
 
 pub type BinderHandle = i32;
 
-ipc_sf_define_default_client_for_interface!(HOSBinderDriver);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait HOSBinderDriver {
     #[ipc_rid(0)]
     fn transact_parcel(

@@ -2,15 +2,15 @@ use crate::version;
 
 use super::ncm;
 
-ipc_sf_define_default_client_for_interface!(InformationInterface);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait InformationInterface {
     #[ipc_rid(0)]
     fn get_program_id(&self, process_id: u64) -> ncm::ProgramId;
 }
 
-ipc_sf_define_default_client_for_interface!(DebugMonitorInterface);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait DebugMonitorInterface {
     #[ipc_rid(5)]
     #[version(version::VersionInterval::to(version::Version::new(4, 1, 0)))]

@@ -1,0 +1,847 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="A convenient constant for Basic Latin fonts (`U+0000` - `U+007F`), that implements the `UnicodeFonts` trait."><title>BASIC_FONTS in font8x8 - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../static.files/rustdoc-84e720fa.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="font8x8" data-themes="" data-resource-suffix="" data-rustdoc-version="1.89.0-nightly (45f256d9d 2025-05-27)" data-channel="nightly" data-search-js="search-f7877310.js" data-settings-js="settings-5514c975.js" ><script src="../static.files/storage-4e99c027.js"></script><script defer src="sidebar-items.js"></script><script defer src="../static.files/main-fd3af306.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-044be391.svg"></head><body class="rustdoc constant"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../font8x8/index.html">font8x8</a><span class="version">0.3.1</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">BASIC_<wbr>FONTS</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#basic_unicode0-u0000-whitespace" title="`BASIC_UNICODE[0]: U+0000` `WHITESPACE`"><code>BASIC_UNICODE[0]: U+0000</code> <code>WHITESPACE</code></a></li><li><a href="#basic_unicode1-u0001-whitespace" title="`BASIC_UNICODE[1]: U+0001` `WHITESPACE`"><code>BASIC_UNICODE[1]: U+0001</code> <code>WHITESPACE</code></a></li><li><a href="#basic_unicode2-u0002-whitespace" title="`BASIC_UNICODE[2]: U+0002` `WHITESPACE`"><code>BASIC_UNICODE[2]: U+0002</code> <code>WHITESPACE</code></a></li><li><a href="#basic_unicode3-u0003-whitespace" title="`BASIC_UNICODE[3]: U+0003` `WHITESPACE`"><code>BASIC_UNICODE[3]: U+0003</code> <code>WHITESPACE</code></a></li><li><a href="#basic_unicode4-u0004-whitespace" title="`BASIC_UNICODE[4]: U+0004` `WHITESPACE`"><code>BASIC_UNICODE[4]: U+0004</code> <code>WHITESPACE</code></a></li><li><a href="#basic_unicode5-u0005-whitespace" title="`BASIC_UNICODE[5]: U+0005` `WHITESPACE`"><code>BASIC_UNICODE[5]: U+0005</code> <code>WHITESPACE</code></a></li><li><a href="#basic_unicode6-u0006-whitespace" title="`BASIC_UNICODE[6]: U+0006` `WHITESPACE`"><code>BASIC_UNICODE[6]: U+0006</code> <code>WHITESPACE</code></a></li><li><a href="#basic_unicode7-u0007-whitespace" title="`BASIC_UNICODE[7]: U+0007` `WHITESPACE`"><code>BASIC_UNICODE[7]: U+0007</code> <code>WHITESPACE</code></a></li><li><a href="#basic_unicode8-u0008-whitespace" title="`BASIC_UNICODE[8]: U+0008` `WHITESPACE`"><code>BASIC_UNICODE[8]: U+0008</code> <code>WHITESPACE</code></a></li><li><a href="#basic_unicode9-u0009-whitespace" title="`BASIC_UNICODE[9]: U+0009` `WHITESPACE`"><code>BASIC_UNICODE[9]: U+0009</code> <code>WHITESPACE</code></a></li><li><a href="#basic_unicode10-u000a-whitespace" title="`BASIC_UNICODE[10]: U+000A` `WHITESPACE`"><code>BASIC_UNICODE[10]: U+000A</code> <code>WHITESPACE</code></a></li><li><a href="#basic_unicode11-u000b-whitespace" title="`BASIC_UNICODE[11]: U+000B` `WHITESPACE`"><code>BASIC_UNICODE[11]: U+000B</code> <code>WHITESPACE</code></a></li><li><a href="#basic_unicode12-u000c-whitespace" title="`BASIC_UNICODE[12]: U+000C` `WHITESPACE`"><code>BASIC_UNICODE[12]: U+000C</code> <code>WHITESPACE</code></a></li><li><a href="#basic_unicode13-u000d-whitespace" title="`BASIC_UNICODE[13]: U+000D` `WHITESPACE`"><code>BASIC_UNICODE[13]: U+000D</code> <code>WHITESPACE</code></a></li><li><a href="#basic_unicode14-u000e-whitespace" title="`BASIC_UNICODE[14]: U+000E` `WHITESPACE`"><code>BASIC_UNICODE[14]: U+000E</code> <code>WHITESPACE</code></a></li><li><a href="#basic_unicode15-u000f-whitespace" title="`BASIC_UNICODE[15]: U+000F` `WHITESPACE`"><code>BASIC_UNICODE[15]: U+000F</code> <code>WHITESPACE</code></a></li><li><a href="#basic_unicode16-u0010-whitespace" title="`BASIC_UNICODE[16]: U+0010` `WHITESPACE`"><code>BASIC_UNICODE[16]: U+0010</code> <code>WHITESPACE</code></a></li><li><a href="#basic_unicode17-u0011-whitespace" title="`BASIC_UNICODE[17]: U+0011` `WHITESPACE`"><code>BASIC_UNICODE[17]: U+0011</code> <code>WHITESPACE</code></a></li><li><a href="#basic_unicode18-u0012-whitespace" title="`BASIC_UNICODE[18]: U+0012` `WHITESPACE`"><code>BASIC_UNICODE[18]: U+0012</code> <code>WHITESPACE</code></a></li><li><a href="#basic_unicode19-u0013-whitespace" title="`BASIC_UNICODE[19]: U+0013` `WHITESPACE`"><code>BASIC_UNICODE[19]: U+0013</code> <code>WHITESPACE</code></a></li><li><a href="#basic_unicode20-u0014-whitespace" title="`BASIC_UNICODE[20]: U+0014` `WHITESPACE`"><code>BASIC_UNICODE[20]: U+0014</code> <code>WHITESPACE</code></a></li><li><a href="#basic_unicode21-u0015-whitespace" title="`BASIC_UNICODE[21]: U+0015` `WHITESPACE`"><code>BASIC_UNICODE[21]: U+0015</code> <code>WHITESPACE</code></a></li><li><a href="#basic_unicode22-u0016-whitespace" title="`BASIC_UNICODE[22]: U+0016` `WHITESPACE`"><code>BASIC_UNICODE[22]: U+0016</code> <code>WHITESPACE</code></a></li><li><a href="#basic_unicode23-u0017-whitespace" title="`BASIC_UNICODE[23]: U+0017` `WHITESPACE`"><code>BASIC_UNICODE[23]: U+0017</code> <code>WHITESPACE</code></a></li><li><a href="#basic_unicode24-u0018-whitespace" title="`BASIC_UNICODE[24]: U+0018` `WHITESPACE`"><code>BASIC_UNICODE[24]: U+0018</code> <code>WHITESPACE</code></a></li><li><a href="#basic_unicode25-u0019-whitespace" title="`BASIC_UNICODE[25]: U+0019` `WHITESPACE`"><code>BASIC_UNICODE[25]: U+0019</code> <code>WHITESPACE</code></a></li><li><a href="#basic_unicode26-u001a-whitespace" title="`BASIC_UNICODE[26]: U+001A` `WHITESPACE`"><code>BASIC_UNICODE[26]: U+001A</code> <code>WHITESPACE</code></a></li><li><a href="#basic_unicode27-u001b-whitespace" title="`BASIC_UNICODE[27]: U+001B` `WHITESPACE`"><code>BASIC_UNICODE[27]: U+001B</code> <code>WHITESPACE</code></a></li><li><a href="#basic_unicode28-u001c-whitespace" title="`BASIC_UNICODE[28]: U+001C` `WHITESPACE`"><code>BASIC_UNICODE[28]: U+001C</code> <code>WHITESPACE</code></a></li><li><a href="#basic_unicode29-u001d-whitespace" title="`BASIC_UNICODE[29]: U+001D` `WHITESPACE`"><code>BASIC_UNICODE[29]: U+001D</code> <code>WHITESPACE</code></a></li><li><a href="#basic_unicode30-u001e-whitespace" title="`BASIC_UNICODE[30]: U+001E` `WHITESPACE`"><code>BASIC_UNICODE[30]: U+001E</code> <code>WHITESPACE</code></a></li><li><a href="#basic_unicode31-u001f-whitespace" title="`BASIC_UNICODE[31]: U+001F` `WHITESPACE`"><code>BASIC_UNICODE[31]: U+001F</code> <code>WHITESPACE</code></a></li><li><a href="#basic_unicode32-u0020-whitespace" title="`BASIC_UNICODE[32]: U+0020` `WHITESPACE`"><code>BASIC_UNICODE[32]: U+0020</code> <code>WHITESPACE</code></a></li><li><a href="#basic_unicode33-u0021" title="`BASIC_UNICODE[33]: U+0021`"><code>BASIC_UNICODE[33]: U+0021</code></a></li><li><a href="#basic_unicode34-u0022" title="`BASIC_UNICODE[34]: U+0022`"><code>BASIC_UNICODE[34]: U+0022</code></a></li><li><a href="#basic_unicode35-u0023" title="`BASIC_UNICODE[35]: U+0023`"><code>BASIC_UNICODE[35]: U+0023</code></a></li><li><a href="#basic_unicode36-u0024" title="`BASIC_UNICODE[36]: U+0024`"><code>BASIC_UNICODE[36]: U+0024</code></a></li><li><a href="#basic_unicode37-u0025" title="`BASIC_UNICODE[37]: U+0025`"><code>BASIC_UNICODE[37]: U+0025</code></a></li><li><a href="#basic_unicode38-u0026" title="`BASIC_UNICODE[38]: U+0026`"><code>BASIC_UNICODE[38]: U+0026</code></a></li><li><a href="#basic_unicode39-u0027" title="`BASIC_UNICODE[39]: U+0027`"><code>BASIC_UNICODE[39]: U+0027</code></a></li><li><a href="#basic_unicode40-u0028" title="`BASIC_UNICODE[40]: U+0028`"><code>BASIC_UNICODE[40]: U+0028</code></a></li><li><a href="#basic_unicode41-u0029" title="`BASIC_UNICODE[41]: U+0029`"><code>BASIC_UNICODE[41]: U+0029</code></a></li><li><a href="#basic_unicode42-u002a" title="`BASIC_UNICODE[42]: U+002A`"><code>BASIC_UNICODE[42]: U+002A</code></a></li><li><a href="#basic_unicode43-u002b" title="`BASIC_UNICODE[43]: U+002B`"><code>BASIC_UNICODE[43]: U+002B</code></a></li><li><a href="#basic_unicode44-u002c" title="`BASIC_UNICODE[44]: U+002C`"><code>BASIC_UNICODE[44]: U+002C</code></a></li><li><a href="#basic_unicode45-u002d" title="`BASIC_UNICODE[45]: U+002D`"><code>BASIC_UNICODE[45]: U+002D</code></a></li><li><a href="#basic_unicode46-u002e" title="`BASIC_UNICODE[46]: U+002E`"><code>BASIC_UNICODE[46]: U+002E</code></a></li><li><a href="#basic_unicode47-u002f" title="`BASIC_UNICODE[47]: U+002F`"><code>BASIC_UNICODE[47]: U+002F</code></a></li><li><a href="#basic_unicode48-u0030" title="`BASIC_UNICODE[48]: U+0030`"><code>BASIC_UNICODE[48]: U+0030</code></a></li><li><a href="#basic_unicode49-u0031" title="`BASIC_UNICODE[49]: U+0031`"><code>BASIC_UNICODE[49]: U+0031</code></a></li><li><a href="#basic_unicode50-u0032" title="`BASIC_UNICODE[50]: U+0032`"><code>BASIC_UNICODE[50]: U+0032</code></a></li><li><a href="#basic_unicode51-u0033" title="`BASIC_UNICODE[51]: U+0033`"><code>BASIC_UNICODE[51]: U+0033</code></a></li><li><a href="#basic_unicode52-u0034" title="`BASIC_UNICODE[52]: U+0034`"><code>BASIC_UNICODE[52]: U+0034</code></a></li><li><a href="#basic_unicode53-u0035" title="`BASIC_UNICODE[53]: U+0035`"><code>BASIC_UNICODE[53]: U+0035</code></a></li><li><a href="#basic_unicode54-u0036" title="`BASIC_UNICODE[54]: U+0036`"><code>BASIC_UNICODE[54]: U+0036</code></a></li><li><a href="#basic_unicode55-u0037" title="`BASIC_UNICODE[55]: U+0037`"><code>BASIC_UNICODE[55]: U+0037</code></a></li><li><a href="#basic_unicode56-u0038" title="`BASIC_UNICODE[56]: U+0038`"><code>BASIC_UNICODE[56]: U+0038</code></a></li><li><a href="#basic_unicode57-u0039" title="`BASIC_UNICODE[57]: U+0039`"><code>BASIC_UNICODE[57]: U+0039</code></a></li><li><a href="#basic_unicode58-u003a" title="`BASIC_UNICODE[58]: U+003A`"><code>BASIC_UNICODE[58]: U+003A</code></a></li><li><a href="#basic_unicode59-u003b" title="`BASIC_UNICODE[59]: U+003B`"><code>BASIC_UNICODE[59]: U+003B</code></a></li><li><a href="#basic_unicode60-u003c" title="`BASIC_UNICODE[60]: U+003C`"><code>BASIC_UNICODE[60]: U+003C</code></a></li><li><a href="#basic_unicode61-u003d" title="`BASIC_UNICODE[61]: U+003D`"><code>BASIC_UNICODE[61]: U+003D</code></a></li><li><a href="#basic_unicode62-u003e" title="`BASIC_UNICODE[62]: U+003E`"><code>BASIC_UNICODE[62]: U+003E</code></a></li><li><a href="#basic_unicode63-u003f" title="`BASIC_UNICODE[63]: U+003F`"><code>BASIC_UNICODE[63]: U+003F</code></a></li><li><a href="#basic_unicode64-u0040" title="`BASIC_UNICODE[64]: U+0040`"><code>BASIC_UNICODE[64]: U+0040</code></a></li><li><a href="#basic_unicode65-u0041" title="`BASIC_UNICODE[65]: U+0041`"><code>BASIC_UNICODE[65]: U+0041</code></a></li><li><a href="#basic_unicode66-u0042" title="`BASIC_UNICODE[66]: U+0042`"><code>BASIC_UNICODE[66]: U+0042</code></a></li><li><a href="#basic_unicode67-u0043" title="`BASIC_UNICODE[67]: U+0043`"><code>BASIC_UNICODE[67]: U+0043</code></a></li><li><a href="#basic_unicode68-u0044" title="`BASIC_UNICODE[68]: U+0044`"><code>BASIC_UNICODE[68]: U+0044</code></a></li><li><a href="#basic_unicode69-u0045" title="`BASIC_UNICODE[69]: U+0045`"><code>BASIC_UNICODE[69]: U+0045</code></a></li><li><a href="#basic_unicode70-u0046" title="`BASIC_UNICODE[70]: U+0046`"><code>BASIC_UNICODE[70]: U+0046</code></a></li><li><a href="#basic_unicode71-u0047" title="`BASIC_UNICODE[71]: U+0047`"><code>BASIC_UNICODE[71]: U+0047</code></a></li><li><a href="#basic_unicode72-u0048" title="`BASIC_UNICODE[72]: U+0048`"><code>BASIC_UNICODE[72]: U+0048</code></a></li><li><a href="#basic_unicode73-u0049" title="`BASIC_UNICODE[73]: U+0049`"><code>BASIC_UNICODE[73]: U+0049</code></a></li><li><a href="#basic_unicode74-u004a" title="`BASIC_UNICODE[74]: U+004A`"><code>BASIC_UNICODE[74]: U+004A</code></a></li><li><a href="#basic_unicode75-u004b" title="`BASIC_UNICODE[75]: U+004B`"><code>BASIC_UNICODE[75]: U+004B</code></a></li><li><a href="#basic_unicode76-u004c" title="`BASIC_UNICODE[76]: U+004C`"><code>BASIC_UNICODE[76]: U+004C</code></a></li><li><a href="#basic_unicode77-u004d" title="`BASIC_UNICODE[77]: U+004D`"><code>BASIC_UNICODE[77]: U+004D</code></a></li><li><a href="#basic_unicode78-u004e" title="`BASIC_UNICODE[78]: U+004E`"><code>BASIC_UNICODE[78]: U+004E</code></a></li><li><a href="#basic_unicode79-u004f" title="`BASIC_UNICODE[79]: U+004F`"><code>BASIC_UNICODE[79]: U+004F</code></a></li><li><a href="#basic_unicode80-u0050" title="`BASIC_UNICODE[80]: U+0050`"><code>BASIC_UNICODE[80]: U+0050</code></a></li><li><a href="#basic_unicode81-u0051" title="`BASIC_UNICODE[81]: U+0051`"><code>BASIC_UNICODE[81]: U+0051</code></a></li><li><a href="#basic_unicode82-u0052" title="`BASIC_UNICODE[82]: U+0052`"><code>BASIC_UNICODE[82]: U+0052</code></a></li><li><a href="#basic_unicode83-u0053" title="`BASIC_UNICODE[83]: U+0053`"><code>BASIC_UNICODE[83]: U+0053</code></a></li><li><a href="#basic_unicode84-u0054" title="`BASIC_UNICODE[84]: U+0054`"><code>BASIC_UNICODE[84]: U+0054</code></a></li><li><a href="#basic_unicode85-u0055" title="`BASIC_UNICODE[85]: U+0055`"><code>BASIC_UNICODE[85]: U+0055</code></a></li><li><a href="#basic_unicode86-u0056" title="`BASIC_UNICODE[86]: U+0056`"><code>BASIC_UNICODE[86]: U+0056</code></a></li><li><a href="#basic_unicode87-u0057" title="`BASIC_UNICODE[87]: U+0057`"><code>BASIC_UNICODE[87]: U+0057</code></a></li><li><a href="#basic_unicode88-u0058" title="`BASIC_UNICODE[88]: U+0058`"><code>BASIC_UNICODE[88]: U+0058</code></a></li><li><a href="#basic_unicode89-u0059" title="`BASIC_UNICODE[89]: U+0059`"><code>BASIC_UNICODE[89]: U+0059</code></a></li><li><a href="#basic_unicode90-u005a" title="`BASIC_UNICODE[90]: U+005A`"><code>BASIC_UNICODE[90]: U+005A</code></a></li><li><a href="#basic_unicode91-u005b" title="`BASIC_UNICODE[91]: U+005B`"><code>BASIC_UNICODE[91]: U+005B</code></a></li><li><a href="#basic_unicode92-u005c" title="`BASIC_UNICODE[92]: U+005C`"><code>BASIC_UNICODE[92]: U+005C</code></a></li><li><a href="#basic_unicode93-u005d" title="`BASIC_UNICODE[93]: U+005D`"><code>BASIC_UNICODE[93]: U+005D</code></a></li><li><a href="#basic_unicode94-u005e" title="`BASIC_UNICODE[94]: U+005E`"><code>BASIC_UNICODE[94]: U+005E</code></a></li><li><a href="#basic_unicode95-u005f" title="`BASIC_UNICODE[95]: U+005F`"><code>BASIC_UNICODE[95]: U+005F</code></a></li><li><a href="#basic_unicode96-u0060" title="`BASIC_UNICODE[96]: U+0060`"><code>BASIC_UNICODE[96]: U+0060</code></a></li><li><a href="#basic_unicode97-u0061" title="`BASIC_UNICODE[97]: U+0061`"><code>BASIC_UNICODE[97]: U+0061</code></a></li><li><a href="#basic_unicode98-u0062" title="`BASIC_UNICODE[98]: U+0062`"><code>BASIC_UNICODE[98]: U+0062</code></a></li><li><a href="#basic_unicode99-u0063" title="`BASIC_UNICODE[99]: U+0063`"><code>BASIC_UNICODE[99]: U+0063</code></a></li><li><a href="#basic_unicode100-u0064" title="`BASIC_UNICODE[100]: U+0064`"><code>BASIC_UNICODE[100]: U+0064</code></a></li><li><a href="#basic_unicode101-u0065" title="`BASIC_UNICODE[101]: U+0065`"><code>BASIC_UNICODE[101]: U+0065</code></a></li><li><a href="#basic_unicode102-u0066" title="`BASIC_UNICODE[102]: U+0066`"><code>BASIC_UNICODE[102]: U+0066</code></a></li><li><a href="#basic_unicode103-u0067" title="`BASIC_UNICODE[103]: U+0067`"><code>BASIC_UNICODE[103]: U+0067</code></a></li><li><a href="#basic_unicode104-u0068" title="`BASIC_UNICODE[104]: U+0068`"><code>BASIC_UNICODE[104]: U+0068</code></a></li><li><a href="#basic_unicode105-u0069" title="`BASIC_UNICODE[105]: U+0069`"><code>BASIC_UNICODE[105]: U+0069</code></a></li><li><a href="#basic_unicode106-u006a" title="`BASIC_UNICODE[106]: U+006A`"><code>BASIC_UNICODE[106]: U+006A</code></a></li><li><a href="#basic_unicode107-u006b" title="`BASIC_UNICODE[107]: U+006B`"><code>BASIC_UNICODE[107]: U+006B</code></a></li><li><a href="#basic_unicode108-u006c" title="`BASIC_UNICODE[108]: U+006C`"><code>BASIC_UNICODE[108]: U+006C</code></a></li><li><a href="#basic_unicode109-u006d" title="`BASIC_UNICODE[109]: U+006D`"><code>BASIC_UNICODE[109]: U+006D</code></a></li><li><a href="#basic_unicode110-u006e" title="`BASIC_UNICODE[110]: U+006E`"><code>BASIC_UNICODE[110]: U+006E</code></a></li><li><a href="#basic_unicode111-u006f" title="`BASIC_UNICODE[111]: U+006F`"><code>BASIC_UNICODE[111]: U+006F</code></a></li><li><a href="#basic_unicode112-u0070" title="`BASIC_UNICODE[112]: U+0070`"><code>BASIC_UNICODE[112]: U+0070</code></a></li><li><a href="#basic_unicode113-u0071" title="`BASIC_UNICODE[113]: U+0071`"><code>BASIC_UNICODE[113]: U+0071</code></a></li><li><a href="#basic_unicode114-u0072" title="`BASIC_UNICODE[114]: U+0072`"><code>BASIC_UNICODE[114]: U+0072</code></a></li><li><a href="#basic_unicode115-u0073" title="`BASIC_UNICODE[115]: U+0073`"><code>BASIC_UNICODE[115]: U+0073</code></a></li><li><a href="#basic_unicode116-u0074" title="`BASIC_UNICODE[116]: U+0074`"><code>BASIC_UNICODE[116]: U+0074</code></a></li><li><a href="#basic_unicode117-u0075" title="`BASIC_UNICODE[117]: U+0075`"><code>BASIC_UNICODE[117]: U+0075</code></a></li><li><a href="#basic_unicode118-u0076" title="`BASIC_UNICODE[118]: U+0076`"><code>BASIC_UNICODE[118]: U+0076</code></a></li><li><a href="#basic_unicode119-u0077" title="`BASIC_UNICODE[119]: U+0077`"><code>BASIC_UNICODE[119]: U+0077</code></a></li><li><a href="#basic_unicode120-u0078" title="`BASIC_UNICODE[120]: U+0078`"><code>BASIC_UNICODE[120]: U+0078</code></a></li><li><a href="#basic_unicode121-u0079" title="`BASIC_UNICODE[121]: U+0079`"><code>BASIC_UNICODE[121]: U+0079</code></a></li><li><a href="#basic_unicode122-u007a" title="`BASIC_UNICODE[122]: U+007A`"><code>BASIC_UNICODE[122]: U+007A</code></a></li><li><a href="#basic_unicode123-u007b" title="`BASIC_UNICODE[123]: U+007B`"><code>BASIC_UNICODE[123]: U+007B</code></a></li><li><a href="#basic_unicode124-u007c" title="`BASIC_UNICODE[124]: U+007C`"><code>BASIC_UNICODE[124]: U+007C</code></a></li><li><a href="#basic_unicode125-u007d" title="`BASIC_UNICODE[125]: U+007D`"><code>BASIC_UNICODE[125]: U+007D</code></a></li><li><a href="#basic_unicode126-u007e" title="`BASIC_UNICODE[126]: U+007E`"><code>BASIC_UNICODE[126]: U+007E</code></a></li><li><a href="#basic_unicode127-u007f-whitespace" title="`BASIC_UNICODE[127]: U+007F` `WHITESPACE`"><code>BASIC_UNICODE[127]: U+007F</code> <code>WHITESPACE</code></a></li></ul></section><div id="rustdoc-modnav"><h2 class="in-crate"><a href="index.html">In crate font8x8</a></h2></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="index.html">font8x8</a></div><h1>Constant <span class="constant">BASIC_FONTS</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../src/font8x8/basic.rs.html#1490">Source</a> </span></div><pre class="rust item-decl"><code>pub const BASIC_FONTS: <a class="struct" href="unicode/struct.BasicFonts.html" title="struct font8x8::unicode::BasicFonts">BasicFonts</a>;</code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>A convenient constant for Basic Latin fonts (<code>U+0000</code> - <code>U+007F</code>), that implements the <code>UnicodeFonts</code> trait.</p>
+<h3 id="basic_unicode0-u0000-whitespace"><a class="doc-anchor" href="#basic_unicode0-u0000-whitespace">§</a><code>BASIC_UNICODE[0]: U+0000</code> <code>WHITESPACE</code></h3><h3 id="basic_unicode1-u0001-whitespace"><a class="doc-anchor" href="#basic_unicode1-u0001-whitespace">§</a><code>BASIC_UNICODE[1]: U+0001</code> <code>WHITESPACE</code></h3><h3 id="basic_unicode2-u0002-whitespace"><a class="doc-anchor" href="#basic_unicode2-u0002-whitespace">§</a><code>BASIC_UNICODE[2]: U+0002</code> <code>WHITESPACE</code></h3><h3 id="basic_unicode3-u0003-whitespace"><a class="doc-anchor" href="#basic_unicode3-u0003-whitespace">§</a><code>BASIC_UNICODE[3]: U+0003</code> <code>WHITESPACE</code></h3><h3 id="basic_unicode4-u0004-whitespace"><a class="doc-anchor" href="#basic_unicode4-u0004-whitespace">§</a><code>BASIC_UNICODE[4]: U+0004</code> <code>WHITESPACE</code></h3><h3 id="basic_unicode5-u0005-whitespace"><a class="doc-anchor" href="#basic_unicode5-u0005-whitespace">§</a><code>BASIC_UNICODE[5]: U+0005</code> <code>WHITESPACE</code></h3><h3 id="basic_unicode6-u0006-whitespace"><a class="doc-anchor" href="#basic_unicode6-u0006-whitespace">§</a><code>BASIC_UNICODE[6]: U+0006</code> <code>WHITESPACE</code></h3><h3 id="basic_unicode7-u0007-whitespace"><a class="doc-anchor" href="#basic_unicode7-u0007-whitespace">§</a><code>BASIC_UNICODE[7]: U+0007</code> <code>WHITESPACE</code></h3><h3 id="basic_unicode8-u0008-whitespace"><a class="doc-anchor" href="#basic_unicode8-u0008-whitespace">§</a><code>BASIC_UNICODE[8]: U+0008</code> <code>WHITESPACE</code></h3><h3 id="basic_unicode9-u0009-whitespace"><a class="doc-anchor" href="#basic_unicode9-u0009-whitespace">§</a><code>BASIC_UNICODE[9]: U+0009</code> <code>WHITESPACE</code></h3><h3 id="basic_unicode10-u000a-whitespace"><a class="doc-anchor" href="#basic_unicode10-u000a-whitespace">§</a><code>BASIC_UNICODE[10]: U+000A</code> <code>WHITESPACE</code></h3><h3 id="basic_unicode11-u000b-whitespace"><a class="doc-anchor" href="#basic_unicode11-u000b-whitespace">§</a><code>BASIC_UNICODE[11]: U+000B</code> <code>WHITESPACE</code></h3><h3 id="basic_unicode12-u000c-whitespace"><a class="doc-anchor" href="#basic_unicode12-u000c-whitespace">§</a><code>BASIC_UNICODE[12]: U+000C</code> <code>WHITESPACE</code></h3><h3 id="basic_unicode13-u000d-whitespace"><a class="doc-anchor" href="#basic_unicode13-u000d-whitespace">§</a><code>BASIC_UNICODE[13]: U+000D</code> <code>WHITESPACE</code></h3><h3 id="basic_unicode14-u000e-whitespace"><a class="doc-anchor" href="#basic_unicode14-u000e-whitespace">§</a><code>BASIC_UNICODE[14]: U+000E</code> <code>WHITESPACE</code></h3><h3 id="basic_unicode15-u000f-whitespace"><a class="doc-anchor" href="#basic_unicode15-u000f-whitespace">§</a><code>BASIC_UNICODE[15]: U+000F</code> <code>WHITESPACE</code></h3><h3 id="basic_unicode16-u0010-whitespace"><a class="doc-anchor" href="#basic_unicode16-u0010-whitespace">§</a><code>BASIC_UNICODE[16]: U+0010</code> <code>WHITESPACE</code></h3><h3 id="basic_unicode17-u0011-whitespace"><a class="doc-anchor" href="#basic_unicode17-u0011-whitespace">§</a><code>BASIC_UNICODE[17]: U+0011</code> <code>WHITESPACE</code></h3><h3 id="basic_unicode18-u0012-whitespace"><a class="doc-anchor" href="#basic_unicode18-u0012-whitespace">§</a><code>BASIC_UNICODE[18]: U+0012</code> <code>WHITESPACE</code></h3><h3 id="basic_unicode19-u0013-whitespace"><a class="doc-anchor" href="#basic_unicode19-u0013-whitespace">§</a><code>BASIC_UNICODE[19]: U+0013</code> <code>WHITESPACE</code></h3><h3 id="basic_unicode20-u0014-whitespace"><a class="doc-anchor" href="#basic_unicode20-u0014-whitespace">§</a><code>BASIC_UNICODE[20]: U+0014</code> <code>WHITESPACE</code></h3><h3 id="basic_unicode21-u0015-whitespace"><a class="doc-anchor" href="#basic_unicode21-u0015-whitespace">§</a><code>BASIC_UNICODE[21]: U+0015</code> <code>WHITESPACE</code></h3><h3 id="basic_unicode22-u0016-whitespace"><a class="doc-anchor" href="#basic_unicode22-u0016-whitespace">§</a><code>BASIC_UNICODE[22]: U+0016</code> <code>WHITESPACE</code></h3><h3 id="basic_unicode23-u0017-whitespace"><a class="doc-anchor" href="#basic_unicode23-u0017-whitespace">§</a><code>BASIC_UNICODE[23]: U+0017</code> <code>WHITESPACE</code></h3><h3 id="basic_unicode24-u0018-whitespace"><a class="doc-anchor" href="#basic_unicode24-u0018-whitespace">§</a><code>BASIC_UNICODE[24]: U+0018</code> <code>WHITESPACE</code></h3><h3 id="basic_unicode25-u0019-whitespace"><a class="doc-anchor" href="#basic_unicode25-u0019-whitespace">§</a><code>BASIC_UNICODE[25]: U+0019</code> <code>WHITESPACE</code></h3><h3 id="basic_unicode26-u001a-whitespace"><a class="doc-anchor" href="#basic_unicode26-u001a-whitespace">§</a><code>BASIC_UNICODE[26]: U+001A</code> <code>WHITESPACE</code></h3><h3 id="basic_unicode27-u001b-whitespace"><a class="doc-anchor" href="#basic_unicode27-u001b-whitespace">§</a><code>BASIC_UNICODE[27]: U+001B</code> <code>WHITESPACE</code></h3><h3 id="basic_unicode28-u001c-whitespace"><a class="doc-anchor" href="#basic_unicode28-u001c-whitespace">§</a><code>BASIC_UNICODE[28]: U+001C</code> <code>WHITESPACE</code></h3><h3 id="basic_unicode29-u001d-whitespace"><a class="doc-anchor" href="#basic_unicode29-u001d-whitespace">§</a><code>BASIC_UNICODE[29]: U+001D</code> <code>WHITESPACE</code></h3><h3 id="basic_unicode30-u001e-whitespace"><a class="doc-anchor" href="#basic_unicode30-u001e-whitespace">§</a><code>BASIC_UNICODE[30]: U+001E</code> <code>WHITESPACE</code></h3><h3 id="basic_unicode31-u001f-whitespace"><a class="doc-anchor" href="#basic_unicode31-u001f-whitespace">§</a><code>BASIC_UNICODE[31]: U+001F</code> <code>WHITESPACE</code></h3><h3 id="basic_unicode32-u0020-whitespace"><a class="doc-anchor" href="#basic_unicode32-u0020-whitespace">§</a><code>BASIC_UNICODE[32]: U+0020</code> <code>WHITESPACE</code></h3><h3 id="basic_unicode33-u0021"><a class="doc-anchor" href="#basic_unicode33-u0021">§</a><code>BASIC_UNICODE[33]: U+0021</code></h3>
+<p><code>"!"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░██░░░
+░░████░░
+░░████░░
+░░░██░░░
+░░░██░░░
+░░░░░░░░
+░░░██░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode34-u0022"><a class="doc-anchor" href="#basic_unicode34-u0022">§</a><code>BASIC_UNICODE[34]: U+0022</code></h3>
+<p><code>"\"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░██░██░░
+░██░██░░
+░░░░░░░░
+░░░░░░░░
+░░░░░░░░
+░░░░░░░░
+░░░░░░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode35-u0023"><a class="doc-anchor" href="#basic_unicode35-u0023">§</a><code>BASIC_UNICODE[35]: U+0023</code></h3>
+<p><code>"#"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░██░██░░
+░██░██░░
+███████░
+░██░██░░
+███████░
+░██░██░░
+░██░██░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode36-u0024"><a class="doc-anchor" href="#basic_unicode36-u0024">§</a><code>BASIC_UNICODE[36]: U+0024</code></h3>
+<p><code>"$"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░██░░░░
+░█████░░
+██░░░░░░
+░████░░░
+░░░░██░░
+█████░░░
+░░██░░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode37-u0025"><a class="doc-anchor" href="#basic_unicode37-u0025">§</a><code>BASIC_UNICODE[37]: U+0025</code></h3>
+<p><code>"%"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░░░░░░
+██░░░██░
+██░░██░░
+░░░██░░░
+░░██░░░░
+░██░░██░
+██░░░██░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode38-u0026"><a class="doc-anchor" href="#basic_unicode38-u0026">§</a><code>BASIC_UNICODE[38]: U+0026</code></h3>
+<p><code>"&amp;"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░███░░░
+░██░██░░
+░░███░░░
+░███░██░
+██░███░░
+██░░██░░
+░███░██░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode39-u0027"><a class="doc-anchor" href="#basic_unicode39-u0027">§</a><code>BASIC_UNICODE[39]: U+0027</code></h3>
+<p><code>"'"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░██░░░░░
+░██░░░░░
+██░░░░░░
+░░░░░░░░
+░░░░░░░░
+░░░░░░░░
+░░░░░░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode40-u0028"><a class="doc-anchor" href="#basic_unicode40-u0028">§</a><code>BASIC_UNICODE[40]: U+0028</code></h3>
+<p><code>"("</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░██░░░
+░░██░░░░
+░██░░░░░
+░██░░░░░
+░██░░░░░
+░░██░░░░
+░░░██░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode41-u0029"><a class="doc-anchor" href="#basic_unicode41-u0029">§</a><code>BASIC_UNICODE[41]: U+0029</code></h3>
+<p><code>")"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░██░░░░░
+░░██░░░░
+░░░██░░░
+░░░██░░░
+░░░██░░░
+░░██░░░░
+░██░░░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode42-u002a"><a class="doc-anchor" href="#basic_unicode42-u002a">§</a><code>BASIC_UNICODE[42]: U+002A</code></h3>
+<p><code>"*"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░░░░░░
+░██░░██░
+░░████░░
+████████
+░░████░░
+░██░░██░
+░░░░░░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode43-u002b"><a class="doc-anchor" href="#basic_unicode43-u002b">§</a><code>BASIC_UNICODE[43]: U+002B</code></h3>
+<p><code>"+"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░░░░░░
+░░██░░░░
+░░██░░░░
+██████░░
+░░██░░░░
+░░██░░░░
+░░░░░░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode44-u002c"><a class="doc-anchor" href="#basic_unicode44-u002c">§</a><code>BASIC_UNICODE[44]: U+002C</code></h3>
+<p><code>","</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░░░░░░
+░░░░░░░░
+░░░░░░░░
+░░░░░░░░
+░░░░░░░░
+░░██░░░░
+░░██░░░░
+░██░░░░░</code></pre></div><h3 id="basic_unicode45-u002d"><a class="doc-anchor" href="#basic_unicode45-u002d">§</a><code>BASIC_UNICODE[45]: U+002D</code></h3>
+<p><code>"-"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░░░░░░
+░░░░░░░░
+░░░░░░░░
+██████░░
+░░░░░░░░
+░░░░░░░░
+░░░░░░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode46-u002e"><a class="doc-anchor" href="#basic_unicode46-u002e">§</a><code>BASIC_UNICODE[46]: U+002E</code></h3>
+<p><code>"."</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░░░░░░
+░░░░░░░░
+░░░░░░░░
+░░░░░░░░
+░░░░░░░░
+░░██░░░░
+░░██░░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode47-u002f"><a class="doc-anchor" href="#basic_unicode47-u002f">§</a><code>BASIC_UNICODE[47]: U+002F</code></h3>
+<p><code>"/"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░░░██░
+░░░░██░░
+░░░██░░░
+░░██░░░░
+░██░░░░░
+██░░░░░░
+█░░░░░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode48-u0030"><a class="doc-anchor" href="#basic_unicode48-u0030">§</a><code>BASIC_UNICODE[48]: U+0030</code></h3>
+<p><code>"0"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░█████░░
+██░░░██░
+██░░███░
+██░████░
+████░██░
+███░░██░
+░█████░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode49-u0031"><a class="doc-anchor" href="#basic_unicode49-u0031">§</a><code>BASIC_UNICODE[49]: U+0031</code></h3>
+<p><code>"1"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░██░░░░
+░███░░░░
+░░██░░░░
+░░██░░░░
+░░██░░░░
+░░██░░░░
+██████░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode50-u0032"><a class="doc-anchor" href="#basic_unicode50-u0032">§</a><code>BASIC_UNICODE[50]: U+0032</code></h3>
+<p><code>"2"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░████░░░
+██░░██░░
+░░░░██░░
+░░███░░░
+░██░░░░░
+██░░██░░
+██████░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode51-u0033"><a class="doc-anchor" href="#basic_unicode51-u0033">§</a><code>BASIC_UNICODE[51]: U+0033</code></h3>
+<p><code>"3"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░████░░░
+██░░██░░
+░░░░██░░
+░░███░░░
+░░░░██░░
+██░░██░░
+░████░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode52-u0034"><a class="doc-anchor" href="#basic_unicode52-u0034">§</a><code>BASIC_UNICODE[52]: U+0034</code></h3>
+<p><code>"4"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░███░░
+░░████░░
+░██░██░░
+██░░██░░
+███████░
+░░░░██░░
+░░░████░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode53-u0035"><a class="doc-anchor" href="#basic_unicode53-u0035">§</a><code>BASIC_UNICODE[53]: U+0035</code></h3>
+<p><code>"5"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>██████░░
+██░░░░░░
+█████░░░
+░░░░██░░
+░░░░██░░
+██░░██░░
+░████░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode54-u0036"><a class="doc-anchor" href="#basic_unicode54-u0036">§</a><code>BASIC_UNICODE[54]: U+0036</code></h3>
+<p><code>"6"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░███░░░
+░██░░░░░
+██░░░░░░
+█████░░░
+██░░██░░
+██░░██░░
+░████░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode55-u0037"><a class="doc-anchor" href="#basic_unicode55-u0037">§</a><code>BASIC_UNICODE[55]: U+0037</code></h3>
+<p><code>"7"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>██████░░
+██░░██░░
+░░░░██░░
+░░░██░░░
+░░██░░░░
+░░██░░░░
+░░██░░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode56-u0038"><a class="doc-anchor" href="#basic_unicode56-u0038">§</a><code>BASIC_UNICODE[56]: U+0038</code></h3>
+<p><code>"8"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░████░░░
+██░░██░░
+██░░██░░
+░████░░░
+██░░██░░
+██░░██░░
+░████░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode57-u0039"><a class="doc-anchor" href="#basic_unicode57-u0039">§</a><code>BASIC_UNICODE[57]: U+0039</code></h3>
+<p><code>"9"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░████░░░
+██░░██░░
+██░░██░░
+░█████░░
+░░░░██░░
+░░░██░░░
+░███░░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode58-u003a"><a class="doc-anchor" href="#basic_unicode58-u003a">§</a><code>BASIC_UNICODE[58]: U+003A</code></h3>
+<p><code>":"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░░░░░░
+░░██░░░░
+░░██░░░░
+░░░░░░░░
+░░░░░░░░
+░░██░░░░
+░░██░░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode59-u003b"><a class="doc-anchor" href="#basic_unicode59-u003b">§</a><code>BASIC_UNICODE[59]: U+003B</code></h3>
+<p><code>";"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░░░░░░
+░░██░░░░
+░░██░░░░
+░░░░░░░░
+░░░░░░░░
+░░██░░░░
+░░██░░░░
+░██░░░░░</code></pre></div><h3 id="basic_unicode60-u003c"><a class="doc-anchor" href="#basic_unicode60-u003c">§</a><code>BASIC_UNICODE[60]: U+003C</code></h3>
+<p><code>"&lt;"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░██░░░
+░░██░░░░
+░██░░░░░
+██░░░░░░
+░██░░░░░
+░░██░░░░
+░░░██░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode61-u003d"><a class="doc-anchor" href="#basic_unicode61-u003d">§</a><code>BASIC_UNICODE[61]: U+003D</code></h3>
+<p><code>"="</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░░░░░░
+░░░░░░░░
+██████░░
+░░░░░░░░
+░░░░░░░░
+██████░░
+░░░░░░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode62-u003e"><a class="doc-anchor" href="#basic_unicode62-u003e">§</a><code>BASIC_UNICODE[62]: U+003E</code></h3>
+<p><code>"&gt;"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░██░░░░░
+░░██░░░░
+░░░██░░░
+░░░░██░░
+░░░██░░░
+░░██░░░░
+░██░░░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode63-u003f"><a class="doc-anchor" href="#basic_unicode63-u003f">§</a><code>BASIC_UNICODE[63]: U+003F</code></h3>
+<p><code>"?"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░████░░░
+██░░██░░
+░░░░██░░
+░░░██░░░
+░░██░░░░
+░░░░░░░░
+░░██░░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode64-u0040"><a class="doc-anchor" href="#basic_unicode64-u0040">§</a><code>BASIC_UNICODE[64]: U+0040</code></h3>
+<p><code>"@"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░█████░░
+██░░░██░
+██░████░
+██░████░
+██░████░
+██░░░░░░
+░████░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode65-u0041"><a class="doc-anchor" href="#basic_unicode65-u0041">§</a><code>BASIC_UNICODE[65]: U+0041</code></h3>
+<p><code>"A"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░██░░░░
+░████░░░
+██░░██░░
+██░░██░░
+██████░░
+██░░██░░
+██░░██░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode66-u0042"><a class="doc-anchor" href="#basic_unicode66-u0042">§</a><code>BASIC_UNICODE[66]: U+0042</code></h3>
+<p><code>"B"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>██████░░
+░██░░██░
+░██░░██░
+░█████░░
+░██░░██░
+░██░░██░
+██████░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode67-u0043"><a class="doc-anchor" href="#basic_unicode67-u0043">§</a><code>BASIC_UNICODE[67]: U+0043</code></h3>
+<p><code>"C"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░████░░
+░██░░██░
+██░░░░░░
+██░░░░░░
+██░░░░░░
+░██░░██░
+░░████░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode68-u0044"><a class="doc-anchor" href="#basic_unicode68-u0044">§</a><code>BASIC_UNICODE[68]: U+0044</code></h3>
+<p><code>"D"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>█████░░░
+░██░██░░
+░██░░██░
+░██░░██░
+░██░░██░
+░██░██░░
+█████░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode69-u0045"><a class="doc-anchor" href="#basic_unicode69-u0045">§</a><code>BASIC_UNICODE[69]: U+0045</code></h3>
+<p><code>"E"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>███████░
+░██░░░█░
+░██░█░░░
+░████░░░
+░██░█░░░
+░██░░░█░
+███████░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode70-u0046"><a class="doc-anchor" href="#basic_unicode70-u0046">§</a><code>BASIC_UNICODE[70]: U+0046</code></h3>
+<p><code>"F"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>███████░
+░██░░░█░
+░██░█░░░
+░████░░░
+░██░█░░░
+░██░░░░░
+████░░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode71-u0047"><a class="doc-anchor" href="#basic_unicode71-u0047">§</a><code>BASIC_UNICODE[71]: U+0047</code></h3>
+<p><code>"G"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░████░░
+░██░░██░
+██░░░░░░
+██░░░░░░
+██░░███░
+░██░░██░
+░░█████░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode72-u0048"><a class="doc-anchor" href="#basic_unicode72-u0048">§</a><code>BASIC_UNICODE[72]: U+0048</code></h3>
+<p><code>"H"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>██░░██░░
+██░░██░░
+██░░██░░
+██████░░
+██░░██░░
+██░░██░░
+██░░██░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode73-u0049"><a class="doc-anchor" href="#basic_unicode73-u0049">§</a><code>BASIC_UNICODE[73]: U+0049</code></h3>
+<p><code>"I"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░████░░░
+░░██░░░░
+░░██░░░░
+░░██░░░░
+░░██░░░░
+░░██░░░░
+░████░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode74-u004a"><a class="doc-anchor" href="#basic_unicode74-u004a">§</a><code>BASIC_UNICODE[74]: U+004A</code></h3>
+<p><code>"J"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░████░
+░░░░██░░
+░░░░██░░
+░░░░██░░
+██░░██░░
+██░░██░░
+░████░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode75-u004b"><a class="doc-anchor" href="#basic_unicode75-u004b">§</a><code>BASIC_UNICODE[75]: U+004B</code></h3>
+<p><code>"K"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>███░░██░
+░██░░██░
+░██░██░░
+░████░░░
+░██░██░░
+░██░░██░
+███░░██░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode76-u004c"><a class="doc-anchor" href="#basic_unicode76-u004c">§</a><code>BASIC_UNICODE[76]: U+004C</code></h3>
+<p><code>"L"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>████░░░░
+░██░░░░░
+░██░░░░░
+░██░░░░░
+░██░░░█░
+░██░░██░
+███████░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode77-u004d"><a class="doc-anchor" href="#basic_unicode77-u004d">§</a><code>BASIC_UNICODE[77]: U+004D</code></h3>
+<p><code>"M"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>██░░░██░
+███░███░
+███████░
+███████░
+██░█░██░
+██░░░██░
+██░░░██░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode78-u004e"><a class="doc-anchor" href="#basic_unicode78-u004e">§</a><code>BASIC_UNICODE[78]: U+004E</code></h3>
+<p><code>"N"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>██░░░██░
+███░░██░
+████░██░
+██░████░
+██░░███░
+██░░░██░
+██░░░██░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode79-u004f"><a class="doc-anchor" href="#basic_unicode79-u004f">§</a><code>BASIC_UNICODE[79]: U+004F</code></h3>
+<p><code>"O"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░███░░░
+░██░██░░
+██░░░██░
+██░░░██░
+██░░░██░
+░██░██░░
+░░███░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode80-u0050"><a class="doc-anchor" href="#basic_unicode80-u0050">§</a><code>BASIC_UNICODE[80]: U+0050</code></h3>
+<p><code>"P"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>██████░░
+░██░░██░
+░██░░██░
+░█████░░
+░██░░░░░
+░██░░░░░
+████░░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode81-u0051"><a class="doc-anchor" href="#basic_unicode81-u0051">§</a><code>BASIC_UNICODE[81]: U+0051</code></h3>
+<p><code>"Q"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░████░░░
+██░░██░░
+██░░██░░
+██░░██░░
+██░███░░
+░████░░░
+░░░███░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode82-u0052"><a class="doc-anchor" href="#basic_unicode82-u0052">§</a><code>BASIC_UNICODE[82]: U+0052</code></h3>
+<p><code>"R"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>██████░░
+░██░░██░
+░██░░██░
+░█████░░
+░██░██░░
+░██░░██░
+███░░██░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode83-u0053"><a class="doc-anchor" href="#basic_unicode83-u0053">§</a><code>BASIC_UNICODE[83]: U+0053</code></h3>
+<p><code>"S"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░████░░░
+██░░██░░
+███░░░░░
+░███░░░░
+░░░███░░
+██░░██░░
+░████░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode84-u0054"><a class="doc-anchor" href="#basic_unicode84-u0054">§</a><code>BASIC_UNICODE[84]: U+0054</code></h3>
+<p><code>"T"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>██████░░
+█░██░█░░
+░░██░░░░
+░░██░░░░
+░░██░░░░
+░░██░░░░
+░████░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode85-u0055"><a class="doc-anchor" href="#basic_unicode85-u0055">§</a><code>BASIC_UNICODE[85]: U+0055</code></h3>
+<p><code>"U"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>██░░██░░
+██░░██░░
+██░░██░░
+██░░██░░
+██░░██░░
+██░░██░░
+██████░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode86-u0056"><a class="doc-anchor" href="#basic_unicode86-u0056">§</a><code>BASIC_UNICODE[86]: U+0056</code></h3>
+<p><code>"V"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>██░░██░░
+██░░██░░
+██░░██░░
+██░░██░░
+██░░██░░
+░████░░░
+░░██░░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode87-u0057"><a class="doc-anchor" href="#basic_unicode87-u0057">§</a><code>BASIC_UNICODE[87]: U+0057</code></h3>
+<p><code>"W"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>██░░░██░
+██░░░██░
+██░░░██░
+██░█░██░
+███████░
+███░███░
+██░░░██░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode88-u0058"><a class="doc-anchor" href="#basic_unicode88-u0058">§</a><code>BASIC_UNICODE[88]: U+0058</code></h3>
+<p><code>"X"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>██░░░██░
+██░░░██░
+░██░██░░
+░░███░░░
+░░███░░░
+░██░██░░
+██░░░██░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode89-u0059"><a class="doc-anchor" href="#basic_unicode89-u0059">§</a><code>BASIC_UNICODE[89]: U+0059</code></h3>
+<p><code>"Y"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>██░░██░░
+██░░██░░
+██░░██░░
+░████░░░
+░░██░░░░
+░░██░░░░
+░████░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode90-u005a"><a class="doc-anchor" href="#basic_unicode90-u005a">§</a><code>BASIC_UNICODE[90]: U+005A</code></h3>
+<p><code>"Z"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>███████░
+██░░░██░
+█░░░██░░
+░░░██░░░
+░░██░░█░
+░██░░██░
+███████░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode91-u005b"><a class="doc-anchor" href="#basic_unicode91-u005b">§</a><code>BASIC_UNICODE[91]: U+005B</code></h3>
+<p><code>"["</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░████░░░
+░██░░░░░
+░██░░░░░
+░██░░░░░
+░██░░░░░
+░██░░░░░
+░████░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode92-u005c"><a class="doc-anchor" href="#basic_unicode92-u005c">§</a><code>BASIC_UNICODE[92]: U+005C</code></h3>
+<p><code>"\"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>██░░░░░░
+░██░░░░░
+░░██░░░░
+░░░██░░░
+░░░░██░░
+░░░░░██░
+░░░░░░█░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode93-u005d"><a class="doc-anchor" href="#basic_unicode93-u005d">§</a><code>BASIC_UNICODE[93]: U+005D</code></h3>
+<p><code>"]"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░████░░░
+░░░██░░░
+░░░██░░░
+░░░██░░░
+░░░██░░░
+░░░██░░░
+░████░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode94-u005e"><a class="doc-anchor" href="#basic_unicode94-u005e">§</a><code>BASIC_UNICODE[94]: U+005E</code></h3>
+<p><code>"^"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░█░░░░
+░░███░░░
+░██░██░░
+██░░░██░
+░░░░░░░░
+░░░░░░░░
+░░░░░░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode95-u005f"><a class="doc-anchor" href="#basic_unicode95-u005f">§</a><code>BASIC_UNICODE[95]: U+005F</code></h3>
+<p><code>"_"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░░░░░░
+░░░░░░░░
+░░░░░░░░
+░░░░░░░░
+░░░░░░░░
+░░░░░░░░
+░░░░░░░░
+████████</code></pre></div><h3 id="basic_unicode96-u0060"><a class="doc-anchor" href="#basic_unicode96-u0060">§</a><code>BASIC_UNICODE[96]: U+0060</code></h3><pre>"`"</pre>
+<div class="example-wrap"><pre class="language-text"><code>░░██░░░░
+░░██░░░░
+░░░██░░░
+░░░░░░░░
+░░░░░░░░
+░░░░░░░░
+░░░░░░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode97-u0061"><a class="doc-anchor" href="#basic_unicode97-u0061">§</a><code>BASIC_UNICODE[97]: U+0061</code></h3>
+<p><code>"a"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░░░░░░
+░░░░░░░░
+░████░░░
+░░░░██░░
+░█████░░
+██░░██░░
+░███░██░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode98-u0062"><a class="doc-anchor" href="#basic_unicode98-u0062">§</a><code>BASIC_UNICODE[98]: U+0062</code></h3>
+<p><code>"b"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>███░░░░░
+░██░░░░░
+░██░░░░░
+░█████░░
+░██░░██░
+░██░░██░
+██░███░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode99-u0063"><a class="doc-anchor" href="#basic_unicode99-u0063">§</a><code>BASIC_UNICODE[99]: U+0063</code></h3>
+<p><code>"c"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░░░░░░
+░░░░░░░░
+░████░░░
+██░░██░░
+██░░░░░░
+██░░██░░
+░████░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode100-u0064"><a class="doc-anchor" href="#basic_unicode100-u0064">§</a><code>BASIC_UNICODE[100]: U+0064</code></h3>
+<p><code>"d"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░███░░
+░░░░██░░
+░░░░██░░
+░█████░░
+██░░██░░
+██░░██░░
+░███░██░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode101-u0065"><a class="doc-anchor" href="#basic_unicode101-u0065">§</a><code>BASIC_UNICODE[101]: U+0065</code></h3>
+<p><code>"e"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░░░░░░
+░░░░░░░░
+░████░░░
+██░░██░░
+██████░░
+██░░░░░░
+░████░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode102-u0066"><a class="doc-anchor" href="#basic_unicode102-u0066">§</a><code>BASIC_UNICODE[102]: U+0066</code></h3>
+<p><code>"f"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░███░░░
+░██░██░░
+░██░░░░░
+████░░░░
+░██░░░░░
+░██░░░░░
+████░░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode103-u0067"><a class="doc-anchor" href="#basic_unicode103-u0067">§</a><code>BASIC_UNICODE[103]: U+0067</code></h3>
+<p><code>"g"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░░░░░░
+░░░░░░░░
+░███░██░
+██░░██░░
+██░░██░░
+░█████░░
+░░░░██░░
+█████░░░</code></pre></div><h3 id="basic_unicode104-u0068"><a class="doc-anchor" href="#basic_unicode104-u0068">§</a><code>BASIC_UNICODE[104]: U+0068</code></h3>
+<p><code>"h"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>███░░░░░
+░██░░░░░
+░██░██░░
+░███░██░
+░██░░██░
+░██░░██░
+███░░██░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode105-u0069"><a class="doc-anchor" href="#basic_unicode105-u0069">§</a><code>BASIC_UNICODE[105]: U+0069</code></h3>
+<p><code>"i"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░██░░░░
+░░░░░░░░
+░███░░░░
+░░██░░░░
+░░██░░░░
+░░██░░░░
+░████░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode106-u006a"><a class="doc-anchor" href="#basic_unicode106-u006a">§</a><code>BASIC_UNICODE[106]: U+006A</code></h3>
+<p><code>"j"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░░██░░
+░░░░░░░░
+░░░░██░░
+░░░░██░░
+░░░░██░░
+██░░██░░
+██░░██░░
+░████░░░</code></pre></div><h3 id="basic_unicode107-u006b"><a class="doc-anchor" href="#basic_unicode107-u006b">§</a><code>BASIC_UNICODE[107]: U+006B</code></h3>
+<p><code>"k"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>███░░░░░
+░██░░░░░
+░██░░██░
+░██░██░░
+░████░░░
+░██░██░░
+███░░██░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode108-u006c"><a class="doc-anchor" href="#basic_unicode108-u006c">§</a><code>BASIC_UNICODE[108]: U+006C</code></h3>
+<p><code>"l"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░███░░░░
+░░██░░░░
+░░██░░░░
+░░██░░░░
+░░██░░░░
+░░██░░░░
+░████░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode109-u006d"><a class="doc-anchor" href="#basic_unicode109-u006d">§</a><code>BASIC_UNICODE[109]: U+006D</code></h3>
+<p><code>"m"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░░░░░░
+░░░░░░░░
+██░░██░░
+███████░
+███████░
+██░█░██░
+██░░░██░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode110-u006e"><a class="doc-anchor" href="#basic_unicode110-u006e">§</a><code>BASIC_UNICODE[110]: U+006E</code></h3>
+<p><code>"n"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░░░░░░
+░░░░░░░░
+█████░░░
+██░░██░░
+██░░██░░
+██░░██░░
+██░░██░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode111-u006f"><a class="doc-anchor" href="#basic_unicode111-u006f">§</a><code>BASIC_UNICODE[111]: U+006F</code></h3>
+<p><code>"o"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░░░░░░
+░░░░░░░░
+░████░░░
+██░░██░░
+██░░██░░
+██░░██░░
+░████░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode112-u0070"><a class="doc-anchor" href="#basic_unicode112-u0070">§</a><code>BASIC_UNICODE[112]: U+0070</code></h3>
+<p><code>"p"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░░░░░░
+░░░░░░░░
+██░███░░
+░██░░██░
+░██░░██░
+░█████░░
+░██░░░░░
+████░░░░</code></pre></div><h3 id="basic_unicode113-u0071"><a class="doc-anchor" href="#basic_unicode113-u0071">§</a><code>BASIC_UNICODE[113]: U+0071</code></h3>
+<p><code>"q"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░░░░░░
+░░░░░░░░
+░███░██░
+██░░██░░
+██░░██░░
+░█████░░
+░░░░██░░
+░░░████░</code></pre></div><h3 id="basic_unicode114-u0072"><a class="doc-anchor" href="#basic_unicode114-u0072">§</a><code>BASIC_UNICODE[114]: U+0072</code></h3>
+<p><code>"r"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░░░░░░
+░░░░░░░░
+██░███░░
+░███░██░
+░██░░██░
+░██░░░░░
+████░░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode115-u0073"><a class="doc-anchor" href="#basic_unicode115-u0073">§</a><code>BASIC_UNICODE[115]: U+0073</code></h3>
+<p><code>"s"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░░░░░░
+░░░░░░░░
+░█████░░
+██░░░░░░
+░████░░░
+░░░░██░░
+█████░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode116-u0074"><a class="doc-anchor" href="#basic_unicode116-u0074">§</a><code>BASIC_UNICODE[116]: U+0074</code></h3>
+<p><code>"t"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░█░░░░
+░░██░░░░
+░█████░░
+░░██░░░░
+░░██░░░░
+░░██░█░░
+░░░██░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode117-u0075"><a class="doc-anchor" href="#basic_unicode117-u0075">§</a><code>BASIC_UNICODE[117]: U+0075</code></h3>
+<p><code>"u"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░░░░░░
+░░░░░░░░
+██░░██░░
+██░░██░░
+██░░██░░
+██░░██░░
+░███░██░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode118-u0076"><a class="doc-anchor" href="#basic_unicode118-u0076">§</a><code>BASIC_UNICODE[118]: U+0076</code></h3>
+<p><code>"v"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░░░░░░
+░░░░░░░░
+██░░██░░
+██░░██░░
+██░░██░░
+░████░░░
+░░██░░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode119-u0077"><a class="doc-anchor" href="#basic_unicode119-u0077">§</a><code>BASIC_UNICODE[119]: U+0077</code></h3>
+<p><code>"w"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░░░░░░
+░░░░░░░░
+██░░░██░
+██░█░██░
+███████░
+███████░
+░██░██░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode120-u0078"><a class="doc-anchor" href="#basic_unicode120-u0078">§</a><code>BASIC_UNICODE[120]: U+0078</code></h3>
+<p><code>"x"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░░░░░░
+░░░░░░░░
+██░░░██░
+░██░██░░
+░░███░░░
+░██░██░░
+██░░░██░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode121-u0079"><a class="doc-anchor" href="#basic_unicode121-u0079">§</a><code>BASIC_UNICODE[121]: U+0079</code></h3>
+<p><code>"y"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░░░░░░
+░░░░░░░░
+██░░██░░
+██░░██░░
+██░░██░░
+░█████░░
+░░░░██░░
+█████░░░</code></pre></div><h3 id="basic_unicode122-u007a"><a class="doc-anchor" href="#basic_unicode122-u007a">§</a><code>BASIC_UNICODE[122]: U+007A</code></h3>
+<p><code>"z"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░░░░░░
+░░░░░░░░
+██████░░
+█░░██░░░
+░░██░░░░
+░██░░█░░
+██████░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode123-u007b"><a class="doc-anchor" href="#basic_unicode123-u007b">§</a><code>BASIC_UNICODE[123]: U+007B</code></h3>
+<p><code>"{"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░███░░
+░░██░░░░
+░░██░░░░
+███░░░░░
+░░██░░░░
+░░██░░░░
+░░░███░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode124-u007c"><a class="doc-anchor" href="#basic_unicode124-u007c">§</a><code>BASIC_UNICODE[124]: U+007C</code></h3>
+<p><code>"|"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░░░██░░░
+░░░██░░░
+░░░██░░░
+░░░░░░░░
+░░░██░░░
+░░░██░░░
+░░░██░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode125-u007d"><a class="doc-anchor" href="#basic_unicode125-u007d">§</a><code>BASIC_UNICODE[125]: U+007D</code></h3>
+<p><code>"}"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>███░░░░░
+░░██░░░░
+░░██░░░░
+░░░███░░
+░░██░░░░
+░░██░░░░
+███░░░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode126-u007e"><a class="doc-anchor" href="#basic_unicode126-u007e">§</a><code>BASIC_UNICODE[126]: U+007E</code></h3>
+<p><code>"~"</code></p>
+<div class="example-wrap"><pre class="language-text"><code>░███░██░
+██░███░░
+░░░░░░░░
+░░░░░░░░
+░░░░░░░░
+░░░░░░░░
+░░░░░░░░
+░░░░░░░░</code></pre></div><h3 id="basic_unicode127-u007f-whitespace"><a class="doc-anchor" href="#basic_unicode127-u007f-whitespace">§</a><code>BASIC_UNICODE[127]: U+007F</code> <code>WHITESPACE</code></h3></div></details></section></div></main></body></html>

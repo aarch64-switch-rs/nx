@@ -1,6 +1,5 @@
 use core::fmt::Debug;
 use core::mem::MaybeUninit;
-use core::ptr::addr_of;
 use core::sync::atomic::Ordering;
 use core::sync::atomic::{AtomicU64, AtomicUsize};
 
@@ -38,35 +37,19 @@ pub struct AtomicSample<T: Copy + Clone + Debug> {
     pub storage: T,
 }
 
-/*
-impl<T: Debug> core::fmt::Debug for AtomicSample<T> {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        f.debug_struct("LifoStorageAtomicContainer")
-        .field("sampling_size", &self.sampling_size.load(Ordering::Relaxed))
-        .field("storage", &self.storage)
-        .finish()
-    }
-} */
-
 impl<T: Copy + Debug, const S: usize> RingLifo<T, S> {
     pub fn get_tail_item(&self) -> T {
         let mut out_value: MaybeUninit<T> = MaybeUninit::uninit();
         loop {
             let tail_index = self.tail.load(Ordering::Acquire);
-            /*debug_assert!(
-                tail_index < self.count.load(Ordering::Acquire),
-                "We are somehow loading from a tail index that hasn't been written to yet."
-            );*/
             let sampling_value_before =
                 self.items[tail_index].sampling_size.load(Ordering::Acquire);
             // We read through a volatile pointer since it basically an uncached memcpy for our purposes.
             // The read is safe, as it is being constructed from a valid reference.
             unsafe {
-                out_value
-                    .as_mut_ptr()
-                    .write(core::ptr::read_volatile(addr_of!(
-                        self.items[tail_index].storage
-                    )))
+                out_value.as_mut_ptr().write(core::ptr::read_volatile(
+                    &raw const self.items[tail_index].storage,
+                ))
             };
             if sampling_value_before == self.items[tail_index].sampling_size.load(Ordering::Acquire)
             {

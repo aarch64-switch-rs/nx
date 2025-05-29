@@ -212,8 +212,8 @@ pub enum WriteType {
     Unk1 = 1,
 }
 
-ipc_sf_define_default_client_for_interface!(User);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait User {
     #[ipc_rid(0)]
     fn initialize(
@@ -303,16 +303,16 @@ pub trait User {
     );
 }
 
-ipc_sf_define_default_client_for_interface!(UserManager);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait UserManager {
     #[ipc_rid(0)]
     #[return_session]
     fn create_user_interface(&self) -> User;
 }
 
-ipc_sf_define_default_client_for_interface!(System);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait System {
     #[ipc_rid(0)]
     fn initialize_system(
@@ -401,16 +401,16 @@ pub trait System {
     fn exists_application_area(&self, device_handle: DeviceHandle) -> bool;
 }
 
-ipc_sf_define_default_client_for_interface!(SystemManager);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait SystemManager {
     #[ipc_rid(0)]
     #[return_session]
     fn create_system_interface(&self) -> System;
 }
 
-ipc_sf_define_default_client_for_interface!(Debug);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait Debug {
     #[ipc_rid(0)]
     fn initialize_debug(
@@ -549,8 +549,8 @@ pub trait Debug {
     );
 }
 
-ipc_sf_define_default_client_for_interface!(DebugManager);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait DebugManager {
     #[ipc_rid(0)]
     #[return_session]

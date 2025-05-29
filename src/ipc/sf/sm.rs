@@ -55,8 +55,8 @@ impl core::fmt::Debug for ServiceName {
     }
 }
 
-ipc_sf_define_default_client_for_interface!(UserInterface);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait UserInterface {
     #[ipc_rid(0)]
     fn register_client(&self, process_id: sf::ProcessId);

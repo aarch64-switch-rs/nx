@@ -49,8 +49,8 @@ pub enum LayerStackId {
     Null,
 }
 
-ipc_sf_define_default_client_for_interface!(ManagerDisplay);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait ManagerDisplay {
     #[ipc_rid(2010)]
     fn create_managed_layer(
@@ -65,8 +65,8 @@ pub trait ManagerDisplay {
     fn add_to_layer_stack(&self, stack: LayerStackId, layer: LayerId);
 }
 
-ipc_sf_define_default_client_for_interface!(SystemDisplay);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait SystemDisplay {
     #[ipc_rid(1200)]
     fn get_z_order_count_min(&self, display_id: DisplayId) -> i64;
@@ -82,8 +82,8 @@ pub trait SystemDisplay {
     fn set_layer_visibility(&mut self, visible: bool, id: LayerId);
 }
 
-ipc_sf_define_default_client_for_interface!(ApplicationDisplay);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait ApplicationDisplay {
     #[ipc_rid(100)]
     fn get_relay_service(&self) -> sf::dispdrv::HOSBinderDriver;
@@ -120,7 +120,6 @@ pub trait ApplicationDisplay {
     fn get_display_vsync_event(&self, id: DisplayId) -> sf::CopyHandle;
 }
 
-//ipc_sf_define_default_client_for_interface!(ApplicationRootService);
 #[nx_derive::ipc_trait]
 pub trait ApplicationDisplayRoot {
     #[ipc_rid(0)]

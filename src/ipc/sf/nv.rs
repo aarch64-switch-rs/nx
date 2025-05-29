@@ -42,7 +42,6 @@ pub enum IoctlId {
 
 pub type Fd = u32;
 
-//ipc_sf_define_default_client_for_interface!(NvDrvServices);
 #[nx_derive::ipc_trait]
 pub trait NvDrv {
     #[ipc_rid(0)]

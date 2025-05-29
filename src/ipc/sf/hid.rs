@@ -268,29 +268,7 @@ define_bit_enum! {
         System = bit!(30) // Generic controller
     }
 }
-/*
-#[atomic_enum]
-#[repr(u32)]
-#[derive(crate::ipc::sf::Request, crate::ipc::sf::Response, PartialEq, Eq, Default)]
-pub enum NpadStyleTag {
-    #[default]
-    None = 0, // The flag was not set for some reason
-    FullKey = bit!(0), // Pro controller
-    Handheld = bit!(1), // Joy-Con controller in handheld mode
-    JoyDual = bit!(2), // Joy-Con controller in dual mode
-    JoyLeft = bit!(3), // Joy-Con left controller in single mode
-    JoyRight = bit!(4), // Joy-Con right controller in single mode
-    Gc = bit!(5), // GameCube controller
-    Palma = bit!(6), // Poké Ball Plus controller
-    Lark = bit!(7), // NES/Famicom controller
-    HandheldLark = bit!(8), // NES/Famicom controller (handheld)
-    Lucia = bit!(9), // SNES controller
-    Lagon = bit!(10), // N64 controller
-    Lager = bit!(11), // Sega Genesis controller
-    SystemExt = bit!(29), // Generic external controller
-    System = bit!(30) // Generic controller
-}
-*/
+
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(i64)]
 pub enum NpadJoyDeviceType {
@@ -539,14 +517,13 @@ define_bit_enum! {
     }
 }
 
-ipc_sf_define_default_client_for_interface!(AppletResource);
 #[nx_derive::ipc_trait]
+#[default_client]
 pub trait AppletResource {
     #[ipc_rid(0)]
     fn get_shared_memory_handle(&mut self) -> sf::CopyHandle;
 }
 
-//ipc_sf_define_default_client_for_interface!(Hid);
 #[nx_derive::ipc_trait]
 pub trait Hid {
     #[ipc_rid(0)]
@@ -587,7 +564,6 @@ pub trait Hid {
     );
 }
 
-//ipc_sf_define_default_client_for_interface!(HidSys);
 #[nx_derive::ipc_trait]
 pub trait HidSys {
     #[ipc_rid(31)]

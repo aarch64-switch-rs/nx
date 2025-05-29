@@ -48,7 +48,6 @@ use crate::{ipc::sf, service, service::set};
 use core::arch::asm;
 use core::mem;
 use core::ptr;
-use core::ptr::addr_of_mut;
 
 use atomic_enum::atomic_enum;
 
@@ -71,18 +70,6 @@ pub enum ExecutableType {
     Nso,
     Nro,
 }
-
-/*
-pub enum ExecutableType {
-    None = -2,
-    #[default]
-    Default = -1,
-    Application = 0,
-    SystemApplet = 1,
-    LibraryApplet = 2,
-    OverlayApplet = 3,
-    SystemApplication = 4
-}*/
 
 static G_EXECUTABLE_TYPE: AtomicExecutableType = AtomicExecutableType::new(ExecutableType::None);
 
@@ -196,7 +183,7 @@ unsafe fn set_main_thread_tlr(handle: svc::Handle) {
 
         MAIN_THREAD.__nx_thread.handle = handle;
 
-        (*tlr_raw).nx_thread_vars.thread_ref = addr_of_mut!(MAIN_THREAD);
+        (*tlr_raw).nx_thread_vars.thread_ref = &raw mut MAIN_THREAD;
     }
 }
 
