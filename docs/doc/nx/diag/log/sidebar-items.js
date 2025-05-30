@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["log_with"],"mod":["fs","lm","svc"],"struct":["LogMetadata"],"trait":["Logger"],"type":["LogSeverity"]};

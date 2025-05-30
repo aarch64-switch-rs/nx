@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"constant":["BASIC_UNICODE","BLOCK_UNICODE","BOX_UNICODE","GREEK_UNICODE","HIRAGANA_UNICODE","LATIN_UNICODE","MISC_UNICODE","SGA_UNICODE"],"struct":["BasicFonts","BlockFonts","BoxFonts","FontUnicode","GreekFonts","HiraganaFonts","LatinFonts","MiscFonts","SgaFonts"],"trait":["UnicodeFonts"]};

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["VoxelOrigin"],"mod":["octant","steps"],"struct":["Bresenham","Bresenham3d","BresenhamCircle","Midpoint","Supercover","WalkGrid","WalkVoxels","XiaolinWu"],"trait":["FloatNum","SignedNum"],"type":["Point","Voxel"]};

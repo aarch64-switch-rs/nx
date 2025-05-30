@@ -31,6 +31,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - run: rustup update
+      - run: rustup toolchain install nightly
+      - run: rustup component add rust-src
+      - run: cargo doc --target=aarch64-nintendo-switch-freestanding --all-features
+      - run: mkdir docs
+      - run: cp .github/docs/index.html ./docs
+      - run: mv ./target/aarch64-nintendo-switch-freestanding/doc ./docs/doc
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact

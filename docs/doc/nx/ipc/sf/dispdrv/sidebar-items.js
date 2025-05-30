@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["NativeHandleType","ParcelTransactionId","RefcountType"],"struct":["HOSBinderDriver"],"trait":["IHOSBinderDriverClient","IHOSBinderDriverServer"],"type":["BinderHandle"]};
