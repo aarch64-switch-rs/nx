@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"constant":["RESULT_MODULE"],"struct":["ResultAccessIdMismatch","ResultAreaAlreadyCreated","ResultAreaNeedsToBeCreated","ResultDeviceNotFound","ResultNeedRestart"]};
