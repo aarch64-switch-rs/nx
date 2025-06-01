@@ -4,7 +4,10 @@ use crate::service;
 
 pub use crate::ipc::sf::usb::hs::*;
 
-impl service::IService for ClientRootSession {
+ipc_client_define_client_default!(ClientRootSessionService);
+impl IClientRootSessionClient for ClientRootSessionService {}
+
+impl service::IService for ClientRootSessionService {
     fn get_name() -> sm::ServiceName {
         sm::ServiceName::new("usb:hs")
     }

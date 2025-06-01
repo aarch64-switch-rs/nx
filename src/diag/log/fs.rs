@@ -6,9 +6,9 @@ use crate::result::*;
 use crate::service;
 use crate::service::fsp::srv::{self, IFileSystemProxyClient};
 
-/// Represents a logger though `FsAccessLog`s (see [`output_access_log_to_sd_card`][`srv::FileSystemProxy::output_access_log_to_sd_card`])
+/// Represents a logger though `FsAccessLog`s (see [`output_access_log_to_sd_card`][`srv::FileSystemProxyService::output_access_log_to_sd_card`])
 pub struct FsAccessLogLogger {
-    service: Result<srv::FileSystemProxy>,
+    service: Result<srv::FileSystemProxyService>,
 }
 
 impl Logger for FsAccessLogLogger {

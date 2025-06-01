@@ -375,8 +375,7 @@ pub trait SystemApplicationProxy {
 }
 
 #[nx_derive::ipc_trait]
-#[default_client]
-pub trait AllSystemAppletProxiesService {
+pub trait AllSystemAppletProxies {
     #[ipc_rid(0)]
     #[return_session]
     fn open_application_proxy(

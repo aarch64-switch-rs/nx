@@ -5,7 +5,10 @@ use crate::service;
 
 pub use crate::ipc::sf::fsp::srv::*;
 
-impl service::IService for FileSystemProxy {
+ipc_client_define_client_default!(FileSystemProxyService);
+impl IFileSystemProxyClient for FileSystemProxyService {}
+
+impl service::IService for FileSystemProxyService {
     fn get_name() -> sm::ServiceName {
         sm::ServiceName::new("fsp-srv")
     }

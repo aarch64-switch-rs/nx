@@ -45,7 +45,6 @@ pub trait RegisteredLocationResolver {
 }
 
 #[nx_derive::ipc_trait]
-#[default_client]
 pub trait LocationResolverManager {
     #[ipc_rid(0)]
     #[return_session]

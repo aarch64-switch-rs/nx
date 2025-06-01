@@ -1,7 +1,9 @@
 use crate::ipc::sf;
 use crate::util;
 
-use super::applet::AppletResourceUserId;
+use sf::dispdrv::{HOSBinderDriver, IHOSBinderDriverServer};
+
+use sf::applet::AppletResourceUserId;
 
 use nx_derive::{Request, Response};
 
@@ -86,7 +88,8 @@ pub trait SystemDisplay {
 #[default_client]
 pub trait ApplicationDisplay {
     #[ipc_rid(100)]
-    fn get_relay_service(&self) -> sf::dispdrv::HOSBinderDriver;
+    #[return_session]
+    fn get_relay_service(&self) -> HOSBinderDriver;
     #[ipc_rid(101)]
     #[return_session]
     fn get_system_display_service(&self) -> SystemDisplay;
