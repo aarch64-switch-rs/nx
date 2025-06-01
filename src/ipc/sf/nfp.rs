@@ -219,7 +219,7 @@ pub trait User {
     fn initialize(
         &self,
         aruid: applet::AppletResourceUserId,
-        _reserved: u64,
+        process_id: sf::ProcessId,
         mcu_data: sf::InMapAliasBuffer<McuVersionData>,
     );
     #[ipc_rid(1)]
@@ -318,7 +318,7 @@ pub trait System {
     fn initialize(
         &self,
         aruid: applet::AppletResourceUserId,
-        _reserved: u64,
+        process_id: sf::ProcessId,
         mcu_data: sf::InMapAliasBuffer<McuVersionData>,
     );
     #[ipc_rid(1)]
@@ -415,7 +415,7 @@ pub trait Debug {
     fn initialize(
         &self,
         aruid: applet::AppletResourceUserId,
-        _reserved: u64,
+        process_id: sf::ProcessId,
         mcu_data: sf::InMapAliasBuffer<McuVersionData>,
     );
     #[ipc_rid(1)]
