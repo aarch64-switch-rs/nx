@@ -4,7 +4,16 @@ use crate::service;
 
 pub use crate::ipc::sf::nfp::*;
 
-impl service::IService for UserManager {
+ipc_client_define_client_default!(UserManagerService);
+impl IUserManagerServiceClient for UserManagerService {}
+
+ipc_client_define_client_default!(DebugManagerService);
+impl IDebugManagerServiceClient for DebugManagerService {}
+
+ipc_client_define_client_default!(SystemManagerService);
+impl ISystemManagerServiceClient for SystemManagerService {}
+
+impl service::IService for UserManagerService {
     fn get_name() -> sm::ServiceName {
         sm::ServiceName::new("nfp:user")
     }
@@ -18,7 +27,7 @@ impl service::IService for UserManager {
     }
 }
 
-impl service::IService for SystemManager {
+impl service::IService for SystemManagerService {
     fn get_name() -> sm::ServiceName {
         sm::ServiceName::new("nfp:sys")
     }
@@ -32,7 +41,7 @@ impl service::IService for SystemManager {
     }
 }
 
-impl service::IService for DebugManager {
+impl service::IService for DebugManagerService {
     fn get_name() -> sm::ServiceName {
         sm::ServiceName::new("nfp:dbg")
     }
