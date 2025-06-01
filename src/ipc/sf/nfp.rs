@@ -219,6 +219,7 @@ pub trait User {
     fn initialize(
         &self,
         aruid: applet::AppletResourceUserId,
+        _reserved: u64,
         mcu_data: sf::InMapAliasBuffer<McuVersionData>,
     );
     #[ipc_rid(1)]
@@ -304,8 +305,7 @@ pub trait User {
 }
 
 #[nx_derive::ipc_trait]
-#[default_client]
-pub trait UserManager {
+pub trait UserManagerService {
     #[ipc_rid(0)]
     #[return_session]
     fn create_user_interface(&self) -> User;
@@ -315,14 +315,14 @@ pub trait UserManager {
 #[default_client]
 pub trait System {
     #[ipc_rid(0)]
-    fn initialize_system(
+    fn initialize(
         &self,
         aruid: applet::AppletResourceUserId,
         _reserved: u64,
         mcu_data: sf::InMapAliasBuffer<McuVersionData>,
     );
     #[ipc_rid(1)]
-    fn finalize_system(&self);
+    fn finalize(&self);
     #[ipc_rid(2)]
     fn list_devices(&self, out_devices: sf::OutPointerBuffer<DeviceHandle>) -> u32;
     #[ipc_rid(3)]
@@ -402,8 +402,7 @@ pub trait System {
 }
 
 #[nx_derive::ipc_trait]
-#[default_client]
-pub trait SystemManager {
+pub trait SystemManagerService {
     #[ipc_rid(0)]
     #[return_session]
     fn create_system_interface(&self) -> System;
@@ -413,13 +412,14 @@ pub trait SystemManager {
 #[default_client]
 pub trait Debug {
     #[ipc_rid(0)]
-    fn initialize_debug(
+    fn initialize(
         &self,
         aruid: applet::AppletResourceUserId,
+        _reserved: u64,
         mcu_data: sf::InMapAliasBuffer<McuVersionData>,
     );
     #[ipc_rid(1)]
-    fn finalize_debug(&self);
+    fn finalize(&self);
     #[ipc_rid(2)]
     fn list_devices(&self, out_devices: sf::OutPointerBuffer<DeviceHandle>) -> u32;
     #[ipc_rid(3)]
@@ -550,8 +550,7 @@ pub trait Debug {
 }
 
 #[nx_derive::ipc_trait]
-#[default_client]
-pub trait DebugManager {
+pub trait DebugManagerService {
     #[ipc_rid(0)]
     #[return_session]
     fn create_debug_interface(&self) -> Debug;
