@@ -10,6 +10,9 @@ use crate::{result::*, svc};
 
 pub use crate::ipc::sf::applet::*;
 
+ipc_client_define_client_default!(AllSystemAppletProxiesService);
+impl IAllSystemAppletProxiesClient for AllSystemAppletProxiesService {}
+
 impl service::IService for AllSystemAppletProxiesService {
     fn get_name() -> sm::ServiceName {
         // we only want to

@@ -13,6 +13,9 @@ pub fn get_device_id() -> Result<CreateId> {
     service::new_service_object::<SystemSettingsService>()?.get_mii_author_id()
 }
 
+ipc_client_define_client_default!(StaticService);
+impl IStaticClient for StaticService {}
+
 impl service::IService for StaticService {
     fn get_name() -> sm::ServiceName {
         sm::ServiceName::new("mii:e")
@@ -28,7 +31,7 @@ impl service::IService for StaticService {
 }
 
 static G_STATIC_SRV: Mutex<Option<StaticService>> = Mutex::new(None);
-static G_DB_SRV: Mutex<Option<DatabaseService>> = Mutex::new(None);
+static G_DB_SRV: Mutex<Option<MiiDatabase>> = Mutex::new(None);
 
 pub fn initialize() -> Result<()> {
     let static_service = service::new_service_object::<StaticService>()?;

@@ -261,7 +261,6 @@ pub trait ClientIfSession {
 }
 
 #[nx_derive::ipc_trait]
-#[default_client]
 pub trait ClientRootSession {
     #[ipc_rid(0)]
     #[version(version::VersionInterval::from(version::Version::new(2, 0, 0)))]

@@ -1884,7 +1884,7 @@ const_assert!(core::mem::size_of::<NfpStoreDataExtension>() == 0x8);
 
 #[nx_derive::ipc_trait]
 #[default_client]
-pub trait DatabaseService {
+pub trait MiiDatabase {
     #[ipc_rid(0)]
     fn is_updated(&self, flag: SourceFlag) -> bool;
     #[ipc_rid(1)]
@@ -1892,7 +1892,7 @@ pub trait DatabaseService {
     #[ipc_rid(2)]
     fn get_count(&self, flag: SourceFlag) -> u32;
     #[ipc_rid(4)]
-    fn get_1(&self, flag: SourceFlag, out_char_infos: sf::OutMapAliasBuffer<CharInfo>) -> u32;
+    fn get_one(&self, flag: SourceFlag, out_char_infos: sf::OutMapAliasBuffer<CharInfo>) -> u32;
     #[ipc_rid(6)]
     fn build_random(
         &self,
@@ -1903,9 +1903,8 @@ pub trait DatabaseService {
 }
 
 #[nx_derive::ipc_trait]
-#[default_client]
-pub trait StaticService {
+pub trait Static {
     #[ipc_rid(0)]
     #[return_session]
-    fn get_database_service(&self, key_code: SpecialKeyCode) -> DatabaseService;
+    fn get_database_service(&self, key_code: SpecialKeyCode) -> MiiDatabase;
 }

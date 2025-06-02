@@ -4,7 +4,10 @@ use crate::service;
 
 pub use crate::ipc::sf::ldr::*;
 
-impl service::IService for ShellInterface {
+ipc_client_define_client_default!(ShellInterfaceService);
+impl IShellInterfaceClient for ShellInterfaceService {}
+
+impl service::IService for ShellInterfaceService {
     fn get_name() -> sm::ServiceName {
         sm::ServiceName::new("ldr:shel")
     }

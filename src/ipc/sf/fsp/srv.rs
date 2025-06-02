@@ -3,7 +3,6 @@ use crate::ipc::sf;
 use super::FileSystem;
 
 #[nx_derive::ipc_trait]
-#[default_client]
 pub trait FileSystemProxy {
     #[ipc_rid(1)]
     fn set_current_process(&self, process_id: sf::ProcessId);

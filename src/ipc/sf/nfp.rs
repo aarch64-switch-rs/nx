@@ -305,7 +305,7 @@ pub trait User {
 }
 
 #[nx_derive::ipc_trait]
-pub trait UserManagerService {
+pub trait UserManager {
     #[ipc_rid(0)]
     #[return_session]
     fn create_user_interface(&self) -> User;
@@ -402,7 +402,7 @@ pub trait System {
 }
 
 #[nx_derive::ipc_trait]
-pub trait SystemManagerService {
+pub trait SystemManager {
     #[ipc_rid(0)]
     #[return_session]
     fn create_system_interface(&self) -> System;
@@ -550,7 +550,7 @@ pub trait Debug {
 }
 
 #[nx_derive::ipc_trait]
-pub trait DebugManagerService {
+pub trait DebugManager {
     #[ipc_rid(0)]
     #[return_session]
     fn create_debug_interface(&self) -> Debug;

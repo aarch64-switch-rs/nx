@@ -43,8 +43,7 @@ pub trait PmModule {
 }
 
 #[nx_derive::ipc_trait]
-#[default_client]
-pub trait PmService {
+pub trait Pm {
     #[ipc_rid(0)]
     #[return_session]
     fn get_pm_module(&self) -> PmModule;

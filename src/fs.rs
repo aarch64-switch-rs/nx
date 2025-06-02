@@ -697,7 +697,7 @@ fn find_device_by_name(name: &str) -> Result<Arc<dyn FileSystem>> {
     rc::ResultDeviceNotFound::make_err()
 }
 
-static G_FSPSRV_SESSION: RwLock<Option<Arc<fsp::srv::FileSystemProxy>>> = RwLock::new(None);
+static G_FSPSRV_SESSION: RwLock<Option<Arc<fsp::srv::FileSystemProxyService>>> = RwLock::new(None);
 
 define_bit_enum! {
     /// Represents options for opening files
@@ -710,13 +710,13 @@ define_bit_enum! {
     }
 }
 
-/// Initializes `fsp-srv` support instantiating a [`FileSystemProxy`][`fsp::srv::FileSystemProxy`] shared object
+/// Initializes `fsp-srv` support instantiating a [`FileSystemProxyService`][`fsp::srv::FileSystemProxyService`] shared object
 #[inline]
 pub fn initialize_fspsrv_session() -> Result<()> {
     let mut guard = G_FSPSRV_SESSION.write();
     debug_assert!(guard.is_none(), "Double initializing FSP session");
     *guard = Some(Arc::new(service::new_service_object::<
-        fsp::srv::FileSystemProxy,
+        fsp::srv::FileSystemProxyService,
     >()?));
     Ok(())
 }
@@ -735,7 +735,7 @@ pub(crate) fn finalize_fspsrv_session() {
 
 /// Gets the global [`IFileSystemProxyClient`] shared object used for `fsp-srv` support
 #[inline]
-pub fn get_fspsrv_session() -> Result<Arc<fsp::srv::FileSystemProxy>> {
+pub fn get_fspsrv_session() -> Result<Arc<fsp::srv::FileSystemProxyService>> {
     G_FSPSRV_SESSION
         .read()
         .as_ref()

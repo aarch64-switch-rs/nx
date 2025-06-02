@@ -5,13 +5,13 @@ use crate::service;
 pub use crate::ipc::sf::nfp::*;
 
 ipc_client_define_client_default!(UserManagerService);
-impl IUserManagerServiceClient for UserManagerService {}
+impl IUserManagerClient for UserManagerService {}
 
 ipc_client_define_client_default!(DebugManagerService);
-impl IDebugManagerServiceClient for DebugManagerService {}
+impl IDebugManagerClient for DebugManagerService {}
 
 ipc_client_define_client_default!(SystemManagerService);
-impl ISystemManagerServiceClient for SystemManagerService {}
+impl ISystemManagerClient for SystemManagerService {}
 
 impl service::IService for UserManagerService {
     fn get_name() -> sm::ServiceName {
