@@ -29,7 +29,7 @@ pub trait PmModule {
     fn initialize(
         &self,
         id: ModuleId,
-        dependencies: sf::InMapAliasBuffer<ModuleId>,
+        dependencies: sf::InMapAliasBuffer<'_, ModuleId>,
     ) -> sf::CopyHandle;
     #[ipc_rid(1)]
     fn get_request(&self) -> (State, u32);

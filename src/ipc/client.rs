@@ -31,6 +31,7 @@ impl<
     T,
 > RequestCommandParameter
     for sf::Buffer<
+        '_,
         IN,
         OUT,
         MAP_ALIAS,

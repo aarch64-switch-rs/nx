@@ -6,7 +6,7 @@ use crate::version;
 #[default_client]
 pub trait LocationResolver {
     #[ipc_rid(1)]
-    fn redirect_program_path(&self, program_id: ncm::ProgramId, path_buf: sf::InPointerBuffer<u8>);
+    fn redirect_program_path(&self, program_id: ncm::ProgramId, path_buf: sf::InPointerBuffer<'_, u8>);
 }
 
 #[nx_derive::ipc_trait]
@@ -17,7 +17,7 @@ pub trait RegisteredLocationResolver {
     fn register_program_path_deprecated(
         &self,
         program_id: ncm::ProgramId,
-        path_buf: sf::InPointerBuffer<u8>,
+        path_buf: sf::InPointerBuffer<'_, u8>,
     );
     #[ipc_rid(1)]
     #[version(version::VersionInterval::from(version::Version::new(9, 0, 0)))]
@@ -25,14 +25,14 @@ pub trait RegisteredLocationResolver {
         &self,
         program_id: ncm::ProgramId,
         owner_id: ncm::ProgramId,
-        path_buf: sf::InPointerBuffer<u8>,
+        path_buf: sf::InPointerBuffer<'_, u8>,
     );
     #[ipc_rid(3)]
     #[version(version::VersionInterval::to(version::Version::new(8, 1, 1)))]
     fn redirect_program_path_deprecated(
         &self,
         program_id: ncm::ProgramId,
-        path_buf: sf::InPointerBuffer<u8>,
+        path_buf: sf::InPointerBuffer<'_, u8>,
     );
     #[ipc_rid(3)]
     #[version(version::VersionInterval::from(version::Version::new(9, 0, 0)))]
@@ -40,7 +40,7 @@ pub trait RegisteredLocationResolver {
         &self,
         program_id: ncm::ProgramId,
         owner_id: ncm::ProgramId,
-        path_buf: sf::InPointerBuffer<u8>,
+        path_buf: sf::InPointerBuffer<'_, u8>,
     );
 }
 

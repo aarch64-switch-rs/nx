@@ -45,14 +45,14 @@ pub type Fd = u32;
 #[nx_derive::ipc_trait]
 pub trait NvDrv {
     #[ipc_rid(0)]
-    fn open(&self, path: sf::InMapAliasBuffer<u8>) -> (Fd, ErrorCode);
+    fn open(&self, path: sf::InMapAliasBuffer<'_, u8>) -> (Fd, ErrorCode);
     #[ipc_rid(1)]
     fn ioctl(
         &self,
         fd: Fd,
         id: IoctlId,
-        in_buf: sf::InAutoSelectBuffer<u8>,
-        out_buf: sf::OutAutoSelectBuffer<u8>,
+        in_buf: sf::InAutoSelectBuffer<'_, u8>,
+        out_buf: sf::OutAutoSelectBuffer<'_, u8>,
     ) -> ErrorCode;
     #[ipc_rid(2)]
     fn close(&self, fd: Fd) -> ErrorCode;

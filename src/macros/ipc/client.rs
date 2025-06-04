@@ -59,7 +59,7 @@ macro_rules! ipc_sf_define_default_client_for_interface {
                     Ok(Self { session: $crate::ipc::sf::Session::from(object_info)})
                 }
             }
-            impl $crate::ipc::server::RequestCommandParameter<$t> for $t {
+            impl $crate::ipc::server::RequestCommandParameter<'_, $t> for $t {
                 fn after_request_read(_ctx: &mut $crate::ipc::server::ServerContext) -> $crate::result::Result<Self> {
                     use $crate::result::ResultBase;
                     // TODO: determine if we need to do this, since this is a server side operation of a client object?

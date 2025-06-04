@@ -11,11 +11,11 @@ pub trait ShellInterface {
         &self,
         program_id: ncm::ProgramId,
         args_size: u32,
-        args_buf: sf::InPointerBuffer<u8>,
+        args_buf: sf::InPointerBuffer<'_, u8>,
     );
     #[ipc_rid(0)]
     #[version(version::VersionInterval::from(version::Version::new(11, 0, 0)))]
-    fn set_program_argument(&self, program_id: ncm::ProgramId, args_buf: sf::InPointerBuffer<u8>);
+    fn set_program_argument(&self, program_id: ncm::ProgramId, args_buf: sf::InPointerBuffer<'_, u8>);
     #[ipc_rid(1)]
     fn flush_arguments(&self);
     #[ipc_rid(65000)]
