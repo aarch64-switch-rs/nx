@@ -1,167 +1,314 @@
-use core::{num::NonZeroU16, u16};
+/*
+pub mod vty {
 
-use crate::{
-    gpu::canvas::{Canvas, CanvasManager, RGBA4},
-    result::Result,
-};
+    use crate::gpu::canvas::{AlphaBlend, CanvasManager, RGBA8, sealed::CanvasColorFormat};
+    pub use embedded_graphics_core::pixelcolor::{Rgb888, RgbColor};
+    pub use embedded_graphics_core::draw_target::DrawTarget;
+    pub use embedded_graphics_core::geometry::{Point, Dimensions, Size};
+    pub use embedded_graphics_core::primitives::rectangle::Rectangle;
 
-use alloc::{collections::vec_deque::VecDeque, string::String};
+    impl CanvasColorFormat for Rgb888 {
+        type RawType = u32;
 
-/*pub struct RandomAccessConsole {
-    //TODO: Make a full featured console that can have a cursor, colours, styles, etc
-}*/
+        const COLOR_FORMAT: crate::gpu::ColorFormat = <RGBA8 as CanvasColorFormat>::COLOR_FORMAT;
+        const PIXEL_FORMAT: crate::gpu::PixelFormat = <RGBA8 as CanvasColorFormat>::PIXEL_FORMAT;
 
-/// This console creates a full-screen layer that will just scroll through provided strings
-pub struct ScrollbackConsole {
-    pub canvas: CanvasManager<RGBA4>,
-    pub text_color: RGBA4,
-    pub history_limit: u16,
-    pub line_max_chars: u16,
-    pub line_wrap: bool,
-    pub scrollback_history: alloc::collections::VecDeque<String>,
-    pub scrollback_history_offset: u16,
-    pub current_line: String,
-}
-
-impl ScrollbackConsole {
-    #[inline]
-    pub fn new(
-        canvas: CanvasManager<RGBA4>,
-        history_limit: u16,
-        line_max_chars: NonZeroU16,
-        line_wrap: bool,
-        text_color: Option<RGBA4>,
-    ) -> Result<Self> {
-        Ok(Self {
-            history_limit,
-            text_color: text_color.unwrap_or(RGBA4::from_bits(u16::MAX)),
-            line_wrap,
-            line_max_chars: line_max_chars
-                .get()
-                .min(canvas.surface.width() as u16 / 8),
-            scrollback_history: VecDeque::with_capacity(history_limit as _),
-            current_line: String::new(),
-            canvas,
-            scrollback_history_offset: 0,
-        })
-    }
-
-    #[inline(always)]
-    pub fn scroll_up(&mut self) {
-        self.scrollback_history_offset = self.scrollback_history_offset.saturating_add(1);
-    }
-
-    #[inline(always)]
-    pub fn scroll_down(&mut self) {
-        self.scrollback_history_offset = self.scrollback_history_offset.saturating_sub(1);
-    }
-
-    fn push_line(&mut self, text: &str, commit: bool) {
-        self.current_line.push_str(text);
-
-        let real_max_len = self
-            .line_max_chars
-            .min(self.canvas.surface.width() as u16 / 8) as usize;
-
-        if !self.line_wrap && self.current_line.len() > real_max_len {
-            self.current_line.truncate(real_max_len - 1);
-            self.current_line.push('>');
-        } else {
-            while self.current_line.len() > real_max_len {
-                let mut temp = core::mem::take(&mut self.current_line);
-                let new_line = temp.split_off(real_max_len);
-                self.push_history_line(temp);
-                self.current_line = new_line;
+        fn blend_with(self, other: Self, blend: AlphaBlend) -> Self {
+            if matches!(blend, AlphaBlend::Destination) {
+                other
+            } else {
+                self
             }
         }
 
-        if commit {
-            let commit_str = core::mem::take(&mut self.current_line);
-            self.push_history_line(commit_str);
+        fn from_raw(raw: Self::RawType) -> Self {
+            let intermediate = RGBA8::from_bits(raw);
+            Rgb888::new(intermediate.r(), intermediate.g(), intermediate.b())
+        }
+
+        fn new() -> Self {
+            Rgb888::new(0,0,0)
+        }
+
+        fn new_scaled(r: u8, g: u8, b: u8, a: u8) -> Self {
+            Rgb888::new(r,g,b)
+        }
+
+        fn scale_alpha(self, alpha: f32) -> Self {
+            self
+        }
+
+        fn to_raw(self) -> Self::RawType {
+            RGBA8::new_scaled(self.r(), self.g(), self.b(), 255).to_raw()
+        }
+
+    }
+
+    impl Dimensions for CanvasManager<Rgb888> {
+        fn bounding_box(&self) -> Rectangle {
+            Rectangle {
+                top_left: Point {
+                    x:0,y:0
+                },
+                size: Size {
+                    width: self.surface.width(),
+                    height: self.surface.height()
+                }
+            }
         }
     }
 
-    #[inline(always)]
-    pub fn push_history_line(&mut self, line: String) {
-        let real_max_len = self
-            .line_max_chars
-            .min(self.canvas.surface.width() as u16 / 8) as usize;
-        debug_assert!(
-            line.find('\n').is_none(),
-            "History lines MUST NOT contain a newline character"
-        );
-        debug_assert!(
-            line.len()
-                <= real_max_len,
-            "History lines not be longer that the max char count"
-        );
-        if self.scrollback_history.len() == self.history_limit as _ {
-            self.scrollback_history.pop_front();
+    impl DrawTarget for CanvasManager<Rgb888> {
+        fn
+    }
+}*/
+pub mod scrollback {
+    use core::{num::NonZeroU16, u16};
+
+    use crate::{
+        gpu::{
+            self,
+            canvas::{Canvas, CanvasManager, RGBA4},
+        },
+        result::Result,
+        sync::RwLock,
+    };
+
+    use crate::sync::Mutex;
+    use crate::thread::{Builder, JoinHandle};
+    use alloc::{
+        collections::vec_deque::VecDeque,
+        string::{String, ToString},
+        sync::Arc,
+    };
+
+    #[derive(Clone)]
+    pub struct BackgroundWriter {
+        inner: Arc<Mutex<VecDeque<String>>>,
+    }
+
+    impl BackgroundWriter {
+        fn new(
+            canvas: CanvasManager<RGBA4>,
+            history_limit: u16,
+            line_max_chars: NonZeroU16,
+            line_wrap: bool,
+            text_color: Option<RGBA4>,
+            scale: u8
+        ) -> Result<Self> {
+            let mut console = ScrollbackConsole::new(
+                canvas,
+                history_limit,
+                line_max_chars,
+                line_wrap,
+                text_color,
+                scale
+            )?;
+
+            let fake_channel = Arc::new(Mutex::new(VecDeque::new()));
+            let _background_thread: JoinHandle<Result<()>> = {
+                let receiver = Arc::downgrade(&fake_channel);
+                Builder::new()
+                    .name("console")
+                    .stack_size(0x1000)
+                    .spawn(move || {
+                        while let Some(reader) = receiver.upgrade() {
+                            {
+                                let mut reader = reader.lock();
+                                while let Some(message) = reader.pop_front() {
+                                    console.write(message);
+                                }
+                            }
+                            console.draw()?;
+
+                            console.wait_vsync_event(None)?;
+                        }
+                        Ok(())
+                    })?
+            };
+            Ok(Self {
+                inner: fake_channel,
+            })
         }
 
-        self.scrollback_history.push_back(line);
-
-        if self.scrollback_history_offset != 0 {
-            self.scrollback_history_offset += 1;
+        #[inline(always)]
+        pub fn write(&self, message: impl ToString) {
+            self.inner.lock().push_back(message.to_string());
         }
     }
 
-    pub fn write(&mut self, text: impl AsRef<str>) {
-        let mut text = text.as_ref();
-
-        while let Some(position) = text.find('\n') {
-            self.push_line(&text[..position], true);
-            text = &text[position + 1..];
-        }
-        self.push_line(text, false);
+    /// This console creates a full-screen layer that will just scroll through provided strings
+    pub struct ScrollbackConsole {
+        canvas: CanvasManager<RGBA4>,
+        pub text_color: RGBA4,
+        pub history_limit: u16,
+        pub line_max_chars: u16,
+        pub line_wrap: bool,
+        scrollback_history: alloc::collections::VecDeque<String>,
+        pub scrollback_history_offset: u16,
+        current_line: String,
+        pub scale: u8
     }
 
-    pub fn draw(&mut self) -> Result<()> {
-        self.canvas.render(Some(RGBA4::new()), |canvas| {
-            let mut line_y = 10;
-            let max_line_count = canvas.height() / 10;
+    unsafe impl Send for ScrollbackConsole {}
+    unsafe impl Sync for ScrollbackConsole {}
 
-            let history_print_offset = self
-                .scrollback_history
-                .len()
-                .saturating_sub(max_line_count as usize - 1)
-                .saturating_sub(self.scrollback_history_offset as usize);
+    impl ScrollbackConsole {
+        #[inline(always)]
+        pub fn new(
+            canvas: CanvasManager<RGBA4>,
+            history_limit: u16,
+            line_max_chars: NonZeroU16,
+            line_wrap: bool,
+            text_color: Option<RGBA4>,
+            scale: u8
+        ) -> Result<Self> {
+            Ok(Self {
+                history_limit,
+                text_color: text_color.unwrap_or(RGBA4::from_bits(u16::MAX)),
+                line_wrap,
+                line_max_chars: line_max_chars.get().min(canvas.surface.width() as u16 / 8),
+                scrollback_history: VecDeque::with_capacity(history_limit as _),
+                current_line: String::new(),
+                canvas,
+                scrollback_history_offset: 0,
+                scale
+            })
+        }
 
-            let history_lines_printed = self
-                .scrollback_history
-                .iter()
-                .skip(history_print_offset)
-                .take(max_line_count as _)
-                .map(|s| {
+        #[inline(always)]
+        pub fn scroll_up(&mut self) {
+            let max_line_count = self.max_line_count();
+
+            let history_len = self.scrollback_history.len();
+            if history_len > max_line_count as usize - 1 {
+                self.scrollback_history_offset = self.scrollback_history_offset.saturating_add(1).min(history_len as _);
+            }
+        }
+
+        #[inline(always)]
+        pub fn scroll_down(&mut self) {
+            self.scrollback_history_offset = self.scrollback_history_offset.saturating_sub(1);
+        }
+
+        fn push_line(&mut self, text: &str, commit: bool) {
+            self.current_line.push_str(text);
+
+            let real_max_len =
+                (self.line_max_chars as u32)
+                    .min((self.canvas.surface.width()-4) / (8*self.scale as u32)) as usize;
+
+            if !self.line_wrap && self.current_line.len() > real_max_len {
+                self.current_line.truncate(real_max_len - 1);
+                self.current_line.push('>');
+            } else {
+                while self.current_line.len() > real_max_len {
+                    let mut temp = core::mem::take(&mut self.current_line);
+                    let new_line = temp.split_off(real_max_len);
+                    self.push_history_line(temp);
+                    self.current_line = new_line;
+                }
+            }
+
+            if commit {
+                let commit_str = core::mem::take(&mut self.current_line);
+                self.push_history_line(commit_str);
+            }
+        }
+
+        #[inline(always)]
+        pub fn push_history_line(&mut self, line: String) {
+            let real_max_len =
+                self.line_max_chars
+                    .min(self.canvas.surface.width() as u16 / 8) as usize;
+            debug_assert!(
+                line.find('\n').is_none(),
+                "History lines MUST NOT contain a newline character"
+            );
+            debug_assert!(
+                line.len() <= real_max_len,
+                "History lines not be longer that the max char count"
+            );
+            if self.scrollback_history.len() == self.history_limit as _ {
+                self.scrollback_history.pop_front();
+            }
+
+            self.scrollback_history.push_back(line);
+
+            if self.scrollback_history_offset != 0 {
+                let history_len = self.scrollback_history.len();
+                self.scrollback_history_offset = self.scrollback_history_offset.saturating_add(1).min(history_len as _);
+            }
+        }
+
+        pub fn write(&mut self, text: impl AsRef<str>) {
+            let mut text = text.as_ref();
+
+            while let Some(position) = text.find('\n') {
+                self.push_line(&text[..position], true);
+                text = &text[position + 1..];
+            }
+            self.push_line(text, false);
+        }
+
+        fn  max_line_count(&self) -> u32 {
+            (self.canvas.surface.height()-4) / (10 * self.scale as u32)
+        }
+
+        pub fn draw(&mut self) -> Result<()> {
+            
+            let max_line_count = self.max_line_count(); 
+            self.canvas.render(Some(RGBA4::new()), |canvas| {
+                let mut line_y = 2 + 8*self.scale as i32;// leave a bit of a gap
+
+                let max_history_lines = if self.scrollback_history_offset == 0 {
+                    max_line_count - 1
+                } else {
+                    max_line_count
+                };
+
+                let history_print_offset = self
+                    .scrollback_history
+                    .len()
+                    .saturating_sub(max_history_lines as usize)
+                    .saturating_sub(self.scrollback_history_offset as usize);
+
+                let history_lines_printed = self
+                    .scrollback_history
+                    .iter()
+                    .skip(history_print_offset)
+                    .take(max_history_lines as _)
+                    .map(|s| {
+                        canvas.draw_ascii_bitmap_text(
+                            s,
+                            self.text_color,
+                            self.scale as u32,
+                            2,
+                            line_y,
+                            crate::gpu::canvas::AlphaBlend::None,
+                        );
+                        line_y += (10*self.scale as i32);
+                    })
+                    .count();
+
+                if history_lines_printed < max_line_count as usize {
                     canvas.draw_ascii_bitmap_text(
-                        s,
+                        &self.current_line,
                         self.text_color,
-                        1,
+                        self.scale as u32,
                         2,
                         line_y,
                         crate::gpu::canvas::AlphaBlend::None,
                     );
-                    line_y += 10;
-                })
-                .count();
+                }
 
-            if history_lines_printed < max_line_count as usize {
-                canvas.draw_ascii_bitmap_text(
-                    &self.current_line,
-                    self.text_color,
-                    1,
-                    2,
-                    line_y,
-                    crate::gpu::canvas::AlphaBlend::None,
-                );
-            }
+                Ok(())
+            })
+        }
 
-            Ok(())
-        })
-    }
-
-    #[inline(always)]
-    pub fn wait_vsync_event(&self, timeout: Option<i64>) -> Result<()> {
-        self.canvas.wait_vsync_event(timeout)
+        #[inline(always)]
+        pub fn wait_vsync_event(&self, timeout: Option<i64>) -> Result<()> {
+            self.canvas.wait_vsync_event(timeout)
+        }
     }
 }

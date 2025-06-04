@@ -1,6 +1,5 @@
 //! Input utils and wrappers
 
-use num_traits::Signed;
 use rc::ResultInvalidControllerId;
 
 use crate::ipc::sf;
@@ -197,7 +196,7 @@ impl<'player, 'context: 'player> Player<'player> {
         deadzone: f32,
     ) -> Option<(AnalogStickState, AnalogStickState)> {
         debug_assert!(
-            deadzone.is_positive() && deadzone <= 1.0,
+            deadzone >= 0.0 && deadzone <= 1.0,
             "deadzone is a factor in the range (0, 1)"
         );
         // TODO - make an iterator through the supported style tags to get the first one passing the deadzone test.

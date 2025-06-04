@@ -181,7 +181,7 @@ impl sealed::CanvasColorFormat for RGBA8 {
     }
 }
 
-mod sealed {
+pub(crate) mod sealed {
     use super::{AlphaBlend, ColorFormat, PixelFormat};
 
     pub trait CanvasColorFormat: Copy + Default + 'static {
@@ -262,6 +262,7 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
     /// Creates a new managed layer (application/applet window) that can be drawn on overlay elements.
     /// These layers exist on top of stray layers and application/applet UIs, and can be Z-order vertically layered over each other.
     /// The GPU provides the alpha blending for all layers based on the committed frame.
+    #[inline(always)]
     pub fn new_stray(
         gpu_ctx: Arc<RwLock<Context>>,
         surface_name: Option<&'static str>,
@@ -283,6 +284,7 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
     }
 
     /// Wait for a vsync event to ensure that the previously submitted frame has been fully rendered to the display.
+    #[inline(always)]
     pub fn wait_vsync_event(&self, timeout: Option<i64>) -> Result<()> {
         self.surface.wait_vsync_event(timeout.unwrap_or(-1))
     }
@@ -291,6 +293,7 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
     /// swizzled into the backing buffer during frame-commit. This provides better performance for line-based renderers
     /// as writes will be sequential in memory. There are cache misses during commit, but that is still better performance
     /// than mapped page churn for GPU-mapped memory.
+    #[inline(always)]
     pub fn render<T>(
         &mut self,
         clear_color: Option<ColorFormat>,
@@ -321,6 +324,7 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
     /// Check out a canvas/framebuffer to draw a new frame, without a linear buffer.
     /// This can be used in memory constrained environments such as sysmodules, but also provides slightly better performance
     /// for frames that draw in block rather than scan-lines (e.g. JPEG decoding).
+    #[inline(always)]
     pub fn render_unbuffered<T>(
         &mut self,
         clear_color: Option<ColorFormat>,
