@@ -150,9 +150,9 @@ pub trait StorageAccessor {
     #[ipc_rid(0)]
     fn get_size(&self) -> usize;
     #[ipc_rid(10)]
-    fn write(&self, offset: usize, buf: sf::InAutoSelectBuffer<u8>);
+    fn write(&self, offset: usize, buf: sf::InAutoSelectBuffer<'_, u8>);
     #[ipc_rid(11)]
-    fn read(&self, offset: usize, buf: sf::OutAutoSelectBuffer<u8>);
+    fn read(&self, offset: usize, buf: sf::OutAutoSelectBuffer<'_, u8>);
 }
 
 #[nx_derive::ipc_trait]
@@ -405,7 +405,7 @@ pub trait AllSystemAppletProxies {
         &self,
         process_id: sf::ProcessId,
         self_process_handle: sf::CopyHandle,
-        applet_attribute: sf::InMapAliasBuffer<AppletAttribute>,
+        applet_attribute: sf::InMapAliasBuffer<'_, AppletAttribute>,
     ) -> LibraryAppletProxy;
     #[ipc_rid(300)]
     #[return_session]

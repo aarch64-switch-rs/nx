@@ -220,12 +220,12 @@ pub trait User {
         &self,
         aruid: applet::AppletResourceUserId,
         process_id: sf::ProcessId,
-        mcu_data: sf::InMapAliasBuffer<McuVersionData>,
+        mcu_data: sf::InMapAliasBuffer<'_, McuVersionData>,
     );
     #[ipc_rid(1)]
     fn finalize(&self);
     #[ipc_rid(2)]
-    fn list_devices(&self, out_devices: sf::OutPointerBuffer<DeviceHandle>) -> u32;
+    fn list_devices(&self, out_devices: sf::OutPointerBuffer<'_, DeviceHandle>) -> u32;
     #[ipc_rid(3)]
     fn start_detection(&self, device_handle: DeviceHandle);
     #[ipc_rid(4)]
@@ -240,10 +240,10 @@ pub trait User {
     fn get_application_area(
         &self,
         device_handle: DeviceHandle,
-        out_data: sf::OutMapAliasBuffer<u8>,
+        out_data: sf::OutMapAliasBuffer<'_, u8>,
     ) -> u32;
     #[ipc_rid(9)]
-    fn set_application_area(&self, device_handle: DeviceHandle, data: sf::InMapAliasBuffer<u8>);
+    fn set_application_area(&self, device_handle: DeviceHandle, data: sf::InMapAliasBuffer<'_, u8>);
     #[ipc_rid(10)]
     fn flush(&self, device_handle: DeviceHandle);
     #[ipc_rid(11)]
@@ -253,31 +253,31 @@ pub trait User {
         &self,
         device_handle: DeviceHandle,
         access_id: AccessId,
-        data: sf::InMapAliasBuffer<u8>,
+        data: sf::InMapAliasBuffer<'_, u8>,
     );
     #[ipc_rid(13)]
     fn get_tag_info(
         &self,
         device_handle: DeviceHandle,
-        out_tag_info: sf::OutFixedPointerBuffer<TagInfo>,
+        out_tag_info: sf::OutFixedPointerBuffer<'_, TagInfo>,
     );
     #[ipc_rid(14)]
     fn get_register_info(
         &self,
         device_handle: DeviceHandle,
-        out_register_info: sf::OutFixedPointerBuffer<RegisterInfo>,
+        out_register_info: sf::OutFixedPointerBuffer<'_, RegisterInfo>,
     );
     #[ipc_rid(15)]
     fn get_common_info(
         &self,
         device_handle: DeviceHandle,
-        out_common_info: sf::OutFixedPointerBuffer<CommonInfo>,
+        out_common_info: sf::OutFixedPointerBuffer<'_, CommonInfo>,
     );
     #[ipc_rid(16)]
     fn get_model_info(
         &self,
         device_handle: DeviceHandle,
-        out_model_info: sf::OutFixedPointerBuffer<ModelInfo>,
+        out_model_info: sf::OutFixedPointerBuffer<'_, ModelInfo>,
     );
     #[ipc_rid(17)]
     fn attach_activate_event(&self, device_handle: DeviceHandle) -> sf::CopyHandle;
@@ -300,7 +300,7 @@ pub trait User {
         &self,
         device_handle: DeviceHandle,
         access_id: AccessId,
-        data: sf::InMapAliasBuffer<u8>,
+        data: sf::InMapAliasBuffer<'_, u8>,
     );
 }
 
@@ -319,12 +319,12 @@ pub trait System {
         &self,
         aruid: applet::AppletResourceUserId,
         process_id: sf::ProcessId,
-        mcu_data: sf::InMapAliasBuffer<McuVersionData>,
+        mcu_data: sf::InMapAliasBuffer<'_, McuVersionData>,
     );
     #[ipc_rid(1)]
     fn finalize(&self);
     #[ipc_rid(2)]
-    fn list_devices(&self, out_devices: sf::OutPointerBuffer<DeviceHandle>) -> u32;
+    fn list_devices(&self, out_devices: sf::OutPointerBuffer<'_, DeviceHandle>) -> u32;
     #[ipc_rid(3)]
     fn start_detection(&self, device_handle: DeviceHandle);
     #[ipc_rid(4)]
@@ -341,25 +341,25 @@ pub trait System {
     fn get_tag_info(
         &self,
         device_handle: DeviceHandle,
-        out_tag_info: sf::OutFixedPointerBuffer<TagInfo>,
+        out_tag_info: sf::OutFixedPointerBuffer<'_, TagInfo>,
     );
     #[ipc_rid(14)]
     fn get_register_info(
         &self,
         device_handle: DeviceHandle,
-        out_register_info: sf::OutFixedPointerBuffer<RegisterInfo>,
+        out_register_info: sf::OutFixedPointerBuffer<'_, RegisterInfo>,
     );
     #[ipc_rid(15)]
     fn get_common_info(
         &self,
         device_handle: DeviceHandle,
-        out_common_info: sf::OutFixedPointerBuffer<CommonInfo>,
+        out_common_info: sf::OutFixedPointerBuffer<'_, CommonInfo>,
     );
     #[ipc_rid(16)]
     fn get_model_info(
         &self,
         device_handle: DeviceHandle,
-        out_model_info: sf::OutFixedPointerBuffer<ModelInfo>,
+        out_model_info: sf::OutFixedPointerBuffer<'_, ModelInfo>,
     );
     #[ipc_rid(17)]
     fn attach_activate_event(&self, device_handle: DeviceHandle) -> sf::CopyHandle;
@@ -379,19 +379,19 @@ pub trait System {
     fn get_admin_info(
         &self,
         device_handle: DeviceHandle,
-        out_admin_info: sf::OutFixedPointerBuffer<AdminInfo>,
+        out_admin_info: sf::OutFixedPointerBuffer<'_, AdminInfo>,
     );
     #[ipc_rid(102)]
     fn get_register_info_private(
         &self,
         device_handle: DeviceHandle,
-        out_register_info_private: sf::OutFixedPointerBuffer<RegisterInfoPrivate>,
+        out_register_info_private: sf::OutFixedPointerBuffer<'_, RegisterInfoPrivate>,
     );
     #[ipc_rid(103)]
     fn set_register_info_private(
         &self,
         device_handle: DeviceHandle,
-        register_info_private: sf::InFixedPointerBuffer<RegisterInfoPrivate>,
+        register_info_private: sf::InFixedPointerBuffer<'_, RegisterInfoPrivate>,
     );
     #[ipc_rid(104)]
     fn delete_register_info(&self, device_handle: DeviceHandle);
@@ -416,12 +416,12 @@ pub trait Debug {
         &self,
         aruid: applet::AppletResourceUserId,
         process_id: sf::ProcessId,
-        mcu_data: sf::InMapAliasBuffer<McuVersionData>,
+        mcu_data: sf::InMapAliasBuffer<'_, McuVersionData>,
     );
     #[ipc_rid(1)]
     fn finalize(&self);
     #[ipc_rid(2)]
-    fn list_devices(&self, out_devices: sf::OutPointerBuffer<DeviceHandle>) -> u32;
+    fn list_devices(&self, out_devices: sf::OutPointerBuffer<'_, DeviceHandle>) -> u32;
     #[ipc_rid(3)]
     fn start_detection(&self, device_handle: DeviceHandle);
     #[ipc_rid(4)]
@@ -436,10 +436,10 @@ pub trait Debug {
     fn get_application_area(
         &self,
         device_handle: DeviceHandle,
-        out_data: sf::OutMapAliasBuffer<u8>,
+        out_data: sf::OutMapAliasBuffer<'_, u8>,
     ) -> u32;
     #[ipc_rid(9)]
-    fn set_application_area(&self, device_handle: DeviceHandle, data: sf::InMapAliasBuffer<u8>);
+    fn set_application_area(&self, device_handle: DeviceHandle, data: sf::InMapAliasBuffer<'_, u8>);
     #[ipc_rid(10)]
     fn flush(&self, device_handle: DeviceHandle);
     #[ipc_rid(11)]
@@ -449,31 +449,31 @@ pub trait Debug {
         &self,
         device_handle: DeviceHandle,
         access_id: AccessId,
-        data: sf::InMapAliasBuffer<u8>,
+        data: sf::InMapAliasBuffer<'_, u8>,
     );
     #[ipc_rid(13)]
     fn get_tag_info(
         &self,
         device_handle: DeviceHandle,
-        out_tag_info: sf::OutFixedPointerBuffer<TagInfo>,
+        out_tag_info: sf::OutFixedPointerBuffer<'_, TagInfo>,
     );
     #[ipc_rid(14)]
     fn get_register_info(
         &self,
         device_handle: DeviceHandle,
-        out_register_info: sf::OutFixedPointerBuffer<RegisterInfo>,
+        out_register_info: sf::OutFixedPointerBuffer<'_, RegisterInfo>,
     );
     #[ipc_rid(15)]
     fn get_common_info(
         &self,
         device_handle: DeviceHandle,
-        out_common_info: sf::OutFixedPointerBuffer<CommonInfo>,
+        out_common_info: sf::OutFixedPointerBuffer<'_, CommonInfo>,
     );
     #[ipc_rid(16)]
     fn get_model_info(
         &self,
         device_handle: DeviceHandle,
-        out_model_info: sf::OutFixedPointerBuffer<ModelInfo>,
+        out_model_info: sf::OutFixedPointerBuffer<'_, ModelInfo>,
     );
     #[ipc_rid(17)]
     fn attach_activate_event(&self, device_handle: DeviceHandle) -> sf::CopyHandle;
@@ -496,7 +496,7 @@ pub trait Debug {
         &self,
         device_handle: DeviceHandle,
         access_id: AccessId,
-        data: sf::InMapAliasBuffer<u8>,
+        data: sf::InMapAliasBuffer<'_, u8>,
     );
     #[ipc_rid(100)]
     fn format(&self, device_handle: DeviceHandle);
@@ -504,19 +504,19 @@ pub trait Debug {
     fn get_admin_info(
         &self,
         device_handle: DeviceHandle,
-        out_admin_info: sf::OutFixedPointerBuffer<AdminInfo>,
+        out_admin_info: sf::OutFixedPointerBuffer<'_, AdminInfo>,
     );
     #[ipc_rid(102)]
     fn get_register_info_private(
         &self,
         device_handle: DeviceHandle,
-        out_register_info_private: sf::OutFixedPointerBuffer<RegisterInfoPrivate>,
+        out_register_info_private: sf::OutFixedPointerBuffer<'_, RegisterInfoPrivate>,
     );
     #[ipc_rid(103)]
     fn set_register_info_private(
         &self,
         device_handle: DeviceHandle,
-        register_info_private: sf::InFixedPointerBuffer<RegisterInfoPrivate>,
+        register_info_private: sf::InFixedPointerBuffer<'_, RegisterInfoPrivate>,
     );
     #[ipc_rid(104)]
     fn delete_register_info(&self, device_handle: DeviceHandle);
@@ -525,9 +525,9 @@ pub trait Debug {
     #[ipc_rid(106)]
     fn exists_application_area(&self, device_handle: DeviceHandle) -> bool;
     #[ipc_rid(200)]
-    fn get_all(&self, device_handle: DeviceHandle, out_data: sf::OutFixedPointerBuffer<NfpData>);
+    fn get_all(&self, device_handle: DeviceHandle, out_data: sf::OutFixedPointerBuffer<'_, NfpData>);
     #[ipc_rid(201)]
-    fn set_all(&self, device_handle: DeviceHandle, data: sf::InFixedPointerBuffer<NfpData>);
+    fn set_all(&self, device_handle: DeviceHandle, data: sf::InFixedPointerBuffer<'_, NfpData>);
     #[ipc_rid(202)]
     fn flush_debug(&self, device_handle: DeviceHandle);
     #[ipc_rid(203)]
@@ -536,16 +536,16 @@ pub trait Debug {
     fn read_backup_data(
         &self,
         device_handle: DeviceHandle,
-        out_buf: sf::OutMapAliasBuffer<u8>,
+        out_buf: sf::OutMapAliasBuffer<'_, u8>,
     ) -> u32;
     #[ipc_rid(205)]
-    fn write_backup_data(&self, device_handle: DeviceHandle, buf: sf::InMapAliasBuffer<u8>);
+    fn write_backup_data(&self, device_handle: DeviceHandle, buf: sf::InMapAliasBuffer<'_, u8>);
     #[ipc_rid(206)]
     fn write_ntf(
         &self,
         device_handle: DeviceHandle,
         write_type: WriteType,
-        buf: sf::InMapAliasBuffer<u8>,
+        buf: sf::InMapAliasBuffer<'_, u8>,
     );
 }
 

@@ -768,6 +768,7 @@ impl CommandContext {
     >(
         &mut self,
         buffer: &sf::Buffer<
+        '_,
             IN,
             OUT,
             MAP_ALIAS,
@@ -909,7 +910,7 @@ impl CommandContext {
         }
     }
 
-    pub fn pop_buffer<
+    fn pop_buffer<
         const IN: bool,
         const OUT: bool,
         const MAP_ALIAS: bool,
@@ -923,17 +924,7 @@ impl CommandContext {
         &mut self,
         raw_data_walker: &mut DataWalker,
     ) -> Result<
-        sf::Buffer<
-            IN,
-            OUT,
-            MAP_ALIAS,
-            POINTER,
-            FIXED_SIZE,
-            AUTO_SELECT,
-            ALLOW_NON_SECURE,
-            ALLOW_NON_DEVICE,
-            T,
-        >,
+        (*mut u8, usize),
     > {
         if AUTO_SELECT {
             if IN {
@@ -941,13 +932,13 @@ impl CommandContext {
                     && let Ok(send_desc) = self.pop_send_buffer()
                 {
                     if !static_desc.get_address().is_null() && (static_desc.get_size() > 0) {
-                        return Ok(sf::Buffer::new(
+                        return Ok((
                             static_desc.get_address(),
                             static_desc.get_size(),
                         ));
                     }
                     if !send_desc.get_address().is_null() && (send_desc.get_size() > 0) {
-                        return Ok(sf::Buffer::new(
+                        return Ok((
                             send_desc.get_address(),
                             send_desc.get_size(),
                         ));
@@ -958,13 +949,13 @@ impl CommandContext {
                 && let Ok(recv_desc) = self.pop_receive_buffer()
             {
                 if !static_desc.get_address().is_null() && (static_desc.get_size() > 0) {
-                    return Ok(sf::Buffer::new(
+                    return Ok((
                         static_desc.get_address(),
                         static_desc.get_size(),
                     ));
                 }
                 if !recv_desc.get_address().is_null() && (recv_desc.get_size() > 0) {
-                    return Ok(sf::Buffer::new(
+                    return Ok((
                         recv_desc.get_address(),
                         recv_desc.get_size(),
                     ));
@@ -972,7 +963,7 @@ impl CommandContext {
             }
         } else if POINTER {
             if IN && let Ok(static_desc) = self.pop_send_static() {
-                return Ok(sf::Buffer::new(
+                return Ok((
                     static_desc.get_address(),
                     static_desc.get_size(),
                 ));
@@ -997,13 +988,13 @@ impl CommandContext {
 
                 let buf = unsafe { self.pointer_buffer.add(self.out_pointer_buffer_offset) };
                 self.out_pointer_buffer_offset += buf_size;
-                return Ok(sf::Buffer::new(buf, buf_size));
+                return Ok((buf, buf_size));
             }
         } else if MAP_ALIAS {
             match (IN, OUT) {
                 (true, true) => {
                     if let Ok(exch_desc) = self.pop_exchange_buffer() {
-                        return Ok(sf::Buffer::new(
+                        return Ok((
                             exch_desc.get_address(),
                             exch_desc.get_size(),
                         ));
@@ -1011,7 +1002,7 @@ impl CommandContext {
                 }
                 (true, false) => {
                     if let Ok(send_desc) = self.pop_send_buffer() {
-                        return Ok(sf::Buffer::new(
+                        return Ok((
                             send_desc.get_address(),
                             send_desc.get_size(),
                         ));
@@ -1019,7 +1010,7 @@ impl CommandContext {
                 }
                 (false, true) => {
                     if let Ok(recv_desc) = self.pop_receive_buffer() {
-                        return Ok(sf::Buffer::new(
+                        return Ok((
                             recv_desc.get_address(),
                             recv_desc.get_size(),
                         ));

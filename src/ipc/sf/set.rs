@@ -26,10 +26,10 @@ const_assert!(core::mem::size_of::<FirmwareVersion>() == 0x100);
 #[nx_derive::ipc_trait]
 pub trait SystemSettings {
     #[ipc_rid(3)]
-    fn get_firmware_version(&self, out_version: sf::OutFixedPointerBuffer<FirmwareVersion>);
+    fn get_firmware_version(&self, out_version: sf::OutFixedPointerBuffer<'_, FirmwareVersion>);
     #[ipc_rid(4)]
     #[version(version::VersionInterval::from(version::Version::new(3, 0, 0)))]
-    fn get_firmware_version_2(&self, out_version: sf::OutFixedPointerBuffer<FirmwareVersion>);
+    fn get_firmware_version_2(&self, out_version: sf::OutFixedPointerBuffer<'_, FirmwareVersion>);
     #[ipc_rid(90)]
     fn get_mii_author_id(&self) -> mii::CreateId;
 }

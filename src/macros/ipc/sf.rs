@@ -195,7 +195,7 @@ macro_rules! server_mark_request_command_parameters_types_as_copy {
     ($($t:ty),*) => {
         $(
         //const_assert!($t::is_pod());
-        impl $crate::ipc::server::RequestCommandParameter<$t> for $t {
+        impl $crate::ipc::server::RequestCommandParameter<'_,$t> for $t {
             fn after_request_read(ctx: &mut $crate::ipc::server::ServerContext) -> $crate::result::Result<Self> {
                 Ok(ctx.raw_data_walker.advance_get())
             }
@@ -231,7 +231,7 @@ api_mark_request_command_parameters_types_as_copy!(
     bool, u8, i8, u16, i16, u32, i32, u64, i64, usize, isize, u128, i128, f32, f64
 );
 
-impl<T: Copy, const N: usize> crate::ipc::server::RequestCommandParameter<[T; N]> for [T; N] {
+impl<T: Copy, const N: usize> crate::ipc::server::RequestCommandParameter<'_,[T; N]> for [T; N] {
     fn after_request_read(
         ctx: &mut crate::ipc::server::ServerContext,
     ) -> crate::result::Result<Self> {

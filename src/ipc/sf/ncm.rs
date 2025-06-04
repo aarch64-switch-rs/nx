@@ -149,9 +149,9 @@ pub struct ContentMetaInfo {
 #[default_client]
 pub trait ContentMetaDatabase {
     #[ipc_rid(0)]
-    fn set(&self, meta_key: ContentMetaKey, in_rec_buf: sf::InMapAliasBuffer<u8>);
+    fn set(&self, meta_key: ContentMetaKey, in_rec_buf: sf::InMapAliasBuffer<'_, u8>);
     #[ipc_rid(1)]
-    fn get(&self, meta_key: ContentMetaKey, out_rec_buf: sf::OutMapAliasBuffer<u8>) -> usize;
+    fn get(&self, meta_key: ContentMetaKey, out_rec_buf: sf::OutMapAliasBuffer<'_, u8>) -> usize;
     #[ipc_rid(2)]
     fn remove(&self, meta_key: ContentMetaKey);
     #[ipc_rid(3)]
@@ -159,14 +159,14 @@ pub trait ContentMetaDatabase {
     #[ipc_rid(4)]
     fn list_content_info(
         &self,
-        out_rec_buf: sf::OutMapAliasBuffer<ContentInfo>,
+        out_rec_buf: sf::OutMapAliasBuffer<'_, ContentInfo>,
         meta_key: ContentMetaKey,
         offset: u32,
     ) -> u32;
     #[ipc_rid(5)]
     fn list(
         &self,
-        out_meta_keys: sf::OutMapAliasBuffer<ContentMetaKey>,
+        out_meta_keys: sf::OutMapAliasBuffer<'_, ContentMetaKey>,
         meta_type: ContentMetaType,
         program_id: ProgramId,
         program_id_min: ProgramId,
@@ -178,13 +178,13 @@ pub trait ContentMetaDatabase {
     #[ipc_rid(7)]
     fn list_application(
         &self,
-        out_app_meta_keys: sf::OutMapAliasBuffer<ApplicationContentMetaKey>,
+        out_app_meta_keys: sf::OutMapAliasBuffer<'_, ApplicationContentMetaKey>,
         meta_type: ContentMetaType,
     ) -> (u32, u32);
     #[ipc_rid(8)]
     fn has(&self, meta_key: ContentMetaKey) -> bool;
     #[ipc_rid(9)]
-    fn has_all(&self, meta_keys_buf: sf::InMapAliasBuffer<ContentMetaKey>) -> bool;
+    fn has_all(&self, meta_keys_buf: sf::InMapAliasBuffer<'_, ContentMetaKey>) -> bool;
     #[ipc_rid(10)]
     fn get_size(&self, meta_key: ContentMetaKey) -> usize;
     #[ipc_rid(11)]
@@ -196,8 +196,8 @@ pub trait ContentMetaDatabase {
     #[ipc_rid(14)]
     fn lookup_orphan_content(
         &self,
-        content_ids_buf: sf::InMapAliasBuffer<ContentId>,
-        out_orphaned_buf: sf::OutMapAliasBuffer<bool>,
+        content_ids_buf: sf::InMapAliasBuffer<'_, ContentId>,
+        out_orphaned_buf: sf::OutMapAliasBuffer<'_, bool>,
     );
     #[ipc_rid(15)]
     fn commit(&self);
@@ -206,7 +206,7 @@ pub trait ContentMetaDatabase {
     #[ipc_rid(17)]
     fn list_content_meta_info(
         &self,
-        out_meta_infos: sf::OutMapAliasBuffer<ContentMetaInfo>,
+        out_meta_infos: sf::OutMapAliasBuffer<'_, ContentMetaInfo>,
         meta_key: ContentMetaKey,
         offset: u32,
     ) -> u32;

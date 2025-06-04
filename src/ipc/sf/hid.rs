@@ -541,7 +541,7 @@ pub trait Hid {
     fn set_supported_npad_id_type(
         &mut self,
         aruid: AppletResourceUserId,
-        npad_ids: sf::InPointerBuffer<NpadIdType>,
+        npad_ids: sf::InPointerBuffer<'_, NpadIdType>,
     );
     #[ipc_rid(103)]
     fn activate_npad(&mut self, aruid: AppletResourceUserId);
