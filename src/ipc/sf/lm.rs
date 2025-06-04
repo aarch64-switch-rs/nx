@@ -14,7 +14,7 @@ define_bit_enum! {
 #[default_client]
 pub trait Logger {
     #[ipc_rid(0)]
-    fn log(&self, log_buf: sf::InAutoSelectBuffer<u8>);
+    fn log(&self, log_buf: sf::InAutoSelectBuffer<'_, u8>);
     #[ipc_rid(1)]
     #[version(version::VersionInterval::from(version::Version::new(3, 0, 0)))]
     fn set_destination(&mut self, log_destination: LogDestination);

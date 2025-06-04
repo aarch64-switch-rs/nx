@@ -76,7 +76,7 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
                     Ok(Self { session: ::nx::ipc::sf::Session::from(object_info)})
                 }
             }
-            impl ::nx::ipc::server::RequestCommandParameter<#name> for #name {
+            impl ::nx::ipc::server::RequestCommandParameter<'_, #name> for #name {
                 fn after_request_read(_ctx: &mut ::nx::ipc::server::ServerContext) -> ::nx::result::Result<Self> {
                     use ::nx::result::ResultBase;
                     // TODO: determine if we need to do this, since this is a server side operation of a client object?
