@@ -537,6 +537,12 @@ impl Surface {
         self.graphic_buf.header.height
     }
 
+    /// Gets the surface pitch (in bytes)
+    #[inline]
+    pub const fn pitch(&self) -> u32 {
+        self.graphic_buf.planes[0].pitch
+    }
+
     /// Gets the surface [`ColorFormat`]
     #[inline]
     pub const fn color_format(&self) -> ColorFormat {
@@ -546,12 +552,6 @@ impl Surface {
     /// Computes and gets the surface stride (distance between adjacent rows in pixels, incliuding padding).
     pub const fn stride(&self) -> u32 {
         self.pitch() / self.color_format().bytes_per_pixel()
-    }
-
-    // Computes the surface pitch (distance between ajacent rows bytes, including padding)
-    #[inline]
-    pub const fn pitch(&self) -> u32 {
-        align_up!(self.width() * self.color_format().bytes_per_pixel(), 64u32)
     }
 
     #[inline]

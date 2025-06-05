@@ -1,11 +1,33 @@
-/*
+#[cfg(feature = "vty")]
 pub mod vty {
 
+    use alloc::boxed::Box;
+    use alloc::vec::Vec;
+
     use crate::gpu::canvas::{AlphaBlend, CanvasManager, RGBA8, sealed::CanvasColorFormat};
+    use crate::result::Result;
+
     pub use embedded_graphics_core::pixelcolor::{Rgb888, RgbColor};
     pub use embedded_graphics_core::draw_target::DrawTarget;
     pub use embedded_graphics_core::geometry::{Point, Dimensions, Size};
     pub use embedded_graphics_core::primitives::rectangle::Rectangle;
+    use embedded_graphics_core::Pixel;
+
+    pub struct PersistantBufferedCanvas {
+        buffer: Box<[Rgb888]>,
+        canvas: CanvasManager<Rgb888>,
+    }
+
+    impl PersistantBufferedCanvas {
+        pub fn new(canvas: CanvasManager<Rgb888>) -> Self {
+            // new buffer with reserved size
+            let mut buffer = Vec::with_capacity((canvas.surface.width() * canvas.surface.height()) as usize);
+            // fill the buffer with black pixels to start
+            buffer.resize((canvas.surface.width() * canvas.surface.height()) as usize, Rgb888::new(0,0, 0));
+
+            Self { buffer: buffer.into_boxed_slice(), canvas: canvas }
+        }
+    }
 
     impl CanvasColorFormat for Rgb888 {
         type RawType = u32;
@@ -44,24 +66,73 @@ pub mod vty {
 
     }
 
-    impl Dimensions for CanvasManager<Rgb888> {
+    impl Dimensions for PersistantBufferedCanvas {
         fn bounding_box(&self) -> Rectangle {
             Rectangle {
                 top_left: Point {
                     x:0,y:0
                 },
                 size: Size {
-                    width: self.surface.width(),
-                    height: self.surface.height()
+                    width: self.canvas.surface.width(),
+                    height: self.canvas.surface.height()
                 }
             }
         }
     }
 
-    impl DrawTarget for CanvasManager<Rgb888> {
-        fn
+    impl DrawTarget for PersistantBufferedCanvas {
+        type Color = Rgb888;
+        type Error = crate::result::ResultCode;
+        fn draw_iter<I>(&mut self, pixels: I) -> Result<()>
+            where
+                I: IntoIterator<Item = Pixel<Self::Color>> {
+            for Pixel(Point{x, y}, color) in pixels.into_iter() {
+                self.buffer[(x + y*self.canvas.surface.width() as i32) as usize] = color;
+            }
+
+            self.canvas.render_prepared_buffer(self.buffer.as_ref())?;
+
+            self.canvas.wait_vsync_event(None)
+        }
+
+        fn fill_contiguous<I>(&mut self, area: &Rectangle, colors: I) -> Result<()>
+            where
+                I: IntoIterator<Item = Self::Color>, {
+            let Rectangle { top_left: Point {x, y}, size: Size { width, height } } = *area;
+
+            let mut color_iter = colors.into_iter().peekable();
+
+            if color_iter.peek().is_none() {
+                // no point iterating and rendering
+                return Ok(())
+            }
+
+            for y in y..(y+height as i32) {
+                for x in x..(x+width as i32) {
+                    if let Some(color) = color_iter.next() {
+                        self.buffer[(x + y*self.canvas.surface.width() as i32) as usize] = color;
+                    }
+                }
+            }
+            self.canvas.render_prepared_buffer(self.buffer.as_ref())?;
+
+            self.canvas.wait_vsync_event(None)
+        }
+
+        fn fill_solid(&mut self, area: &Rectangle, color: Self::Color) -> Result<()> {
+            
+            let Rectangle { top_left: Point {x, y}, size: Size { width, height } } = *area;
+            for y in y..(y+height as i32) {
+                for x in x..(x+width as i32) {
+                        self.buffer[(x + y*self.canvas.surface.width() as i32) as usize] = color;
+                }
+            }
+            self.canvas.render_prepared_buffer(self.buffer.as_ref())?;
+
+            self.canvas.wait_vsync_event(None)
+        }
     }
-}*/
+}
 pub mod scrollback {
     use core::{num::NonZeroU16, u16};
 
@@ -71,7 +142,6 @@ pub mod scrollback {
             canvas::{Canvas, CanvasManager, RGBA4},
         },
         result::Result,
-        sync::RwLock,
     };
 
     use crate::sync::Mutex;

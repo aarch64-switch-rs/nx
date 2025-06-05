@@ -321,6 +321,33 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
         runner(&mut canvas)
     }
 
+    /// Renders a pre-preprared buffer of pixels (represented by their color values) directly to the screen.
+    /// 
+    /// Panics if the buffer length does not equal the total number of visible pixels (width * height).
+    pub fn render_prepared_buffer(&mut self, pixels: &[ColorFormat]) -> Result<()> {
+        let height = self.surface.height();
+        let width = self.surface.width();
+        assert!(pixels.len() == (width * height) as usize, "Incorrectly sized buffer");
+
+        let (buffer, buffer_length, slot, _fence_present, fences) =
+            self.surface.dequeue_buffer(false)?;
+
+            let mut canvas = UnbufferedCanvas {
+                slot,
+                base_pointer: buffer as usize,
+                fences,
+                buffer_size: buffer_length,
+                manager: self,
+            };
+    
+            for y in 0..height {
+                for x in 0..width {
+                    canvas.draw_single(x as i32, y as i32, pixels[(x + y*width) as usize], AlphaBlend::None);
+                }
+            }
+            Ok(())
+    }
+
     /// Check out a canvas/framebuffer to draw a new frame, without a linear buffer.
     /// This can be used in memory constrained environments such as sysmodules, but also provides slightly better performance
     /// for frames that draw in block rather than scan-lines (e.g. JPEG decoding).
