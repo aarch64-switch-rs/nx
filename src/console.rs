@@ -60,11 +60,11 @@ pub mod vty {
             Rgb888::new(0, 0, 0)
         }
 
-        fn new_scaled(r: u8, g: u8, b: u8, a: u8) -> Self {
+        fn new_scaled(r: u8, g: u8, b: u8, _a: u8) -> Self {
             Rgb888::new(r, g, b)
         }
 
-        fn scale_alpha(self, alpha: f32) -> Self {
+        fn scale_alpha(self, _alpha: f32) -> Self {
             self
         }
 
@@ -167,7 +167,7 @@ pub mod scrollback {
     }
 
     impl BackgroundWriter {
-        fn new(
+        pub fn new(
             gpu_ctx: Arc<RwLock<gpu::Context>>,
             history_limit: u16,
             line_max_chars: NonZeroU16,
