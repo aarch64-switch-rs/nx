@@ -19,6 +19,7 @@ zeroize = { version = "1.8.1", features = ["aarch64"] }
 nx-derive = { path = "nx-derive/" }
 bitfield-struct = "0.11.0"
 num-derive = "0.4.2"
+enum-iterator = "2.1.0"
 
 
 [dependencies.embedded-term]
@@ -27,7 +28,7 @@ optional = true
 default-features = false
 
 [dependencies.embedded-graphics-core]
-version = "0.4.0"
+version = "0.3.3"
 optional = true
 
 [dependencies.line_drawing]

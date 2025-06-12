@@ -225,7 +225,7 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
     /// Creates a new stray layer (application/applet window) that can be drawn on for UI elements
     pub fn new_managed(
         gpu_ctx: Arc<RwLock<Context>>,
-        surface_name: Option<&'static str>,
+        surface_name: super::surface::DisplayName,
         x: u32,
         y: u32,
         z: LayerZ,
@@ -239,7 +239,7 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
     ) -> Result<Self> {
         let raw_surface = Surface::new_managed(
             gpu_ctx,
-            surface_name.unwrap_or("Default"),
+            surface_name,
             aruid,
             layer_flags,
             x as f32,
@@ -265,13 +265,13 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
     #[inline(always)]
     pub fn new_stray(
         gpu_ctx: Arc<RwLock<Context>>,
-        surface_name: Option<&'static str>,
+        surface_name: super::surface::DisplayName,
         buffer_count: u32,
         block_height: BlockLinearHeights,
     ) -> Result<Self> {
         let raw_surface = Surface::new_stray(
             gpu_ctx,
-            surface_name.unwrap_or("Default"),
+            surface_name,
             buffer_count,
             block_height,
             ColorFormat::COLOR_FORMAT,

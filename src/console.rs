@@ -3,15 +3,16 @@ pub mod vty {
 
     use alloc::boxed::Box;
     use alloc::vec::Vec;
+    use embedded_graphics_core::prelude::OriginDimensions;
 
     use crate::gpu::canvas::{AlphaBlend, CanvasManager, RGBA8, sealed::CanvasColorFormat};
     use crate::result::Result;
 
-    pub use embedded_graphics_core::pixelcolor::{Rgb888, RgbColor};
-    pub use embedded_graphics_core::draw_target::DrawTarget;
-    pub use embedded_graphics_core::geometry::{Point, Dimensions, Size};
-    pub use embedded_graphics_core::primitives::rectangle::Rectangle;
     use embedded_graphics_core::Pixel;
+    pub use embedded_graphics_core::draw_target::DrawTarget;
+    pub use embedded_graphics_core::geometry::{Dimensions, Point, Size};
+    pub use embedded_graphics_core::pixelcolor::{Rgb888, RgbColor};
+    pub use embedded_graphics_core::primitives::rectangle::Rectangle;
 
     pub struct PersistantBufferedCanvas {
         buffer: Box<[Rgb888]>,
@@ -21,11 +22,18 @@ pub mod vty {
     impl PersistantBufferedCanvas {
         pub fn new(canvas: CanvasManager<Rgb888>) -> Self {
             // new buffer with reserved size
-            let mut buffer = Vec::with_capacity((canvas.surface.width() * canvas.surface.height()) as usize);
+            let mut buffer =
+                Vec::with_capacity((canvas.surface.width() * canvas.surface.height()) as usize);
             // fill the buffer with black pixels to start
-            buffer.resize((canvas.surface.width() * canvas.surface.height()) as usize, Rgb888::new(0,0, 0));
+            buffer.resize(
+                (canvas.surface.width() * canvas.surface.height()) as usize,
+                Rgb888::new(0, 0, 0),
+            );
 
-            Self { buffer: buffer.into_boxed_slice(), canvas: canvas }
+            Self {
+                buffer: buffer.into_boxed_slice(),
+                canvas: canvas,
+            }
         }
     }
 
@@ -49,11 +57,11 @@ pub mod vty {
         }
 
         fn new() -> Self {
-            Rgb888::new(0,0,0)
+            Rgb888::new(0, 0, 0)
         }
 
         fn new_scaled(r: u8, g: u8, b: u8, a: u8) -> Self {
-            Rgb888::new(r,g,b)
+            Rgb888::new(r, g, b)
         }
 
         fn scale_alpha(self, alpha: f32) -> Self {
@@ -63,19 +71,13 @@ pub mod vty {
         fn to_raw(self) -> Self::RawType {
             RGBA8::new_scaled(self.r(), self.g(), self.b(), 255).to_raw()
         }
-
     }
 
-    impl Dimensions for PersistantBufferedCanvas {
-        fn bounding_box(&self) -> Rectangle {
-            Rectangle {
-                top_left: Point {
-                    x:0,y:0
-                },
-                size: Size {
-                    width: self.canvas.surface.width(),
-                    height: self.canvas.surface.height()
-                }
+    impl OriginDimensions for PersistantBufferedCanvas {
+        fn size(&self) -> Size {
+            Size {
+                width: self.canvas.surface.width(),
+                height: self.canvas.surface.height(),
             }
         }
     }
@@ -84,10 +86,11 @@ pub mod vty {
         type Color = Rgb888;
         type Error = crate::result::ResultCode;
         fn draw_iter<I>(&mut self, pixels: I) -> Result<()>
-            where
-                I: IntoIterator<Item = Pixel<Self::Color>> {
-            for Pixel(Point{x, y}, color) in pixels.into_iter() {
-                self.buffer[(x + y*self.canvas.surface.width() as i32) as usize] = color;
+        where
+            I: IntoIterator<Item = Pixel<Self::Color>>,
+        {
+            for Pixel(Point { x, y }, color) in pixels.into_iter() {
+                self.buffer[(x + y * self.canvas.surface.width() as i32) as usize] = color;
             }
 
             self.canvas.render_prepared_buffer(self.buffer.as_ref())?;
@@ -96,21 +99,25 @@ pub mod vty {
         }
 
         fn fill_contiguous<I>(&mut self, area: &Rectangle, colors: I) -> Result<()>
-            where
-                I: IntoIterator<Item = Self::Color>, {
-            let Rectangle { top_left: Point {x, y}, size: Size { width, height } } = *area;
+        where
+            I: IntoIterator<Item = Self::Color>,
+        {
+            let Rectangle {
+                top_left: Point { x, y },
+                size: Size { width, height },
+            } = *area;
 
             let mut color_iter = colors.into_iter().peekable();
 
             if color_iter.peek().is_none() {
                 // no point iterating and rendering
-                return Ok(())
+                return Ok(());
             }
 
-            for y in y..(y+height as i32) {
-                for x in x..(x+width as i32) {
+            for y in y..(y + height as i32) {
+                for x in x..(x + width as i32) {
                     if let Some(color) = color_iter.next() {
-                        self.buffer[(x + y*self.canvas.surface.width() as i32) as usize] = color;
+                        self.buffer[(x + y * self.canvas.surface.width() as i32) as usize] = color;
                     }
                 }
             }
@@ -120,11 +127,13 @@ pub mod vty {
         }
 
         fn fill_solid(&mut self, area: &Rectangle, color: Self::Color) -> Result<()> {
-            
-            let Rectangle { top_left: Point {x, y}, size: Size { width, height } } = *area;
-            for y in y..(y+height as i32) {
-                for x in x..(x+width as i32) {
-                        self.buffer[(x + y*self.canvas.surface.width() as i32) as usize] = color;
+            let Rectangle {
+                top_left: Point { x, y },
+                size: Size { width, height },
+            } = *area;
+            for y in y..(y + height as i32) {
+                for x in x..(x + width as i32) {
+                    self.buffer[(x + y * self.canvas.surface.width() as i32) as usize] = color;
                 }
             }
             self.canvas.render_prepared_buffer(self.buffer.as_ref())?;
@@ -141,7 +150,7 @@ pub mod scrollback {
             self,
             canvas::{Canvas, CanvasManager, RGBA4},
         },
-        result::Result,
+        result::Result, sync::RwLock,
     };
 
     use crate::sync::Mutex;
@@ -159,20 +168,20 @@ pub mod scrollback {
 
     impl BackgroundWriter {
         fn new(
-            canvas: CanvasManager<RGBA4>,
+            gpu_ctx: Arc<RwLock<gpu::Context>>,
             history_limit: u16,
             line_max_chars: NonZeroU16,
             line_wrap: bool,
             text_color: Option<RGBA4>,
-            scale: u8
+            scale: u8,
         ) -> Result<Self> {
             let mut console = ScrollbackConsole::new(
-                canvas,
+                gpu_ctx,
                 history_limit,
                 line_max_chars,
                 line_wrap,
                 text_color,
-                scale
+                scale,
             )?;
 
             let fake_channel = Arc::new(Mutex::new(VecDeque::new()));
@@ -217,7 +226,7 @@ pub mod scrollback {
         scrollback_history: alloc::collections::VecDeque<String>,
         pub scrollback_history_offset: u16,
         current_line: String,
-        pub scale: u8
+        pub scale: u8,
     }
 
     unsafe impl Send for ScrollbackConsole {}
@@ -226,13 +235,20 @@ pub mod scrollback {
     impl ScrollbackConsole {
         #[inline(always)]
         pub fn new(
-            canvas: CanvasManager<RGBA4>,
+            gpu_ctx: Arc<RwLock<gpu::Context>>,
             history_limit: u16,
             line_max_chars: NonZeroU16,
             line_wrap: bool,
             text_color: Option<RGBA4>,
-            scale: u8
+            scale: u8,
         ) -> Result<Self> {
+
+            let canvas = nx::gpu::canvas::CanvasManager::new_stray(
+                gpu_ctx,
+                Default::default(),
+                3,
+                gpu::BlockLinearHeights::OneGob,
+            )?; 
             Ok(Self {
                 history_limit,
                 text_color: text_color.unwrap_or(RGBA4::from_bits(u16::MAX)),
@@ -242,7 +258,7 @@ pub mod scrollback {
                 current_line: String::new(),
                 canvas,
                 scrollback_history_offset: 0,
-                scale
+                scale,
             })
         }
 
@@ -252,7 +268,10 @@ pub mod scrollback {
 
             let history_len = self.scrollback_history.len();
             if history_len > max_line_count as usize - 1 {
-                self.scrollback_history_offset = self.scrollback_history_offset.saturating_add(1).min(history_len as _);
+                self.scrollback_history_offset = self
+                    .scrollback_history_offset
+                    .saturating_add(1)
+                    .min(history_len as _);
             }
         }
 
@@ -264,9 +283,9 @@ pub mod scrollback {
         fn push_line(&mut self, text: &str, commit: bool) {
             self.current_line.push_str(text);
 
-            let real_max_len =
-                (self.line_max_chars as u32)
-                    .min((self.canvas.surface.width()-4) / (8*self.scale as u32)) as usize;
+            let real_max_len = (self.line_max_chars as u32)
+                .min((self.canvas.surface.width() - 4) / (8 * self.scale as u32))
+                as usize;
 
             if !self.line_wrap && self.current_line.len() > real_max_len {
                 self.current_line.truncate(real_max_len - 1);
@@ -307,7 +326,10 @@ pub mod scrollback {
 
             if self.scrollback_history_offset != 0 {
                 let history_len = self.scrollback_history.len();
-                self.scrollback_history_offset = self.scrollback_history_offset.saturating_add(1).min(history_len as _);
+                self.scrollback_history_offset = self
+                    .scrollback_history_offset
+                    .saturating_add(1)
+                    .min(history_len as _);
             }
         }
 
@@ -321,15 +343,14 @@ pub mod scrollback {
             self.push_line(text, false);
         }
 
-        fn  max_line_count(&self) -> u32 {
-            (self.canvas.surface.height()-4) / (10 * self.scale as u32)
+        fn max_line_count(&self) -> u32 {
+            (self.canvas.surface.height() - 4) / (10 * self.scale as u32)
         }
 
         pub fn draw(&mut self) -> Result<()> {
-            
-            let max_line_count = self.max_line_count(); 
+            let max_line_count = self.max_line_count();
             self.canvas.render(Some(RGBA4::new()), |canvas| {
-                let mut line_y = 2 + 8*self.scale as i32;// leave a bit of a gap
+                let mut line_y = 2 + 8 * self.scale as i32; // leave a bit of a gap
 
                 let max_history_lines = if self.scrollback_history_offset == 0 {
                     max_line_count - 1
@@ -357,7 +378,7 @@ pub mod scrollback {
                             line_y,
                             crate::gpu::canvas::AlphaBlend::None,
                         );
-                        line_y += (10*self.scale as i32);
+                        line_y += 10 * self.scale as i32;
                     })
                     .count();
 
