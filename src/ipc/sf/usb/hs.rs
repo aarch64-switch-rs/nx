@@ -99,13 +99,13 @@ const_assert!(core::mem::size_of::<XferReport>() == 0x18);
 pub trait ClientEpSession {
     #[ipc_rid(0)]
     #[version(version::VersionInterval::to(version::Version::new(1, 0, 0)))]
-    fn submit_out_request(&self, size: u32, unk: u32, buf: sf::InMapAliasBuffer<u8>) -> u32;
+    fn submit_out_request(&self, size: u32, unk: u32, buf: sf::InMapAliasBuffer<'_, u8>) -> u32;
     #[ipc_rid(0)]
     #[version(version::VersionInterval::from(version::Version::new(2, 0, 0)))]
     fn re_open(&self);
     #[ipc_rid(1)]
     #[version(version::VersionInterval::to(version::Version::new(1, 0, 0)))]
-    fn submit_in_request(&self, size: u32, unk: u32, out_buf: sf::OutMapAliasBuffer<u8>) -> u32;
+    fn submit_in_request(&self, size: u32, unk: u32, out_buf: sf::OutMapAliasBuffer<'_, u8>) -> u32;
     #[ipc_rid(1)]
     #[version(version::VersionInterval::from(version::Version::new(2, 0, 0)))]
     fn close(&self);
@@ -132,14 +132,14 @@ pub trait ClientEpSession {
     fn get_xfer_report_deprecated(
         &self,
         count: u32,
-        out_reports_buf: sf::OutMapAliasBuffer<XferReport>,
+        out_reports_buf: sf::OutMapAliasBuffer<'_, XferReport>,
     ) -> u32;
     #[ipc_rid(5)]
     #[version(version::VersionInterval::from(version::Version::new(3, 0, 0)))]
     fn get_xfer_report(
         &self,
         count: u32,
-        out_reports_buf: sf::OutAutoSelectBuffer<XferReport>,
+        out_reports_buf: sf::OutAutoSelectBuffer<'_, XferReport>,
     ) -> u32;
     #[ipc_rid(6)]
     #[version(version::VersionInterval::from_to(
@@ -153,7 +153,7 @@ pub trait ClientEpSession {
         unk_2: u32,
         buf_addr: u64,
         unk_3: u64,
-        urb_sizes_buf: sf::InMapAliasBuffer<u32>,
+        urb_sizes_buf: sf::InMapAliasBuffer<'_, u32>,
     ) -> u32;
     #[ipc_rid(6)]
     #[version(version::VersionInterval::from(version::Version::new(3, 0, 0)))]
@@ -164,7 +164,7 @@ pub trait ClientEpSession {
         unk_2: u32,
         buf_addr: u64,
         unk_3: u64,
-        urb_sizes_buf: sf::InAutoSelectBuffer<u32>,
+        urb_sizes_buf: sf::InAutoSelectBuffer<'_, u32>,
     ) -> u32;
     #[ipc_rid(7)]
     #[version(version::VersionInterval::from(version::Version::new(4, 0, 0)))]
@@ -180,14 +180,14 @@ pub trait ClientIfSession {
     #[ipc_rid(0)]
     fn get_state_change_event(&self) -> sf::CopyHandle;
     #[ipc_rid(1)]
-    fn set_interface(&self, unk: u8, profile_buf: sf::InMapAliasBuffer<InterfaceProfile>);
+    fn set_interface(&self, unk: u8, profile_buf: sf::InMapAliasBuffer<'_, InterfaceProfile>);
     #[ipc_rid(2)]
-    fn get_interface(&self, out_profile_buf: sf::OutMapAliasBuffer<InterfaceProfile>);
+    fn get_interface(&self, out_profile_buf: sf::OutMapAliasBuffer<'_, InterfaceProfile>);
     #[ipc_rid(3)]
     fn get_alternate_interface(
         &self,
         unk: u8,
-        out_profile_buf: sf::OutMapAliasBuffer<InterfaceProfile>,
+        out_profile_buf: sf::OutMapAliasBuffer<'_, InterfaceProfile>,
     );
     #[ipc_rid(5)]
     #[version(version::VersionInterval::to(version::Version::new(1, 0, 0)))]
@@ -216,7 +216,7 @@ pub trait ClientIfSession {
         idx: u16,
         length: u16,
         timeout_ms: u32,
-        out_buf: sf::OutMapAliasBuffer<u8>,
+        out_buf: sf::OutMapAliasBuffer<'_, u8>,
     ) -> u32;
     #[ipc_rid(6)]
     #[version(version::VersionInterval::from(version::Version::new(2, 0, 0)))]
@@ -231,11 +231,11 @@ pub trait ClientIfSession {
         idx: u16,
         length: u16,
         timeout_ms: u32,
-        buf: sf::InMapAliasBuffer<u8>,
+        buf: sf::InMapAliasBuffer<'_, u8>,
     ) -> u32;
     #[ipc_rid(7)]
     #[version(version::VersionInterval::from(version::Version::new(2, 0, 0)))]
-    fn get_ctrl_xfer_report(&self, out_report_buf: sf::OutMapAliasBuffer<XferReport>);
+    fn get_ctrl_xfer_report(&self, out_report_buf: sf::OutMapAliasBuffer<'_, XferReport>);
     #[ipc_rid(8)]
     fn reset_device(&self, unk: u32);
     #[ipc_rid(4)]
@@ -270,40 +270,40 @@ pub trait ClientRootSession {
     fn query_all_interfaces_deprecated(
         &self,
         filter: DeviceFilter,
-        out_intfs: sf::OutMapAliasBuffer<InterfaceQueryOutput>,
+        out_intfs: sf::OutMapAliasBuffer<'_, InterfaceQueryOutput>,
     ) -> u32;
     #[ipc_rid(1)]
     #[version(version::VersionInterval::from(version::Version::new(2, 0, 0)))]
     fn query_all_interfaces(
         &self,
         filter: DeviceFilter,
-        out_intfs: sf::OutMapAliasBuffer<InterfaceQueryOutput>,
+        out_intfs: sf::OutMapAliasBuffer<'_, InterfaceQueryOutput>,
     ) -> u32;
     #[ipc_rid(1)]
     #[version(version::VersionInterval::to(version::Version::new(1, 0, 0)))]
     fn query_available_interfaces_deprecated(
         &self,
         filter: DeviceFilter,
-        out_intfs: sf::OutMapAliasBuffer<InterfaceQueryOutput>,
+        out_intfs: sf::OutMapAliasBuffer<'_, InterfaceQueryOutput>,
     ) -> u32;
     #[ipc_rid(2)]
     #[version(version::VersionInterval::from(version::Version::new(2, 0, 0)))]
     fn query_available_interfaces(
         &self,
         filter: DeviceFilter,
-        out_intfs: sf::OutMapAliasBuffer<InterfaceQueryOutput>,
+        out_intfs: sf::OutMapAliasBuffer<'_, InterfaceQueryOutput>,
     ) -> u32;
     #[ipc_rid(2)]
     #[version(version::VersionInterval::to(version::Version::new(1, 0, 0)))]
     fn query_acquired_interfaces_deprecated(
         &self,
-        out_intfs: sf::OutMapAliasBuffer<InterfaceQueryOutput>,
+        out_intfs: sf::OutMapAliasBuffer<'_, InterfaceQueryOutput>,
     ) -> u32;
     #[ipc_rid(3)]
     #[version(version::VersionInterval::from(version::Version::new(2, 0, 0)))]
     fn query_acquired_interfaces(
         &self,
-        out_intfs: sf::OutMapAliasBuffer<InterfaceQueryOutput>,
+        out_intfs: sf::OutMapAliasBuffer<'_, InterfaceQueryOutput>,
     ) -> u32;
     #[ipc_rid(3)]
     #[version(version::VersionInterval::to(version::Version::new(1, 0, 0)))]
@@ -336,15 +336,15 @@ pub trait ClientRootSession {
     fn acquire_usb_if_deprecated(
         &self,
         id: u32,
-        out_profile_buf: sf::OutMapAliasBuffer<InterfaceProfile>,
+        out_profile_buf: sf::OutMapAliasBuffer<'_, InterfaceProfile>,
     ) -> ClientIfSession;
     #[ipc_rid(7)]
     #[version(version::VersionInterval::from(version::Version::new(2, 0, 0)))]
     fn acquire_usb_if(
         &self,
         id: u32,
-        out_info_buf: sf::OutMapAliasBuffer<InterfaceInfo>,
-        out_profile_buf: sf::OutMapAliasBuffer<InterfaceProfile>,
+        out_info_buf: sf::OutMapAliasBuffer<'_, InterfaceInfo>,
+        out_profile_buf: sf::OutMapAliasBuffer<'_, InterfaceProfile>,
     ) -> ClientIfSession;
     #[ipc_rid(7)]
     #[version(version::VersionInterval::to(version::Version::new(1, 0, 0)))]
@@ -353,7 +353,7 @@ pub trait ClientRootSession {
         unk_1: u8,
         unk_2: bool,
         unk_maybe_id: u32,
-        out_desc_buf: sf::OutMapAliasBuffer<u8>,
+        out_desc_buf: sf::OutMapAliasBuffer<'_, u8>,
     ) -> u32;
     #[ipc_rid(8)]
     #[version(version::VersionInterval::to(version::Version::new(1, 0, 0)))]

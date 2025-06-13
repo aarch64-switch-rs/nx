@@ -46,8 +46,8 @@ pub trait HOSBinderDriver {
         binder_handle: BinderHandle,
         transaction_id: ParcelTransactionId,
         flags: u32,
-        in_parcel: sf::InMapAliasBuffer<u8>,
-        out_parcel: sf::OutMapAliasBuffer<u8>,
+        in_parcel: sf::InMapAliasBuffer<'_, u8>,
+        out_parcel: sf::OutMapAliasBuffer<'_, u8>,
     );
     #[ipc_rid(1)]
     fn adjust_refcount(
@@ -69,7 +69,7 @@ pub trait HOSBinderDriver {
         binder_handle: BinderHandle,
         transaction_id: ParcelTransactionId,
         flags: u32,
-        in_parcel: sf::InAutoSelectBuffer<u8>,
-        out_parcel: sf::OutAutoSelectBuffer<u8>,
+        in_parcel: sf::InAutoSelectBuffer<'_, u8>,
+        out_parcel: sf::OutAutoSelectBuffer<'_, u8>,
     );
 }

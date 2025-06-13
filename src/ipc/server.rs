@@ -47,8 +47,8 @@ impl<'ctx> ServerContext<'ctx> {
     }
 }
 
-pub trait RequestCommandParameter<O> {
-    fn after_request_read(ctx: &mut ServerContext) -> Result<O>;
+pub trait RequestCommandParameter<'ctx, O> {
+    fn after_request_read(ctx: &mut ServerContext<'ctx>) -> Result<O>;
 }
 
 pub trait ResponseCommandParameter {
@@ -62,6 +62,8 @@ pub trait ResponseCommandParameter {
 }
 
 impl<
+    'buf,
+    'ctx: 'buf,
     const IN: bool,
     const OUT: bool,
     const MAP_ALIAS: bool,
@@ -72,8 +74,9 @@ impl<
     const ALLOW_NON_DEVICE: bool,
     T,
 >
-    RequestCommandParameter<
+    RequestCommandParameter<'ctx,
         sf::Buffer<
+            'buf,
             IN,
             OUT,
             MAP_ALIAS,
@@ -86,6 +89,7 @@ impl<
         >,
     >
     for sf::Buffer<
+        'buf,
         IN,
         OUT,
         MAP_ALIAS,
@@ -97,8 +101,16 @@ impl<
         T,
     >
 {
-    fn after_request_read(ctx: &mut ServerContext) -> Result<Self> {
-        let buf = ctx.ctx.pop_buffer(&mut ctx.raw_data_walker)?;
+    fn after_request_read(ctx: &mut ServerContext<'ctx>) -> Result<Self> {
+        let (addr, size) = ctx.ctx.pop_buffer::<IN,
+        OUT,
+        MAP_ALIAS,
+        POINTER,
+        FIXED_SIZE,
+        AUTO_SELECT,
+        ALLOW_NON_SECURE,
+        ALLOW_NON_DEVICE,
+        T>(&mut ctx.raw_data_walker)?;
 
         if OUT && POINTER {
             // For Out(Fixed)Pointer buffers, we need to send them back as InPointer
@@ -106,17 +118,17 @@ impl<
 
             // SAFETY - This should be safe as we're only copying the buffer back into the context and not duplicating access to the buffer.
             // If we ever actually access that cloned buffer, it's instant UB
-            let in_ptr_buf = unsafe { sf::InPointerBuffer::<u8>::from_other(&buf) };
+            let in_ptr_buf = unsafe { sf::InPointerBuffer::<u8>::new(addr, size) };
             ctx.ctx.add_buffer(&in_ptr_buf)?;
         }
 
-        Ok(buf)
+        Ok(unsafe {sf::Buffer::new(addr, size)})
     }
 }
 
 //impl<const A: BufferAttribute, T> !ResponseCommandParameter for sf::Buffer<A, T> {}
 
-impl<const MOVE: bool> RequestCommandParameter<sf::Handle<MOVE>> for sf::Handle<MOVE> {
+impl<const MOVE: bool> RequestCommandParameter<'_,sf::Handle<MOVE>> for sf::Handle<MOVE> {
     fn after_request_read(ctx: &mut ServerContext) -> Result<Self> {
         ctx.ctx.in_params.pop_handle::<MOVE>()
     }
@@ -138,7 +150,7 @@ impl<const MOVE: bool> ResponseCommandParameter for sf::Handle<MOVE> {
     }
 }
 
-impl RequestCommandParameter<sf::ProcessId> for sf::ProcessId {
+impl RequestCommandParameter<'_,sf::ProcessId> for sf::ProcessId {
     fn after_request_read(ctx: &mut ServerContext) -> Result<Self> {
         if ctx.ctx.in_params.send_process_id {
             if ctx.ctx.object_info.uses_cmif_protocol() {
@@ -154,7 +166,7 @@ impl RequestCommandParameter<sf::ProcessId> for sf::ProcessId {
 
 //impl !ResponseCommandParameter for sf::ProcessId {}
 
-impl RequestCommandParameter<sf::AppletResourceUserId> for sf::AppletResourceUserId {
+impl RequestCommandParameter<'_, sf::AppletResourceUserId> for sf::AppletResourceUserId {
     fn after_request_read(ctx: &mut ServerContext) -> Result<Self> {
         result_return_unless!(
             ctx.ctx.object_info.uses_cmif_protocol(),

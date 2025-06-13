@@ -106,7 +106,7 @@ pub trait ApplicationDisplay {
         name: DisplayName,
         id: LayerId,
         aruid: AppletResourceUserId,
-        out_native_window: sf::OutMapAliasBuffer<u8>,
+        out_native_window: sf::OutMapAliasBuffer<'_, u8>,
     ) -> usize;
     #[ipc_rid(2021)]
     fn set_scaling_mode(&mut self, scaling_mode: ScalingMode, layer_id: LayerId);
@@ -115,7 +115,7 @@ pub trait ApplicationDisplay {
         &mut self,
         flags: LayerFlags,
         display_id: DisplayId,
-        out_native_window: sf::OutMapAliasBuffer<u8>,
+        out_native_window: sf::OutMapAliasBuffer<'_, u8>,
     ) -> (LayerId, usize);
     #[ipc_rid(2031)]
     fn destroy_stray_layer(&mut self, id: LayerId);

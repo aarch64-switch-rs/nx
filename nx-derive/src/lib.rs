@@ -26,8 +26,8 @@ pub fn derive_request(input: TokenStream) -> TokenStream {
             }
         }
 
-        impl ::nx::ipc::server::RequestCommandParameter<#name> for #name {
-            fn after_request_read(ctx: &mut ::nx::ipc::server::ServerContext) -> ::nx::result::Result<Self> {
+        impl ::nx::ipc::server::RequestCommandParameter<'_, #name> for #name {
+            fn after_request_read(ctx: &mut ::nx::ipc::server::ServerContext<'_>) -> ::nx::result::Result<Self> {
                 Ok(ctx.raw_data_walker.advance_get())
             }
         }
