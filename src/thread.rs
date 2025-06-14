@@ -213,7 +213,16 @@ impl Builder {
     ///
     /// handler.join().unwrap();
     /// ```
-    pub fn spawn<F, T>(self, f: F) -> crate::result::Result<JoinHandle<T>>
+    pub fn spawn<F, T>(self, f: F) -> crate::result::Result<JoinHandle<T, false>>
+    where
+        F: FnOnce() -> T,
+        F: Send + 'static,
+        T: Send + 'static,
+    {
+        unsafe { self.spawn_unchecked(f) }
+    }
+
+    pub fn spawn_blocking<F, T>(self, f: F) -> crate::result::Result<JoinHandle<T, true>>
     where
         F: FnOnce() -> T,
         F: Send + 'static,
@@ -279,7 +288,7 @@ impl Builder {
     /// ```
     ///
     /// [`Result`]: crate::result::Result
-    pub unsafe fn spawn_unchecked<F, T>(self, f: F) -> crate::result::Result<JoinHandle<T>>
+    pub unsafe fn spawn_unchecked<F, T, const WAIT_ON_DROP: bool>(self, f: F) -> crate::result::Result<JoinHandle<T, WAIT_ON_DROP>>
     where
         F: FnOnce() -> T,
         F: Send,
@@ -517,7 +526,7 @@ impl Builder {
 /// [`catch_unwind`]: unwinding::panic::catch_unwind
 /// [`join`]: JoinHandle::join
 /// [`Err`]: crate::result::Result::Err
-pub fn spawn<F, T>(f: F) -> JoinHandle<T>
+pub fn spawn<F, T>(f: F) -> JoinHandle<T, false>
 where
     F: FnOnce() -> T,
     F: Send + 'static,
@@ -783,6 +792,16 @@ struct JoinInner<'scope, T> {
     packet: Arc<Packet<'scope, T>>,
 }
 
+impl<T> Clone for JoinInner<'static, T> {
+    fn clone(&self) -> Self {
+        Self {
+            native: self.native.clone(),
+            thread: self.thread.clone(),
+            packet: self.packet.clone()
+        }
+    }
+}
+
 impl<T> JoinInner<'_, T> {
     fn join(mut self) -> Result<T> {
         let _ = self.native.join();
@@ -860,12 +879,12 @@ impl<T> JoinInner<'_, T> {
 ///
 /// [`thread::Builder::spawn`]: Builder::spawn
 /// [`thread::spawn`]: spawn
-pub struct JoinHandle<T>(JoinInner<'static, T>);
+pub struct JoinHandle<T, const BLOCK_ON_DROP: bool = false>(JoinInner<'static, T>);
 
-unsafe impl<T> Send for JoinHandle<T> {}
-unsafe impl<T> Sync for JoinHandle<T> {}
+unsafe impl<T, const BLOCK_ON_DROP: bool> Send for JoinHandle<T, BLOCK_ON_DROP> {}
+unsafe impl<T, const BLOCK_ON_DROP: bool> Sync for JoinHandle<T, BLOCK_ON_DROP> {}
 
-impl<T> JoinHandle<T> {
+impl<T, const BLOCK_ON_DROP: bool> JoinHandle<T, BLOCK_ON_DROP> {
     /// Extracts a handle to the underlying thread.
     ///
     /// # Examples
@@ -921,8 +940,10 @@ impl<T> JoinHandle<T> {
     /// join_handle.join().expect("Couldn't join on the associated thread");
     /// ```
     pub fn join(self) -> Result<T> {
-        self.0.join()
+        self.0.clone().join()
     }
+
+    
 
     /// Waits for the associated thread to finish, with a timeout (in nanoseconds)
     ///
@@ -976,19 +997,28 @@ impl<T> JoinHandle<T> {
     }
 }
 
-impl<T> util::AsInner<imp::Thread> for JoinHandle<T> {
+impl<T, const BLOCK_ON_DROP: bool> Drop for JoinHandle<T, BLOCK_ON_DROP> {
+    fn drop(&mut self) {
+        if BLOCK_ON_DROP {
+            let _ = self.wait_exit(None);
+        }
+    }
+}
+
+impl<T, const BLOCK_ON_DROP: bool> util::AsInner<imp::Thread> for JoinHandle<T, BLOCK_ON_DROP> {
     fn as_inner(&self) -> &imp::Thread {
         &self.0.native
     }
 }
 
-impl<T> util::IntoInner<Arc<imp::Thread>> for JoinHandle<T> {
+/*
+impl<T, const BLOCK_ON_DROP: bool> util::IntoInner<Arc<imp::Thread>> for JoinHandle<T, BLOCK_ON_DROP> {
     fn into_inner(self) -> Arc<imp::Thread> {
         Pin::into_inner(self.0.native)
     }
-}
+} */
 
-impl<T> fmt::Debug for JoinHandle<T> {
+impl<T, const BLOCK_ON_DROP: bool> fmt::Debug for JoinHandle<T, BLOCK_ON_DROP> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("JoinHandle").finish_non_exhaustive()
     }
@@ -996,7 +1026,7 @@ impl<T> fmt::Debug for JoinHandle<T> {
 
 fn _assert_sync_and_send() {
     fn _assert_both<T: Send + Sync>() {}
-    _assert_both::<JoinHandle<()>>();
+    _assert_both::<JoinHandle<(), false>>();
     _assert_both::<Thread>();
 }
 
@@ -1288,9 +1318,6 @@ pub mod imp {
 
     impl Drop for StratosphereThreadType {
         fn drop(&mut self) {
-            if self.state == ThreadState::Started {
-                let _ = self.join();
-            }
 
             if !self.stack_top.is_null() {
                 // local thread

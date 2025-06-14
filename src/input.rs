@@ -1,6 +1,5 @@
 //! Input utils and wrappers
 
-use num_traits::Signed;
 use rc::ResultInvalidControllerId;
 
 use crate::ipc::sf;
@@ -51,6 +50,31 @@ macro_rules! get_npad_property {
             }
             $crate::service::hid::shmem::SharedMemoryFormat::V6(m) => {
                 &m.npad.entries[$self.npad_id_idx].$property
+            }
+        }
+    };
+}
+
+macro_rules! get_keyboard_tail_item {
+    ($self:expr) => {
+        match $self.shmem {
+            $crate::service::hid::shmem::SharedMemoryFormat::V1(m) => {
+                m.keyboard.lifo.get_tail_item()
+            }
+            $crate::service::hid::shmem::SharedMemoryFormat::V2(m) => {
+                m.keyboard.lifo.get_tail_item()
+            }
+            $crate::service::hid::shmem::SharedMemoryFormat::V3(m) => {
+                m.keyboard.lifo.get_tail_item()
+            }
+            $crate::service::hid::shmem::SharedMemoryFormat::V4(m) => {
+                m.keyboard.lifo.get_tail_item()
+            }
+            $crate::service::hid::shmem::SharedMemoryFormat::V5(m) => {
+                m.keyboard.lifo.get_tail_item()
+            }
+            $crate::service::hid::shmem::SharedMemoryFormat::V6(m) => {
+                m.keyboard.lifo.get_tail_item()
             }
         }
     };
@@ -197,7 +221,7 @@ impl<'player, 'context: 'player> Player<'player> {
         deadzone: f32,
     ) -> Option<(AnalogStickState, AnalogStickState)> {
         debug_assert!(
-            deadzone.is_positive() && deadzone <= 1.0,
+            deadzone >= 0.0 && deadzone <= 1.0,
             "deadzone is a factor in the range (0, 1)"
         );
         // TODO - make an iterator through the supported style tags to get the first one passing the deadzone test.
@@ -312,6 +336,11 @@ impl<'player, 'context: 'player> Player<'player> {
     #[inline]
     pub fn get_controller_type(&self) -> hid::DeviceType {
         *get_npad_property!(self, device_type)
+    }
+
+    #[inline]
+    pub fn get_keyboard_state(&self) -> shmem::KeyboardState {
+        get_keyboard_tail_item!(self)
     }
 }
 

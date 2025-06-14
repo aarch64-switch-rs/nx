@@ -133,3 +133,7 @@ pub mod rand;
 
 #[cfg(feature = "la")]
 pub mod la;
+
+#[cfg(feature = "console")]
+#[macro_use]
+pub mod console;

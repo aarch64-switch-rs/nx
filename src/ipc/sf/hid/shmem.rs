@@ -119,12 +119,12 @@ pub struct MouseSharedMemoryFormat {
 }
 const_assert!(core::mem::size_of::<MouseSharedMemoryFormat>() == 0x400);
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct KeyboardState {
     pub sampling_number: u64,
     pub modifiers: KeyboardModifier,
-    pub keys: KeyboardKey,
+    pub keys: KeyboardKeyStates,
 }
 
 #[derive(Debug)]

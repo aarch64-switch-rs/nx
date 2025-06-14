@@ -1,5 +1,6 @@
 //! Surface (gfx wrapper) implementation
 
+use ::alloc::string::String;
 use ::alloc::sync::Arc;
 use service::vi::{IManagerDisplayClient, ISystemDisplayClient};
 
@@ -24,6 +25,22 @@ pub enum ScaleMode {
     FitToLayer { width: u32, height: u32 },
     // Native framebuffer/canvas will be scaled to fit the provided layer height, but aspect ratio will be respected
     PreseveAspect { height: u32 },
+}
+
+#[derive(Debug, Clone, Default)]
+pub enum DisplayName {
+    #[default]
+    Default,
+    Special(String)
+}
+
+impl Into<vi::DisplayName> for DisplayName {
+    fn into(self) -> vi::DisplayName {
+        match self {
+            Self::Default => vi::DisplayName::from_str("Default"),
+            Self::Special(special) => vi::DisplayName::from_string(&special)
+        }
+    }
 }
 
 /// Represents a wrapper around layer manipulation
@@ -53,7 +70,7 @@ impl Surface {
     /// * pixel_format: The pixel format for the buffer. Must match the color format to run without graphical issues.
     pub fn new_stray(
         gpu_ctx: Arc<RwLock<Context>>,
-        display_name: &'_ str,
+        display_name: DisplayName,
         buffer_count: u32,
         block_config: BlockLinearHeights,
         color_fmt: ColorFormat,
@@ -62,7 +79,7 @@ impl Surface {
         let mut gpu_guard = gpu_ctx.write();
         let display_id = gpu_guard
             .application_display_service
-            .open_display(vi::DisplayName::from_str(display_name))?;
+            .open_display(display_name.into())?;
 
         let (binder_handle, layer_id) = {
             let mut native_window = parcel::ParcelPayload::new();
@@ -111,7 +128,7 @@ impl Surface {
     /// * scaling: The configuration for mapping the framebuffer/canvas onto the spawned layer which may be a larger/smaller size.
     pub fn new_managed(
         gpu_ctx: Arc<RwLock<Context>>,
-        display_name: &'_ str,
+        display_name: DisplayName,
         aruid: applet::AppletResourceUserId,
         layer_flags: vi::LayerFlags,
         x: f32,
@@ -127,7 +144,7 @@ impl Surface {
     ) -> Result<Self> {
         let mut gpu_guard = gpu_ctx.write();
 
-        let display_name_v = vi::DisplayName::from_str(display_name);
+        let display_name_v = display_name.into();
         let display_id = gpu_guard
             .application_display_service
             .open_display(display_name_v)?;
@@ -537,6 +554,12 @@ impl Surface {
         self.graphic_buf.header.height
     }
 
+    /// Gets the surface pitch (in bytes)
+    #[inline]
+    pub const fn pitch(&self) -> u32 {
+        self.graphic_buf.planes[0].pitch
+    }
+
     /// Gets the surface [`ColorFormat`]
     #[inline]
     pub const fn color_format(&self) -> ColorFormat {
@@ -546,12 +569,6 @@ impl Surface {
     /// Computes and gets the surface stride (distance between adjacent rows in pixels, incliuding padding).
     pub const fn stride(&self) -> u32 {
         self.pitch() / self.color_format().bytes_per_pixel()
-    }
-
-    // Computes the surface pitch (distance between ajacent rows bytes, including padding)
-    #[inline]
-    pub const fn pitch(&self) -> u32 {
-        align_up!(self.width() * self.color_format().bytes_per_pixel(), 64u32)
     }
 
     #[inline]

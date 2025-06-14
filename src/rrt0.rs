@@ -54,7 +54,7 @@ use atomic_enum::atomic_enum;
 // These functions must be implemented by any binary using this crate
 
 unsafe extern "Rust" {
-    fn main() -> Result<()>;
+    fn main();
     fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize;
 }
 
@@ -296,9 +296,6 @@ unsafe fn normal_entry(loader_mode: LoaderMode, exit_config: Option<ExitFn>) -> 
     initialize_version(hos_version_opt);
 
     let res = unsafe { main() };
-
-    // Unwrap main(), which will trigger a panic if it didn't succeed
-    res.unwrap();
 
     // unmount fs devices
     #[cfg(feature = "fs")]

@@ -181,7 +181,7 @@ impl sealed::CanvasColorFormat for RGBA8 {
     }
 }
 
-mod sealed {
+pub(crate) mod sealed {
     use super::{AlphaBlend, ColorFormat, PixelFormat};
 
     pub trait CanvasColorFormat: Copy + Default + 'static {
@@ -225,7 +225,7 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
     /// Creates a new stray layer (application/applet window) that can be drawn on for UI elements
     pub fn new_managed(
         gpu_ctx: Arc<RwLock<Context>>,
-        surface_name: Option<&'static str>,
+        surface_name: super::surface::DisplayName,
         x: u32,
         y: u32,
         z: LayerZ,
@@ -239,7 +239,7 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
     ) -> Result<Self> {
         let raw_surface = Surface::new_managed(
             gpu_ctx,
-            surface_name.unwrap_or("Default"),
+            surface_name,
             aruid,
             layer_flags,
             x as f32,
@@ -262,15 +262,16 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
     /// Creates a new managed layer (application/applet window) that can be drawn on overlay elements.
     /// These layers exist on top of stray layers and application/applet UIs, and can be Z-order vertically layered over each other.
     /// The GPU provides the alpha blending for all layers based on the committed frame.
+    #[inline(always)]
     pub fn new_stray(
         gpu_ctx: Arc<RwLock<Context>>,
-        surface_name: Option<&'static str>,
+        surface_name: super::surface::DisplayName,
         buffer_count: u32,
         block_height: BlockLinearHeights,
     ) -> Result<Self> {
         let raw_surface = Surface::new_stray(
             gpu_ctx,
-            surface_name.unwrap_or("Default"),
+            surface_name,
             buffer_count,
             block_height,
             ColorFormat::COLOR_FORMAT,
@@ -283,6 +284,7 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
     }
 
     /// Wait for a vsync event to ensure that the previously submitted frame has been fully rendered to the display.
+    #[inline(always)]
     pub fn wait_vsync_event(&self, timeout: Option<i64>) -> Result<()> {
         self.surface.wait_vsync_event(timeout.unwrap_or(-1))
     }
@@ -291,6 +293,7 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
     /// swizzled into the backing buffer during frame-commit. This provides better performance for line-based renderers
     /// as writes will be sequential in memory. There are cache misses during commit, but that is still better performance
     /// than mapped page churn for GPU-mapped memory.
+    #[inline(always)]
     pub fn render<T>(
         &mut self,
         clear_color: Option<ColorFormat>,
@@ -318,9 +321,36 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
         runner(&mut canvas)
     }
 
+    /// Renders a pre-preprared buffer of pixels (represented by their color values) directly to the screen.
+    /// 
+    /// A maximum of `(width * height)` pixels are read from the input buffer line-by-line to the screen. Extra
+    /// pixels are discarded, and no error is returned for partial refreshes.
+    pub fn render_prepared_buffer(&mut self, pixels: &[ColorFormat]) -> Result<()> {
+        let height = self.surface.height() as usize;
+        let width = self.surface.width() as usize;
+
+        let (buffer, buffer_length, slot, _fence_present, fences) =
+            self.surface.dequeue_buffer(false)?;
+
+            let mut canvas = UnbufferedCanvas {
+                slot,
+                base_pointer: buffer as usize,
+                fences,
+                buffer_size: buffer_length,
+                manager: self,
+            };
+    
+            for (index, pixel) in pixels.iter().cloned().take(height  * width).enumerate() {
+                canvas.draw_single((index % width) as i32, (index / width) as i32, pixel, AlphaBlend::None);
+            }
+
+            Ok(())
+    }
+
     /// Check out a canvas/framebuffer to draw a new frame, without a linear buffer.
     /// This can be used in memory constrained environments such as sysmodules, but also provides slightly better performance
     /// for frames that draw in block rather than scan-lines (e.g. JPEG decoding).
+    #[inline(always)]
     pub fn render_unbuffered<T>(
         &mut self,
         clear_color: Option<ColorFormat>,
