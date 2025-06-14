@@ -323,11 +323,11 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
 
     /// Renders a pre-preprared buffer of pixels (represented by their color values) directly to the screen.
     /// 
-    /// Panics if the buffer length does not equal the total number of visible pixels (width * height).
+    /// A maximum of `(width * height)` pixels are read from the input buffer line-by-line to the screen Extra
+    /// pixels are discarded, and no error is returned for partial refreshes.
     pub fn render_prepared_buffer(&mut self, pixels: &[ColorFormat]) -> Result<()> {
-        let height = self.surface.height();
-        let width = self.surface.width();
-        assert!(pixels.len() == (width * height) as usize, "Incorrectly sized buffer");
+        let height = self.surface.height() as usize;
+        let width = self.surface.width() as usize;
 
         let (buffer, buffer_length, slot, _fence_present, fences) =
             self.surface.dequeue_buffer(false)?;
@@ -340,11 +340,10 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
                 manager: self,
             };
     
-            for y in 0..height {
-                for x in 0..width {
-                    canvas.draw_single(x as i32, y as i32, pixels[(x + y*width) as usize], AlphaBlend::None);
-                }
+            for (index, pixel) in pixels.iter().cloned().take(height  * width).enumerate() {
+                canvas.draw_single((index % width) as i32, (index / width) as i32, pixel, AlphaBlend::None);
             }
+
             Ok(())
     }
 
