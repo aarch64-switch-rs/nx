@@ -323,7 +323,7 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
 
     /// Renders a pre-preprared buffer of pixels (represented by their color values) directly to the screen.
     /// 
-    /// A maximum of `(width * height)` pixels are read from the input buffer line-by-line to the screen Extra
+    /// A maximum of `(width * height)` pixels are read from the input buffer line-by-line to the screen. Extra
     /// pixels are discarded, and no error is returned for partial refreshes.
     pub fn render_prepared_buffer(&mut self, pixels: &[ColorFormat]) -> Result<()> {
         let height = self.surface.height() as usize;
