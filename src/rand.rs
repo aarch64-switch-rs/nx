@@ -7,7 +7,7 @@ pub use rand::{Rng, RngCore};
 use crate::ipc::sf::Buffer;
 use crate::result::*;
 use crate::service;
-use crate::service::spl::{IRandomClient, RandomService};
+pub use crate::service::spl::{IRandomClient, RandomService};
 use crate::sync::Mutex;
 
 impl RngCore for RandomService {

@@ -6,6 +6,7 @@ use super::CopyHandle;
 use super::applet::AppletResourceUserId;
 
 pub mod shmem;
+use enum_iterator::{All, Sequence};
 use nx_derive::{Request, Response};
 
 define_bit_enum! {
@@ -80,7 +81,7 @@ define_bit_enum! {
 }
 
 define_bit_enum! {
-    KeyboardModifier (u32) {
+    KeyboardModifier (u64) {
         Control = bit!(0),
         Shift = bit!(1),
         LeftAlt = bit!(2),
@@ -102,10 +103,383 @@ define_bit_enum! {
 }
 */
 
-#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
-pub struct KeyboardKey {
-    pub todo: [u8; 0x20],
+pub struct KeyboardKeyStates {
+    pub key_bitfield: [u8;0x20],
+}
+
+impl KeyboardKeyStates {
+    /// Check if a particular key is depressed
+    #[inline]
+    pub fn is_down(&self, key: KeyboardKey) -> bool {
+        let key_offset = key.bit_offset();
+        (self.key_bitfield[key_offset>>3] >> (key_offset & 7)) & 1 == 1
+    }
+
+    /// Check if a particular key is not depressed
+    #[inline(always)]
+    pub fn is_up(&self, key: KeyboardKey) -> bool {
+        !self.is_down(key)
+    }
+}
+
+pub struct KeyboardKeyDownIter(KeyboardKeyStates, All<KeyboardKey>);
+
+impl Iterator for KeyboardKeyDownIter {
+    type Item = KeyboardKey;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            let key = self.1.next()?;
+            let key_offset = key.bit_offset();
+            if (self.0.key_bitfield[key_offset >> 3] >> (key_offset & 0b111)) & 1 == 1 {
+                return Some(key);
+            }
+        }
+    }
+}
+
+impl IntoIterator for KeyboardKeyStates {
+    type Item = KeyboardKey;
+    type IntoIter = KeyboardKeyDownIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        KeyboardKeyDownIter(self, enum_iterator::all::<Self::Item>())
+    }
+}
+
+#[derive(Debug, Clone, Copy, Sequence)]
+pub enum KeyboardKey {
+    A,
+    B,
+    C,
+    D,
+    E,
+    F,
+    G,
+    H,
+    I,
+    J,
+    K,
+    L,
+    M,
+    N,
+    O,
+    P,
+    Q,
+    R,
+    S,
+    T,
+    U,
+    V,
+    W,
+    X,
+    Y,
+    Z,
+    D1,
+    D2,
+    D3,
+    D4,
+    D5,
+    D6,
+    D7,
+    D8,
+    D9,
+    D0,
+    Return,
+    Escape,
+    Backspace,
+    Tab,
+    Space,
+    Minus,
+    Plus,
+    OpenBracket,
+    CloseBracket,
+    Pipe,
+    Tilde,
+    Semicolon,
+    Quote,
+    Backquote,
+    Comma,
+    Period,
+    Slash,
+    CapsLock,
+    F1,
+    F2,
+    F3,
+    F4,
+    F5,
+    F6,
+    F7,
+    F8,
+    F9,
+    F10,
+    F11,
+    F12,
+    PrintScreen,
+    ScrollLock,
+    Pause,
+    Insert,
+    Home,
+    PageUp,
+    Delete,
+    End,
+    PageDown,
+    RightArrow,
+    LeftArrow,
+    DownArrow,
+    UpArrow,
+    NumLock,
+    NumPadDivide,
+    NumPadMultiply,
+    NumPadSubtract,
+    NumPadAdd,
+    NumPadEnter,
+    NumPad1,
+    NumPad2,
+    NumPad3,
+    NumPad4,
+    NumPad5,
+    NumPad6,
+    NumPad7,
+    NumPad8,
+    NumPad9,
+    NumPad0,
+    NumPadDot,
+    Backslash,
+    Application,
+    Power,
+    NumPadEquals,
+    F13,
+    F14,
+    F15,
+    F16,
+    F17,
+    F18,
+    F19,
+    F20,
+    F21,
+    F22,
+    F23,
+    F24,
+    NumPadComma,
+    Ro,
+    KatakanaHiragana,
+    Yen,
+    Henkan,
+    Muhenkan,
+    NumPadCommaPc98,
+    HangulEnglish,
+    Hanja,
+    Katakana,
+    Hiragana,
+    ZenkakuHankaku,
+    LeftControl,
+    LeftShift,
+    LeftAlt,
+    LeftGui,
+    RightControl,
+    RightShift,
+    RightAlt,
+    RightGui,
+}
+
+impl KeyboardKey {
+    fn bit_offset(&self) -> usize {
+        match *self {
+            KeyboardKey::A => 4,
+            KeyboardKey::B => 5,
+            KeyboardKey::C => 6,
+            KeyboardKey::D => 7,
+            KeyboardKey::E => 8,
+            KeyboardKey::F => 9,
+            KeyboardKey::G => 10,
+            KeyboardKey::H => 11,
+            KeyboardKey::I => 12,
+            KeyboardKey::J => 13,
+            KeyboardKey::K => 14,
+            KeyboardKey::L => 15,
+            KeyboardKey::M => 16,
+            KeyboardKey::N => 17,
+            KeyboardKey::O => 18,
+            KeyboardKey::P => 19,
+            KeyboardKey::Q => 20,
+            KeyboardKey::R => 21,
+            KeyboardKey::S => 22,
+            KeyboardKey::T => 23,
+            KeyboardKey::U => 24,
+            KeyboardKey::V => 25,
+            KeyboardKey::W => 26,
+            KeyboardKey::X => 27,
+            KeyboardKey::Y => 28,
+            KeyboardKey::Z => 29,
+            KeyboardKey::D1 => 30,
+            KeyboardKey::D2 => 31,
+            KeyboardKey::D3 => 32,
+            KeyboardKey::D4 => 33,
+            KeyboardKey::D5 => 34,
+            KeyboardKey::D6 => 35,
+            KeyboardKey::D7 => 36,
+            KeyboardKey::D8 => 37,
+            KeyboardKey::D9 => 38,
+            KeyboardKey::D0 => 39,
+            KeyboardKey::Return => 40,
+            KeyboardKey::Escape => 41,
+            KeyboardKey::Backspace => 42,
+            KeyboardKey::Tab => 43,
+            KeyboardKey::Space => 44,
+            KeyboardKey::Minus => 45,
+            KeyboardKey::Plus => 46,
+            KeyboardKey::OpenBracket => 47,
+            KeyboardKey::CloseBracket => 48,
+            KeyboardKey::Pipe => 49,
+            KeyboardKey::Tilde => 50,
+            KeyboardKey::Semicolon => 51,
+            KeyboardKey::Quote => 52,
+            KeyboardKey::Backquote => 53,
+            KeyboardKey::Comma => 54,
+            KeyboardKey::Period => 55,
+            KeyboardKey::Slash => 56,
+            KeyboardKey::CapsLock => 57,
+            KeyboardKey::F1 => 58,
+            KeyboardKey::F2 => 59,
+            KeyboardKey::F3 => 60,
+            KeyboardKey::F4 => 61,
+            KeyboardKey::F5 => 62,
+            KeyboardKey::F6 => 63,
+            KeyboardKey::F7 => 64,
+            KeyboardKey::F8 => 65,
+            KeyboardKey::F9 => 66,
+            KeyboardKey::F10 => 67,
+            KeyboardKey::F11 => 68,
+            KeyboardKey::F12 => 69,
+            KeyboardKey::PrintScreen => 70,
+            KeyboardKey::ScrollLock => 71,
+            KeyboardKey::Pause => 72,
+            KeyboardKey::Insert => 73,
+            KeyboardKey::Home => 74,
+            KeyboardKey::PageUp => 75,
+            KeyboardKey::Delete => 76,
+            KeyboardKey::End => 77,
+            KeyboardKey::PageDown => 78,
+            KeyboardKey::RightArrow => 79,
+            KeyboardKey::LeftArrow => 80,
+            KeyboardKey::DownArrow => 81,
+            KeyboardKey::UpArrow => 82,
+            KeyboardKey::NumLock => 83,
+            KeyboardKey::NumPadDivide => 84,
+            KeyboardKey::NumPadMultiply => 85,
+            KeyboardKey::NumPadSubtract => 86,
+            KeyboardKey::NumPadAdd => 87,
+            KeyboardKey::NumPadEnter => 88,
+            KeyboardKey::NumPad1 => 89,
+            KeyboardKey::NumPad2 => 90,
+            KeyboardKey::NumPad3 => 91,
+            KeyboardKey::NumPad4 => 92,
+            KeyboardKey::NumPad5 => 93,
+            KeyboardKey::NumPad6 => 94,
+            KeyboardKey::NumPad7 => 95,
+            KeyboardKey::NumPad8 => 96,
+            KeyboardKey::NumPad9 => 97,
+            KeyboardKey::NumPad0 => 98,
+            KeyboardKey::NumPadDot => 99,
+            KeyboardKey::Backslash => 100,
+            KeyboardKey::Application => 101,
+            KeyboardKey::Power => 102,
+            KeyboardKey::NumPadEquals => 103,
+            KeyboardKey::F13 => 104,
+            KeyboardKey::F14 => 105,
+            KeyboardKey::F15 => 106,
+            KeyboardKey::F16 => 107,
+            KeyboardKey::F17 => 108,
+            KeyboardKey::F18 => 109,
+            KeyboardKey::F19 => 110,
+            KeyboardKey::F20 => 111,
+            KeyboardKey::F21 => 112,
+            KeyboardKey::F22 => 113,
+            KeyboardKey::F23 => 114,
+            KeyboardKey::F24 => 115,
+            KeyboardKey::NumPadComma => 133,
+            KeyboardKey::Ro => 135,
+            KeyboardKey::KatakanaHiragana => 136,
+            KeyboardKey::Yen => 137,
+            KeyboardKey::Henkan => 138,
+            KeyboardKey::Muhenkan => 139,
+            KeyboardKey::NumPadCommaPc98 => 140,
+            KeyboardKey::HangulEnglish => 144,
+            KeyboardKey::Hanja => 145,
+            KeyboardKey::Katakana => 146,
+            KeyboardKey::Hiragana => 147,
+            KeyboardKey::ZenkakuHankaku => 148,
+            KeyboardKey::LeftControl => 224,
+            KeyboardKey::LeftShift => 225,
+            KeyboardKey::LeftAlt => 226,
+            KeyboardKey::LeftGui => 227,
+            KeyboardKey::RightControl => 228,
+            KeyboardKey::RightShift => 229,
+            KeyboardKey::RightAlt => 230,
+            KeyboardKey::RightGui => 231,
+        }
+    }
+    pub fn get_ansi(&self) -> Option<&'static str> {
+        match *self {
+            Self::A => Some("a"),
+            Self::B => Some("b"),
+            Self::C => Some("c"),
+            Self::D => Some("d"),
+            Self::E => Some("e"),
+            Self::F => Some("f"),
+            Self::G => Some("g"),
+            Self::H => Some("h"),
+            Self::I => Some("i"),
+            Self::J => Some("j"),
+            Self::K => Some("k"),
+            Self::L => Some("l"),
+            Self::M => Some("m"),
+            Self::N => Some("n"),
+            Self::O => Some("o"),
+            Self::P => Some("p"),
+            Self::Q => Some("q"),
+            Self::R => Some("r"),
+            Self::S => Some("s"),
+            Self::T => Some("t"),
+            Self::U => Some("u"),
+            Self::V => Some("v"),
+            Self::W => Some("w"),
+            Self::X => Some("x"),
+            Self::Y => Some("y"),
+            Self::Z => Some("z"),
+            Self::Return => Some("\r\n"),
+            Self::Backquote => Some("`"),
+            Self::Backslash => Some("\\"),
+            Self::Comma => Some(","),
+            Self::CloseBracket => Some(")"),
+            Self::OpenBracket => Some("("),
+            Self::DownArrow => Some("\x1b[(224;80)"),
+            Self::UpArrow => Some("\x1b[(224;72)"),
+            Self::Minus => Some("-"),
+            Self::Plus => Some("+"),
+            Self::LeftArrow => Some("\x1B[(224;75)"),
+            Self::RightArrow => Some("\x1B[(224;77)"),
+            Self::F1 => Some("\x1b[0;59"),
+            Self::F2 => Some("\x1b[0;60"),
+            Self::F3 => Some("\x1b[0;61"),
+            Self::F4 => Some("\x1b[0;62"),
+            Self::F5 => Some("\x1b[0;63"),
+            Self::F6 => Some("\x1b[0;64"),
+            Self::F7 => Some("\x1b[0;65"),
+            Self::F8 => Some("\x1b[0;66"),
+            Self::F9 => Some("\x1b[0;67"),
+            Self::F10 => Some("\x1b[0;68"),
+            Self::F11 => Some("\x1b[0;133"),
+            Self::F12 => Some("\x1b[0;134"),
+            Self::Home => Some("\x1b[(224;71)"),
+            Self::End => Some("\x1b[(224;79)"),
+            // TODO: More - https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797
+            _ => None
+        }
+    }
 }
 
 define_bit_enum! {
