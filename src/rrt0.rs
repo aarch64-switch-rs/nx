@@ -295,7 +295,7 @@ unsafe fn normal_entry(loader_mode: LoaderMode, exit_config: Option<ExitFn>) -> 
     // Initialize version support
     initialize_version(hos_version_opt);
 
-    let res = unsafe { main() };
+    unsafe { main() };
 
     // unmount fs devices
     #[cfg(feature = "fs")]

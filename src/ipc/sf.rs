@@ -58,6 +58,12 @@ impl<
 
     // TODO: ensure that sizeof(T) is a multiple of size
 
+    /// Creates a `Buffer` from raw parts
+    /// 
+    /// # Safety
+    /// 
+    /// It is the caller's responsibility to ensure the lifetime of the buffer does not exceed the
+    /// inner data.
     pub const unsafe fn new<'a: 'borrow>(addr: *mut u8, size: usize) -> Self {
         Self {
             buf: addr as *mut T,
@@ -66,6 +72,12 @@ impl<
         }
     }
 
+    /// Creates a `Buffer` from a raw pointer
+    /// 
+    /// # Safety
+    /// 
+    /// It is the caller's responsibility to ensure the lifetime of the buffer does not exceed the
+    /// inner data.
     pub const unsafe fn from_ptr<'a: 'borrow>(buf: *const T, count: usize) -> Self {
         Self {
             buf: buf as *mut T,
@@ -74,6 +86,12 @@ impl<
         }
     }
 
+    /// Creates a `Buffer` from a raw pointer
+    /// 
+    /// # Safety
+    /// 
+    /// It is the caller's responsibility to ensure the lifetime of the buffer does not exceed the
+    /// inner data.
     pub const unsafe fn from_mut_ptr<'a: 'borrow>(buf: *mut T, count: usize) -> Self {
         Self {
             buf,
