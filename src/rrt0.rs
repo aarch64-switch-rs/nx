@@ -306,11 +306,13 @@ unsafe fn normal_entry(loader_mode: LoaderMode, exit_config: Option<ExitFn>) -> 
         crate::fs::finalize_fspsrv_session();
     }
 
-    #[cfg(feature = "services")]
+    #[cfg(feature = "applet")]
     {
-        service::applet::finalize();
-
-        service::mii::finalize();
+        crate::applet::finalize();
+    }
+    #[cfg(feature = "mii")]
+    {
+        crate::mii::finalize();
     }
 
     #[cfg(feature = "la")]
@@ -321,6 +323,11 @@ unsafe fn normal_entry(loader_mode: LoaderMode, exit_config: Option<ExitFn>) -> 
     #[cfg(feature = "rand")]
     {
         crate::rand::finalize();
+    }
+
+    #[cfg(feature = "socket")]
+    {
+        crate::socket::finalize();
     }
 
     // Successful exit by default

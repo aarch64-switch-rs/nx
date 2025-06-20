@@ -1031,13 +1031,13 @@ impl Context {
         nv_host_as_gpu: bool,
     ) -> Result<Self> {
         let transfer_mem = alloc::Buffer::new(alloc::PAGE_ALIGNMENT, transfer_mem_size)?;
-        let transfer_mem_handle = unsafe {
+        let transfer_mem_handle = 
             svc::create_transfer_memory(
                 transfer_mem.ptr,
                 transfer_mem_size,
                 svc::MemoryPermission::None(),
             )?
-        };
+        ;
         if let Err(rc) = nvdrv_srv.initialize(
             transfer_mem_size as u32,
             sf::Handle::from(svc::CURRENT_PROCESS_PSEUDO_HANDLE),

@@ -118,3 +118,7 @@ pub mod ncm;
 
 /// "lr" service definitions.
 pub mod lr;
+
+
+/// "bsd" socket service definitions
+pub mod socket;

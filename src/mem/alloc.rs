@@ -147,11 +147,11 @@ pub fn is_enabled() -> bool {
 /// Note that a [`Buffer`] is able to hold both a single value or an array of values of the provided type
 pub struct Buffer<T, A: Allocator = Global> {
     /// The actual heap value
-    pub ptr: *mut T,
+    pub(crate) ptr: *mut T,
     /// The memory's layout
-    pub layout: Layout,
+    pub(crate) layout: Layout,
     /// The allocator used to request the buffer
-    allocator: A,
+    pub(crate) allocator: A,
 }
 
 impl<T> Buffer<T> {

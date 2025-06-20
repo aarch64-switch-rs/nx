@@ -99,20 +99,12 @@ pub mod rrt0;
 #[allow(clippy::missing_safety_doc)]
 pub mod svc;
 
-#[cfg(feature = "smc")]
-pub mod smc;
 
 #[macro_use]
 pub mod ipc;
 
-#[cfg(feature = "services")]
-pub mod service;
-
 #[macro_use]
 pub mod diag;
-
-#[cfg(feature = "gpu")]
-pub mod gpu;
 
 #[cfg(feature = "input")]
 pub mod input;
@@ -123,10 +115,20 @@ pub mod arm;
 
 pub mod wait;
 
+pub mod version;
+
+#[cfg(feature = "services")]
+pub mod service;
+#[cfg(feature = "applet")]
+pub mod applet;
+
+#[cfg(feature = "gpu")]
+pub mod gpu;
+#[cfg(feature = "smc")]
+pub mod smc;
+
 #[cfg(feature = "fs")]
 pub mod fs;
-
-pub mod version;
 
 #[cfg(feature = "rand")]
 pub mod rand;
@@ -137,3 +139,9 @@ pub mod la;
 #[cfg(feature = "console")]
 #[macro_use]
 pub mod console;
+
+#[cfg(feature = "socket")]
+pub mod socket;
+
+#[cfg(feature = "mii")]
+pub mod mii;

@@ -323,6 +323,7 @@ pub type InNonSecureMapAliasBuffer<'borrow, T> = Buffer<'borrow, true, false, tr
 pub type OutNonSecureMapAliasBuffer<'borrow, T> = Buffer<'borrow, false, true, true, false, false, false, true, false, T>;
 pub type InAutoSelectBuffer<'borrow, T> = Buffer<'borrow, true, false, false, false, false, true, false, false, T>;
 pub type OutAutoSelectBuffer<'borrow, T> = Buffer<'borrow, false, true, false, false, false, true, false, false, T>;
+pub type InOutAutoSelectBuffer<'borrow, T> = Buffer<'borrow, true, true, false, false, false, true, false, false, T>;
 pub type InPointerBuffer<'borrow, T> = Buffer<'borrow, true, false, false, true, false, false, false, false, T>;
 pub type OutPointerBuffer<'borrow, T> = Buffer<'borrow, false, true, false, true, false, false, false, false, T>;
 pub type InFixedPointerBuffer<'borrow, T> = Buffer<'borrow, true, false, false, true, true, false, false, false, T>;
@@ -376,11 +377,11 @@ impl AppletResourceUserId {
         Self { process_id, aruid }
     }
 
-    #[cfg(feature = "services")]
+    #[cfg(feature = "applet")]
     pub fn from_global() -> Self {
         Self {
             process_id: 0,
-            aruid: nx::service::applet::GLOBAL_ARUID.load(core::sync::atomic::Ordering::SeqCst),
+            aruid: crate::applet::GLOBAL_ARUID.load(core::sync::atomic::Ordering::SeqCst),
         }
     }
 
@@ -451,6 +452,37 @@ impl<E: Copy + Clone, T: Copy + Clone> server::ResponseCommandParameter
     ) -> Result<()> {
         ctx.raw_data_walker.advance_set(raw);
         Ok(())
+    }
+}
+
+impl client::RequestCommandParameter for core::time::Duration {
+    fn before_request_write(
+            _var: &Self,
+            walker: &mut DataWalker,
+            _ctx: &mut CommandContext,
+        ) -> Result<()> {
+            walker.advance::<u64>();
+            walker.advance::<u64>();
+            Ok(())
+    }
+
+    fn before_send_sync_request(
+            var: &Self,
+            walker: &mut DataWalker,
+            _ctx: &mut CommandContext,
+        ) -> Result<()> {
+            walker.advance_set(var.as_secs());
+            walker.advance_set(var.subsec_nanos() as u64);
+            Ok(())
+    }
+}
+
+impl server::RequestCommandParameter<'_, core::time::Duration> for core::time::Duration {
+    fn after_request_read(ctx: &mut server::ServerContext<'_>) -> Result<core::time::Duration> {
+        let seconds: u64 = ctx.raw_data_walker.advance_get();
+        let nanos: u64  = ctx.raw_data_walker.advance_get();
+
+        Ok(core::time::Duration::new(seconds, nanos as u32))
     }
 }
 
@@ -599,3 +631,5 @@ pub mod ldr;
 pub mod ncm;
 
 pub mod lr;
+
+pub mod socket;

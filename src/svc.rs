@@ -481,7 +481,8 @@ pub unsafe fn unmap_shared_memory(handle: Handle, address: Address, size: Size) 
 }
 
 #[inline(always)]
-pub unsafe fn create_transfer_memory(
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
+pub fn create_transfer_memory(
     address: Address,
     size: Size,
     permissions: MemoryPermission,
