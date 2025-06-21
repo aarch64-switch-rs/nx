@@ -7,7 +7,6 @@ use crate::ipc::sf::{
 use crate::result::Result;
 use crate::version::{self, Version, VersionInterval};
 
-use core::mem::offset_of;
 use core::net::Ipv4Addr;
 use core::str::FromStr;
 use core::time::Duration as TimeSpec;
@@ -280,12 +279,12 @@ pub struct SocketAddrRepr {
     // TCP/UDP port
     pub port: u16,
     // IPv4 Address
-    pub addr: u32,
+    pub addr: [u8;4],
     /// The min size we are working with for the true types. The real size is based on `self.actual_length` and `self.family`.
     pub(crate) _zero: [u8; 8],
 }
 
-static_assert!( core::mem::size_of::<SocketAddrRepr> == 8);
+const_assert!( core::mem::size_of::<SocketAddrRepr>() == 16);
 
 impl FromStr for SocketAddrRepr {
     type Err = core::net::AddrParseError;
@@ -302,7 +301,7 @@ impl From<core::net::Ipv4Addr> for SocketAddrRepr {
             len: 6,
             family: SocketDomain::INet,
             port: 0,
-            addr: u32::from_ne_bytes(value.octets()),
+            addr: value.octets(),
             _zero: [0; 8],
         }
     }
@@ -314,7 +313,7 @@ impl From<(core::net::Ipv4Addr, u16)> for SocketAddrRepr {
             len: 6,
             family: SocketDomain::INet,
             port: value.1.to_be(),
-            addr: u32::from_ne_bytes(value.0.octets()),
+            addr: value.0.octets(),
             _zero: [0; 8],
         }
     }
@@ -322,31 +321,52 @@ impl From<(core::net::Ipv4Addr, u16)> for SocketAddrRepr {
 
 #[derive(Copy, Clone, Debug, Default, Request, Response)]
 #[repr(C)]
-pub struct Duration {
-    pub seconds: u64,
-    pub microseconds: u64,
+struct BsdDuration {
+    seconds: u64,
+    microseconds: u64,
 }
 
 #[derive(Copy, Clone, Debug, Request, Response)]
 #[repr(C)]
+#[deprecated]
+/// This is newly added but immediately deprecated.
+/// See `ISocketClient::select` for details.
 pub struct BsdTimeout {
-    pub timeout: Duration,
-    pub no_timeout: bool,
+    timeout: BsdDuration,
+    no_timeout: bool,
 }
 
-#[derive(Copy, Clone, Debug, Request, Response)]
-#[repr(C)]
-pub enum ShutdownMode {
-    Receive = 0,
-    Send = 1,
-    Bidirectional = 2,
+impl BsdTimeout {
+    const fn new() -> Self {
+        Self {
+            timeout: BsdDuration { seconds: 0, microseconds: 0},
+            no_timeout: true
+        }
+    }
+
+    const fn timeout(timout: TimeSpec) ->  Self {
+        Self {
+            timeout: BsdDuration {
+                seconds: timout.as_secs(),
+                microseconds: timout.subsec_micros() as u64,
+            },
+            no_timeout: false,
+        }
+    }
 }
+
+impl Default for BsdTimeout {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 
 impl From<Option<core::time::Duration>> for BsdTimeout {
     fn from(value: Option<core::time::Duration>) -> Self {
         if let Some(duration) = value {
             Self {
-                timeout: Duration {
+                timeout: BsdDuration {
                     seconds: duration.as_secs(),
                     microseconds: duration.subsec_micros() as u64,
                 },
@@ -359,6 +379,14 @@ impl From<Option<core::time::Duration>> for BsdTimeout {
             }
         }
     }
+}
+
+#[derive(Copy, Clone, Debug, Request, Response)]
+#[repr(C)]
+pub enum ShutdownMode {
+    Receive = 0,
+    Send = 1,
+    Bidirectional = 2,
 }
 
 pub type FdSet = [u64; 1024 / (8 * core::mem::size_of::<u64>())];
@@ -432,13 +460,13 @@ define_bit_enum! {
         /// bypass routing, use direct interface
         DontRoute = 0x00004,
         /// data completes record
-        EOR = 0x00008,
+        Eor = 0x00008,
         /// do not block
-        DONTWAIT = 0x00080,
+        DontWait = 0x00080,
         /// data completes transaction
-        EOF = 0x00100,
+        Eof = 0x00100,
         /// do not generate SIGPIPE on EOF
-        NOSIGNAL = 0x20000
+        NoSignal = 0x20000
     }
 }
 
@@ -511,7 +539,7 @@ pub trait Socket {
         flags: ReadFlags,
         out_buffer: OutAutoSelectBuffer<u8>,
         from_addrs: OutAutoSelectBuffer<SocketAddrRepr>,
-    ) -> BsdResult<u32>;
+    ) -> BsdResult<()>;
 
     #[ipc_rid(10)]
     fn send(&self, sockfd: i32, flags: SendFlags, buffer: InAutoSelectBuffer<u8>) -> BsdResult<()>;

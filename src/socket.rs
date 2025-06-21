@@ -23,25 +23,11 @@ pub struct SocketService {
     tmem_handle: Handle,
     service: Box<dyn ISocketClient + Send + 'static>,
     _monitor_service: Box<dyn ISocketClient + Send + 'static>,
-    _bsd_client_pid: u64
+    _bsd_client_pid: u64,
 }
 
 unsafe impl Sync for SocketService {}
 unsafe impl Send for SocketService {}
-
-macro_rules! dispatch_bsd {
-    ($fn_name:ident(&self, $($name:ident: $t:ty),*) -> $r:ty) => {
-        pub fn $fn_name(&self, $($name: $t),*) -> Result<$r> {
-            self.service.$fn_name( $($name),*)
-        }
-    };
-    ($fn_name:ident(&mut self, $($name:ident: $t:ty),*) -> $r:ty) => {
-        #[inline(always)]
-        pub fn $fn_name(&mut self, $($name: $t),*) -> Result<$r> {
-            self.service.$fn_name( $($name),*)
-        }
-    };
-}
 
 impl SocketService {
     fn new(
@@ -89,7 +75,12 @@ impl SocketService {
             MemoryPermission::None(),
         )?;
 
-        let bsd_client_pid = service.register_client(config, sf::ProcessId::new(), tmem_buffer.layout.size(), CopyHandle::from(tmem_handle))?;
+        let bsd_client_pid = service.register_client(
+            config,
+            sf::ProcessId::new(),
+            tmem_buffer.layout.size(),
+            CopyHandle::from(tmem_handle),
+        )?;
 
         monitor_service.start_monitoring(sf::ProcessId::from(bsd_client_pid))?;
 
@@ -98,138 +89,9 @@ impl SocketService {
             tmem_handle,
             service,
             _monitor_service: monitor_service,
-            _bsd_client_pid: bsd_client_pid
+            _bsd_client_pid: bsd_client_pid,
         })
     }
-/*
-    // Implement the IPC bsd API for now.
-    dispatch_bsd!(register_client(
-        &mut self,
-        library_config: BsdServiceConfig,
-        pid: ProcessId,
-        transfer_mem_size: usize,
-        tmem_handle: CopyHandle
-    ) -> u64);
-    dispatch_bsd!(start_monitoring(&mut self, pid: ProcessId) -> ());
-    dispatch_bsd!(socket(&self, domain: SocketDomain, sock_type: SocketType, protocol: IpProto) -> BsdResult<()>);
-    dispatch_bsd!(socket_exempt(
-        &self,
-        domain: SocketDomain,
-        sock_type: SocketType,
-        protocol: IpProto
-    ) -> BsdResult<()>);
-
-    dispatch_bsd!(open(&self, path_cstr: InAutoSelectBuffer<u8>, flags: i32) -> BsdResult<()>);
-
-    dispatch_bsd!(select(
-        &self,
-        fd_cound: u32,
-        read_fds: InOutAutoSelectBuffer<FdSet>,
-        write_fds: InOutAutoSelectBuffer<FdSet>,
-        except_fds: InOutAutoSelectBuffer<FdSet>,
-        timeout: BsdTimeout
-    ) -> BsdResult<()>);
-
-    dispatch_bsd!(poll(&self, fds: InOutAutoSelectBuffer<PollFd>, timeout: i32) -> BsdResult<()>);
-
-    dispatch_bsd!(sysctl(
-        &self,
-        name: InAutoSelectBuffer<u32>,
-        newp: InAutoSelectBuffer<u8>,
-        oldp: OutAutoSelectBuffer<u8>
-    ) -> BsdResult<u32>);
-
-    dispatch_bsd!(recv(
-        &self,
-        sockfd: i32,
-        flags: ReadFlags,
-        out_buffer: OutAutoSelectBuffer<u8>
-    ) -> BsdResult<()>);
-
-    dispatch_bsd!(recv_from(
-        &self,
-        sockfd: i32,
-        flags: ReadFlags,
-        out_buffer: OutAutoSelectBuffer<u8>,
-        from_addrs: OutAutoSelectBuffer<SocketAddrRepr>
-    ) -> BsdResult<u32>);
-
-    dispatch_bsd!(send(&self, sockfd: i32, flags: SendFlags, buffer: InAutoSelectBuffer<u8>) -> BsdResult<()>);
-
-    dispatch_bsd!(send_to(
-        &self,
-        sockfd: i32,
-        flags: SendFlags,
-        buffer: InAutoSelectBuffer<u8>,
-        to_addrs: InAutoSelectBuffer<SocketAddrRepr>
-    ) -> BsdResult<()>);
-
-    dispatch_bsd!(accept(&self, sockfd: i32, addrs: OutAutoSelectBuffer<SocketAddrRepr>) -> BsdResult<u32>);
-
-    dispatch_bsd!(bind(&self, sockfd: i32, addrs: InAutoSelectBuffer<SocketAddrRepr>) -> BsdResult<()>);
-
-    dispatch_bsd!(connect(&self, sockfd: i32, addrs: InAutoSelectBuffer<SocketAddrRepr>) -> BsdResult<()>);
-
-    dispatch_bsd!(get_peer_name(
-        &self,
-        sockfd: i32,
-        addrs: OutAutoSelectBuffer<SocketAddrRepr>
-    ) -> BsdResult<u32>);
-
-    dispatch_bsd!(get_socket_name(
-        &self,
-        sockfd: i32,
-        addrs: OutAutoSelectBuffer<SocketAddrRepr>
-    ) -> BsdResult<u32>);
-
-    dispatch_bsd!(get_sock_opt(
-        &self,
-        sockfd: i32,
-        level: i32,
-        optname: i32,
-        out_opt_buffer: OutAutoSelectBuffer<u8>
-    ) -> BsdResult<u32>);
-
-    dispatch_bsd!(listen(&self, sockfd: i32, backlog: i32) -> BsdResult<()>);
-
-    dispatch_bsd!(fnctl(&self, socfd: i32, cmd: i32, flags: i32) -> BsdResult<()>);
-
-    dispatch_bsd!(set_sock_opt(
-        &self,
-        sockfd: i32,
-        level: i32,
-        optname: i32,
-        opt_buffer: InAutoSelectBuffer<u8>
-    ) -> BsdResult<()>);
-
-    dispatch_bsd!(shutdown(&self, sockfd: i32, how: ShutdownMode) -> BsdResult<()>);
-
-    dispatch_bsd!(shutdown_all(&self, how: ShutdownMode) -> BsdResult<()>);
-
-    dispatch_bsd!(write(&self, sockfd: i32, data: InAutoSelectBuffer<u8>) -> BsdResult<()>);
-
-    dispatch_bsd!(read(&self, sockfd: i32, buffer: OutAutoSelectBuffer<u8>) -> BsdResult<()>);
-
-    dispatch_bsd!(close(&self, sockfd: i32) -> BsdResult<()>);
-
-    dispatch_bsd!(dup_fd(&self, fd: i32, zero: u64) -> BsdResult<()>);
-    dispatch_bsd!(recv_mmesg(
-        &self,
-        fd: i32,
-        buffer: OutMapAliasBuffer<u8>,
-        vlen: i32,
-        flags: ReadFlags,
-        timeout: TimeSpec
-    ) -> BsdResult<()>);
-
-    dispatch_bsd!(send_mmesg(
-        &self,
-        fd: i32,
-        buffer: OutMapAliasBuffer<u8>,
-        vlen: i32,
-        flags: SendFlags
-    ) -> BsdResult<()>);
-      */
 }
 
 impl Drop for SocketService {
@@ -272,7 +134,7 @@ pub fn write_socket_service<'a>() -> WriteGuard<'a, Option<SocketService>> {
 }
 
 pub mod net {
-    use core::{mem::offset_of, net::Ipv4Addr, str::FromStr};
+    use core::{mem::offset_of, net::Ipv4Addr};
 
     use super::rc;
     use crate::{
@@ -308,21 +170,29 @@ pub mod net {
             };
 
             let yes = 1i32;
-            if let BsdResult::Err(errno) = socket_server.service.set_sock_opt(listenfd, 0xffff /* SOL_SOCKET */, 4 /*SO_REUSEADDR */, Buffer::from_other_var(&yes))? {
+            if let BsdResult::Err(errno) = socket_server.service.set_sock_opt(
+                listenfd,
+                0xffff, /* SOL_SOCKET */
+                4,      /*SO_REUSEADDR */
+                Buffer::from_other_var(&yes),
+            )? {
                 return ResultCode::new_err(nx::result::pack_value(
                     rc::RESULT_MODULE,
                     1000 + errno.cast_unsigned(),
                 ));
             }
-            
-            if let BsdResult::Err(errno) =socket_server.service.bind(listenfd, Buffer::from_var(&ipaddr))? {
+
+            if let BsdResult::Err(errno) = socket_server
+                .service
+                .bind(listenfd, Buffer::from_var(&ipaddr))?
+            {
                 return ResultCode::new_err(nx::result::pack_value(
                     rc::RESULT_MODULE,
                     1000 + errno.cast_unsigned(),
                 ));
             };
 
-            if let BsdResult::Err(errno) =socket_server.service.listen(listenfd, 5)? {
+            if let BsdResult::Err(errno) = socket_server.service.listen(listenfd, 5)? {
                 return ResultCode::new_err(nx::result::pack_value(
                     rc::RESULT_MODULE,
                     1000 + errno.cast_unsigned(),
@@ -341,17 +211,21 @@ pub mod net {
 
             let mut out_ip: SocketAddrRepr = Default::default();
 
-            match socket_server.service.accept(self.0, Buffer::from_mut_var(&mut out_ip))? {
-                BsdResult::Ok(new_sock, written_sockaddr_size  ) => { 
-                    debug_assert!(written_sockaddr_size as usize >= offset_of!(SocketAddrRepr, _zero), "Invalid write length for returned socket addr");
+            match socket_server
+                .service
+                .accept(self.0, Buffer::from_mut_var(&mut out_ip))?
+            {
+                BsdResult::Ok(new_sock, written_sockaddr_size) => {
+                    debug_assert!(
+                        written_sockaddr_size as usize >= offset_of!(SocketAddrRepr, _zero),
+                        "Invalid write length for returned socket addr"
+                    );
                     Ok((TcpStream(new_sock), out_ip))
-                },
-                BsdResult::Err(errno) => {
-                    ResultCode::new_err(nx::result::pack_value(
-                        rc::RESULT_MODULE,
-                        1000 + errno.cast_unsigned(),
-                    ))
                 }
+                BsdResult::Err(errno) => ResultCode::new_err(nx::result::pack_value(
+                    rc::RESULT_MODULE,
+                    1000 + errno.cast_unsigned(),
+                )),
             }
         }
 
@@ -362,51 +236,86 @@ pub mod net {
                 .as_ref()
                 .ok_or(rc::ResultNotInitialized::make())?;
 
-                let mut out_ip: SocketAddrRepr = Default::default();
-                match socket_server.service.get_socket_name(self.0, Buffer::from_mut_var(&mut out_ip))? {
-                    BsdResult::Ok(_, written_sockaddr_size  ) => { 
-                        debug_assert!(written_sockaddr_size as usize >= offset_of!(SocketAddrRepr, _zero), "Invalid write length for returned socket addr");
-                        Ok(out_ip)
-                    },
-                    BsdResult::Err(errno) => {
-                        ResultCode::new_err(nx::result::pack_value(
-                            rc::RESULT_MODULE,
-                            1000 + errno.cast_unsigned(),
-                        ))
-                    }
+            let mut out_ip: SocketAddrRepr = Default::default();
+            match socket_server
+                .service
+                .get_socket_name(self.0, Buffer::from_mut_var(&mut out_ip))?
+            {
+                BsdResult::Ok(_, written_sockaddr_size) => {
+                    debug_assert!(
+                        written_sockaddr_size as usize >= offset_of!(SocketAddrRepr, _zero),
+                        "Invalid write length for returned socket addr"
+                    );
+                    Ok(out_ip)
                 }
-
+                BsdResult::Err(errno) => ResultCode::new_err(nx::result::pack_value(
+                    rc::RESULT_MODULE,
+                    1000 + errno.cast_unsigned(),
+                )),
+            }
         }
     }
     pub struct TcpStream(i32);
 
     impl TcpStream {
-        pub fn recv(&mut self, data: &mut [u8]) -> Result<usize> {
+        pub fn connect<A: Into<Ipv4Addr>>(target: A, port: u16) -> Result<Self> {
             let socket_server_handle = BSD_SERVICE.read();
 
             let socket_server = socket_server_handle
                 .as_ref()
-                .unwrap();
+                .ok_or(rc::ResultNotInitialized::make())?;
 
-            match socket_server.service.recv(self.0, ReadFlags::None(), Buffer::from_mut_array(data))? {
-                BsdResult::Ok(ret, ()) => {
-                    Ok(ret as usize)
-                },
+            let target = SocketAddrRepr::from((target.into(), port));
+
+            let socket = match socket_server.service.socket(
+                super::SocketDomain::INet,
+                super::SocketType::Stream,
+                super::IpProto::Ip,
+            )? {
+                BsdResult::Ok(ret, ()) => ret,
                 BsdResult::Err(errno) => {
-                    ResultCode::new_err(nx::result::pack_value(
+                    return ResultCode::new_err(nx::result::pack_value(
                         rc::RESULT_MODULE,
                         1000 + errno.cast_unsigned(),
-                    ))
+                    ));
                 }
+            };
+
+            if let BsdResult::Err(errno) = socket_server
+                .service
+                .connect(socket, Buffer::from_var(&target))?
+            {
+                return ResultCode::new_err(nx::result::pack_value(
+                    rc::RESULT_MODULE,
+                    1000 + errno.cast_unsigned(),
+                ));
+            };
+
+            Ok(Self(socket))
+        }
+
+        pub fn recv(&mut self, data: &mut [u8]) -> Result<usize> {
+            let socket_server_handle = BSD_SERVICE.read();
+
+            let socket_server = socket_server_handle.as_ref().unwrap();
+
+            match socket_server.service.recv(
+                self.0,
+                ReadFlags::None(),
+                Buffer::from_mut_array(data),
+            )? {
+                BsdResult::Ok(ret, ()) => Ok(ret as usize),
+                BsdResult::Err(errno) => ResultCode::new_err(nx::result::pack_value(
+                    rc::RESULT_MODULE,
+                    1000 + errno.cast_unsigned(),
+                )),
             }
         }
 
         pub fn recv_non_blocking(&mut self, data: &mut [u8]) -> Result<usize> {
             let socket_server_handle = BSD_SERVICE.read();
 
-            let socket_server = socket_server_handle
-                .as_ref()
-                .unwrap();
+            let socket_server = socket_server_handle.as_ref().unwrap();
 
             match socket_server.service.recv(self.0, ReadFlags::DontWait(), Buffer::from_mut_array(data))? {
                 BsdResult::Ok(ret, ()) => {
@@ -427,20 +336,35 @@ pub mod net {
         pub fn send(&mut self, data: &[u8]) -> Result<()> {
             let socket_server_handle = BSD_SERVICE.read();
 
-            let socket_server = socket_server_handle
-                .as_ref()
-                .unwrap();
+            let socket_server = socket_server_handle.as_ref().unwrap();
 
-            match socket_server.service.send(self.0, SendFlags::None(), Buffer::from_array(data))? {
-                BsdResult::Ok(_, ()) => {
-                    Ok(())
-                },
-                BsdResult::Err(errno) => {
-                    ResultCode::new_err(nx::result::pack_value(
-                        rc::RESULT_MODULE,
-                        1000 + errno.cast_unsigned(),
-                    ))
-                }
+            match socket_server
+                .service
+                .send(self.0, SendFlags::None(), Buffer::from_array(data))?
+            {
+                BsdResult::Ok(_, ()) => Ok(()),
+                BsdResult::Err(errno) => ResultCode::new_err(nx::result::pack_value(
+                    rc::RESULT_MODULE,
+                    1000 + errno.cast_unsigned(),
+                )),
+            }
+        }
+
+        pub fn send_non_blocking(&mut self, data: &[u8]) -> Result<()> {
+            let socket_server_handle = BSD_SERVICE.read();
+
+            let socket_server = socket_server_handle.as_ref().unwrap();
+
+            match socket_server.service.send(
+                self.0,
+                SendFlags::DontWait(),
+                Buffer::from_array(data),
+            )? {
+                BsdResult::Ok(_, ()) => Ok(()),
+                BsdResult::Err(errno) => ResultCode::new_err(nx::result::pack_value(
+                    rc::RESULT_MODULE,
+                    1000 + errno.cast_unsigned(),
+                )),
             }
         }
     }
@@ -448,14 +372,14 @@ pub mod net {
     pub struct UdpSocket(i32);
 
     impl UdpSocket {
-        pub fn bind() -> Result<Self> {
+        pub fn bind<A: Into<Ipv4Addr>>(addr: A) -> Result<Self> {
             let socket_server_handle = BSD_SERVICE.read();
 
             let socket_server = socket_server_handle
                 .as_ref()
                 .ok_or(rc::ResultNotInitialized::make())?;
-            let ipaddr = core::net::Ipv4Addr::new(0, 0, 0, 0).into();
-            //let ipaddr = SocketAddrRepr::from_str(ipaddr).map_err(|_| rc::ResultInvalidSocketString::make())?;
+            let ipaddr: Ipv4Addr = addr.into();
+            let ipaddr: SocketAddrRepr = ipaddr.into();
             let socket = match socket_server.service.socket(
                 super::SocketDomain::INet,
                 super::SocketType::DataGram,
@@ -469,14 +393,83 @@ pub mod net {
                     ));
                 }
             };
-            
-            if let BsdResult::Err(errno) =socket_server.service.bind(socket, Buffer::from_var(&ipaddr))? {
+
+            if let BsdResult::Err(errno) = socket_server
+                .service
+                .bind(socket, Buffer::from_var(&ipaddr))?
+            {
                 return ResultCode::new_err(nx::result::pack_value(
                     rc::RESULT_MODULE,
                     1000 + errno.cast_unsigned(),
                 ));
             };
             Err(rc::ResultNotInitialized::make())
+        }
+
+        pub fn recv(&mut self, buffer: &mut [u8]) -> Result<(usize, Ipv4Addr, u16)> {
+            let socket_server_handle = BSD_SERVICE.read();
+
+            let socket_server = socket_server_handle.as_ref().unwrap();
+
+            let mut out_addr: SocketAddrRepr = Default::default();
+            match socket_server.service.recv_from(
+                self.0,
+                ReadFlags::None(),
+                Buffer::from_mut_array(buffer),
+                Buffer::from_mut_var(&mut out_addr),
+            )? {
+                BsdResult::Ok(ret, ()) => Ok((
+                    ret as usize,
+                    Ipv4Addr::from_bits(u32::from_be_bytes(out_addr.addr)),
+                    u16::from_be(out_addr.port),
+                )),
+                BsdResult::Err(errno) => ResultCode::new_err(nx::result::pack_value(
+                    rc::RESULT_MODULE,
+                    1000 + errno.cast_unsigned(),
+                )),
+            }
+        }
+
+        pub fn recv_non_blocking(
+            &mut self,
+            buffer: &mut [u8],
+        ) -> Result<Option<(usize, Ipv4Addr, u16)>> {
+            let socket_server_handle = BSD_SERVICE.read();
+
+            let socket_server = socket_server_handle.as_ref().unwrap();
+
+            let mut out_addr: SocketAddrRepr = Default::default();
+            match socket_server.service.recv_from(self.0, ReadFlags::None(), Buffer::from_mut_array(buffer), Buffer::from_mut_var(&mut out_addr))? {
+                BsdResult::Ok(ret, ()) => {
+                    Ok(Some((ret as usize, Ipv4Addr::from_bits(u32::from_be_bytes(out_addr.addr)), u16::from_be(out_addr.port))))
+                },
+                BsdResult::Err(errno) if errno == 11 /* EAGAIN */ => {
+                    Ok(None)
+                }
+                BsdResult::Err(errno) => {
+                    ResultCode::new_err(nx::result::pack_value(
+                        rc::RESULT_MODULE,
+                        1000 + errno.cast_unsigned(),
+                    ))
+                }
+            }
+        }
+
+        pub fn send(&mut self, data: &[u8]) -> Result<()> {
+            let socket_server_handle = BSD_SERVICE.read();
+
+            let socket_server = socket_server_handle.as_ref().unwrap();
+
+            match socket_server
+                .service
+                .send(self.0, SendFlags::None(), Buffer::from_array(data))?
+            {
+                BsdResult::Ok(_, ()) => Ok(()),
+                BsdResult::Err(errno) => ResultCode::new_err(nx::result::pack_value(
+                    rc::RESULT_MODULE,
+                    1000 + errno.cast_unsigned(),
+                )),
+            }
         }
     }
 
