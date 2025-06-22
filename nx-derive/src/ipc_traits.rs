@@ -6,8 +6,8 @@ use syn::{
     punctuated::Punctuated,
     spanned::Spanned,
     token::{Gt, Lt, Mut, PathSep},
-    AngleBracketedGenericArguments, FnArg, GenericArgument, Path, PathSegment, ReturnType,
-    TraitItem, TraitItemFn, Type, TypePath,
+    AngleBracketedGenericArguments, AttrStyle, FnArg, GenericArgument, Path, PathSegment,
+    ReturnType, TraitItem, TraitItemFn, Type, TypePath,
 };
 
 pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<TokenStream> {
@@ -134,8 +134,10 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
         let mut version_req = None;
         let mut return_type_is_session = false;
         let mut return_wrap_result = true;
+        let mut doc_comment: Option<syn::Attribute> = None;
         for attr in fn_item.attrs.iter() {
             if let syn::Attribute {
+                style: AttrStyle::Outer,
                 meta:
                     syn::Meta::List(syn::MetaList {
                         path,
@@ -150,7 +152,7 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
                 } else if path.is_ident("version") {
                     version_req = Some(syn::parse2::<syn::Expr>(tokens.clone())?);
                 } else {
-                    return Err(stringify_error(fn_item.span(), "Only the `ipc_rid`, `version`, `no_wrap_return`, and `return_session` attrs are supported on ipc trait functions"));
+                    return Err(stringify_error(fn_item.span(), "Only the `ipc_rid`, `version`, `no_wrap_return`, and `return_session` attrs are supported on ipc trait functions (plus doc comments)"));
                 }
             } else if let syn::Attribute {
                 meta: syn::Meta::Path(p),
@@ -162,10 +164,18 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
                 } else if p.is_ident("no_wrap_return") {
                     return_wrap_result = false
                 } else {
-                    return Err(stringify_error(fn_item.span(), "Only the `ipc_rid`, `version` `no_wrap_return`, and `return_session` attrs are supported on ipc trait functions"));
+                    return Err(stringify_error(fn_item.span(), "Only the `ipc_rid`, `version` `no_wrap_return`, and `return_session` attrs are supported on ipc trait functions (plus doc comments)"));
                 }
+            } else if let syn::Attribute {
+                style: AttrStyle::Outer,
+                meta: syn::Meta::NameValue(syn::MetaNameValue { path, .. }),
+                ..
+            } = attr
+                && path.is_ident("doc")
+            {
+                doc_comment = Some(attr.clone());
             } else {
-                return Err(stringify_error(fn_item.span(), "Only the `ipc_rid`, `version` `no_wrap_return`, and `return_session` attrs are supported on ipc trait functions"));
+                return Err(stringify_error(fn_item.span(), "Only the `ipc_rid`, `version` `no_wrap_return`, and `return_session` attrs are supported on ipc trait functions (plus doc comments)"));
             }
         }
 
@@ -184,6 +194,9 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
         // fix up the return types of the client functions to return nx::result::Result
         let mut client_fn = fn_item.clone();
         client_fn.attrs = vec![];
+        if let Some(doc_comment) = doc_comment {
+            client_fn.attrs.push(doc_comment);
+        }
 
         let mut client_in_param_names = vec![];
         let mut server_in_param_names = vec![];
