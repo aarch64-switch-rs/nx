@@ -328,7 +328,6 @@ struct BsdDuration {
 
 #[derive(Copy, Clone, Debug, Request, Response)]
 #[repr(C)]
-#[deprecated]
 /// This is newly added but immediately deprecated.
 /// See `ISocketClient::select` for details.
 pub struct BsdTimeout {

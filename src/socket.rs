@@ -134,7 +134,6 @@ pub fn write_socket_service<'a>() -> WriteGuard<'a, Option<BsdSocketService>> {
 }
 
 pub mod net {
-    use core::task::Poll;
     use core::{mem::offset_of, net::Ipv4Addr};
 
     use alloc::vec::Vec;
@@ -146,7 +145,7 @@ pub mod net {
     use crate::{
         ipc::sf::Buffer,
         result::{Result, ResultBase, ResultCode},
-        service::bsd::{BsdResult, BsdTimeout, ReadFlags, SendFlags, SocketAddrRepr},
+        service::bsd::{BsdResult, ReadFlags, SendFlags, SocketAddrRepr},
     };    
 
     mod sealed {
