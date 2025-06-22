@@ -389,14 +389,76 @@ pub enum ShutdownMode {
     Bidirectional = 2,
 }
 
+define_bit_enum! {
+    SocketOptions (i32) {
+        /// turn on debugging info recording
+        Debug = 0x0001,
+        /// socket has had listen()
+        AcceptConn = 0x0002,
+        /// allow local address reuse
+        ReuseAddr = 0x0004,
+        /// keep connections alive
+        KeepAlive = 0x0008,
+        /// just use interface addresses
+        DontRoute = 0x0010,
+        /// permit sending of broadcast msgs
+        Broadcast = 0x0020,
+        /// bypass hardware when possible
+        UseLoopbackK = 0x0040,
+        /// linger on close if data present
+        Linger = 0x0080,
+        /// leave received OOB data in line
+        OOBInline = 0x0100,
+        /// allow local address & port reuse
+        ReusePort = 0x0200,
+        /// timestamp received dgram traffic
+        Timestmap = 0x0400,
+        /// no SIGPIPE from EPIPE
+        NoSigPipe = 0x0800,
+        /// there is an accept filter
+        AcceptFilter = 0x1000,
+        /// timestamp received dgram traffic
+        BInTime = 0x2000,
+        /// socket cannot be offloaded
+        NoOffload = 0x4000,
+        /// disable direct data placement
+        NoDdp = 0x8000
+    }
+}
+
 pub type FdSet = [u64; 1024 / (8 * core::mem::size_of::<u64>())];
 
 #[derive(Copy, Clone, Debug, Default, Request, Response)]
 #[repr(C)]
 pub struct PollFd {
     pub fd: i32,
-    pub events: u16,
-    pub revents: u16,
+    pub events: PollFlags,
+    pub revents: PollFlags,
+}
+
+define_bit_enum! {
+    PollFlags (u16) {
+        /// any readable data available
+        PollIn = 0x0001,
+        /// OOB/Urgent readable data
+        PollPri = 0x0002,
+        /// file descriptor is writeable
+        PollOut = 0x0004,
+        /// non-OOB/URG data available
+        PollRDNorm = 0x0040,
+        /// OOB/Urgent readable data
+        PollRDBand = 0x0080,
+        /// OOB/Urgent data can be written
+        PollWRBand = 0x0100,
+        /// like PollIN, except ignore EOF
+        PolliInIgnoreEof = 0x2000,
+        /// some poll error occurred
+        PollError = 0x0008,
+        /// file descriptor was "hung up"
+        PollHangup = 0x0010,
+        /// requested events "invalid"
+        PollInvalid = 0x0020
+    }
 }
 
 #[derive(Copy, Clone, Debug, Default, Request, Response)]
@@ -471,7 +533,7 @@ define_bit_enum! {
 }
 
 #[nx_derive::ipc_trait]
-pub trait Socket {
+pub trait Bsd {
     #[ipc_rid(0)]
     fn register_client(
         &mut self,
@@ -504,7 +566,9 @@ pub trait Socket {
     #[ipc_rid(4)]
     fn open(&self, path_cstr: InAutoSelectBuffer<u8>, flags: i32) -> BsdResult<()>;
 
-    #[ipc_rid(5)]
+    // incompatible with rust's memory model.
+    // The reads and writes to the buffers are implemented as a double borrow as mut and shared.
+    /*#[ipc_rid(5)]
     fn select(
         &self,
         fd_cound: u32,
@@ -512,7 +576,7 @@ pub trait Socket {
         write_fds: InOutAutoSelectBuffer<FdSet>,
         except_fds: InOutAutoSelectBuffer<FdSet>,
         timeout: BsdTimeout,
-    ) -> BsdResult<()>;
+    ) -> BsdResult<()>;*/
 
     #[ipc_rid(6)]
     fn poll(&self, fds: InOutAutoSelectBuffer<PollFd>, timeout: i32) -> BsdResult<()>;
@@ -582,7 +646,7 @@ pub trait Socket {
         &self,
         sockfd: i32,
         level: i32,
-        optname: i32,
+        optname: SocketOptions,
         out_opt_buffer: OutAutoSelectBuffer<u8>,
     ) -> BsdResult<u32>;
 
@@ -597,7 +661,7 @@ pub trait Socket {
         &self,
         sockfd: i32,
         level: i32,
-        optname: i32,
+        optname: SocketOptions,
         opt_buffer: InAutoSelectBuffer<u8>,
     ) -> BsdResult<()>;
 

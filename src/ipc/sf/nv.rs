@@ -51,8 +51,7 @@ pub trait NvDrv {
         &self,
         fd: Fd,
         id: IoctlId,
-        in_buf: sf::InAutoSelectBuffer<'_, u8>,
-        out_buf: sf::OutAutoSelectBuffer<'_, u8>,
+        in_buf: sf::InOutAutoSelectBuffer<'_, u8>,
     ) -> ErrorCode;
     #[ipc_rid(2)]
     fn close(&self, fd: Fd) -> ErrorCode;

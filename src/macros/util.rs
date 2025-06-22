@@ -108,6 +108,11 @@ macro_rules! define_bit_enum {
                 (self.0 & other.0) == other.0
             }
 
+            /// Checks if the provided `$name` has any common bits with `other`
+            pub const fn intersects(self, other: Self) -> bool {
+                (self.0 & other.0) != 0
+            }
+
             /// Returns the value as the underlying type
             pub const fn get(self) -> $base {
                 self.0

@@ -2,12 +2,12 @@ use crate::ipc::sf::sm;
 use crate::result::Result;
 use crate::service;
 
-pub use crate::ipc::sf::socket::*;
+pub use crate::ipc::sf::bsd::*;
 
-ipc_client_define_client_default!(SystemSocketService);
-impl ISocketClient for SystemSocketService {}
+ipc_client_define_client_default!(SystemBsdService);
+impl IBsdClient for SystemBsdService {}
 
-impl service::IService for SystemSocketService {
+impl service::IService for SystemBsdService {
     fn get_name() -> sm::ServiceName {
         sm::ServiceName::new("bsd:s")
     }
@@ -21,10 +21,10 @@ impl service::IService for SystemSocketService {
     }
 }
 
-ipc_client_define_client_default!(AppletSocketService);
-impl ISocketClient for AppletSocketService {}
+ipc_client_define_client_default!(AppletBsdService);
+impl IBsdClient for AppletBsdService {}
 
-impl service::IService for AppletSocketService {
+impl service::IService for AppletBsdService {
     fn get_name() -> sm::ServiceName {
         sm::ServiceName::new("bsd:a")
     }
@@ -38,10 +38,10 @@ impl service::IService for AppletSocketService {
     }
 }
 
-ipc_client_define_client_default!(UserSocketService);
-impl ISocketClient for UserSocketService {}
+ipc_client_define_client_default!(UserBsdService);
+impl IBsdClient for UserBsdService {}
 
-impl service::IService for UserSocketService {
+impl service::IService for UserBsdService {
     fn get_name() -> sm::ServiceName {
         sm::ServiceName::new("bsd:u")
     }

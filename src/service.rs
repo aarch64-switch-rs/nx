@@ -121,4 +121,4 @@ pub mod lr;
 
 
 /// "bsd" socket service definitions
-pub mod socket;
+pub mod bsd;

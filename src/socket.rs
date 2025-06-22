@@ -11,46 +11,46 @@ use crate::mem::alloc::PAGE_ALIGNMENT;
 use crate::mem::wait_for_permission;
 use crate::result::Result;
 
-use crate::service::socket::*;
+use crate::service::bsd::*;
 
 use crate::service::new_service_object;
 use crate::svc::Handle;
 use crate::svc::MemoryPermission;
 use crate::sync::{ReadGuard, RwLock, WriteGuard};
 
-pub struct SocketService {
+pub struct BsdSocketService {
     _tmem_buffer: Buffer<u8>,
     tmem_handle: Handle,
-    service: Box<dyn ISocketClient + Send + 'static>,
-    _monitor_service: Box<dyn ISocketClient + Send + 'static>,
+    service: Box<dyn IBsdClient + Send + 'static>,
+    _monitor_service: Box<dyn IBsdClient + Send + 'static>,
     _bsd_client_pid: u64,
 }
 
-unsafe impl Sync for SocketService {}
-unsafe impl Send for SocketService {}
+unsafe impl Sync for BsdSocketService {}
+unsafe impl Send for BsdSocketService {}
 
-impl SocketService {
+impl BsdSocketService {
     fn new(
         config: BsdServiceConfig,
         kind: BsdSrvkind,
         transfer_mem_buffer: Option<Buffer<u8>>,
     ) -> Result<Self> {
         let mut service = match kind {
-            BsdSrvkind::Applet => Box::new(new_service_object::<AppletSocketService>()?)
-                as Box<dyn ISocketClient + Send + Sync + 'static>,
-            BsdSrvkind::System => Box::new(new_service_object::<SystemSocketService>()?)
-                as Box<dyn ISocketClient + Send + Sync + 'static>,
-            BsdSrvkind::User => Box::new(new_service_object::<UserSocketService>()?)
-                as Box<dyn ISocketClient + Send + Sync + 'static>,
+            BsdSrvkind::Applet => Box::new(new_service_object::<AppletBsdService>()?)
+                as Box<dyn IBsdClient + Send + Sync + 'static>,
+            BsdSrvkind::System => Box::new(new_service_object::<SystemBsdService>()?)
+                as Box<dyn IBsdClient + Send + Sync + 'static>,
+            BsdSrvkind::User => Box::new(new_service_object::<UserBsdService>()?)
+                as Box<dyn IBsdClient + Send + Sync + 'static>,
         };
 
         let mut monitor_service = match kind {
-            BsdSrvkind::Applet => Box::new(new_service_object::<AppletSocketService>()?)
-                as Box<dyn ISocketClient + Send + Sync + 'static>,
-            BsdSrvkind::System => Box::new(new_service_object::<SystemSocketService>()?)
-                as Box<dyn ISocketClient + Send + Sync + 'static>,
-            BsdSrvkind::User => Box::new(new_service_object::<UserSocketService>()?)
-                as Box<dyn ISocketClient + Send + Sync + 'static>,
+            BsdSrvkind::Applet => Box::new(new_service_object::<AppletBsdService>()?)
+                as Box<dyn IBsdClient + Send + Sync + 'static>,
+            BsdSrvkind::System => Box::new(new_service_object::<SystemBsdService>()?)
+                as Box<dyn IBsdClient + Send + Sync + 'static>,
+            BsdSrvkind::User => Box::new(new_service_object::<UserBsdService>()?)
+                as Box<dyn IBsdClient + Send + Sync + 'static>,
         };
 
         let tmem_min_size = config.min_transfer_mem_size();
@@ -94,7 +94,7 @@ impl SocketService {
     }
 }
 
-impl Drop for SocketService {
+impl Drop for BsdSocketService {
     fn drop(&mut self) {
         let _ = self._monitor_service.close_session();
         let _ = self.service.close_session();
@@ -103,7 +103,7 @@ impl Drop for SocketService {
     }
 }
 
-static BSD_SERVICE: RwLock<Option<SocketService>> = RwLock::new(None);
+static BSD_SERVICE: RwLock<Option<BsdSocketService>> = RwLock::new(None);
 
 pub fn initialize(
     kind: BsdSrvkind,
@@ -116,7 +116,7 @@ pub fn initialize(
         return Ok(());
     }
 
-    *service_handle = Some(SocketService::new(config, kind, tmem_buffer)?);
+    *service_handle = Some(BsdSocketService::new(config, kind, tmem_buffer)?);
 
     Ok(())
 }
@@ -125,24 +125,61 @@ pub(crate) fn finalize() {
     *BSD_SERVICE.write() = None;
 }
 
-pub fn read_socket_service<'a>() -> ReadGuard<'a, Option<SocketService>> {
+pub fn read_socket_service<'a>() -> ReadGuard<'a, Option<BsdSocketService>> {
     BSD_SERVICE.read()
 }
 
-pub fn write_socket_service<'a>() -> WriteGuard<'a, Option<SocketService>> {
+pub fn write_socket_service<'a>() -> WriteGuard<'a, Option<BsdSocketService>> {
     BSD_SERVICE.write()
 }
 
 pub mod net {
+    use core::task::Poll;
     use core::{mem::offset_of, net::Ipv4Addr};
 
+    use alloc::vec::Vec;
+
     use super::rc;
+    use super::BSD_SERVICE;
+    use crate::service::bsd::{PollFd, SocketOptions};
+    use crate::service::bsd::PollFlags;
     use crate::{
         ipc::sf::Buffer,
         result::{Result, ResultBase, ResultCode},
-        service::socket::{BsdResult, ReadFlags, SendFlags, SocketAddrRepr},
-        socket::BSD_SERVICE,
-    };
+        service::bsd::{BsdResult, BsdTimeout, ReadFlags, SendFlags, SocketAddrRepr},
+    };    
+
+    mod sealed {
+        pub trait Pollable {
+            fn get_poll_fd(&self) -> i32;
+        }
+    }
+
+    /// Takes a slice of pollable values and requested events returns an iterator over the matched index in the input list and the returned events.
+    #[inline(always)]
+    pub fn poll<P: sealed::Pollable>(pollers: &[(P, PollFlags)], timeout: Option<i32>) -> Result<impl Iterator<Item = (usize, PollFlags)>> {
+        poll_impl(pollers.iter().map(|(poll, flags)| PollFd { fd: poll.get_poll_fd(), events: *flags, revents: Default::default()} ).collect(), timeout.unwrap_or(-1))
+    }
+
+    #[doc(hidden)]
+    fn poll_impl(mut fds:Vec<PollFd>, timeout: i32) -> Result<impl Iterator<Item = (usize, PollFlags)>> {
+        let socket_server_handle = BSD_SERVICE.read();
+
+            let socket_server = socket_server_handle
+                .as_ref()
+                .ok_or(rc::ResultNotInitialized::make())?;
+
+            if let BsdResult::Err(errno) = socket_server.service.poll(Buffer::from_mut_array(fds.as_mut_slice()), timeout)? {
+                return ResultCode::new_err(nx::result::pack_value(
+                    rc::RESULT_MODULE,
+                    1000 + errno.cast_unsigned(),
+                ));
+            }
+
+            Ok(fds.into_iter().enumerate().filter_map(|(index, pollfd)| { if pollfd.events.intersects(pollfd.revents) {Some((index, pollfd.revents))} else {None}}))
+
+    }
+
 
     pub struct TcpListener(i32);
 
@@ -173,7 +210,7 @@ pub mod net {
             if let BsdResult::Err(errno) = socket_server.service.set_sock_opt(
                 listenfd,
                 0xffff, /* SOL_SOCKET */
-                4,      /*SO_REUSEADDR */
+                SocketOptions::ReuseAddr(),
                 Buffer::from_other_var(&yes),
             )? {
                 return ResultCode::new_err(nx::result::pack_value(
@@ -255,6 +292,13 @@ pub mod net {
             }
         }
     }
+
+    impl sealed::Pollable for TcpListener {
+        fn get_poll_fd(&self) -> i32 {
+            self.0
+        }
+    }
+
     pub struct TcpStream(i32);
 
     impl TcpStream {
@@ -369,6 +413,11 @@ pub mod net {
         }
     }
 
+    impl sealed::Pollable for TcpStream {
+        fn get_poll_fd(&self) -> i32 {
+            self.0
+        }
+    }
     pub struct UdpSocket(i32);
 
     impl UdpSocket {
@@ -588,6 +637,12 @@ pub mod net {
                     1000 + errno.cast_unsigned(),
                 )),
             }
+        }
+    }
+
+    impl sealed::Pollable for UdpSocket {
+        fn get_poll_fd(&self) -> i32 {
+            self.0
         }
     }
 

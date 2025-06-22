@@ -354,7 +354,7 @@ impl ProxyDirectory {
 impl Directory for ProxyDirectory {
     fn read(&self, out_entries: &mut [DirectoryEntry]) -> Result<usize> {
         self.dir_obj
-            .read(ipc_sf::Buffer::from_array(out_entries))
+            .read(ipc_sf::Buffer::from_mut_array(out_entries))
             .map(|r| r as usize)
     }
 

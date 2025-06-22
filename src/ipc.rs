@@ -822,7 +822,8 @@ impl CommandContext {
                         self.send_statics.len() as u32,
                     ))?;
                 }
-            } else if OUT {
+            }
+            if OUT {
                 if buffer_in_static {
                     self.add_receive_buffer(BufferDescriptor::new(
                         ptr::null(),
@@ -848,7 +849,8 @@ impl CommandContext {
                     buf_size,
                     self.send_statics.len() as u32,
                 ))?;
-            } else if OUT {
+            }
+            if OUT {
                 self.add_receive_static(ReceiveStaticDescriptor::new(buf_addr, buf_size))?;
                 if !FIXED_SIZE {
                     self.in_params.add_out_pointer_size(buf_size as u16)?;

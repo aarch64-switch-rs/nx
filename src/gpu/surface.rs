@@ -86,7 +86,7 @@ impl Surface {
             let (layer_id, _) = gpu_guard.application_display_service.create_stray_layer(
                 vi::LayerFlags::Default(),
                 display_id,
-                sf::Buffer::from_other_mut_var(&mut native_window),
+                sf::Buffer::from_other_var_mut(&mut native_window),
             )?;
             let mut parcel = parcel::Parcel::new();
             parcel.load_from(native_window);
@@ -162,7 +162,7 @@ impl Surface {
             display_name_v,
             layer_id,
             aruid,
-            sf::Buffer::from_other_mut_var(&mut native_window),
+            sf::Buffer::from_other_var_mut(&mut native_window),
         )?;
 
         let mut binder_parcel = parcel::Parcel::new();
@@ -372,8 +372,7 @@ impl Surface {
         let err = gpu_guard.nvdrv_service.ioctl(
             fd,
             I::get_id(),
-            sf::Buffer::from_other_var(i),
-            sf::Buffer::from_other_var(i),
+            sf::Buffer::from_other_var_mut(i),
         )?;
         super::convert_nv_error_code(err)
     }
