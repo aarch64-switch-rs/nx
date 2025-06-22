@@ -337,14 +337,14 @@ pub struct BsdTimeout {
 }
 
 impl BsdTimeout {
-    const fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             timeout: BsdDuration { seconds: 0, microseconds: 0},
             no_timeout: true
         }
     }
 
-    const fn timeout(timout: TimeSpec) ->  Self {
+    pub const fn timeout(timout: TimeSpec) ->  Self {
         Self {
             timeout: BsdDuration {
                 seconds: timout.as_secs(),
@@ -485,6 +485,7 @@ pub trait Socket {
     fn start_monitoring(&mut self, pid: ProcessId) -> ();
 
     #[ipc_rid(2)]
+    /// See [read(2)](https://man.openbsd.org/read.2)
     fn socket(
         &self,
         domain: SocketDomain,

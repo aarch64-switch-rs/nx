@@ -372,14 +372,12 @@ pub mod net {
     pub struct UdpSocket(i32);
 
     impl UdpSocket {
-        pub fn bind<A: Into<Ipv4Addr>>(addr: A) -> Result<Self> {
+        pub fn bind<A: Into<Ipv4Addr>>(addr: A, port: Option<u16>) -> Result<Self> {
             let socket_server_handle = BSD_SERVICE.read();
 
             let socket_server = socket_server_handle
                 .as_ref()
                 .ok_or(rc::ResultNotInitialized::make())?;
-            let ipaddr: Ipv4Addr = addr.into();
-            let ipaddr: SocketAddrRepr = ipaddr.into();
             let socket = match socket_server.service.socket(
                 super::SocketDomain::INet,
                 super::SocketType::DataGram,
@@ -394,9 +392,12 @@ pub mod net {
                 }
             };
 
+            
+            let ipaddr: Ipv4Addr = addr.into();
+            let socketaddr = SocketAddrRepr::from((ipaddr, port.unwrap_or(0)));
             if let BsdResult::Err(errno) = socket_server
                 .service
-                .bind(socket, Buffer::from_var(&ipaddr))?
+                .bind(socket, Buffer::from_var(&socketaddr))?
             {
                 return ResultCode::new_err(nx::result::pack_value(
                     rc::RESULT_MODULE,
@@ -405,6 +406,40 @@ pub mod net {
             };
             Err(rc::ResultNotInitialized::make())
         }
+
+        pub fn connect<A:Into<SocketAddrRepr>>(destination: A) -> Result<Self> {
+            let socket_server_handle = BSD_SERVICE.read();
+
+            let socket_server = socket_server_handle
+                .as_ref()
+                .ok_or(rc::ResultNotInitialized::make())?;
+            let socket = match socket_server.service.socket(
+                super::SocketDomain::INet,
+                super::SocketType::DataGram,
+                super::IpProto::UDP,
+            )? {
+                BsdResult::Ok(ret, ()) => ret,
+                BsdResult::Err(errno) => {
+                    return ResultCode::new_err(nx::result::pack_value(
+                        rc::RESULT_MODULE,
+                        1000 + errno.cast_unsigned(),
+                    ));
+                }
+            };
+
+            let socketaddr = destination.into();
+            if let BsdResult::Err(errno) = socket_server
+                .service
+                .connect(socket, Buffer::from_var(&socketaddr))?
+            {
+                return ResultCode::new_err(nx::result::pack_value(
+                    rc::RESULT_MODULE,
+                    1000 + errno.cast_unsigned(),
+                ));
+            };
+            Err(rc::ResultNotInitialized::make())
+        }
+            
 
         pub fn recv(&mut self, buffer: &mut [u8]) -> Result<(usize, Ipv4Addr, u16)> {
             let socket_server_handle = BSD_SERVICE.read();
@@ -430,7 +465,64 @@ pub mod net {
             }
         }
 
+        /// Receives data on the socket from the remote address to which it is connected.
+        /// On success, returns the number of bytes read or a None value if there is no data.
+        ///
+        ///The function must be called with valid byte array buf of sufficient size to hold the message bytes. If a message is too long to fit in the supplied buffer, excess bytes may be discarded.
+        /// 
+        /// `UdpSocket::connect`` will connect this socket to a remote address. This method will fail if the socket is not connected.
         pub fn recv_non_blocking(
+            &mut self,
+            buffer: &mut [u8],
+        ) -> Result<Option<usize>> {
+            let socket_server_handle = BSD_SERVICE.read();
+
+            let socket_server = socket_server_handle.as_ref().unwrap();
+
+            match socket_server.service.recv(self.0, ReadFlags::None(), Buffer::from_mut_array(buffer))? {
+                BsdResult::Ok(ret, ()) => {
+                    Ok(Some(ret as usize))
+                },
+                BsdResult::Err(errno) if errno == 11 /* EAGAIN */ => {
+                    Ok(None)
+                }
+                BsdResult::Err(errno) => {
+                    ResultCode::new_err(nx::result::pack_value(
+                        rc::RESULT_MODULE,
+                        1000 + errno.cast_unsigned(),
+                    ))
+                }
+            }
+        }
+
+        /// Receives data on the socket from the remote address to which it is connected.
+        /// On success, returns the number of bytes read and the origin.
+        ///
+        ///The function must be called with valid byte array buf of sufficient size to hold the message bytes. If a message is too long to fit in the supplied buffer, excess bytes may be discarded.
+        pub fn recv_from(&mut self, buffer: &mut [u8]) -> Result<(usize, Ipv4Addr, u16)> {
+            let socket_server_handle = BSD_SERVICE.read();
+
+            let socket_server = socket_server_handle.as_ref().unwrap();
+
+            let mut out_addr: SocketAddrRepr = Default::default();
+            match socket_server.service.recv_from(self.0, ReadFlags::None(), Buffer::from_mut_array(buffer), Buffer::from_mut_var(&mut out_addr))? {
+                BsdResult::Ok(ret, ()) => {
+                    Ok((ret as usize, Ipv4Addr::from_bits(u32::from_be_bytes(out_addr.addr)), u16::from_be(out_addr.port)))
+                },
+                BsdResult::Err(errno) => {
+                    ResultCode::new_err(nx::result::pack_value(
+                        rc::RESULT_MODULE,
+                        1000 + errno.cast_unsigned(),
+                    ))
+                }
+            }
+        }
+
+        /// Receives data on the socket from the remote address to which it is connected.
+        /// On success, returns the number of bytes read and the origin or a None value if there is no data.
+        ///
+        ///The function must be called with valid byte array buf of sufficient size to hold the message bytes. If a message is too long to fit in the supplied buffer, excess bytes may be discarded.
+        pub fn recv_from_non_blocking(
             &mut self,
             buffer: &mut [u8],
         ) -> Result<Option<(usize, Ipv4Addr, u16)>> {
@@ -439,7 +531,7 @@ pub mod net {
             let socket_server = socket_server_handle.as_ref().unwrap();
 
             let mut out_addr: SocketAddrRepr = Default::default();
-            match socket_server.service.recv_from(self.0, ReadFlags::None(), Buffer::from_mut_array(buffer), Buffer::from_mut_var(&mut out_addr))? {
+            match socket_server.service.recv_from(self.0, ReadFlags::DontWait(), Buffer::from_mut_array(buffer), Buffer::from_mut_var(&mut out_addr))? {
                 BsdResult::Ok(ret, ()) => {
                     Ok(Some((ret as usize, Ipv4Addr::from_bits(u32::from_be_bytes(out_addr.addr)), u16::from_be(out_addr.port))))
                 },
@@ -455,6 +547,11 @@ pub mod net {
             }
         }
 
+        /// Sends data on the socket to the remote address to which it is connected.
+        /// Unlike `std::net::UdpSocket`, this method does not return length of the written data.
+        /// All data is sent or an error is returned.
+        /// 
+        /// `UdpSocket::connect`` will connect this socket to a remote address. This method will fail if the socket is not connected.
         pub fn send(&mut self, data: &[u8]) -> Result<()> {
             let socket_server_handle = BSD_SERVICE.read();
 
@@ -463,6 +560,27 @@ pub mod net {
             match socket_server
                 .service
                 .send(self.0, SendFlags::None(), Buffer::from_array(data))?
+            {
+                BsdResult::Ok(_, ()) => Ok(()),
+                BsdResult::Err(errno) => ResultCode::new_err(nx::result::pack_value(
+                    rc::RESULT_MODULE,
+                    1000 + errno.cast_unsigned(),
+                )),
+            }
+        }
+
+        /// Sends data on the socket to the remote address provided (no call to `UdpSocket::connect` is necessary).
+        /// Unlike `std::net::UdpSocket`, this method does not return length of the written data.
+        /// All data is sent or an error is returned.
+        pub fn send_to<A:Into<SocketAddrRepr>>(&mut self, data: &[u8], destinaation: A) -> Result<()> {
+            let socket_server_handle = BSD_SERVICE.read();
+
+            let socket_server = socket_server_handle.as_ref().unwrap();
+
+            let destination = destinaation.into();
+            match socket_server
+                .service
+                .send_to(self.0, SendFlags::None(), Buffer::from_array(data), Buffer::from_var(&destination))?
             {
                 BsdResult::Ok(_, ()) => Ok(()),
                 BsdResult::Err(errno) => ResultCode::new_err(nx::result::pack_value(
