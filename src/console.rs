@@ -32,7 +32,7 @@ pub mod vty {
 
             Self {
                 buffer: buffer.into_boxed_slice(),
-                canvas: canvas,
+                canvas,
             }
         }
     }
@@ -143,7 +143,7 @@ pub mod vty {
     }
 }
 pub mod scrollback {
-    use core::{num::NonZeroU16, u16};
+    use core::num::NonZeroU16;
 
     use crate::{
         gpu::{

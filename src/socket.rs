@@ -96,8 +96,8 @@ impl BsdSocketService {
 
 impl Drop for BsdSocketService {
     fn drop(&mut self) {
-        let _ = self._monitor_service.close_session();
-        let _ = self.service.close_session();
+        self._monitor_service.close_session();
+        self.service.close_session();
         let _ = crate::svc::close_handle(self.tmem_handle);
         let _ = wait_for_permission(self._tmem_buffer.ptr as _, MemoryPermission::Write(), None);
     }
@@ -364,7 +364,7 @@ pub mod net {
                 BsdResult::Ok(ret, ()) => {
                     Ok(ret as usize)
                 },
-                BsdResult::Err(errno) if errno == 11 /* EAGAIN */ => {
+                BsdResult::Err(11) /* EAGAIN */ => {
                     Ok(0)
                 }
                 BsdResult::Err(errno) => {
@@ -533,7 +533,7 @@ pub mod net {
                 BsdResult::Ok(ret, ()) => {
                     Ok(Some(ret as usize))
                 },
-                BsdResult::Err(errno) if errno == 11 /* EAGAIN */ => {
+                BsdResult::Err(11) /* EAGAIN */ => {
                     Ok(None)
                 }
                 BsdResult::Err(errno) => {
@@ -585,7 +585,7 @@ pub mod net {
                 BsdResult::Ok(ret, ()) => {
                     Ok(Some((ret as usize, Ipv4Addr::from_bits(u32::from_be_bytes(out_addr.addr)), u16::from_be(out_addr.port))))
                 },
-                BsdResult::Err(errno) if errno == 11 /* EAGAIN */ => {
+                BsdResult::Err(11) /* EAGAIN */ => {
                     Ok(None)
                 }
                 BsdResult::Err(errno) => {

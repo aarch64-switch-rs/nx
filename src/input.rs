@@ -221,7 +221,7 @@ impl<'player, 'context: 'player> Player<'player> {
         deadzone: f32,
     ) -> Option<(AnalogStickState, AnalogStickState)> {
         debug_assert!(
-            deadzone >= 0.0 && deadzone <= 1.0,
+            (0.0..=1.0).contains(&deadzone),
             "deadzone is a factor in the range (0, 1)"
         );
         // TODO - make an iterator through the supported style tags to get the first one passing the deadzone test.

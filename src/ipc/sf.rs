@@ -101,7 +101,7 @@ impl<
     }
 
     // TODO: ensure sizeof(T) is a multiple of sizeof(U)
-    pub const fn from_other_var_mut<'a: 'borrow, U>(var: &'a U) -> Self {
+    pub const fn from_other_var_mut<'a: 'borrow, U>(var: &'a mut U) -> Self {
         unsafe {
             Self::from_ptr::<'a>(
                 var as *const U as *const T,

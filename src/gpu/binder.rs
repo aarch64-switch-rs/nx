@@ -100,13 +100,13 @@ impl Binder {
         transaction_id: dispdrv::ParcelTransactionId,
         payload: parcel::ParcelPayload,
     ) -> Result<parcel::Parcel> {
-        let response_payload = parcel::ParcelPayload::new();
+        let mut response_payload = parcel::ParcelPayload::new();
         self.hos_binder_driver.transact_parcel(
             self.handle,
             transaction_id,
             0,
             sf::Buffer::from_other_var(&payload),
-            sf::Buffer::from_other_var_mut(&response_payload),
+            sf::Buffer::from_other_var_mut(&mut response_payload),
         )?;
 
         let mut parcel = parcel::Parcel::new();

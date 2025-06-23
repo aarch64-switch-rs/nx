@@ -34,11 +34,11 @@ pub enum DisplayName {
     Special(String)
 }
 
-impl Into<vi::DisplayName> for DisplayName {
-    fn into(self) -> vi::DisplayName {
-        match self {
-            Self::Default => vi::DisplayName::from_str("Default"),
-            Self::Special(special) => vi::DisplayName::from_string(&special)
+impl From<DisplayName> for vi::DisplayName {
+    fn from(var: DisplayName) -> vi::DisplayName {
+        match var {
+            DisplayName::Default => vi::DisplayName::from_str("Default"),
+            DisplayName::Special(special) => vi::DisplayName::from_string(&special)
         }
     }
 }
