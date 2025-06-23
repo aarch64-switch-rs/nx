@@ -35,7 +35,7 @@ pub enum AbiConfigEntryKey {
     HosVersion = 16,
 }
 
-define_bit_enum! {
+define_bit_set! {
     /// Represents optional flags for config entries
     AbiConfigEntryFlags (u32) {
         /// Mandatory entry
@@ -43,7 +43,7 @@ define_bit_enum! {
     }
 }
 
-define_bit_enum! {
+define_bit_set! {
     /// Represents optional flag values for the specific case of [`AbiConfigEntryKey::AppletType`] config entries
     AbiConfigAppletFlags (u32) {
         ApplicationOverride = bit!(0)

@@ -6,7 +6,7 @@ pub mod rc;
 
 use nx_derive::{Request, Response};
 
-define_bit_enum! {
+define_bit_set! {
     FileOpenMode (u32) {
         None = 0,
         Read = bit!(0),
@@ -15,7 +15,7 @@ define_bit_enum! {
     }
 }
 
-define_bit_enum! {
+define_bit_set! {
     DirectoryOpenMode (u32) {
         ReadDirectories = bit!(0),
         ReadFiles = bit!(1),
@@ -23,20 +23,20 @@ define_bit_enum! {
     }
 }
 
-define_bit_enum! {
+define_bit_set! {
     FileAttribute (u32) {
         None = 0,
         ConcatenationFile = bit!(0)
     }
 }
 
-define_bit_enum! {
+define_bit_set! {
     FileReadOption (u32) {
         None = 0
     }
 }
 
-define_bit_enum! {
+define_bit_set! {
     FileWriteOption (u32) {
         None = 0,
         Flush = bit!(0)

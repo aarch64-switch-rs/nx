@@ -68,7 +68,7 @@ macro_rules! bit {
     };
 }
 
-/// Defines a type meant to serve as a bitflag enum-like type
+/// Defines a type meant to serve as a bitflag set with enum-like API
 ///
 /// # Examples
 ///
@@ -81,7 +81,7 @@ macro_rules! bit {
 /// }
 /// ```
 #[macro_export]
-macro_rules! define_bit_enum {
+macro_rules! define_bit_set {
     (
         $(#[$a_meta:meta])*
         $name:ident ($base:ty) {

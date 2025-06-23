@@ -11,7 +11,7 @@ use crate::mem::alloc::PAGE_ALIGNMENT;
 use crate::mem::wait_for_permission;
 use crate::result::Result;
 
-use crate::service::bsd::*;
+pub use crate::service::bsd::*;
 
 use crate::service::new_service_object;
 use crate::svc::Handle;
@@ -301,14 +301,14 @@ pub mod net {
     pub struct TcpStream(i32);
 
     impl TcpStream {
-        pub fn connect<A: Into<Ipv4Addr>>(target: A, port: u16) -> Result<Self> {
+        pub fn connect<A:Into<SocketAddrRepr>>(destination: A) -> Result<Self> {
             let socket_server_handle = BSD_SERVICE.read();
 
             let socket_server = socket_server_handle
                 .as_ref()
                 .ok_or(rc::ResultNotInitialized::make())?;
 
-            let target = SocketAddrRepr::from((target.into(), port));
+            let target: SocketAddrRepr = destination.into();
 
             let socket = match socket_server.service.socket(
                 super::SocketDomain::INet,
@@ -461,6 +461,7 @@ pub mod net {
             let socket_server = socket_server_handle
                 .as_ref()
                 .ok_or(rc::ResultNotInitialized::make())?;
+
             let socket = match socket_server.service.socket(
                 super::SocketDomain::INet,
                 super::SocketType::DataGram,
@@ -485,7 +486,8 @@ pub mod net {
                     1000 + errno.cast_unsigned(),
                 ));
             };
-            Err(rc::ResultNotInitialized::make())
+            
+            Ok(Self(socket))
         }
             
 
@@ -636,6 +638,12 @@ pub mod net {
                     1000 + errno.cast_unsigned(),
                 )),
             }
+        }
+    }
+
+    impl core::fmt::Write for UdpSocket { 
+        fn write_str(&mut self, s: &str) -> core::fmt::Result {
+            self.send(s.as_bytes()).map_err(|_| core::fmt::Error)
         }
     }
 

@@ -4,7 +4,7 @@ use crate::{result::*, util};
 
 use nx_derive::{Request, Response};
 
-define_bit_enum! {
+define_bit_set! {
     DeviceFilterFlags (u16) {
         IdVendor = bit!(0),
         IdProduct = bit!(1),

@@ -699,7 +699,7 @@ fn find_device_by_name(name: &str) -> Result<Arc<dyn FileSystem>> {
 
 static G_FSPSRV_SESSION: RwLock<Option<Arc<fsp::srv::FileSystemProxyService>>> = RwLock::new(None);
 
-define_bit_enum! {
+define_bit_set! {
     /// Represents options for opening files
     FileOpenOption (u32) {
         None = 0,

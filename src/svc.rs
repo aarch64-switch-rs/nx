@@ -71,7 +71,7 @@ pub enum MemoryState {
     CodeOut = 0x15,
 }
 
-define_bit_enum! {
+define_bit_set! {
     MemoryPermission (u32) {
         None = 0,
         Read = bit!(0),
@@ -81,7 +81,7 @@ define_bit_enum! {
     }
 }
 
-define_bit_enum! {
+define_bit_set! {
     MemoryAttribute (u32) {
         None = 0,
         Borrowed = bit!(0),

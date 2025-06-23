@@ -15,7 +15,7 @@ use crate::service;
 #[cfg(feature = "services")]
 use crate::service::fatal;
 
-define_bit_enum! {
+define_bit_set! {
     /// Represents a system to abort, plus optional flags they have
     AbortLevel (u32) {
         NeedsHeapAllocation = bit!(31),

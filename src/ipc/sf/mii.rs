@@ -36,7 +36,7 @@ pub enum FaceColor {
     All,
 }
 
-define_bit_enum! {
+define_bit_set! {
     SourceFlag (u32) {
         Database = bit!(0),
         Default = bit!(1)

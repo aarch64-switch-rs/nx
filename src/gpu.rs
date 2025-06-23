@@ -569,7 +569,7 @@ pub enum PixelFormat {
     YV12 = 0x32315659,
 }
 
-define_bit_enum! {
+define_bit_set! {
     /// Represents allocator usage flags
     GraphicsAllocatorUsage (u32) {
         SoftwareReadNever = 0,

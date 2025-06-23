@@ -388,7 +388,7 @@ pub enum ShutdownMode {
     Bidirectional = 2,
 }
 
-define_bit_enum! {
+define_bit_set! {
     SocketOptions (i32) {
         /// turn on debugging info recording
         Debug = 0x0001,
@@ -435,7 +435,7 @@ pub struct PollFd {
     pub revents: PollFlags,
 }
 
-define_bit_enum! {
+define_bit_set! {
     PollFlags (u16) {
         /// any readable data available
         PollIn = 0x0001,
@@ -490,7 +490,7 @@ pub enum IpProto {
     UDP = 17,
 }
 
-define_bit_enum! {
+define_bit_set! {
     /// Represents the valid flags when receiving data from a network socket.
     ReadFlags (u32) {
         None = 0,
@@ -513,7 +513,7 @@ define_bit_enum! {
     }
 }
 
-define_bit_enum! {
+define_bit_set! {
     SendFlags (u32) {
         None = 0,
         /// process out-of-band data

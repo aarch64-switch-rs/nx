@@ -9,13 +9,13 @@ pub mod shmem;
 use enum_iterator::{All, Sequence};
 use nx_derive::{Request, Response};
 
-define_bit_enum! {
+define_bit_set! {
     DebugPadAttribute (u32) {
         IsConnected = bit!(0)
     }
 }
 
-define_bit_enum! {
+define_bit_set! {
     DebugPadButton (u32) {
         A = bit!(0),
         B = bit!(1),
@@ -41,7 +41,7 @@ pub struct AnalogStickState {
     pub y: i32,
 }
 
-define_bit_enum! {
+define_bit_set! {
     TouchAttribute (u32) {
         None = 0,
         Start = bit!(0),
@@ -63,14 +63,14 @@ pub struct TouchState {
     pub reserved: [u8; 4],
 }
 
-define_bit_enum! {
+define_bit_set! {
     MouseAttribute (u32) {
         Transferable = bit!(0),
         IsConnected = bit!(1)
     }
 }
 
-define_bit_enum! {
+define_bit_set! {
     MouseButton (u32) {
         Left = bit!(0),
         Right = bit!(1),
@@ -80,7 +80,7 @@ define_bit_enum! {
     }
 }
 
-define_bit_enum! {
+define_bit_set! {
     KeyboardModifier (u64) {
         Control = bit!(0),
         Shift = bit!(1),
@@ -94,14 +94,6 @@ define_bit_enum! {
         Hiragana = bit!(12)
     }
 }
-
-/*
-define_bit_enum! {
-    KeyboardKey (u32) {
-        // TODO (is 256-bit, not 32-bit...): https://switchbrew.org/wiki/HID_services#KeyboardKey
-    }
-}
-*/
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
@@ -482,43 +474,43 @@ impl KeyboardKey {
     }
 }
 
-define_bit_enum! {
+define_bit_set! {
     BasicXpadAttribute (u32) {
         // TODO: are these known at all?
     }
 }
 
-define_bit_enum! {
+define_bit_set! {
     BasicXpadButton (u32) {
         // TODO: are these known at all?
     }
 }
 
-define_bit_enum! {
+define_bit_set! {
     DigitizerAttribute (u32) {
         // TODO: are these known at all?
     }
 }
 
-define_bit_enum! {
+define_bit_set! {
     DigitizerButton (u32) {
         // TODO: are these known at all?
     }
 }
 
-define_bit_enum! {
+define_bit_set! {
     HomeButton (u32) {
         // TODO: are these known at all?
     }
 }
 
-define_bit_enum! {
+define_bit_set! {
     SleepButton (u32) {
         // TODO: are these known at all?
     }
 }
 
-define_bit_enum! {
+define_bit_set! {
     CaptureButton (u32) {
         // TODO: are these known at all?
     }
@@ -551,7 +543,7 @@ pub enum UniquePadInterface {
 
 pub type UniquePadSerialNumber = [u8; 0x10];
 
-define_bit_enum! {
+define_bit_set! {
     AnalogStickCalibrationFlags (u32) {
         // TODO: are these known at all?
     }
@@ -571,7 +563,7 @@ pub enum AnalogStickManualCalibrationStage {
     ClearCompleted = 8,
 }
 
-define_bit_enum! {
+define_bit_set! {
     SixAxisSensorUserCalibrationFlags (u32) {
         // TODO: are these known at all?
     }
@@ -617,14 +609,14 @@ pub struct GesturePoint {
     pub y: u32,
 }
 
-define_bit_enum! {
+define_bit_set! {
     GestureAttribute (u32) {
         IsNewTouch = bit!(4),
         IsDoubleTap = bit!(8)
     }
 }
 
-define_bit_enum! {
+define_bit_set! {
     NpadStyleTag (u32) {
         FullKey = bit!(0), // Pro controller
         Handheld = bit!(1), // Joy-Con controller in handheld mode
@@ -687,7 +679,7 @@ pub struct NpadControllerColor {
     pub sub: u32,
 }
 
-define_bit_enum! {
+define_bit_set! {
     NpadButton (u64) {
         A = bit!(0),
         B = bit!(1),
@@ -727,7 +719,7 @@ define_bit_enum! {
     }
 }
 
-define_bit_enum! {
+define_bit_set! {
     NpadAttribute (u32) {
         IsConnected = bit!(0),
         IsWired = bit!(1),
@@ -752,14 +744,14 @@ pub struct DirectionState {
     pub zz: u32,
 }
 
-define_bit_enum! {
+define_bit_set! {
     SixAxisSensorAttribute (u32) {
         IsConnected = bit!(0),
         IsInterpolated = bit!(1)
     }
 }
 
-define_bit_enum! {
+define_bit_set! {
     DeviceType (u32) {
         FullKey = bit!(0),
         DebugPad = bit!(1),
@@ -783,7 +775,7 @@ define_bit_enum! {
     }
 }
 
-define_bit_enum! {
+define_bit_set! {
     NpadSystemProperties (u64) {
         IsChargingJoyDual = bit!(0),
         IsChargingJoyLeft = bit!(1),
@@ -801,7 +793,7 @@ define_bit_enum! {
     }
 }
 
-define_bit_enum! {
+define_bit_set! {
     NpadSystemButtonProperties (u32) {
         IsUnintendedHomeButtonInputProtectionEnabled = bit!(0)
     }
@@ -809,7 +801,7 @@ define_bit_enum! {
 
 pub type NpadBatteryLevel = u32;
 
-define_bit_enum! {
+define_bit_set! {
     AppletFooterUiAttribute (u32) {
         // TODO: are these known at all?
     }
@@ -870,14 +862,14 @@ pub enum NpadLagerType {
     U = 3,
 }
 
-define_bit_enum! {
+define_bit_set! {
     SixAxisSensorProperties (u8) {
         IsSixAxisSensorDeviceNewlyAssigned = bit!(0),
         IsFirmwareUpdateAvailableForSixAxisSensor = bit!(1)
     }
 }
 
-define_bit_enum! {
+define_bit_set! {
     LockKeyFlags (u32) {
         NumLockOn = bit!(0),
         NumLockOff = bit!(1),
