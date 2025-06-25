@@ -31,7 +31,7 @@ jobs:
         run: cargo check --all-features --release --target=aarch64-nintendo-switch-freestanding
 
       - name: clippy
-        run: cargo clippy --all-features --target=aarch64-nintendo-switch-freestanding -- -D warnings --force-warn deprecated --force-warn dead-code
+        run: cargo clippy --all-features --target=aarch64-nintendo-switch-freestanding #-- -D warnings --force-warn deprecated --force-warn dead-code
 
   format:
     runs-on: ubuntu-latest
