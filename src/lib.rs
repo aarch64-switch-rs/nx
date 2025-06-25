@@ -21,11 +21,11 @@
 //! - `la`: Enables library applet support, AKA the `nx::la` module (also enables `services`)
 //!
 //! - `rand`: Enables pseudo-RNG support, AKA the `nx::rand` module (also enables `services`)
-//! 
+//!
 //! - `socket` : Enables std-like network support, AKA the `nx::socket` module (also enables `services`)
-//! 
+//!
 //! - `applet` : Enables applet service support, AKA the `nx::applet` module (also enables `services`)
-//! 
+//!
 //! - `mii` : Enables mii support, AKA the `nx::mii` module (also enables `services`)
 //!
 //! Note that most of these features/modules are just simplified and easy-to-use wrappers around IPC/raw system features, so not using them doesn't fully block those features (for instance, you could use services using IPC commands more directly without the `services` feature).
@@ -107,7 +107,6 @@ pub mod rrt0;
 #[allow(clippy::missing_safety_doc)]
 pub mod svc;
 
-
 #[macro_use]
 pub mod ipc;
 
@@ -125,10 +124,10 @@ pub mod wait;
 
 pub mod version;
 
-#[cfg(feature = "services")]
-pub mod service;
 #[cfg(feature = "applet")]
 pub mod applet;
+#[cfg(feature = "services")]
+pub mod service;
 
 #[cfg(feature = "gpu")]
 pub mod gpu;

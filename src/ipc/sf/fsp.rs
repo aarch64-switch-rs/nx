@@ -215,8 +215,10 @@ pub trait FileSystem {
     fn clean_directory_recursively(&self, path_buf: sf::InFixedPointerBuffer<'_, Path>);
     #[ipc_rid(14)]
     #[version(version::VersionInterval::from(version::Version::new(3, 0, 0)))]
-    fn get_file_time_stamp_raw(&self, path_buf: sf::InFixedPointerBuffer<'_, Path>)
-    -> FileTimeStampRaw;
+    fn get_file_time_stamp_raw(
+        &self,
+        path_buf: sf::InFixedPointerBuffer<'_, Path>,
+    ) -> FileTimeStampRaw;
     #[ipc_rid(15)]
     #[version(version::VersionInterval::from(version::Version::new(4, 0, 0)))]
     fn query_entry(

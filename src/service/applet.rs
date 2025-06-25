@@ -1,7 +1,7 @@
 use crate::hbl::AppletType;
 use crate::ipc::sf::sm;
-use crate::{hbl, service};
 use crate::result::*;
+use crate::{hbl, service};
 
 pub use crate::ipc::sf::applet::*;
 

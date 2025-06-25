@@ -525,7 +525,11 @@ pub trait Debug {
     #[ipc_rid(106)]
     fn exists_application_area(&self, device_handle: DeviceHandle) -> bool;
     #[ipc_rid(200)]
-    fn get_all(&self, device_handle: DeviceHandle, out_data: sf::OutFixedPointerBuffer<'_, NfpData>);
+    fn get_all(
+        &self,
+        device_handle: DeviceHandle,
+        out_data: sf::OutFixedPointerBuffer<'_, NfpData>,
+    );
     #[ipc_rid(201)]
     fn set_all(&self, device_handle: DeviceHandle, data: sf::InFixedPointerBuffer<'_, NfpData>);
     #[ipc_rid(202)]

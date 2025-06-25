@@ -2,10 +2,10 @@
 
 use rc::ResultInvalidControllerId;
 
+use crate::applet;
 use crate::ipc::sf;
 use crate::result::*;
 use crate::service;
-use crate::applet;
 use crate::service::applet::AppletResourceUserId;
 use crate::service::hid;
 use crate::service::hid::AnalogStickState;

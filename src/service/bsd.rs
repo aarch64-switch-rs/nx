@@ -55,7 +55,6 @@ impl service::IService for UserBsdService {
     }
 }
 
-
 pub enum BsdSrvkind {
     /// "bsd:u"
     User,
@@ -64,4 +63,3 @@ pub enum BsdSrvkind {
     /// "bsd:s"
     System,
 }
-

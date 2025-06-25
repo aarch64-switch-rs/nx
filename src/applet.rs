@@ -1,10 +1,10 @@
-use crate::service;
+use crate::hbl::{AppletType, get_applet_type};
 use crate::ipc::sf;
-use crate::svc;
-use crate::hbl::{get_applet_type, AppletType};
 use crate::result::*;
+use crate::service;
+use crate::svc;
 use crate::sync::{ReadGuard, RwLock};
-use crate::version::{get_version, Version};
+use crate::version::{Version, get_version};
 
 use core::sync::atomic::AtomicU64;
 
@@ -175,4 +175,3 @@ pub fn get_applet_proxy<'a>() -> ReadGuard<'a, Option<AppletProxy>> {
 pub fn get_system_proxy_service<'a>() -> ReadGuard<'a, Option<AllSystemAppletProxiesService>> {
     ALL_SYSTEM_APPLET_PROXY_SERVICE.read()
 }
-

@@ -47,12 +47,7 @@ pub trait NvDrv {
     #[ipc_rid(0)]
     fn open(&self, path: sf::InMapAliasBuffer<'_, u8>) -> (Fd, ErrorCode);
     #[ipc_rid(1)]
-    fn ioctl(
-        &self,
-        fd: Fd,
-        id: IoctlId,
-        in_buf: sf::InOutAutoSelectBuffer<'_, u8>,
-    ) -> ErrorCode;
+    fn ioctl(&self, fd: Fd, id: IoctlId, in_buf: sf::InOutAutoSelectBuffer<'_, u8>) -> ErrorCode;
     #[ipc_rid(2)]
     fn close(&self, fd: Fd) -> ErrorCode;
     #[ipc_rid(3)]

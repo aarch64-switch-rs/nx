@@ -105,7 +105,8 @@ pub trait ClientEpSession {
     fn re_open(&self);
     #[ipc_rid(1)]
     #[version(version::VersionInterval::to(version::Version::new(1, 0, 0)))]
-    fn submit_in_request(&self, size: u32, unk: u32, out_buf: sf::OutMapAliasBuffer<'_, u8>) -> u32;
+    fn submit_in_request(&self, size: u32, unk: u32, out_buf: sf::OutMapAliasBuffer<'_, u8>)
+    -> u32;
     #[ipc_rid(1)]
     #[version(version::VersionInterval::from(version::Version::new(2, 0, 0)))]
     fn close(&self);

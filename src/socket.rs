@@ -224,7 +224,7 @@ pub mod net {
             /// For TCP, all data is sent or an error is returned.
             ///
             /// Returns the length of the data written from the buffer
-            /// 
+            ///
             /// `Self::connect`` will connect this socket to a remote address. This method will fail if the socket is not connected.
             fn send(&mut self, data: &[u8]) -> Result<u32> {
                 let socket_server_handle = BSD_SERVICE.read();
@@ -286,30 +286,29 @@ pub mod net {
             }
             }
 
-            
-        fn local_addr(&self) -> Result<SocketAddrRepr> {
-            let socket_server_handle = BSD_SERVICE.read();
+            fn local_addr(&self) -> Result<SocketAddrRepr> {
+                let socket_server_handle = BSD_SERVICE.read();
 
-            let socket_server = socket_server_handle.as_ref().unwrap();
+                let socket_server = socket_server_handle.as_ref().unwrap();
 
-            let mut out_ip: SocketAddrRepr = Default::default();
-            match socket_server
-                .service
-                .get_socket_name(self.as_raw_fd(), Buffer::from_mut_var(&mut out_ip))?
-            {
-                BsdResult::Ok(_, written_sockaddr_size) => {
-                    debug_assert!(
-                        written_sockaddr_size as usize >= offset_of!(SocketAddrRepr, _zero),
-                        "Invalid write length for returned socket addr"
-                    );
-                    Ok(out_ip)
+                let mut out_ip: SocketAddrRepr = Default::default();
+                match socket_server
+                    .service
+                    .get_socket_name(self.as_raw_fd(), Buffer::from_mut_var(&mut out_ip))?
+                {
+                    BsdResult::Ok(_, written_sockaddr_size) => {
+                        debug_assert!(
+                            written_sockaddr_size as usize >= offset_of!(SocketAddrRepr, _zero),
+                            "Invalid write length for returned socket addr"
+                        );
+                        Ok(out_ip)
+                    }
+                    BsdResult::Err(errno) => ResultCode::new_err(nx::result::pack_value(
+                        rc::RESULT_MODULE,
+                        1000 + errno.cast_unsigned(),
+                    )),
                 }
-                BsdResult::Err(errno) => ResultCode::new_err(nx::result::pack_value(
-                    rc::RESULT_MODULE,
-                    1000 + errno.cast_unsigned(),
-                )),
             }
-        }
 
             fn peer_addr(&self) -> Result<SocketAddrRepr> {
                 let socket_server_handle = BSD_SERVICE.read();
@@ -670,7 +669,6 @@ pub mod net {
                 )),
             }
         }
-
     }
 
     impl sealed::Pollable for TcpListener {
@@ -722,7 +720,6 @@ pub mod net {
             Ok(Self(socket))
         }
 
-        
         pub fn linger(&self) -> Result<Option<Duration>> {
             let socket_server_handle = BSD_SERVICE.read();
 
@@ -766,14 +763,12 @@ pub mod net {
                 )),
             }
         }
-        
+
         pub fn shutdown(&self, mode: ShutdownMode) -> Result<()> {
             let socket_server_handle = BSD_SERVICE.read();
             let socket_server = socket_server_handle.as_ref().unwrap();
 
-            if let BsdResult::Err(errno) = socket_server.service.shutdown(
-                self.0,
-                mode)? {
+            if let BsdResult::Err(errno) = socket_server.service.shutdown(self.0, mode)? {
                 return ResultCode::new_err(nx::result::pack_value(
                     rc::RESULT_MODULE,
                     1000 + errno.cast_unsigned(),
@@ -955,7 +950,7 @@ pub mod net {
         fn write_str(&mut self, s: &str) -> core::fmt::Result {
             match self.send(s.as_bytes()) {
                 Ok(_) => Ok(()),
-                Err(_) => Err(core::fmt::Error)
+                Err(_) => Err(core::fmt::Error),
             }
         }
     }

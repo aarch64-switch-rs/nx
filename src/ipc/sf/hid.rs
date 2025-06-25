@@ -98,7 +98,7 @@ define_bit_set! {
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(C)]
 pub struct KeyboardKeyStates {
-    pub key_bitfield: [u8;0x20],
+    pub key_bitfield: [u8; 0x20],
 }
 
 impl KeyboardKeyStates {
@@ -106,7 +106,7 @@ impl KeyboardKeyStates {
     #[inline]
     pub fn is_down(&self, key: KeyboardKey) -> bool {
         let key_offset = key.bit_offset();
-        (self.key_bitfield[key_offset>>3] >> (key_offset & 7)) & 1 == 1
+        (self.key_bitfield[key_offset >> 3] >> (key_offset & 7)) & 1 == 1
     }
 
     /// Check if a particular key is not depressed
@@ -469,7 +469,7 @@ impl KeyboardKey {
             Self::Home => Some("\x1b[(224;71)"),
             Self::End => Some("\x1b[(224;79)"),
             // TODO: More - https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797
-            _ => None
+            _ => None,
         }
     }
 }

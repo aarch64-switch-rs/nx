@@ -31,14 +31,14 @@ pub enum ScaleMode {
 pub enum DisplayName {
     #[default]
     Default,
-    Special(String)
+    Special(String),
 }
 
 impl From<DisplayName> for vi::DisplayName {
     fn from(var: DisplayName) -> vi::DisplayName {
         match var {
             DisplayName::Default => vi::DisplayName::from_str("Default"),
-            DisplayName::Special(special) => vi::DisplayName::from_string(&special)
+            DisplayName::Special(special) => vi::DisplayName::from_string(&special),
         }
     }
 }
@@ -369,11 +369,10 @@ impl Surface {
             ioctl::IoctlFd::NvHostCtrl => gpu_guard.nvhostctrl_fd,
         };
 
-        let err = gpu_guard.nvdrv_service.ioctl(
-            fd,
-            I::get_id(),
-            sf::Buffer::from_other_mut_var(i),
-        )?;
+        let err =
+            gpu_guard
+                .nvdrv_service
+                .ioctl(fd, I::get_id(), sf::Buffer::from_other_mut_var(i))?;
         super::convert_nv_error_code(err)
     }
 

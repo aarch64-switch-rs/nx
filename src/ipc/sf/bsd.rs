@@ -1,8 +1,8 @@
 use nx_derive::{Request, Response};
 
 use crate::ipc::sf::{
-    CopyHandle, InAutoSelectBuffer, InOutAutoSelectBuffer,
-    OutAutoSelectBuffer, OutMapAliasBuffer, ProcessId,
+    CopyHandle, InAutoSelectBuffer, InOutAutoSelectBuffer, OutAutoSelectBuffer, OutMapAliasBuffer,
+    ProcessId,
 };
 use crate::result::Result;
 use crate::version::{self, Version, VersionInterval};
@@ -459,7 +459,6 @@ pub enum SocketOptions {
     NoDdp = 0x8000,
 
     // Other options not generally kept in so_options
-
     /// send buffer size
     SNDBUF = 0x1001,
     /// receive buffer size
@@ -495,7 +494,7 @@ pub enum SocketOptions {
     /// clock type used for SO_TIMESTAMP
     TS_CLOCK = 0x1017,
     /// socket's max TX pacing rate (Linux name)
-    MAX_PACING_RATE = 0x1018
+    MAX_PACING_RATE = 0x1018,
 }
 
 #[derive(Copy, Clone, Debug, Default, Request, Response)]

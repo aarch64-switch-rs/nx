@@ -768,7 +768,7 @@ impl CommandContext {
     >(
         &mut self,
         buffer: &sf::Buffer<
-        '_,
+            '_,
             IN,
             OUT,
             MAP_ALIAS,
@@ -925,25 +925,17 @@ impl CommandContext {
     >(
         &mut self,
         raw_data_walker: &mut DataWalker,
-    ) -> Result<
-        (*mut u8, usize),
-    > {
+    ) -> Result<(*mut u8, usize)> {
         if AUTO_SELECT {
             if IN {
                 if let Ok(static_desc) = self.pop_send_static()
                     && let Ok(send_desc) = self.pop_send_buffer()
                 {
                     if !static_desc.get_address().is_null() && (static_desc.get_size() > 0) {
-                        return Ok((
-                            static_desc.get_address(),
-                            static_desc.get_size(),
-                        ));
+                        return Ok((static_desc.get_address(), static_desc.get_size()));
                     }
                     if !send_desc.get_address().is_null() && (send_desc.get_size() > 0) {
-                        return Ok((
-                            send_desc.get_address(),
-                            send_desc.get_size(),
-                        ));
+                        return Ok((send_desc.get_address(), send_desc.get_size()));
                     }
                 }
             } else if OUT
@@ -951,24 +943,15 @@ impl CommandContext {
                 && let Ok(recv_desc) = self.pop_receive_buffer()
             {
                 if !static_desc.get_address().is_null() && (static_desc.get_size() > 0) {
-                    return Ok((
-                        static_desc.get_address(),
-                        static_desc.get_size(),
-                    ));
+                    return Ok((static_desc.get_address(), static_desc.get_size()));
                 }
                 if !recv_desc.get_address().is_null() && (recv_desc.get_size() > 0) {
-                    return Ok((
-                        recv_desc.get_address(),
-                        recv_desc.get_size(),
-                    ));
+                    return Ok((recv_desc.get_address(), recv_desc.get_size()));
                 }
             }
         } else if POINTER {
             if IN && let Ok(static_desc) = self.pop_send_static() {
-                return Ok((
-                    static_desc.get_address(),
-                    static_desc.get_size(),
-                ));
+                return Ok((static_desc.get_address(), static_desc.get_size()));
             } else if OUT {
                 let buf_size = match FIXED_SIZE {
                     true => sf::Buffer::<
@@ -996,26 +979,17 @@ impl CommandContext {
             match (IN, OUT) {
                 (true, true) => {
                     if let Ok(exch_desc) = self.pop_exchange_buffer() {
-                        return Ok((
-                            exch_desc.get_address(),
-                            exch_desc.get_size(),
-                        ));
+                        return Ok((exch_desc.get_address(), exch_desc.get_size()));
                     }
                 }
                 (true, false) => {
                     if let Ok(send_desc) = self.pop_send_buffer() {
-                        return Ok((
-                            send_desc.get_address(),
-                            send_desc.get_size(),
-                        ));
+                        return Ok((send_desc.get_address(), send_desc.get_size()));
                     }
                 }
                 (false, true) => {
                     if let Ok(recv_desc) = self.pop_receive_buffer() {
-                        return Ok((
-                            recv_desc.get_address(),
-                            recv_desc.get_size(),
-                        ));
+                        return Ok((recv_desc.get_address(), recv_desc.get_size()));
                     }
                 }
                 (false, false) => {}

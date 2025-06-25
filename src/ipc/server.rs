@@ -74,7 +74,8 @@ impl<
     const ALLOW_NON_DEVICE: bool,
     T,
 >
-    RequestCommandParameter<'ctx,
+    RequestCommandParameter<
+        'ctx,
         sf::Buffer<
             'buf,
             IN,
@@ -122,13 +123,13 @@ impl<
             ctx.ctx.add_buffer(&in_ptr_buf)?;
         }
 
-        Ok(unsafe {sf::Buffer::new(addr, size)})
+        Ok(unsafe { sf::Buffer::new(addr, size) })
     }
 }
 
 //impl<const A: BufferAttribute, T> !ResponseCommandParameter for sf::Buffer<A, T> {}
 
-impl<const MOVE: bool> RequestCommandParameter<'_,sf::Handle<MOVE>> for sf::Handle<MOVE> {
+impl<const MOVE: bool> RequestCommandParameter<'_, sf::Handle<MOVE>> for sf::Handle<MOVE> {
     fn after_request_read(ctx: &mut ServerContext) -> Result<Self> {
         ctx.ctx.in_params.pop_handle::<MOVE>()
     }
@@ -150,7 +151,7 @@ impl<const MOVE: bool> ResponseCommandParameter for sf::Handle<MOVE> {
     }
 }
 
-impl RequestCommandParameter<'_,sf::ProcessId> for sf::ProcessId {
+impl RequestCommandParameter<'_, sf::ProcessId> for sf::ProcessId {
     fn after_request_read(ctx: &mut ServerContext) -> Result<Self> {
         if ctx.ctx.in_params.send_process_id {
             if ctx.ctx.object_info.uses_cmif_protocol() {
