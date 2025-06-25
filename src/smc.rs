@@ -6,11 +6,30 @@ use core::mem as cmem;
 /// Represents the secure monitor function IDs
 ///
 /// Note that only those supported by this libraries are present in the enum...
+/// See [SwitchBrew](https://switchbrew.org/wiki/SMC) for all options.
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u64)]
 pub enum FunctionId {
     Invalid = 0,
-    GenerateRandomBytes = 0xC3000006, // TODO: more (can we generate them via some macro...? check https://switchbrew.org/wiki/SMC)
+    //SetConfig = 0xC3000401,
+    //GetConfig = 0xC3000002,
+    //GetResult = 0xC3000003,
+    //GetResultData = 0xC3000404,
+    //MudularExponentiate = 0xC3000E05,
+    GenerateRandomBytes = 0xC3000006,
+    //GenerateAesKek = 0xC3000007,
+    //LoadAesKey = 0xC3000008,
+    //ComputeAes = 0xC3000009,
+    //GenerateSpecificAesKey = 0xC300000A,
+    //ComputeCmac = 0xC300040B,
+    //DecryptAndImportEsDeviceKey = 0xC300100C,
+    //ReencryptDeviceUniqueData = 0xC300D60C,
+    //DecryptDeviceUniqueData = 0xC300100D,
+    //DecryptAndImportLotusKey = 0xC300100E,
+    //ModularExponentiateByStorageKey = 0xC300060F,
+    //PrepareEsDeviceUniqueKey = 0xC3000610,
+    //LoadPreparedAesKey = 0xC3000011,
+    //PrepareEsCommonKey = 0xC3000012,
 }
 
 /// Represents the raw argument layout used in secure monitor calls

@@ -11,17 +11,17 @@ const DEFAULT_VALUE: u32 = 0;
 const SUCCESS_VALUE: u32 = DEFAULT_VALUE;
 
 #[inline]
-const fn pack_value(module: u32, description: u32) -> u32 {
+pub(crate) const fn pack_value(module: u32, description: u32) -> u32 {
     module | (description << MODULE_BITS)
 }
 
 #[inline]
-const fn unpack_module(value: u32) -> u32 {
+pub(crate) const fn unpack_module(value: u32) -> u32 {
     value & !(!DEFAULT_VALUE << MODULE_BITS)
 }
 
 #[inline]
-const fn unpack_description(value: u32) -> u32 {
+pub(crate) const fn unpack_description(value: u32) -> u32 {
     (value >> MODULE_BITS) & !(!DEFAULT_VALUE << DESCRIPTION_BITS)
 }
 

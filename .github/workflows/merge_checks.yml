@@ -1,0 +1,49 @@
+name: merge_checks
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: full
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - run: rustup update
+      - run: rustup toolchain install nightly
+      - run: rustup component add rust-src
+      - run: rustup component add clippy
+
+      - name: Cache rust build files
+        uses: Leafwing-Studios/cargo-cache@a0709d80dd96c8734ac8f186c1f238c8f528d198 # v2
+
+      ## Lints
+      - name: check (release)
+        run: cargo check --all-features --release --target=aarch64-nintendo-switch-freestanding
+
+      - name: clippy
+        run: cargo clippy --all-features --target=aarch64-nintendo-switch-freestanding #-- -D warnings --force-warn deprecated --force-warn dead-code
+
+  format:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      - name: Setup Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@11df97af8e8102fd60b60a77dfbf58d40cd843b8 # v1
+        with:
+          toolchain: nightly
+          components: rustfmt
+          cache: false
+
+      - run: cargo +nightly fmt --all -- --check

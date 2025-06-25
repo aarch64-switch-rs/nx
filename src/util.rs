@@ -159,7 +159,7 @@ pub struct ArrayString<const S: usize> {
     c_str: [u8; S],
 }
 
-impl<const S: usize> crate::ipc::server::RequestCommandParameter<'_,ArrayString<S>>
+impl<const S: usize> crate::ipc::server::RequestCommandParameter<'_, ArrayString<S>>
     for ArrayString<S>
 {
     fn after_request_read(ctx: &mut crate::ipc::server::ServerContext) -> Result<Self> {
@@ -400,7 +400,7 @@ pub struct ArrayWideString<const S: usize> {
     c_wstr: [u16; S],
 }
 
-impl<const S: usize> crate::ipc::server::RequestCommandParameter<'_,ArrayWideString<S>>
+impl<const S: usize> crate::ipc::server::RequestCommandParameter<'_, ArrayWideString<S>>
     for ArrayWideString<S>
 {
     fn after_request_read(ctx: &mut crate::ipc::server::ServerContext) -> Result<Self> {

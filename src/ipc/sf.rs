@@ -1,4 +1,4 @@
-use core::marker::PhantomData;
+use core::{marker::PhantomData, mem::MaybeUninit};
 
 use super::*;
 use crate::util;
@@ -36,6 +36,40 @@ impl<
     const AUTO_SELECT: bool,
     const ALLOW_NON_SECURE: bool,
     const ALLOW_NON_DEVICE: bool,
+>
+    Buffer<
+        'borrow,
+        IN,
+        OUT,
+        MAP_ALIAS,
+        POINTER,
+        FIXED_SIZE,
+        AUTO_SELECT,
+        ALLOW_NON_SECURE,
+        ALLOW_NON_DEVICE,
+        u8,
+    >
+{
+    pub const fn from_other_mut_var<'a: 'borrow, U>(var: &'a mut U) -> Self {
+        unsafe {
+            Self::from_ptr::<'a>(
+                var as *const U as *const u8,
+                size_of::<U>() / Self::get_expected_size(),
+            )
+        }
+    }
+}
+
+impl<
+    'borrow,
+    const IN: bool,
+    const OUT: bool,
+    const MAP_ALIAS: bool,
+    const POINTER: bool,
+    const FIXED_SIZE: bool,
+    const AUTO_SELECT: bool,
+    const ALLOW_NON_SECURE: bool,
+    const ALLOW_NON_DEVICE: bool,
     T,
 >
     Buffer<
@@ -59,9 +93,9 @@ impl<
     // TODO: ensure that sizeof(T) is a multiple of size
 
     /// Creates a `Buffer` from raw parts
-    /// 
+    ///
     /// # Safety
-    /// 
+    ///
     /// It is the caller's responsibility to ensure the lifetime of the buffer does not exceed the
     /// inner data.
     pub const unsafe fn new<'a: 'borrow>(addr: *mut u8, size: usize) -> Self {
@@ -73,9 +107,9 @@ impl<
     }
 
     /// Creates a `Buffer` from a raw pointer
-    /// 
+    ///
     /// # Safety
-    /// 
+    ///
     /// It is the caller's responsibility to ensure the lifetime of the buffer does not exceed the
     /// inner data.
     pub const unsafe fn from_ptr<'a: 'borrow>(buf: *const T, count: usize) -> Self {
@@ -87,9 +121,9 @@ impl<
     }
 
     /// Creates a `Buffer` from a raw pointer
-    /// 
+    ///
     /// # Safety
-    /// 
+    ///
     /// It is the caller's responsibility to ensure the lifetime of the buffer does not exceed the
     /// inner data.
     pub const unsafe fn from_mut_ptr<'a: 'borrow>(buf: *mut T, count: usize) -> Self {
@@ -98,42 +132,6 @@ impl<
             count,
             _lifetime: PhantomData,
         }
-    }
-
-    pub const fn from_var(var: &T) -> Self {
-        unsafe { Self::from_ptr(var as *const T, 1) }
-    }
-
-    pub const fn from_mut_var(var: &'_ mut T) -> Self {
-        unsafe { Self::from_mut_ptr::<'_>(var as *mut T, 1) }
-    }
-
-    // TODO: ensure sizeof(T) is a multiple of sizeof(U)
-
-    pub const fn from_other_var<'a: 'borrow, U>(var: &'a U) -> Self {
-        unsafe {
-            Self::from_ptr::<'a>(
-                var as *const U as *const T,
-                mem::size_of::<U>() / Self::get_expected_size(),
-            )
-        }
-    }
-
-    pub const fn from_other_mut_var<U>(var: &mut U) -> Self {
-        unsafe {
-            Self::from_mut_ptr(
-                var as *mut U as *mut T,
-                mem::size_of::<U>() / Self::get_expected_size(),
-            )
-        }
-    }
-
-    pub const fn from_array(arr: &[T]) -> Self {
-        unsafe { Self::from_ptr(arr.as_ptr(), arr.len()) }
-    }
-
-    pub const fn from_mut_array(arr: &mut [T]) -> Self {
-        unsafe { Self::from_mut_ptr(arr.as_mut_ptr(), arr.len()) }
     }
 
     /// Converts a Buffer from one flag set to another
@@ -221,6 +219,74 @@ impl<
 }
 
 impl<
+    'borrow,
+    const IN: bool,
+    const OUT: bool,
+    const MAP_ALIAS: bool,
+    const POINTER: bool,
+    const FIXED_SIZE: bool,
+    const AUTO_SELECT: bool,
+    const ALLOW_NON_SECURE: bool,
+    const ALLOW_NON_DEVICE: bool,
+    T,
+>
+    Buffer<
+        'borrow,
+        IN,
+        OUT,
+        MAP_ALIAS,
+        POINTER,
+        FIXED_SIZE,
+        AUTO_SELECT,
+        ALLOW_NON_SECURE,
+        ALLOW_NON_DEVICE,
+        T,
+    >
+{
+    pub const fn from_mut_var(var: &'borrow mut T) -> Self {
+        unsafe { Self::from_mut_ptr::<'borrow>(var as *mut T, 1) }
+    }
+
+    pub const fn from_mut_array(arr: &'borrow mut [T]) -> Self {
+        unsafe { Self::from_mut_ptr(arr.as_mut_ptr(), arr.len()) }
+    }
+}
+
+impl<
+    'borrow,
+    const IN: bool,
+    const MAP_ALIAS: bool,
+    const POINTER: bool,
+    const FIXED_SIZE: bool,
+    const AUTO_SELECT: bool,
+    const ALLOW_NON_SECURE: bool,
+    const ALLOW_NON_DEVICE: bool,
+>
+    Buffer<
+        'borrow,
+        IN,
+        false,
+        MAP_ALIAS,
+        POINTER,
+        FIXED_SIZE,
+        AUTO_SELECT,
+        ALLOW_NON_SECURE,
+        ALLOW_NON_DEVICE,
+        u8,
+    >
+{
+    pub const fn from_other_var<'a: 'borrow, U>(var: &'a U) -> Self {
+        unsafe {
+            Self::from_ptr::<'a>(
+                var as *const U as *const _,
+                size_of::<U>() / Self::get_expected_size(),
+            )
+        }
+    }
+}
+
+impl<
+    'borrow,
     const IN: bool,
     const MAP_ALIAS: bool,
     const POINTER: bool,
@@ -231,8 +297,39 @@ impl<
     T,
 >
     Buffer<
-        '_,
+        'borrow,
         IN,
+        false,
+        MAP_ALIAS,
+        POINTER,
+        FIXED_SIZE,
+        AUTO_SELECT,
+        ALLOW_NON_SECURE,
+        ALLOW_NON_DEVICE,
+        T,
+    >
+{
+    pub const fn from_var(var: &'borrow T) -> Self {
+        unsafe { Self::from_ptr(var as *const T, 1) }
+    }
+
+    pub const fn from_array(arr: &'borrow [T]) -> Self {
+        unsafe { Self::from_ptr(arr.as_ptr(), arr.len()) }
+    }
+}
+
+impl<
+    const MAP_ALIAS: bool,
+    const POINTER: bool,
+    const FIXED_SIZE: bool,
+    const AUTO_SELECT: bool,
+    const ALLOW_NON_SECURE: bool,
+    const ALLOW_NON_DEVICE: bool,
+    T,
+>
+    Buffer<
+        '_,
+        true,
         true,
         MAP_ALIAS,
         POINTER,
@@ -253,7 +350,37 @@ impl<
 }
 
 impl<
-    const IN: bool,
+    const MAP_ALIAS: bool,
+    const POINTER: bool,
+    const FIXED_SIZE: bool,
+    const AUTO_SELECT: bool,
+    const ALLOW_NON_SECURE: bool,
+    const ALLOW_NON_DEVICE: bool,
+    T,
+>
+    Buffer<
+        '_,
+        false,
+        true,
+        MAP_ALIAS,
+        POINTER,
+        FIXED_SIZE,
+        AUTO_SELECT,
+        ALLOW_NON_SECURE,
+        ALLOW_NON_DEVICE,
+        T,
+    >
+{
+    pub fn as_maybeuninit_mut(&mut self) -> Result<&mut [MaybeUninit<T>]> {
+        result_return_unless!(
+            self.buf.is_aligned() && !self.buf.is_null(),
+            rc::ResultInvalidBufferPointer
+        );
+        Ok(unsafe { core::slice::from_raw_parts_mut(self.buf.cast(), self.count) })
+    }
+}
+
+impl<
     const OUT: bool,
     const MAP_ALIAS: bool,
     const POINTER: bool,
@@ -264,7 +391,7 @@ impl<
 >
     Buffer<
         '_,
-        IN,
+        true,
         OUT,
         MAP_ALIAS,
         POINTER,
@@ -317,16 +444,28 @@ impl<
     }
 }
 
-pub type InMapAliasBuffer<'borrow, T> = Buffer<'borrow, true, false, true, false, false, false, false, false, T>;
-pub type OutMapAliasBuffer<'borrow, T> = Buffer<'borrow, false, true, true, false, false, false, false, false, T>;
-pub type InNonSecureMapAliasBuffer<'borrow, T> = Buffer<'borrow, true, false, true, false, false, false, true, false, T>;
-pub type OutNonSecureMapAliasBuffer<'borrow, T> = Buffer<'borrow, false, true, true, false, false, false, true, false, T>;
-pub type InAutoSelectBuffer<'borrow, T> = Buffer<'borrow, true, false, false, false, false, true, false, false, T>;
-pub type OutAutoSelectBuffer<'borrow, T> = Buffer<'borrow, false, true, false, false, false, true, false, false, T>;
-pub type InPointerBuffer<'borrow, T> = Buffer<'borrow, true, false, false, true, false, false, false, false, T>;
-pub type OutPointerBuffer<'borrow, T> = Buffer<'borrow, false, true, false, true, false, false, false, false, T>;
-pub type InFixedPointerBuffer<'borrow, T> = Buffer<'borrow, true, false, false, true, true, false, false, false, T>;
-pub type OutFixedPointerBuffer<'borrow, T> = Buffer<'borrow, false, true, false, true, true, false, false, false, T>;
+pub type InMapAliasBuffer<'borrow, T> =
+    Buffer<'borrow, true, false, true, false, false, false, false, false, T>;
+pub type OutMapAliasBuffer<'borrow, T> =
+    Buffer<'borrow, false, true, true, false, false, false, false, false, T>;
+pub type InNonSecureMapAliasBuffer<'borrow, T> =
+    Buffer<'borrow, true, false, true, false, false, false, true, false, T>;
+pub type OutNonSecureMapAliasBuffer<'borrow, T> =
+    Buffer<'borrow, false, true, true, false, false, false, true, false, T>;
+pub type InAutoSelectBuffer<'borrow, T> =
+    Buffer<'borrow, true, false, false, false, false, true, false, false, T>;
+pub type OutAutoSelectBuffer<'borrow, T> =
+    Buffer<'borrow, false, true, false, false, false, true, false, false, T>;
+pub type InOutAutoSelectBuffer<'borrow, T> =
+    Buffer<'borrow, true, true, false, false, false, true, false, false, T>;
+pub type InPointerBuffer<'borrow, T> =
+    Buffer<'borrow, true, false, false, true, false, false, false, false, T>;
+pub type OutPointerBuffer<'borrow, T> =
+    Buffer<'borrow, false, true, false, true, false, false, false, false, T>;
+pub type InFixedPointerBuffer<'borrow, T> =
+    Buffer<'borrow, true, false, false, true, true, false, false, false, T>;
+pub type OutFixedPointerBuffer<'borrow, T> =
+    Buffer<'borrow, false, true, false, true, true, false, false, false, T>;
 
 #[derive(Clone)]
 pub struct Handle<const MOVE: bool> {
@@ -376,11 +515,11 @@ impl AppletResourceUserId {
         Self { process_id, aruid }
     }
 
-    #[cfg(feature = "services")]
+    #[cfg(feature = "applet")]
     pub fn from_global() -> Self {
         Self {
             process_id: 0,
-            aruid: nx::service::applet::GLOBAL_ARUID.load(core::sync::atomic::Ordering::SeqCst),
+            aruid: crate::applet::GLOBAL_ARUID.load(core::sync::atomic::Ordering::SeqCst),
         }
     }
 
@@ -427,8 +566,8 @@ impl<E: Copy + Clone, T: Copy + Clone> EnumAsPrimitiveType<E, T> {
     }
 }
 
-impl<E: Copy + Clone, T: Copy + Clone> server::RequestCommandParameter<'_,EnumAsPrimitiveType<E, T>>
-    for EnumAsPrimitiveType<E, T>
+impl<E: Copy + Clone, T: Copy + Clone>
+    server::RequestCommandParameter<'_, EnumAsPrimitiveType<E, T>> for EnumAsPrimitiveType<E, T>
 {
     fn after_request_read(ctx: &mut server::ServerContext) -> Result<Self> {
         Ok(ctx.raw_data_walker.advance_get())
@@ -451,6 +590,37 @@ impl<E: Copy + Clone, T: Copy + Clone> server::ResponseCommandParameter
     ) -> Result<()> {
         ctx.raw_data_walker.advance_set(raw);
         Ok(())
+    }
+}
+
+impl client::RequestCommandParameter for core::time::Duration {
+    fn before_request_write(
+        _var: &Self,
+        walker: &mut DataWalker,
+        _ctx: &mut CommandContext,
+    ) -> Result<()> {
+        walker.advance::<u64>();
+        walker.advance::<u64>();
+        Ok(())
+    }
+
+    fn before_send_sync_request(
+        var: &Self,
+        walker: &mut DataWalker,
+        _ctx: &mut CommandContext,
+    ) -> Result<()> {
+        walker.advance_set(var.as_secs());
+        walker.advance_set(var.subsec_nanos() as u64);
+        Ok(())
+    }
+}
+
+impl server::RequestCommandParameter<'_, core::time::Duration> for core::time::Duration {
+    fn after_request_read(ctx: &mut server::ServerContext<'_>) -> Result<core::time::Duration> {
+        let seconds: u64 = ctx.raw_data_walker.advance_get();
+        let nanos: u64 = ctx.raw_data_walker.advance_get();
+
+        Ok(core::time::Duration::new(seconds, nanos as u32))
     }
 }
 
@@ -599,3 +769,5 @@ pub mod ldr;
 pub mod ncm;
 
 pub mod lr;
+
+pub mod bsd;

@@ -288,7 +288,10 @@ impl Builder {
     /// ```
     ///
     /// [`Result`]: crate::result::Result
-    pub unsafe fn spawn_unchecked<F, T, const WAIT_ON_DROP: bool>(self, f: F) -> crate::result::Result<JoinHandle<T, WAIT_ON_DROP>>
+    pub unsafe fn spawn_unchecked<F, T, const WAIT_ON_DROP: bool>(
+        self,
+        f: F,
+    ) -> crate::result::Result<JoinHandle<T, WAIT_ON_DROP>>
     where
         F: FnOnce() -> T,
         F: Send,
@@ -797,7 +800,7 @@ impl<T> Clone for JoinInner<'static, T> {
         Self {
             native: self.native.clone(),
             thread: self.thread.clone(),
-            packet: self.packet.clone()
+            packet: self.packet.clone(),
         }
     }
 }
@@ -942,8 +945,6 @@ impl<T, const BLOCK_ON_DROP: bool> JoinHandle<T, BLOCK_ON_DROP> {
     pub fn join(self) -> Result<T> {
         self.0.clone().join()
     }
-
-    
 
     /// Waits for the associated thread to finish, with a timeout (in nanoseconds)
     ///
@@ -1318,7 +1319,6 @@ pub mod imp {
 
     impl Drop for StratosphereThreadType {
         fn drop(&mut self) {
-
             if !self.stack_top.is_null() {
                 // local thread
                 unsafe {

@@ -354,7 +354,7 @@ impl ProxyDirectory {
 impl Directory for ProxyDirectory {
     fn read(&self, out_entries: &mut [DirectoryEntry]) -> Result<usize> {
         self.dir_obj
-            .read(ipc_sf::Buffer::from_array(out_entries))
+            .read(ipc_sf::Buffer::from_mut_array(out_entries))
             .map(|r| r as usize)
     }
 
@@ -699,7 +699,7 @@ fn find_device_by_name(name: &str) -> Result<Arc<dyn FileSystem>> {
 
 static G_FSPSRV_SESSION: RwLock<Option<Arc<fsp::srv::FileSystemProxyService>>> = RwLock::new(None);
 
-define_bit_enum! {
+define_bit_set! {
     /// Represents options for opening files
     FileOpenOption (u32) {
         None = 0,

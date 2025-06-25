@@ -71,7 +71,7 @@ pub enum MemoryState {
     CodeOut = 0x15,
 }
 
-define_bit_enum! {
+define_bit_set! {
     MemoryPermission (u32) {
         None = 0,
         Read = bit!(0),
@@ -81,7 +81,7 @@ define_bit_enum! {
     }
 }
 
-define_bit_enum! {
+define_bit_set! {
     MemoryAttribute (u32) {
         None = 0,
         Borrowed = bit!(0),
@@ -481,7 +481,8 @@ pub unsafe fn unmap_shared_memory(handle: Handle, address: Address, size: Size) 
 }
 
 #[inline(always)]
-pub unsafe fn create_transfer_memory(
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
+pub fn create_transfer_memory(
     address: Address,
     size: Size,
     permissions: MemoryPermission,

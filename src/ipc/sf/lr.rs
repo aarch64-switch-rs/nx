@@ -6,7 +6,11 @@ use crate::version;
 #[default_client]
 pub trait LocationResolver {
     #[ipc_rid(1)]
-    fn redirect_program_path(&self, program_id: ncm::ProgramId, path_buf: sf::InPointerBuffer<'_, u8>);
+    fn redirect_program_path(
+        &self,
+        program_id: ncm::ProgramId,
+        path_buf: sf::InPointerBuffer<'_, u8>,
+    );
 }
 
 #[nx_derive::ipc_trait]

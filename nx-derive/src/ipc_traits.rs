@@ -6,8 +6,8 @@ use syn::{
     punctuated::Punctuated,
     spanned::Spanned,
     token::{Gt, Lt, Mut, PathSep},
-    AngleBracketedGenericArguments, FnArg, GenericArgument, Path, PathSegment, ReturnType,
-    TraitItem, TraitItemFn, Type, TypePath,
+    AngleBracketedGenericArguments, AttrStyle, FnArg, GenericArgument, Path, PathSegment,
+    ReturnType, TraitItem, TraitItemFn, Type, TypePath,
 };
 
 pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<TokenStream> {
@@ -133,8 +133,11 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
         let mut ipc_rid: Option<u32> = None;
         let mut version_req = None;
         let mut return_type_is_session = false;
+        let mut return_wrap_result = true;
+        let mut doc_comment: Option<syn::Attribute> = None;
         for attr in fn_item.attrs.iter() {
             if let syn::Attribute {
+                style: AttrStyle::Outer,
                 meta:
                     syn::Meta::List(syn::MetaList {
                         path,
@@ -149,7 +152,7 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
                 } else if path.is_ident("version") {
                     version_req = Some(syn::parse2::<syn::Expr>(tokens.clone())?);
                 } else {
-                    return Err(stringify_error(fn_item.span(), "Only the `ipc_rid`, `version` and `return_session` attrs are supported on ipc trait functions"));
+                    return Err(stringify_error(fn_item.span(), "Only the `ipc_rid`, `version`, `no_wrap_return`, and `return_session` attrs are supported on ipc trait functions (plus doc comments)"));
                 }
             } else if let syn::Attribute {
                 meta: syn::Meta::Path(p),
@@ -158,11 +161,21 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
             {
                 if p.is_ident("return_session") {
                     return_type_is_session = true;
+                } else if p.is_ident("no_wrap_return") {
+                    return_wrap_result = false
                 } else {
-                    return Err(stringify_error(fn_item.span(), "Only the `ipc_rid`, `version` and `return_session` attrs are supported on ipc trait functions"));
+                    return Err(stringify_error(fn_item.span(), "Only the `ipc_rid`, `version` `no_wrap_return`, and `return_session` attrs are supported on ipc trait functions (plus doc comments)"));
                 }
+            } else if let syn::Attribute {
+                style: AttrStyle::Outer,
+                meta: syn::Meta::NameValue(syn::MetaNameValue { path, .. }),
+                ..
+            } = attr
+                && path.is_ident("doc")
+            {
+                doc_comment = Some(attr.clone());
             } else {
-                return Err(stringify_error(fn_item.span(), "Only the `ipc_rid`, `version` and `return_session` attrs are supported on ipc trait functions"));
+                return Err(stringify_error(fn_item.span(), "Only the `ipc_rid`, `version` `no_wrap_return`, and `return_session` attrs are supported on ipc trait functions (plus doc comments)"));
             }
         }
 
@@ -181,70 +194,92 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
         // fix up the return types of the client functions to return nx::result::Result
         let mut client_fn = fn_item.clone();
         client_fn.attrs = vec![];
+        if let Some(doc_comment) = doc_comment {
+            client_fn.attrs.push(doc_comment);
+        }
 
-        let mut in_param_names = vec![];
+        let mut client_in_param_names = vec![];
+        let mut server_in_param_names = vec![];
         let mut in_param_types = vec![];
-        let _: () = client_fn
+        client_fn
             .sig
             .inputs
             .iter()
             .skip(1)
             .map(|fn_args| {
+                let arg_span = fn_args.span();
                 let arg_pat = match fn_args {
                     FnArg::Typed(pat) => pat,
-                    _ => panic!(
-                        "We should only have non-receiver arguments after skipping the first arg."
-                    ),
+                    _ => {
+                        return Err(stringify_error(
+                        arg_span,
+                        "We should only have non-receiver arguments after skipping the first arg.",
+                    ));
+                    }
                 };
 
-                in_param_names.push(arg_pat.pat.clone());
+                let arg_name = match *arg_pat.pat.clone() {
+                    syn::Pat::Ident(pat_ident) => pat_ident.ident,
+                    _ => {
+                        return Err(stringify_error(
+                            arg_span,
+                            "Only basic ident names are supported.",
+                        ));
+                    }
+                };
+
+                client_in_param_names.push(arg_pat.pat.clone());
+                server_in_param_names.push(format_ident!("in_param_{}", arg_name));
                 in_param_types.push(arg_pat.ty.clone());
+
+                Ok(())
             })
-            .collect();
+            .collect::<Result<(), syn::Error>>()?;
 
         let mut out_param_names = vec![];
         let mut out_param_types = vec![];
-        match client_fn.sig.output.clone() {
-            ReturnType::Default => {}
-            ReturnType::Type(_, ty) => match *ty {
-                Type::Tuple(tuple) => {
-                    let types: Vec<Type> = (0..)
-                        .map_while(|off| tuple.elems.get(off).cloned())
-                        .collect();
+        if return_wrap_result {
+            match client_fn.sig.output.clone() {
+                ReturnType::Default => {}
+                ReturnType::Type(_, ty) => match *ty {
+                    Type::Tuple(tuple) => {
+                        let types: Vec<Type> = (0..)
+                            .map_while(|off| tuple.elems.get(off).cloned())
+                            .collect();
 
-                    let _: () = types
-                        .into_iter()
-                        .enumerate()
-                        .map(|(off, t)| {
-                            out_param_names.push(format_ident!("out_param_{}", off));
-                            out_param_types.push(t);
-                        })
-                        .collect();
-                }
-                Type::Paren(ty_pat) => {
-                    out_param_names.push(format_ident!("out_param_0"));
-                    out_param_types.push((*ty_pat.elem).clone());
-                }
-                Type::Path(ty_path) => {
-                    out_param_names.push(format_ident!("out_param_0"));
-                    out_param_types.push(Type::Path(ty_path));
-                }
-                _ => {
-                    return Err(stringify_error(
+                        let _: () = types
+                            .into_iter()
+                            .enumerate()
+                            .map(|(off, t)| {
+                                out_param_names.push(format_ident!("out_param_{}", off));
+                                out_param_types.push(t);
+                            })
+                            .collect();
+                    }
+                    Type::Paren(ty_pat) => {
+                        out_param_names.push(format_ident!("out_param_0"));
+                        out_param_types.push((*ty_pat.elem).clone());
+                    }
+                    Type::Path(ty_path) => {
+                        out_param_names.push(format_ident!("out_param_0"));
+                        out_param_types.push(Type::Path(ty_path));
+                    }
+                    _ => {
+                        return Err(stringify_error(
                         client_fn.sig.output.span(),
                         "Only tuple types, paren-wrapped types, or paths are supported for return types",
                     ));
-                }
-            },
+                    }
+                },
+            }
         }
-
         client_fn.default = Some(syn::parse2(quote! {
                 {
                     let mut ctx = ::nx::ipc::CommandContext::new_client(self.get_session().object_info);
 
                     let mut walker = ::nx::ipc::DataWalker::new(core::ptr::null_mut());
 
-                    #(::nx::ipc::client::RequestCommandParameter::before_request_write(&#in_param_names, &mut walker, &mut ctx)?;)*
+                    #(::nx::ipc::client::RequestCommandParameter::before_request_write(&#client_in_param_names, &mut walker, &mut ctx)?;)*
 
                     ctx.in_params.data_size = walker.get_offset() as u32;
 
@@ -254,7 +289,7 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
                     };
 
                     walker.reset_with(ctx.in_params.data_offset);
-                    #( ::nx::ipc::client::RequestCommandParameter::before_send_sync_request(&#in_param_names, &mut walker, &mut ctx)?; )*
+                    #( ::nx::ipc::client::RequestCommandParameter::before_send_sync_request(&#client_in_param_names, &mut walker, &mut ctx)?; )*
 
                     ::nx::svc::send_sync_request(self.get_session().object_info.handle)?;
 
@@ -403,9 +438,9 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
                 use ::nx::result::ResultBase;
 
                 ctx.raw_data_walker = ::nx::ipc::DataWalker::new(ctx.ctx.in_params.data_offset);
-                #( let #in_param_names = <#in_param_types as ::nx::ipc::server::RequestCommandParameter<_>>::after_request_read(&mut ctx)?; )*
+                #( let #server_in_param_names = <#in_param_types as ::nx::ipc::server::RequestCommandParameter<_>>::after_request_read(&mut ctx)?; )*
 
-                let ( #( #out_param_names ),* ) = self.#fn_name( #( #in_param_names ),* )?;
+                let ( #( #out_param_names ),* ) = self.#fn_name( #( #server_in_param_names ),* )?;
 
                 ctx.raw_data_walker = ::nx::ipc::DataWalker::new(core::ptr::null_mut());
                 #( let #carry_state_names = ::nx::ipc::server::ResponseCommandParameter::before_response_write(&#out_param_names, &mut ctx)?; )*

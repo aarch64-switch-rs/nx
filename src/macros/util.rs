@@ -68,7 +68,7 @@ macro_rules! bit {
     };
 }
 
-/// Defines a type meant to serve as a bitflag enum-like type
+/// Defines a type meant to serve as a bitflag set with enum-like API
 ///
 /// # Examples
 ///
@@ -81,7 +81,7 @@ macro_rules! bit {
 /// }
 /// ```
 #[macro_export]
-macro_rules! define_bit_enum {
+macro_rules! define_bit_set {
     (
         $(#[$a_meta:meta])*
         $name:ident ($base:ty) {
@@ -106,6 +106,11 @@ macro_rules! define_bit_enum {
             /// Checks if the provided `$name` has all of the set bits in `other` are set in `self`
             pub const fn contains(self, other: Self) -> bool {
                 (self.0 & other.0) == other.0
+            }
+
+            /// Checks if the provided `$name` has any common bits with `other`
+            pub const fn intersects(self, other: Self) -> bool {
+                (self.0 & other.0) != 0
             }
 
             /// Returns the value as the underlying type

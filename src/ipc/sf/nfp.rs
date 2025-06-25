@@ -51,7 +51,7 @@ pub enum ModelType {
     Amiibo = 0,
 }
 
-define_bit_enum! {
+define_bit_set! {
     MountTarget (u32) {
         Rom = bit!(0),
         Ram = bit!(1)
@@ -122,7 +122,7 @@ const_assert!(core::mem::size_of::<ModelInfo>() == 0x40);
 
 pub type AccessId = u32;
 
-define_bit_enum! {
+define_bit_set! {
     AdminInfoFlags (u8) { // Note: plain amiibo flags shifted 4 bits (original bits 0-3 are discarded)
         IsInitialized = bit!(0),
         HasApplicationArea = bit!(1)
@@ -525,7 +525,11 @@ pub trait Debug {
     #[ipc_rid(106)]
     fn exists_application_area(&self, device_handle: DeviceHandle) -> bool;
     #[ipc_rid(200)]
-    fn get_all(&self, device_handle: DeviceHandle, out_data: sf::OutFixedPointerBuffer<'_, NfpData>);
+    fn get_all(
+        &self,
+        device_handle: DeviceHandle,
+        out_data: sf::OutFixedPointerBuffer<'_, NfpData>,
+    );
     #[ipc_rid(201)]
     fn set_all(&self, device_handle: DeviceHandle, data: sf::InFixedPointerBuffer<'_, NfpData>);
     #[ipc_rid(202)]

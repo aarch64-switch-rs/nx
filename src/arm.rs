@@ -118,7 +118,7 @@ impl FpuRegister {
     }
 }
 
-define_bit_enum! {
+define_bit_set! {
     /// Represents flags of different register kinds/groups.
     RegisterGroup (u32) {
         CpuGprs = bit!(0),

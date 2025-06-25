@@ -5,7 +5,7 @@
 
 > ### API docs are hosted [here](https://aarch64-switch-rs.github.io/nx/), and examples can be found [here](https://github.com/aarch64-switch-rs/examples)
 
-> ### Setup guide to start developing Rust homebrew can be found [here](https://github.com/aarch64-switch-rs/setup-guide)
+> ### Setup guide to start developing Rust homebrew can be found [here](https://github.com/aarch64-switch-rs/nx/wiki/Setup-Guide)
 
 ## TODO list
 
@@ -25,7 +25,7 @@
 
   - Finish mii services
 
-  - Finish nv servuces
+  - Finish nv services
 
   - Support HTC/TMA?
 
@@ -46,8 +46,6 @@
   - Add other unimplemented services not mentioned above
 
 - TIPC server support
-
-- Extend hw-crypto support
 
 - More FS interfaces:
 

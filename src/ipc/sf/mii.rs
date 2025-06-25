@@ -36,7 +36,7 @@ pub enum FaceColor {
     All,
 }
 
-define_bit_enum! {
+define_bit_set! {
     SourceFlag (u32) {
         Database = bit!(0),
         Default = bit!(1)
@@ -1892,7 +1892,8 @@ pub trait MiiDatabase {
     #[ipc_rid(2)]
     fn get_count(&self, flag: SourceFlag) -> u32;
     #[ipc_rid(4)]
-    fn get_one(&self, flag: SourceFlag, out_char_infos: sf::OutMapAliasBuffer<'_, CharInfo>) -> u32;
+    fn get_one(&self, flag: SourceFlag, out_char_infos: sf::OutMapAliasBuffer<'_, CharInfo>)
+    -> u32;
     #[ipc_rid(6)]
     fn build_random(
         &self,

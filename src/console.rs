@@ -32,7 +32,7 @@ pub mod vty {
 
             Self {
                 buffer: buffer.into_boxed_slice(),
-                canvas: canvas,
+                canvas,
             }
         }
     }
@@ -143,14 +143,15 @@ pub mod vty {
     }
 }
 pub mod scrollback {
-    use core::{num::NonZeroU16, u16};
+    use core::num::NonZeroU16;
 
     use crate::{
         gpu::{
             self,
             canvas::{Canvas, CanvasManager, RGBA4},
         },
-        result::Result, sync::RwLock,
+        result::Result,
+        sync::RwLock,
     };
 
     use crate::sync::Mutex;
@@ -242,13 +243,12 @@ pub mod scrollback {
             text_color: Option<RGBA4>,
             scale: u8,
         ) -> Result<Self> {
-
             let canvas = nx::gpu::canvas::CanvasManager::new_stray(
                 gpu_ctx,
                 Default::default(),
                 3,
                 gpu::BlockLinearHeights::OneGob,
-            )?; 
+            )?;
             Ok(Self {
                 history_limit,
                 text_color: text_color.unwrap_or(RGBA4::from_bits(u16::MAX)),

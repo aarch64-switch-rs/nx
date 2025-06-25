@@ -9,7 +9,7 @@ use nx_derive::{Request, Response};
 
 pub type DisplayName = util::ArrayString<0x40>;
 
-define_bit_enum! {
+define_bit_set! {
     LayerFlags (u32) {
         None = 0,
         Default = bit!(0)

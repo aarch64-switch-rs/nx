@@ -322,7 +322,7 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
     }
 
     /// Renders a pre-preprared buffer of pixels (represented by their color values) directly to the screen.
-    /// 
+    ///
     /// A maximum of `(width * height)` pixels are read from the input buffer line-by-line to the screen. Extra
     /// pixels are discarded, and no error is returned for partial refreshes.
     pub fn render_prepared_buffer(&mut self, pixels: &[ColorFormat]) -> Result<()> {
@@ -332,19 +332,24 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
         let (buffer, buffer_length, slot, _fence_present, fences) =
             self.surface.dequeue_buffer(false)?;
 
-            let mut canvas = UnbufferedCanvas {
-                slot,
-                base_pointer: buffer as usize,
-                fences,
-                buffer_size: buffer_length,
-                manager: self,
-            };
-    
-            for (index, pixel) in pixels.iter().cloned().take(height  * width).enumerate() {
-                canvas.draw_single((index % width) as i32, (index / width) as i32, pixel, AlphaBlend::None);
-            }
+        let mut canvas = UnbufferedCanvas {
+            slot,
+            base_pointer: buffer as usize,
+            fences,
+            buffer_size: buffer_length,
+            manager: self,
+        };
 
-            Ok(())
+        for (index, pixel) in pixels.iter().cloned().take(height * width).enumerate() {
+            canvas.draw_single(
+                (index % width) as i32,
+                (index / width) as i32,
+                pixel,
+                AlphaBlend::None,
+            );
+        }
+
+        Ok(())
     }
 
     /// Check out a canvas/framebuffer to draw a new frame, without a linear buffer.
