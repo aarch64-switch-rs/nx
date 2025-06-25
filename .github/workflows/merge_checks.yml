@@ -21,6 +21,7 @@ jobs:
       - run: rustup update
       - run: rustup toolchain install nightly
       - run: rustup component add rust-src
+      - run: rustup component add clippy
 
       - name: Cache rust build files
         uses: Leafwing-Studios/cargo-cache@a0709d80dd96c8734ac8f186c1f238c8f528d198 # v2
