@@ -1,8 +1,8 @@
 use nx_derive::{Request, Response};
 
 use crate::ipc::sf::{
-    CopyHandle, InAutoSelectBuffer, InOutAutoSelectBuffer, OutAutoSelectBuffer, OutMapAliasBuffer,
-    ProcessId,
+    CopyHandle, InAutoSelectBuffer, InOutAutoSelectBuffer,
+    OutAutoSelectBuffer, OutMapAliasBuffer, ProcessId,
 };
 use crate::result::Result;
 use crate::version::{self, Version, VersionInterval};
@@ -12,6 +12,8 @@ use core::str::FromStr;
 use core::time::Duration as TimeSpec;
 
 pub mod rc;
+
+pub const SOL_SOCKET: i32 = (0xffffffff_u32).cast_signed();
 
 #[derive(Copy, Clone, Debug, Request, Response)]
 #[repr(C)]
@@ -70,7 +72,7 @@ pub struct BsdServiceConfig {
 
     /// Size of the TCP transfer (send) buffer (initial or fixed).
     pub tcp_tx_buf_size: u32,
-    /// Size of the TCP recieve buffer (initial or fixed).
+    /// Size of the TCP receive buffer (initial or fixed).
     pub tcp_rx_buf_size: u32,
     /// Maximum size of the TCP transfer (send) buffer. If it is 0, the size of the buffer is fixed to its initial value.
     pub tcp_tx_buf_max_size: u32,
@@ -279,12 +281,12 @@ pub struct SocketAddrRepr {
     // TCP/UDP port
     pub port: u16,
     // IPv4 Address
-    pub addr: [u8;4],
+    pub addr: [u8; 4],
     /// The min size we are working with for the true types. The real size is based on `self.actual_length` and `self.family`.
     pub(crate) _zero: [u8; 8],
 }
 
-const_assert!( core::mem::size_of::<SocketAddrRepr>() == 16);
+const_assert!(core::mem::size_of::<SocketAddrRepr>() == 16);
 
 impl FromStr for SocketAddrRepr {
     type Err = core::net::AddrParseError;
@@ -319,11 +321,41 @@ impl From<(core::net::Ipv4Addr, u16)> for SocketAddrRepr {
     }
 }
 
-#[derive(Copy, Clone, Debug, Default, Request, Response)]
+#[derive(Copy, Clone, Debug, Default, Request, Response, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
-struct BsdDuration {
+pub struct BsdDuration {
     seconds: u64,
     microseconds: u64,
+}
+
+impl From<BsdDuration> for TimeSpec {
+    fn from(value: BsdDuration) -> Self {
+        TimeSpec::from_secs(value.seconds) + TimeSpec::from_micros(value.microseconds)
+    }
+}
+
+impl From<TimeSpec> for BsdDuration {
+    fn from(timeout: TimeSpec) -> Self {
+        Self {
+            seconds: timeout.as_secs(),
+            microseconds: timeout.subsec_micros() as u64,
+        }
+    }
+}
+
+impl From<Option<TimeSpec>> for BsdDuration {
+    fn from(timeout: Option<TimeSpec>) -> Self {
+        match timeout {
+            None | Some(TimeSpec::ZERO) => {
+                // match libstd behaviour on unix
+                Self {
+                    seconds: 0,
+                    microseconds: 1,
+                }
+            }
+            Some(timeout) => timeout.into(),
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug, Request, Response)]
@@ -338,16 +370,19 @@ pub struct BsdTimeout {
 impl BsdTimeout {
     pub const fn new() -> Self {
         Self {
-            timeout: BsdDuration { seconds: 0, microseconds: 0},
-            no_timeout: true
+            timeout: BsdDuration {
+                seconds: 0,
+                microseconds: 0,
+            },
+            no_timeout: true,
         }
     }
 
-    pub const fn timeout(timout: TimeSpec) ->  Self {
+    pub const fn timeout(timeout: TimeSpec) -> Self {
         Self {
             timeout: BsdDuration {
-                seconds: timout.as_secs(),
-                microseconds: timout.subsec_micros() as u64,
+                seconds: timeout.as_secs(),
+                microseconds: timeout.subsec_micros() as u64,
             },
             no_timeout: false,
         }
@@ -359,7 +394,6 @@ impl Default for BsdTimeout {
         Self::new()
     }
 }
-
 
 impl From<Option<core::time::Duration>> for BsdTimeout {
     fn from(value: Option<core::time::Duration>) -> Self {
@@ -388,41 +422,156 @@ pub enum ShutdownMode {
     Bidirectional = 2,
 }
 
-define_bit_set! {
-    SocketOptions (i32) {
-        /// turn on debugging info recording
-        Debug = 0x0001,
-        /// socket has had listen()
-        AcceptConn = 0x0002,
-        /// allow local address reuse
-        ReuseAddr = 0x0004,
-        /// keep connections alive
-        KeepAlive = 0x0008,
-        /// just use interface addresses
-        DontRoute = 0x0010,
-        /// permit sending of broadcast msgs
-        Broadcast = 0x0020,
-        /// bypass hardware when possible
-        UseLoopbackK = 0x0040,
-        /// linger on close if data present
-        Linger = 0x0080,
-        /// leave received OOB data in line
-        OOBInline = 0x0100,
-        /// allow local address & port reuse
-        ReusePort = 0x0200,
-        /// timestamp received dgram traffic
-        Timestmap = 0x0400,
-        /// no SIGPIPE from EPIPE
-        NoSigPipe = 0x0800,
-        /// there is an accept filter
-        AcceptFilter = 0x1000,
-        /// timestamp received dgram traffic
-        BInTime = 0x2000,
-        /// socket cannot be offloaded
-        NoOffload = 0x4000,
-        /// disable direct data placement
-        NoDdp = 0x8000
+#[derive(Copy, Clone, Debug, Request, Response)]
+#[repr(C)]
+pub enum SocketOptions {
+    /// turn on debugging info recording
+    Debug = 0x0001,
+    /// socket has had listen()
+    AcceptConn = 0x0002,
+    /// allow local address reuse
+    ReuseAddr = 0x0004,
+    /// keep connections alive
+    KeepAlive = 0x0008,
+    /// just use interface addresses
+    DontRoute = 0x0010,
+    /// permit sending of broadcast msgs
+    Broadcast = 0x0020,
+    /// bypass hardware when possible
+    UseLoopbackK = 0x0040,
+    /// linger on close if data present
+    Linger = 0x0080,
+    /// leave received OOB data in line
+    OOBInline = 0x0100,
+    /// allow local address & port reuse
+    ReusePort = 0x0200,
+    /// timestamp received dgram traffic
+    Timestamp = 0x0400,
+    /// no SIGPIPE from EPIPE
+    NoSigPipe = 0x0800,
+    /// there is an accept filter
+    AcceptFilter = 0x1000,
+    /// timestamp received dgram traffic
+    BInTime = 0x2000,
+    /// socket cannot be offloaded
+    NoOffload = 0x4000,
+    /// disable direct data placement
+    NoDdp = 0x8000,
+
+    // Other options not generally kept in so_options
+
+    /// send buffer size
+    SNDBUF = 0x1001,
+    /// receive buffer size
+    RCVBUF = 0x1002,
+    /// send low-water mark
+    SNDLOWAT = 0x1003,
+    /// receive low-water mark
+    RCVLOWAT = 0x1004,
+    /// send timeout
+    SNDTIMEO = 0x1005,
+    /// receive timeout
+    RCVTIMEO = 0x1006,
+    /// get error status and clear
+    ERROR = 0x1007,
+    /// get socket type
+    TYPE = 0x1008,
+    /// socket's MAC label
+    LABEL = 0x1009,
+    /// socket's peer's MAC label
+    PEERLABEL = 0x1010,
+    /// socket's backlog limit
+    LISTENQLIMIT = 0x1011,
+    /// socket's complete queue length
+    LISTENQLEN = 0x1012,
+    /// socket's incomplete queue length
+    LISTENINCQLEN = 0x1013,
+    /// use this FIB to route
+    SETFIB = 0x1014,
+    /// user cookie (dummynet etc.)
+    USER_COOKIE = 0x1015,
+    /// get socket protocol (Linux name)
+    PROTOCOL = 0x1016,
+    /// clock type used for SO_TIMESTAMP
+    TS_CLOCK = 0x1017,
+    /// socket's max TX pacing rate (Linux name)
+    MAX_PACING_RATE = 0x1018
+}
+
+#[derive(Copy, Clone, Debug, Default, Request, Response)]
+#[repr(C)]
+pub struct Linger {
+    pub on_off: u32,
+    pub linger_time: u32,
+}
+
+impl Linger {
+    pub fn as_duration(self) -> Option<TimeSpec> {
+        if self.on_off == 0 {
+            None
+        } else {
+            Some(TimeSpec::from_secs(self.linger_time as _))
+        }
     }
+}
+
+impl From<Linger> for Option<TimeSpec> {
+    fn from(value: Linger) -> Self {
+        match value.as_duration() {
+            None | Some(TimeSpec::ZERO) => None,
+            Some(time) => Some(time),
+        }
+    }
+}
+
+impl From<TimeSpec> for Linger {
+    fn from(value: TimeSpec) -> Self {
+        Self {
+            on_off: (value == TimeSpec::ZERO) as u32,
+            linger_time: value.as_secs() as u32,
+        }
+    }
+}
+
+impl From<Option<TimeSpec>> for Linger {
+    fn from(value: Option<TimeSpec>) -> Self {
+        value.unwrap_or(TimeSpec::ZERO).into()
+    }
+}
+
+#[derive(Copy, Clone, Debug, Request, Response)]
+#[repr(C)]
+pub enum FnCtlCmd {
+    /// Duplicate file descriptor
+    DupFd = 0,
+    /// Get file descriptor flags (close on exec)
+    GetFd = 1,
+    /// Set file descriptor flags (close on exec)
+    SetFd = 2,
+    /// Get file flags
+    GetFl = 3,
+    /// Set file flags
+    SetFl = 4,
+    /// Get owner - for ASYNC
+    GetOwn = 5,
+    /// Set owner - for ASYNC
+    SetOwn = 6,
+    /// Get record-locking information
+    GetLk = 7,
+    /// Set or Clear a record-lock (Non-Blocking)
+    SetLk = 8,
+    /// Set or Clear a record-lock (Blocking)
+    SetLkW = 9,
+    /// Test a remote lock to see if it is blocked
+    RGetLk = 10,
+    /// Set or unlock a remote lock
+    RsetLk = 11,
+    /// Convert a fhandle to an open fd
+    Cnvt = 12,
+    /// Set or Clear remote record-lock(Blocking)
+    RsetLkW = 13,
+    /// As F_DUPFD, but set close-on-exec flag
+    DupFdCloexec = 14,
 }
 
 pub type FdSet = [u64; 1024 / (8 * core::mem::size_of::<u64>())];
@@ -450,7 +599,7 @@ define_bit_set! {
         /// OOB/Urgent data can be written
         PollWRBand = 0x0100,
         /// like PollIN, except ignore EOF
-        PolliInIgnoreEof = 0x2000,
+        PollInIgnoreEof = 0x2000,
         /// some poll error occurred
         PollError = 0x0008,
         /// file descriptor was "hung up"
@@ -499,7 +648,7 @@ define_bit_set! {
         /// peek at incoming message
         Peek = 0x00000002,
         /// data discarded before delivery
-        Trun = 0x00000010,
+        Trunc = 0x00000010,
         /// control data lost before delivery
         CTrunc = 0x00000020,
         /// wait for full request or error
@@ -570,7 +719,7 @@ pub trait Bsd {
     /*#[ipc_rid(5)]
     fn select(
         &self,
-        fd_cound: u32,
+        fd_count: u32,
         read_fds: InOutAutoSelectBuffer<FdSet>,
         write_fds: InOutAutoSelectBuffer<FdSet>,
         except_fds: InOutAutoSelectBuffer<FdSet>,
@@ -645,7 +794,7 @@ pub trait Bsd {
         &self,
         sockfd: i32,
         level: i32,
-        optname: SocketOptions,
+        optname: i32,
         out_opt_buffer: OutAutoSelectBuffer<u8>,
     ) -> BsdResult<u32>;
 
@@ -653,14 +802,14 @@ pub trait Bsd {
     fn listen(&self, sockfd: i32, backlog: i32) -> BsdResult<()>;
 
     #[ipc_rid(20)]
-    fn fnctl(&self, socfd: i32, cmd: i32, flags: i32) -> BsdResult<()>;
+    fn fnctl(&self, sockfd: i32, cmd: FnCtlCmd, flags: i32) -> BsdResult<()>;
 
     #[ipc_rid(21)]
     fn set_sock_opt(
         &self,
         sockfd: i32,
         level: i32,
-        optname: SocketOptions,
+        optname: i32,
         opt_buffer: InAutoSelectBuffer<u8>,
     ) -> BsdResult<()>;
 

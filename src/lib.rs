@@ -6,11 +6,13 @@
 //!
 //! - `services`: Enables custom client-IPC service implementations, AKA the `nx::service` module
 //!
-//! - `crypto`: Enables hw-accelerated cryptography support, AKA the `nx::crypto` module
-//!
 //! - `smc`: Enables secure-monitor support, AKA the `nx::smc` module
 //!
 //! - `gpu`: Enables graphics support, AKA the `nx::gpu` module (also enables `services`)
+//!
+//! - `console`: Enables console support, AKA the `nx::console` module (also enables `canvas` and the `font8x8` dependency)
+//!
+//! - `vty`: Enables virtual tty support, AKA, the `nx::console::vty` module (also enables `console` as well as the dependencies `embedded-term` and `embedded-graphics-core`)
 //!
 //! - `fs`: Enables support for this library's FS implementation, aka the `nx::fs` module (also enables `services`)
 //!
@@ -18,7 +20,13 @@
 //!
 //! - `la`: Enables library applet support, AKA the `nx::la` module (also enables `services`)
 //!
-//! - `rand`: Enabled pseudo-RNG support, AKA the `nx::rand` module (also enables `services`)
+//! - `rand`: Enables pseudo-RNG support, AKA the `nx::rand` module (also enables `services`)
+//! 
+//! - `socket` : Enables std-like network support, AKA the `nx::socket` module (also enables `services`)
+//! 
+//! - `applet` : Enables applet service support, AKA the `nx::applet` module (also enables `services`)
+//! 
+//! - `mii` : Enables mii support, AKA the `nx::mii` module (also enables `services`)
 //!
 //! Note that most of these features/modules are just simplified and easy-to-use wrappers around IPC/raw system features, so not using them doesn't fully block those features (for instance, you could use services using IPC commands more directly without the `services` feature).
 //!

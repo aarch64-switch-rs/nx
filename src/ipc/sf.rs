@@ -36,6 +36,40 @@ impl<
     const AUTO_SELECT: bool,
     const ALLOW_NON_SECURE: bool,
     const ALLOW_NON_DEVICE: bool,
+>
+    Buffer<
+        'borrow,
+        IN,
+        OUT,
+        MAP_ALIAS,
+        POINTER,
+        FIXED_SIZE,
+        AUTO_SELECT,
+        ALLOW_NON_SECURE,
+        ALLOW_NON_DEVICE,
+        u8,
+    >
+{
+    pub const fn from_other_mut_var<'a: 'borrow, U>(var: &'a mut U) -> Self {
+        unsafe {
+            Self::from_ptr::<'a>(
+                var as *const U as *const u8,
+                size_of::<U>() / Self::get_expected_size(),
+            )
+        }
+    }
+}
+
+impl<
+    'borrow,
+    const IN: bool,
+    const OUT: bool,
+    const MAP_ALIAS: bool,
+    const POINTER: bool,
+    const FIXED_SIZE: bool,
+    const AUTO_SELECT: bool,
+    const ALLOW_NON_SECURE: bool,
+    const ALLOW_NON_DEVICE: bool,
     T,
 >
     Buffer<
@@ -97,16 +131,6 @@ impl<
             buf,
             count,
             _lifetime: PhantomData,
-        }
-    }
-
-    // TODO: ensure sizeof(T) is a multiple of sizeof(U)
-    pub const fn from_other_var_mut<'a: 'borrow, U>(var: &'a mut U) -> Self {
-        unsafe {
-            Self::from_ptr::<'a>(
-                var as *const U as *const T,
-                size_of::<U>() / Self::get_expected_size(),
-            )
         }
     }
 
@@ -237,6 +261,39 @@ impl<
     const AUTO_SELECT: bool,
     const ALLOW_NON_SECURE: bool,
     const ALLOW_NON_DEVICE: bool,
+>
+    Buffer<
+        'borrow,
+        IN,
+        false,
+        MAP_ALIAS,
+        POINTER,
+        FIXED_SIZE,
+        AUTO_SELECT,
+        ALLOW_NON_SECURE,
+        ALLOW_NON_DEVICE,
+        u8,
+    >
+{
+    pub const fn from_other_var<'a: 'borrow, U>(var: &'a U) -> Self {
+        unsafe {
+            Self::from_ptr::<'a>(
+                var as *const U as *const _,
+                size_of::<U>() / Self::get_expected_size(),
+            )
+        }
+    }
+}
+
+impl<
+    'borrow,
+    const IN: bool,
+    const MAP_ALIAS: bool,
+    const POINTER: bool,
+    const FIXED_SIZE: bool,
+    const AUTO_SELECT: bool,
+    const ALLOW_NON_SECURE: bool,
+    const ALLOW_NON_DEVICE: bool,
     T,
 >
     Buffer<
@@ -254,16 +311,6 @@ impl<
 {
     pub const fn from_var(var: &'borrow T) -> Self {
         unsafe { Self::from_ptr(var as *const T, 1) }
-    }
-
-    // TODO: ensure sizeof(T) is a multiple of sizeof(U)
-    pub const fn from_other_var<'a: 'borrow, U>(var: &'a U) -> Self {
-        unsafe {
-            Self::from_ptr::<'a>(
-                var as *const U as *const T,
-                size_of::<U>() / Self::get_expected_size(),
-            )
-        }
     }
 
     pub const fn from_array(arr: &'borrow [T]) -> Self {

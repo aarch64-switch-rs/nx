@@ -167,7 +167,7 @@ pub fn read_storage<T: Copy>(storage: &mut Storage) -> Result<T> {
     let mut t = unsafe { cmem::zeroed::<T>() };
 
     let storage_accessor = storage.open()?;
-    storage_accessor.read(0, sf::Buffer::from_other_var_mut(&mut t))?;
+    storage_accessor.read(0, sf::Buffer::from_other_mut_var(&mut t))?;
 
     Ok(t)
 }

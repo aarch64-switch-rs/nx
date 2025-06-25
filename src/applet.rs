@@ -104,7 +104,7 @@ pub fn initialize() -> Result<()> {
                     AppletProxy::LibraryApplet(app_proxy_service.open_library_applet_proxy(
                         sf::ProcessId::new(),
                         sf::CopyHandle::from(svc::CURRENT_PROCESS_PSEUDO_HANDLE),
-                        sf::InMapAliasBuffer::from_other_var(&APPLET_ATTRIBUTE),
+                        sf::InMapAliasBuffer::from_var(&APPLET_ATTRIBUTE),
                     )?)
                 }
                 AppletType::LibraryApplet => {

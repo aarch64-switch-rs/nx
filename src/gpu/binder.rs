@@ -106,7 +106,7 @@ impl Binder {
             transaction_id,
             0,
             sf::Buffer::from_other_var(&payload),
-            sf::Buffer::from_other_var_mut(&mut response_payload),
+            sf::Buffer::from_other_mut_var(&mut response_payload),
         )?;
 
         let mut parcel = parcel::Parcel::new();

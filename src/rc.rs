@@ -22,7 +22,6 @@
 //! * `1100`: gpu/binder
 //! * `1200`: gpu/parcel
 //! * `1300`: ipc/server
-//! * `1400`: crypto
 
 pub const RESULT_MODULE: u32 = 430;
 /// Result submodule for the base `rc` module.
@@ -53,6 +52,5 @@ result_define_subgroup!(RESULT_MODULE, RESULT_SUBMODULE => {
 1100: gpu/binder
 1200: gpu/parcel
 1300: ipc/server
-1400: crypto
 
 */
