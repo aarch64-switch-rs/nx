@@ -55,9 +55,11 @@
 // for manually pre-checked pointer to reference conversion
 #![feature(ptr_as_ref_unchecked)]
 #![feature(pointer_is_aligned_to)]
+
+//#![warn(missing_docs)]
+
 #![macro_use]
 use core::arch::global_asm;
-
 // Required assembly bits (those which essentially cannot/shouldn't be inlined)
 
 global_asm!(include_str!("asm.s"));

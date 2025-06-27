@@ -1,3 +1,5 @@
+//! Exception handling support (stubbed for now).
+
 use crate::diag::abort::{AbortLevel, abort};
 use crate::result::ResultCode;
 use crate::svc;

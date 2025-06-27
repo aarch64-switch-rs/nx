@@ -8,6 +8,7 @@ use alloc::{
 };
 
 pub use nx_derive::{Request, Response, ipc_trait};
+use zeroize::Zeroize;
 
 pub struct Buffer<
     'borrow,
@@ -184,10 +185,6 @@ impl<
         self.count
     }
 
-    pub const fn get_var(&self) -> &T {
-        unsafe { self.buf.as_ref().unwrap() }
-    }
-
     pub fn get_mut_var(&mut self) -> &mut T {
         unsafe { self.buf.as_mut().unwrap() }
     }
@@ -207,14 +204,6 @@ impl<
         }
 
         out
-    }
-
-    pub fn as_slice(&self) -> Result<&[T]> {
-        result_return_unless!(
-            self.buf.is_aligned() && !self.buf.is_null(),
-            rc::ResultInvalidBufferPointer
-        );
-        Ok(unsafe { core::slice::from_raw_parts(self.buf, self.count) })
     }
 }
 
@@ -249,6 +238,47 @@ impl<
 
     pub const fn from_mut_array(arr: &'borrow mut [T]) -> Self {
         unsafe { Self::from_mut_ptr(arr.as_mut_ptr(), arr.len()) }
+    }
+}
+
+impl<
+    'borrow,
+    const OUT: bool,
+    const MAP_ALIAS: bool,
+    const POINTER: bool,
+    const FIXED_SIZE: bool,
+    const AUTO_SELECT: bool,
+    const ALLOW_NON_SECURE: bool,
+    const ALLOW_NON_DEVICE: bool,
+    T
+>
+    Buffer<
+        'borrow,
+        true,
+        OUT,
+        MAP_ALIAS,
+        POINTER,
+        FIXED_SIZE,
+        AUTO_SELECT,
+        ALLOW_NON_SECURE,
+        ALLOW_NON_DEVICE,
+        T,
+    >
+{
+    pub fn get_var(&self) -> Result<&T> {
+        unsafe {
+            self.buf
+                .as_ref()
+                .ok_or(rc::ResultInvalidBufferPointer::make())
+        }
+    }
+
+    pub fn as_slice(&self) -> Result<&[T]> {
+        result_return_unless!(
+            self.buf.is_aligned() && !self.buf.is_null(),
+            rc::ResultInvalidBufferPointer
+        );
+        Ok(unsafe { core::slice::from_raw_parts(self.buf, self.count) })
     }
 }
 
@@ -371,6 +401,8 @@ impl<
         T,
     >
 {
+    /// If the input buffer is not marked as "IN" then there isn't an API contract that it will be readable/initialized.
+    /// As such, we should consider all "OUT + !IN" buffers as uninitialized until written by the server function.
     pub fn as_maybeuninit_mut(&mut self) -> Result<&mut [MaybeUninit<T>]> {
         result_return_unless!(
             self.buf.is_aligned() && !self.buf.is_null(),
@@ -403,9 +435,8 @@ impl<
     >
 {
     pub fn get_string(&self) -> String {
-        let cstr = unsafe { core::ffi::CStr::from_ptr(self.buf as _) };
-
-        String::from_utf8_lossy(cstr.to_bytes()).to_string()
+        String::from_utf8_lossy(unsafe { core::slice::from_raw_parts_mut(self.buf, self.count) })
+            .to_string()
     }
 }
 
@@ -434,7 +465,7 @@ impl<
     pub fn set_string(&mut self, string: String) {
         unsafe {
             // First memset to zero so that it will be a valid nul-terminated string
-            core::ptr::write_bytes(self.buf, 0, self.count);
+            core::slice::from_raw_parts_mut(self.buf, self.count).zeroize();
             core::ptr::copy(
                 string.as_ptr(),
                 self.buf,

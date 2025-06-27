@@ -1,3 +1,5 @@
+//! Contains the machinery for Horizon OS's IPC interface
+
 use crate::result::*;
 use crate::svc;
 use crate::thread;

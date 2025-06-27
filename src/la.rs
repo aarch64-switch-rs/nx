@@ -144,16 +144,9 @@ pub(crate) fn finalize() {
 }
 
 /// Gets access to the global [`ILibraryAppletCreatorClient`] shared object instance
-///
-/// This will fail with [`ResultNotInitialized`][`super::rc::ResultNotInitialized`] if library applet support isn't initialized
 #[inline]
-pub fn get_creator<'a>() -> Result<MutexGuard<'a, Option<LibraryAppletCreator>>> {
-    let guard = G_CREATOR.lock();
-    if guard.is_some() {
-        Ok(guard)
-    } else {
-        Err(rc::ResultNotInitialized::make())
-    }
+pub fn get_creator<'a>() -> MutexGuard<'a, Option<LibraryAppletCreator>> {
+    G_CREATOR.lock()
 }
 
 /// Wrapper for reading data from a [`IStorageClient`] shared object
@@ -201,9 +194,9 @@ pub fn write_storage<T: Copy>(storage: &mut Storage, t: T) -> Result<()> {
 pub fn create_write_storage<T: Copy>(t: T) -> Result<Storage> {
     result_return_unless!(is_initialized(), super::rc::ResultNotInitialized);
 
-    let mut storage = get_creator()?
+    let mut storage = get_creator()
         .as_ref()
-        .unwrap()
+        .ok_or(rc::ResultNotInitialized::make())?
         .create_storage(cmem::size_of::<T>())?;
     write_storage(&mut storage, t)?;
 
@@ -226,9 +219,9 @@ pub fn create_library_applet(
 ) -> Result<LibraryAppletHolder> {
     result_return_unless!(is_initialized(), super::rc::ResultNotInitialized);
 
-    let accessor = get_creator()?
+    let accessor = get_creator()
         .as_ref()
-        .unwrap()
+        .ok_or(rc::ResultNotInitialized::make())?
         .create_library_applet(id, mode)?;
 
     let mut holder = LibraryAppletHolder::new(Box::new(accessor))?;

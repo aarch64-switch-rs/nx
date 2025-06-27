@@ -1,8 +1,10 @@
+//! Console Services
+
+/// Virtuall TTY functionality
 #[cfg(feature = "vty")]
 pub mod vty {
 
     use alloc::boxed::Box;
-    use alloc::vec::Vec;
     use embedded_graphics_core::prelude::OriginDimensions;
 
     use crate::gpu::canvas::{AlphaBlend, CanvasManager, RGBA8, sealed::CanvasColorFormat};
@@ -14,24 +16,23 @@ pub mod vty {
     pub use embedded_graphics_core::pixelcolor::{Rgb888, RgbColor};
     pub use embedded_graphics_core::primitives::rectangle::Rectangle;
 
+    /// Canvas/Framebuffer type that keeps a single buffer that is
+    /// flushed to the display on change.
     pub struct PersistantBufferedCanvas {
         buffer: Box<[Rgb888]>,
         canvas: CanvasManager<Rgb888>,
     }
 
     impl PersistantBufferedCanvas {
+        /// Wraps and existing `CanvasManager` instance
+        #[inline(always)]
         pub fn new(canvas: CanvasManager<Rgb888>) -> Self {
-            // new buffer with reserved size
-            let mut buffer =
-                Vec::with_capacity((canvas.surface.width() * canvas.surface.height()) as usize);
-            // fill the buffer with black pixels to start
-            buffer.resize(
-                (canvas.surface.width() * canvas.surface.height()) as usize,
-                Rgb888::new(0, 0, 0),
-            );
-
             Self {
-                buffer: buffer.into_boxed_slice(),
+                buffer: vec![
+                    Rgb888::new(0, 0, 0);
+                    (canvas.surface.width() * canvas.surface.height()) as usize
+                ]
+                .into_boxed_slice(),
                 canvas,
             }
         }
@@ -43,6 +44,7 @@ pub mod vty {
         const COLOR_FORMAT: crate::gpu::ColorFormat = <RGBA8 as CanvasColorFormat>::COLOR_FORMAT;
         const PIXEL_FORMAT: crate::gpu::PixelFormat = <RGBA8 as CanvasColorFormat>::PIXEL_FORMAT;
 
+        #[inline(always)]
         fn blend_with(self, other: Self, blend: AlphaBlend) -> Self {
             if matches!(blend, AlphaBlend::Destination) {
                 other
@@ -51,29 +53,35 @@ pub mod vty {
             }
         }
 
+        #[inline(always)]
         fn from_raw(raw: Self::RawType) -> Self {
             let intermediate = RGBA8::from_bits(raw);
             Rgb888::new(intermediate.r(), intermediate.g(), intermediate.b())
         }
 
+        #[inline(always)]
         fn new() -> Self {
             Rgb888::new(0, 0, 0)
         }
 
+        #[inline(always)]
         fn new_scaled(r: u8, g: u8, b: u8, _a: u8) -> Self {
             Rgb888::new(r, g, b)
         }
 
+        #[inline(always)]
         fn scale_alpha(self, _alpha: f32) -> Self {
             self
         }
 
+        #[inline(always)]
         fn to_raw(self) -> Self::RawType {
             RGBA8::new_scaled(self.r(), self.g(), self.b(), 255).to_raw()
         }
     }
 
     impl OriginDimensions for PersistantBufferedCanvas {
+        #[inline(always)]
         fn size(&self) -> Size {
             Size {
                 width: self.canvas.surface.width(),
@@ -117,7 +125,12 @@ pub mod vty {
             for y in y..(y + height as i32) {
                 for x in x..(x + width as i32) {
                     if let Some(color) = color_iter.next() {
-                        self.buffer[(x + y * self.canvas.surface.width() as i32) as usize] = color;
+                        if (0..self.canvas.surface.height().cast_signed()).contains(&y)
+                            && (0..self.canvas.surface.width().cast_signed()).contains(&x)
+                        {
+                            self.buffer[(x + y * self.canvas.surface.width() as i32) as usize] =
+                                color;
+                        }
                     }
                 }
             }

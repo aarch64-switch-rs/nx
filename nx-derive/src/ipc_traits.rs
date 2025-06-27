@@ -22,7 +22,7 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
     let build_default_client = input
         .attrs
         .iter()
-        .find(|&attr| {
+        .any(|attr| {
             if let syn::Attribute {
                 meta: syn::Meta::Path(p),
                 ..
@@ -32,8 +32,7 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
             } else {
                 false
             }
-        })
-        .is_some();
+        });
 
     let default_client: TokenStream = if build_default_client {
         quote! {
@@ -206,7 +205,7 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
             .inputs
             .iter()
             .skip(1)
-            .map(|fn_args| {
+            .try_for_each(|fn_args| {
                 let arg_span = fn_args.span();
                 let arg_pat = match fn_args {
                     FnArg::Typed(pat) => pat,
@@ -233,8 +232,7 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
                 in_param_types.push(arg_pat.ty.clone());
 
                 Ok(())
-            })
-            .collect::<Result<(), syn::Error>>()?;
+            })?;
 
         let mut out_param_names = vec![];
         let mut out_param_types = vec![];

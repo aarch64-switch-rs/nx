@@ -1,7 +1,6 @@
 use nx_derive::{Request, Response};
 
-use crate::ipc::sf::{
-    CopyHandle, InAutoSelectBuffer, InOutAutoSelectBuffer, OutAutoSelectBuffer, OutMapAliasBuffer,
+use crate::ipc::sf::{CopyHandle, InAutoSelectBuffer, InOutAutoSelectBuffer, OutAutoSelectBuffer, OutMapAliasBuffer,
     ProcessId,
 };
 use crate::result::Result;
@@ -414,14 +413,79 @@ impl From<Option<core::time::Duration>> for BsdTimeout {
     }
 }
 
+/// Shutdown mode for TCP streams
 #[derive(Copy, Clone, Debug, Request, Response)]
 #[repr(C)]
 pub enum ShutdownMode {
+    /// Disable reads
     Receive = 0,
+    /// Disable writes
     Send = 1,
+    /// Disable both directions
     Bidirectional = 2,
 }
 
+
+/// `get/set_sock_opt` options for level `IpProto::IP`
+#[derive(Copy, Clone, Debug, Request, Response)]
+#[repr(C)]
+pub enum IpOptions {
+    /// buf/ip_opts; set/get IP options
+    Options = 1,
+    /// int; header is included with data
+    HeaderIncluded = 2,
+    /// int; IP type of service and preced.
+    TypeOfService = 3,
+    /// int; IP time to live
+    TimeToLive = 4,
+    /// bool; receive all IP opts w/dgram
+    RecvOptions = 5,
+    /// bool; receive IP opts for response
+    RecvReturnOptions = 6,
+    /// bool; receive IP dst addr w/dgram
+    ReceiveDestinationOptions = 7,
+    /// ip_opts; set/get IP options
+    ReturnOptions = 8,
+    /// struct in_addr *or* struct ip_mreqn;
+    MulticastInterface = 9,
+    /// u_char; set/get IP multicast ttl
+    MulticastTimeToLive = 10,
+    /// u_char; set/get IP multicast loopback
+    MulticastLoopback = 11,
+    /// ip_mreq; add an IP group membership
+    MulticastAddMembership = 12,
+    /// ip_mreq; drop an IP group membership
+    MulticastDropMembership = 13,
+    /// set/get IP mcast virt. iface
+    MulticastVirtualInterface = 14,
+    /// enable RSVP in kernel
+    EnableRSVP = 15,
+    /// disable RSVP in kernel
+    DisableRSVP = 16,
+    /// set RSVP per-vif socket
+    EnablePerInterfaceRSVP = 17,
+    /// unset RSVP per-vif socket
+    DisablePerInterfaceRSVP = 18,
+    /// int; range to choose for unspec port
+    PortRange = 19,
+    /// bool; receive reception if w/dgram
+    RecvInterface = 20,
+    /// int; set/get security policy
+    IpsecPolicy = 21,
+    /// bool: send all-ones broadcast
+    AllOnesBroadcast = 23,
+    /// bool: allow bind to any address
+    AllowBindAny = 24,
+    /// bool: allow multiple listeners on a tuple
+    AllowBindMulti = 25,
+    /// int; set RSS listen bucket
+    ResetListenBucket = 26,
+    /// bool: receive IP dst addr/port w/dgram
+    OriginalDestinationAddress = 27,
+}
+
+
+/// `get/set_sock_opt` options for level `SOL_SOCKET`
 #[derive(Copy, Clone, Debug, Request, Response)]
 #[repr(C)]
 pub enum SocketOptions {
@@ -460,48 +524,92 @@ pub enum SocketOptions {
 
     // Other options not generally kept in so_options
     /// send buffer size
-    SNDBUF = 0x1001,
+    SendBufferSize = 0x1001,
     /// receive buffer size
-    RCVBUF = 0x1002,
+    ReceiveBufferSize = 0x1002,
     /// send low-water mark
-    SNDLOWAT = 0x1003,
+    SendLowWaterMark = 0x1003,
     /// receive low-water mark
-    RCVLOWAT = 0x1004,
+    ReceiveLowWaterMark = 0x1004,
     /// send timeout
-    SNDTIMEO = 0x1005,
+    SendTimeout = 0x1005,
     /// receive timeout
-    RCVTIMEO = 0x1006,
+    ReceiveTimeout = 0x1006,
     /// get error status and clear
-    ERROR = 0x1007,
+    Error = 0x1007,
     /// get socket type
-    TYPE = 0x1008,
+    Type = 0x1008,
     /// socket's MAC label
-    LABEL = 0x1009,
+    Label = 0x1009,
     /// socket's peer's MAC label
-    PEERLABEL = 0x1010,
+    PeerLabel = 0x1010,
     /// socket's backlog limit
-    LISTENQLIMIT = 0x1011,
+    ListenQueueLimit = 0x1011,
     /// socket's complete queue length
-    LISTENQLEN = 0x1012,
+    ListenQueueLength = 0x1012,
     /// socket's incomplete queue length
-    LISTENINCQLEN = 0x1013,
+    ListenIncompleteQueueLength = 0x1013,
     /// use this FIB to route
-    SETFIB = 0x1014,
+    SetFIB = 0x1014,
     /// user cookie (dummynet etc.)
-    USER_COOKIE = 0x1015,
+    UserCookie = 0x1015,
     /// get socket protocol (Linux name)
-    PROTOCOL = 0x1016,
+    Protocol = 0x1016,
     /// clock type used for SO_TIMESTAMP
-    TS_CLOCK = 0x1017,
+    TimestampClock = 0x1017,
     /// socket's max TX pacing rate (Linux name)
-    MAX_PACING_RATE = 0x1018,
+    MaxPacingRate = 0x1018,
 }
 
+
+#[derive(Clone, Copy, Debug, Request, Response)]
+#[repr(C)]
+pub enum TcpOptions {
+    /// don't delay send to coalesce packets
+    NoDelay = 1,
+    /// set maximum segment size
+    MaxSegmentSize = 2,
+    /// don't push last block of write
+    NoPush = 4,
+    /// don't use TCP options
+    NoOptions = 8,
+    /// use MD5 digests (RFC2385)
+    MD5Signature = 16,
+    /// retrieve tcp_info structure
+    Info = 32,
+    /// get/set congestion control algorithm
+    Congestion = 64,
+    /// get/set cc algorithm specific options
+    CCAlgorithmOptions = 65,
+    /// N, time to establish connection
+    KeepInit = 128,
+    /// L,N,X start keeplives after this period
+    KeepIdle = 256,
+    /// L,N interval between keepalives
+    KeepInterval = 512,
+    /// L,N number of keepalives before close
+    KeepCount = 1024,
+    /// enable TFO / was created via TFO
+    FastOpen = 1025,
+    /// number of output packets to keep
+    PCapOut = 2048,
+    /// number of input packets to keep
+    PCapIn = 4096,
+    /// Set the tcp function pointers to the specified stack
+    FunctionBlock = 8192,
+}
 #[derive(Copy, Clone, Debug, Default, Request, Response)]
 #[repr(C)]
 pub struct Linger {
     pub on_off: u32,
     pub linger_time: u32,
+}
+
+#[derive(Copy, Clone, Debug, Request, Response)]
+#[repr(C)]
+pub struct IpMulticastRequest{
+    pub multicast_addr: Ipv4Addr,
+    pub interface_addr: Ipv4Addr
 }
 
 impl Linger {
@@ -608,6 +716,7 @@ define_bit_set! {
     }
 }
 
+/// Valid socket domains to request from the bsd service
 #[derive(Copy, Clone, Debug, Default, Request, Response)]
 #[repr(u8)]
 pub enum SocketDomain {
@@ -620,6 +729,8 @@ pub enum SocketDomain {
     //INet6 = 28, - not supported?
 }
 
+
+/// Valid socket types to create from the bsd service.
 #[derive(Copy, Clone, Debug, Request, Response)]
 #[repr(C)]
 pub enum SocketType {
@@ -629,13 +740,15 @@ pub enum SocketType {
     SequencePacket = 5,
 }
 
+/// Valid Levels for `get/set_sock_opt`
 #[derive(Copy, Clone, Debug, Request, Response)]
 #[repr(C)]
 pub enum IpProto {
-    Ip = 0,
+    IP = 0,
     ICMP = 1,
     TCP = 6,
     UDP = 17,
+    Socket = 0xffffffff_u32.cast_signed() as _
 }
 
 define_bit_set! {
@@ -713,9 +826,7 @@ pub trait Bsd {
     #[ipc_rid(4)]
     fn open(&self, path_cstr: InAutoSelectBuffer<u8>, flags: i32) -> BsdResult<()>;
 
-    // incompatible with rust's memory model.
-    // The reads and writes to the buffers are implemented as a double borrow as mut and shared.
-    /*#[ipc_rid(5)]
+    #[ipc_rid(5)]
     fn select(
         &self,
         fd_count: u32,
@@ -723,7 +834,7 @@ pub trait Bsd {
         write_fds: InOutAutoSelectBuffer<FdSet>,
         except_fds: InOutAutoSelectBuffer<FdSet>,
         timeout: BsdTimeout,
-    ) -> BsdResult<()>;*/
+    ) -> BsdResult<()>;
 
     #[ipc_rid(6)]
     fn poll(&self, fds: InOutAutoSelectBuffer<PollFd>, timeout: i32) -> BsdResult<()>;

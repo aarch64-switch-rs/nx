@@ -1,3 +1,5 @@
+//! Implementation of the Rust libstd TCP/UDP APIs, and re-exports of the raw bsd sockets API.
+
 use core::alloc::Layout;
 
 use alloc::alloc::Allocator;
@@ -18,6 +20,7 @@ use crate::svc::Handle;
 use crate::svc::MemoryPermission;
 use crate::sync::{ReadGuard, RwLock, WriteGuard};
 
+/// Holder type for the intialized bsd service
 pub struct BsdSocketService {
     _tmem_buffer: Buffer<u8>,
     tmem_handle: Handle,
@@ -105,6 +108,7 @@ impl Drop for BsdSocketService {
 
 static BSD_SERVICE: RwLock<Option<BsdSocketService>> = RwLock::new(None);
 
+/// Initializes the bsd/socket service.
 pub fn initialize(
     kind: BsdSrvkind,
     config: BsdServiceConfig,
@@ -133,6 +137,7 @@ pub fn write_socket_service<'a>() -> WriteGuard<'a, Option<BsdSocketService>> {
     BSD_SERVICE.write()
 }
 
+/// Implementation of the Rust stdlib TCP/UDP API
 pub mod net {
     use core::time::Duration;
     use core::{mem::offset_of, net::Ipv4Addr};
@@ -150,9 +155,10 @@ pub mod net {
         service::bsd::{BsdResult, ReadFlags, SendFlags, SocketAddrRepr},
     };
 
-    mod sealed {
+     pub mod traits {
         use super::*;
 
+        /// Trait for making a bsd-fd wrapper type usable in `super::poll`
         pub trait Pollable {
             fn get_poll_fd(&self) -> i32;
         }
@@ -163,10 +169,37 @@ pub mod net {
             }
         }
 
-        pub trait SocketCommon {
+        /// Contains common functions for bsd-compatible socket-like types
+        /// 
+        /// # Safety
+        /// 
+        /// Implementors are responsible for synchonising any interior mutablility for types, if any exists.
+        pub unsafe trait SocketCommon {
+            /// gets the raw file descriptor for the type
             fn as_raw_fd(&self) -> i32;
 
-            fn read(&mut self, data: &mut [u8]) -> Result<usize> {
+            /// Opens a connection to a remote host.
+            fn connect<A: Into<Ipv4Addr>>(destination: A, port: u16) -> Result<Self>
+            where
+                Self: Sized;
+
+            /// Creates a new independently owned handle to the underlying socket.
+            /// 
+            /// The returned object is a references the same stream that this
+            /// object references. Both handles will read and write the same stream of
+            /// data, and options set on one stream will be propagated to the other
+            /// stream.
+            /// 
+            /// This function is also why objects implementing this trait _should not_ contain any methods requiring mutable references.
+            /// Consumers should expect that calls to these functions are synchronized by the implementation.
+            fn try_clone(&self) -> Result<Self>
+            where
+                Self: Sized;
+
+            /// Reads data from the remote side into the provided buffer.
+            /// 
+            /// Immediately returns an error if the socket is not connected.
+            fn recv(&self, data: &mut [u8]) -> Result<usize> {
                 let socket_server_handle = BSD_SERVICE.read();
                 let socket_server = socket_server_handle.as_ref().unwrap();
 
@@ -183,27 +216,19 @@ pub mod net {
                 }
             }
 
-            fn read_non_blocking(&mut self, data: &mut [u8]) -> Result<usize> {
-                let socket_server_handle = BSD_SERVICE.read();
-                let socket_server = socket_server_handle.as_ref().unwrap();
-
-                match socket_server.service.recv(self.as_raw_fd(), ReadFlags::DontWait(), Buffer::from_mut_array(data))? {
-                    BsdResult::Ok(ret, ()) => {
-                        Ok(ret as usize)
-                    },
-                    BsdResult::Err(11) /* EAGAIN */ => {
-                        Ok(0)
-                    }
-                    BsdResult::Err(errno) => {
-                        ResultCode::new_err(nx::result::pack_value(
-                            rc::RESULT_MODULE,
-                            1000 + errno.cast_unsigned(),
-                        ))
-                    }
-                }
-            }
-
-            fn peek(&mut self, data: &mut [u8]) -> Result<usize> {
+            /// Receives single datagram on the socket from the remote address to which it is connected, without removing the message from input queue. On success, returns the number of bytes peeked.
+            ///
+            /// The function must be called with valid byte array buf of sufficient size to hold the message bytes. If a message is too long to fit in the supplied buffer, excess bytes may be discarded.
+            ///
+            /// Successive calls return the same data. This is accomplished by passing `MSG_PEEK`` as a flag to the underlying `recv` system call.
+            ///
+            /// Do not use this function to implement busy waiting, instead use [`poll`][`nx::socket::net::poll`] to synchronize IO events on one or more sockets.
+            /// `UdpSocket::connect` will connect this socket to a remote address. This method will fail if the socket is not connected.
+            ///
+            /// # Errors
+            ///
+            /// This method will fail if the socket is not connected. The connect method will connect this socket to a remote address.
+            fn peek(&self, data: &mut [u8]) -> Result<usize> {
                 let socket_server_handle = BSD_SERVICE.read();
                 let socket_server = socket_server_handle.as_ref().unwrap();
 
@@ -226,7 +251,7 @@ pub mod net {
             /// Returns the length of the data written from the buffer
             ///
             /// `Self::connect`` will connect this socket to a remote address. This method will fail if the socket is not connected.
-            fn send(&mut self, data: &[u8]) -> Result<u32> {
+            fn send(&self, data: &[u8]) -> Result<u32> {
                 let socket_server_handle = BSD_SERVICE.read();
                 let socket_server = socket_server_handle.as_ref().unwrap();
 
@@ -243,7 +268,13 @@ pub mod net {
                 }
             }
 
-            fn send_non_blocking(&mut self, data: &[u8]) -> Result<()> {
+            /// Sends data on the socket to the remote address to which it is connected.
+            /// For TCP, all data is sent or an error is returned.
+            ///
+            /// Returns the length of the data written from the buffer
+            ///
+            /// `Self::connect`` will connect this socket to a remote address. This method will fail if the socket is not connected.
+            fn send_non_blocking(&self, data: &[u8]) -> Result<()> {
                 let socket_server_handle = BSD_SERVICE.read();
                 let socket_server = socket_server_handle.as_ref().unwrap();
 
@@ -266,26 +297,27 @@ pub mod net {
             ///The function must be called with valid byte array buf of sufficient size to hold the message bytes. If a message is too long to fit in the supplied buffer, excess bytes may be discarded.
             ///
             /// `UdpSocket::connect`` will connect this socket to a remote address. This method will fail if the socket is not connected.
-            fn recv_non_blocking(&mut self, buffer: &mut [u8]) -> Result<Option<usize>> {
+            fn recv_non_blocking(&self, buffer: &mut [u8]) -> Result<Option<usize>> {
                 let socket_server_handle = BSD_SERVICE.read();
                 let socket_server = socket_server_handle.as_ref().unwrap();
 
                 match socket_server.service.recv(self.as_raw_fd(), ReadFlags::DontWait(), Buffer::from_mut_array(buffer))? {
-                BsdResult::Ok(ret, ()) => {
-                    Ok(Some(ret as usize))
-                },
-                BsdResult::Err(11) /* EAGAIN */ => {
-                    Ok(None)
+                    BsdResult::Ok(ret, ()) => {
+                        Ok(Some(ret as usize))
+                    },
+                    BsdResult::Err(11) /* EAGAIN */ => {
+                        Ok(None)
+                    }
+                    BsdResult::Err(errno) => {
+                        ResultCode::new_err(nx::result::pack_value(
+                            rc::RESULT_MODULE,
+                            1000 + errno.cast_unsigned(),
+                        ))
+                    }
                 }
-                BsdResult::Err(errno) => {
-                    ResultCode::new_err(nx::result::pack_value(
-                        rc::RESULT_MODULE,
-                        1000 + errno.cast_unsigned(),
-                    ))
-                }
-            }
             }
 
+            /// Returns the local address of this socket
             fn local_addr(&self) -> Result<SocketAddrRepr> {
                 let socket_server_handle = BSD_SERVICE.read();
 
@@ -310,6 +342,7 @@ pub mod net {
                 }
             }
 
+            /// Returns the remote address of this socket (errors for unconnected UDP sockets).
             fn peer_addr(&self) -> Result<SocketAddrRepr> {
                 let socket_server_handle = BSD_SERVICE.read();
                 let socket_server = socket_server_handle.as_ref().unwrap();
@@ -333,14 +366,18 @@ pub mod net {
                 }
             }
 
+            /// Sets the value for the `IP_TTL` option on this socket.
+            /// 
+            /// This value sets the time-to-live field that is used in every packet sent
+            /// from this socket.
             fn set_ttl(&self, ttl: u32) -> Result<()> {
                 let socket_server_handle = BSD_SERVICE.read();
                 let socket_server = socket_server_handle.as_ref().unwrap();
 
                 if let BsdResult::Err(errno) = socket_server.service.set_sock_opt(
                     self.as_raw_fd(),
-                    0, /* IPPROTO_IP */
-                    4, /* IP_TTL */
+                    IpProto::IP as _,
+                    IpOptions::TimeToLive as _,
                     Buffer::from_other_var(&ttl),
                 )? {
                     return ResultCode::new_err(nx::result::pack_value(
@@ -352,6 +389,7 @@ pub mod net {
                 Ok(())
             }
 
+            /// Gets the value of the `IP_TTL` option for this socket
             fn ttl(&self) -> Result<u32> {
                 let socket_server_handle = BSD_SERVICE.read();
                 let socket_server = socket_server_handle.as_ref().unwrap();
@@ -359,8 +397,8 @@ pub mod net {
                 let mut ttl: u32 = 0;
                 if let BsdResult::Err(errno) = socket_server.service.get_sock_opt(
                     self.as_raw_fd(),
-                    0, /* IPPROTO_IP */
-                    4, /* IP_TTL */
+                    IpProto::IP as _,
+                    IpOptions::TimeToLive as _,
                     Buffer::from_other_mut_var(&mut ttl),
                 )? {
                     return ResultCode::new_err(nx::result::pack_value(
@@ -372,6 +410,14 @@ pub mod net {
                 Ok(ttl)
             }
 
+            /// Moves this TCP stream into or out of nonblocking mode.
+            /// 
+            ///  This will result in `read`, `write`, `recv` and `send` system operations
+            ///  becoming nonblocking, i.e., immediately returning from their calls.
+            /// If the IO operation is successful, `Ok` is returned and no further
+            /// action is required. If the IO operation could not be completed and needs
+            /// to be retried, an error with the value set to `EAGAIN` is
+             /// returned.
             fn set_nonblocking(&self, nonblocking: bool) -> Result<()> {
                 const O_NONBLOCK: i32 = 0x4000;
 
@@ -412,7 +458,9 @@ pub mod net {
                 Ok(())
             }
 
-            fn read_timeout(&self) -> Result<Option<Duration>> {
+            /// Returns the read timeout of this socket.
+            /// If the timeout is [`None`], then [`SocketCommon::recv`] calls will block indefinitely.
+            fn recv_timeout(&self) -> Result<Option<Duration>> {
                 let socket_server_handle = BSD_SERVICE.read();
                 let socket_server = socket_server_handle.as_ref().unwrap();
 
@@ -420,7 +468,7 @@ pub mod net {
                 match socket_server.service.get_sock_opt(
                     self.as_raw_fd(),
                     SOL_SOCKET,
-                    SocketOptions::RCVTIMEO as _,
+                    SocketOptions::ReceiveTimeout as _,
                     Buffer::from_other_mut_var(&mut timeout),
                 )? {
                     BsdResult::Ok(_, written_len) => {
@@ -441,7 +489,14 @@ pub mod net {
                 }
             }
 
+            /// Sets the read timeout to the timeout specified.
+            /// 
+            /// If the value specified is [`None`], then [`SocketCommon::recv`] calls will block
+            /// indefinitely. An [`Err`] is returned if the zero [`Duration`] is
+            /// passed to this method.
             fn set_read_timeout(&self, timeout: Option<Duration>) -> Result<()> {
+                result_return_if!(timeout == Some(Duration::ZERO), rc::ResultInvalidTimeout);
+
                 let socket_server_handle = BSD_SERVICE.read();
                 let socket_server = socket_server_handle.as_ref().unwrap();
 
@@ -449,7 +504,7 @@ pub mod net {
                 if let BsdResult::Err(errno) = socket_server.service.set_sock_opt(
                     self.as_raw_fd(),
                     SOL_SOCKET,
-                    SocketOptions::RCVTIMEO as _,
+                    SocketOptions::ReceiveTimeout as _,
                     Buffer::from_other_var(&timeout),
                 )? {
                     return ResultCode::new_err(nx::result::pack_value(
@@ -461,7 +516,10 @@ pub mod net {
                 Ok(())
             }
 
-            fn write_timeout(&self) -> Result<Option<Duration>> {
+            /// Returns the write timeout of this socket.
+            /// 
+            ///  If the timeout is [`None`], then [`SocketCommon::send`] calls will block indefinitely.
+            fn send_timeout(&self) -> Result<Option<Duration>> {
                 let socket_server_handle = BSD_SERVICE.read();
                 let socket_server = socket_server_handle.as_ref().unwrap();
 
@@ -469,7 +527,7 @@ pub mod net {
                 match socket_server.service.get_sock_opt(
                     self.as_raw_fd(),
                     SOL_SOCKET,
-                    SocketOptions::SNDTIMEO as _,
+                    SocketOptions::SendTimeout as _,
                     Buffer::from_other_mut_var(&mut timeout),
                 )? {
                     BsdResult::Ok(_, written_len) => {
@@ -490,7 +548,14 @@ pub mod net {
                 }
             }
 
+            /// Sets the write timeout to the timeout specified.
+            /// 
+            ///  If the value specified is [`None`], then [`write`] calls will block
+            /// indefinitely. An [`Err`] is returned if the zero [`Duration`] is
+            /// passed to this method.
             fn set_write_timeout(&self, timeout: Option<Duration>) -> Result<()> {
+                result_return_if!(timeout == Some(Duration::ZERO), rc::ResultInvalidTimeout);
+
                 let socket_server_handle = BSD_SERVICE.read();
                 let socket_server = socket_server_handle.as_ref().unwrap();
 
@@ -498,7 +563,7 @@ pub mod net {
                 if let BsdResult::Err(errno) = socket_server.service.set_sock_opt(
                     self.as_raw_fd(),
                     SOL_SOCKET,
-                    SocketOptions::SNDTIMEO as _,
+                    SocketOptions::SendTimeout as _,
                     Buffer::from_other_var(&timeout),
                 )? {
                     return ResultCode::new_err(nx::result::pack_value(
@@ -508,15 +573,44 @@ pub mod net {
                 }
 
                 Ok(())
+            }
+
+            /// Gets the value of the `SO_ERROR` option on this socket.
+            /// 
+            /// This will retrieve the stored error in the underlying socket, clearing
+            /// the field in the process. This can be useful for checking errors between
+            /// calls.
+            fn take_error(&self) -> Result<Option<i32>> {
+                let socket_server_handle = BSD_SERVICE.read();
+
+                let socket_server = socket_server_handle.as_ref().unwrap();
+
+                let mut ret_errno: i32 = 0;
+                if let BsdResult::Err(errno) = socket_server.service.get_sock_opt(
+                    self.as_raw_fd(),
+                    SOL_SOCKET,
+                    SocketOptions::Error as i32,
+                    OutAutoSelectBuffer::from_other_mut_var(&mut ret_errno),
+                )? {
+                    return ResultCode::new_err(nx::result::pack_value(
+                        rc::RESULT_MODULE,
+                        1000 + errno.cast_unsigned(),
+                    ));
+                }
+
+                Ok(if ret_errno != 0 {
+                    Some(ret_errno)
+                } else {
+                    None
+                })
             }
         }
     }
 
-    use sealed::{Pollable, SocketCommon};
-
+    use traits::{Pollable, SocketCommon};
     /// Takes a slice of pollable values and requested events returns an iterator over the matched index in the input list and the returned events.
     #[inline(always)]
-    pub fn poll<P: sealed::Pollable>(
+    pub fn poll<P: traits::Pollable>(
         pollers: &[(P, PollFlags)],
         timeout: Option<i32>,
     ) -> Result<impl Iterator<Item = (usize, PollFlags)>> {
@@ -577,7 +671,7 @@ pub mod net {
             let listenfd = match socket_server.service.socket(
                 super::SocketDomain::INet,
                 super::SocketType::Stream,
-                super::IpProto::Ip,
+                super::IpProto::IP,
             )? {
                 BsdResult::Ok(ret, ()) => ret,
                 BsdResult::Err(errno) => {
@@ -671,7 +765,7 @@ pub mod net {
         }
     }
 
-    impl sealed::Pollable for TcpListener {
+    impl traits::Pollable for TcpListener {
         fn get_poll_fd(&self) -> i32 {
             self.0
         }
@@ -680,12 +774,6 @@ pub mod net {
     pub struct TcpStream(i32);
 
     impl TcpStream {
-        #[inline(always)]
-        pub fn connect<A: Into<SocketAddrRepr>>(destination: A) -> Result<Self> {
-            let destination = destination.into();
-            Self::connect_impl(destination)
-        }
-
         fn connect_impl(destination: SocketAddrRepr) -> Result<Self> {
             let socket_server_handle = BSD_SERVICE.read();
 
@@ -696,7 +784,7 @@ pub mod net {
             let socket = match socket_server.service.socket(
                 super::SocketDomain::INet,
                 super::SocketType::Stream,
-                super::IpProto::Ip,
+                super::IpProto::IP,
             )? {
                 BsdResult::Ok(ret, ()) => ret,
                 BsdResult::Err(errno) => {
@@ -740,7 +828,9 @@ pub mod net {
 
             Ok(linger.into())
         }
-
+        /// Gets the value of the TCP_NODELAY option on this socket.
+        ///
+        /// For more information about this option, see `TcpStream::set_nodelay`.
         pub fn nodelay(&self) -> Result<bool> {
             let socket_server_handle = BSD_SERVICE.read();
 
@@ -749,8 +839,8 @@ pub mod net {
             let mut delay: i32 = 0;
             match socket_server.service.get_sock_opt(
                 self.0,
-                0, /* IPPROTO_IP */
-                1, /* TCP_NODELAY */
+                IpProto::IP as _,
+                TcpOptions::NoDelay as _,
                 Buffer::from_other_mut_var(&mut delay),
             )? {
                 BsdResult::Ok(_, written_data_len) => {
@@ -764,6 +854,47 @@ pub mod net {
             }
         }
 
+        /// Sets the value of the TCP_NODELAY option on this socket.
+        ///
+        /// If set, this option disables the Nagle algorithm.
+        /// This means that segments are always sent as soon as possible, even
+        /// if there is only a small amount of data. When not set, data is
+        /// buffered until there is a sufficient amount to send out, thereby
+        /// avoiding the frequent sending of small packets.
+        pub fn set_nodelay(&self, value: bool) -> Result<()> {
+            let socket_server_handle = BSD_SERVICE.read();
+            let socket_server = socket_server_handle.as_ref().unwrap();
+
+            if let BsdResult::Err(errno) = socket_server.service.set_sock_opt(
+                self.0,
+                SOL_SOCKET,
+                SocketOptions::Broadcast as _,
+                Buffer::from_other_var(&(value as i32)),
+            )? {
+                return ResultCode::new_err(nx::result::pack_value(
+                    rc::RESULT_MODULE,
+                    1000 + errno.cast_unsigned(),
+                ));
+            }
+
+            Ok(())
+        }
+
+        /// Shuts down the read, write, or both halves of this connection.
+        ///
+        /// This function will cause all pending and future I/O on the specified
+        /// portions to return immediately with an appropriate value (see the
+        /// documentation of [`ShutdownMode`]).
+        ///
+        /// # Examples
+        ///
+        /// ```no_run
+        /// use nx::socket::net::{Shutdown, TcpStream};
+        ///
+        /// let stream = TcpStream::connect(Ipv4Addr::LOCALHOST, Some(8080))
+        ///                        .expect("Couldn't connect to the server...");
+        /// stream.shutdown(Shutdown::Both).expect("shutdown call failed");
+        /// ```
         pub fn shutdown(&self, mode: ShutdownMode) -> Result<()> {
             let socket_server_handle = BSD_SERVICE.read();
             let socket_server = socket_server_handle.as_ref().unwrap();
@@ -779,14 +910,102 @@ pub mod net {
         }
     }
 
-    impl sealed::SocketCommon for TcpStream {
+    unsafe impl traits::SocketCommon for TcpStream {
+        #[inline(always)]
         fn as_raw_fd(&self) -> i32 {
             self.0
         }
+
+        #[inline(always)]
+        fn connect<A: Into<Ipv4Addr>>(destination: A, port: u16) -> Result<Self> {
+            let destination = (destination.into(), port).into();
+            Self::connect_impl(destination)
+        }
+
+        #[inline(always)]
+        fn try_clone(&self) -> Result<Self> {
+            Ok(Self(self.0))
+        }
     }
+
+    /// A UDP socket.
+    ///
+    /// After creating a `UdpSocket` by [`bind`]ing it to a socket address, data can be
+    /// [sent to] and [received from] any other socket address.
+    ///
+    /// Although UDP is a connectionless protocol, this implementation provides an interface
+    /// to set an address where data should be sent and received from. After setting a remote
+    /// address with [`connect`], data can be sent to and received from that address with
+    /// [`send`] and [`recv`].
+    ///
+    /// As stated in the User Datagram Protocol's specification in [IETF RFC 768], UDP is
+    /// an unordered, unreliable protocol; refer to [`TcpListener`] and [`TcpStream`] for TCP
+    /// primitives.
+    ///
+    /// [`bind`]: UdpSocket::bind
+    /// [`connect`]: SocketCommon::connect
+    /// [IETF RFC 768]: https://tools.ietf.org/html/rfc768
+    /// [`recv`]: SocketCommon::recv
+    /// [received from]: UdpSocket::recv_from
+    /// [`send`]: SocketCommon::send
+    /// [sent to]: UdpSocket::send_to
+    /// [`TcpListener`]: TcpListener
+    /// [`TcpStream`]: TcpStream
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use nx::socket::net::UdpSocket;
+    ///
+    /// fn main() {
+    ///     let socket = UdpSocket::bind(Ipv4Addr::LOCALHOST, Some(34254))?;
+    ///
+    ///     // Receives a single datagram message on the socket. If `buf` is too small to hold
+    ///     // the message, it will be cut off.
+    ///     let mut buf = [0; 10];
+    ///     let (amt, src_ip, src_port) = socket.recv_from(&mut buf)?;
+    ///
+    ///     // Redeclare `buf` as slice of the received data and send reverse data back to origin.
+    ///     let buf = &mut buf[..amt];
+    ///     buf.reverse();
+    ///     socket.send_to(buf, (src_ip, src_port))?;
+    /// }
+    /// ```
     pub struct UdpSocket(i32);
 
     impl UdpSocket {
+        /// Creates a UDP socket from the given address.
+        ///
+        /// The address type can be any implementor of [`Into<Ipv4Addr>`].
+        ///
+        /// # Examples
+        ///
+        /// Creates a UDP socket bound to `127.0.0.1:3400`:
+        ///
+        /// ```no_run
+        /// use std::net::UdpSocket;
+        ///
+        /// let socket = UdpSocket::bind(Ipv4Addr::LOCALHOST,Some(3400)).expect("couldn't bind to address");
+        /// ```
+        ///
+        /// Creates a UDP socket bound to a port assigned by the operating system
+        /// at `127.0.0.1`.
+        ///
+        /// ```no_run
+        /// use std::net::UdpSocket;
+        ///
+        /// let socket = UdpSocket::bind(Ipv4Addr::LOCALHOST, None).unwrap();
+        /// ```
+        ///
+        /// Note that `bind` declares the scope of your network connection.
+        /// You can only receive datagrams from and send datagrams to
+        /// participants in that view of the network.
+        /// For instance, binding to a loopback address as in the example
+        /// above will prevent you from sending datagrams to another device
+        /// in your local network.
+        ///
+        /// In order to limit your view of the network the least, `bind` to
+        /// [`Ipv4Addr::UNSPECIFIED`].
         pub fn bind<A: Into<Ipv4Addr>>(addr: A, port: Option<u16>) -> Result<Self> {
             let socket_server_handle = BSD_SERVICE.read();
 
@@ -819,12 +1038,6 @@ pub mod net {
                 ));
             };
             Err(rc::ResultNotInitialized::make())
-        }
-
-        #[inline(always)]
-        pub fn connect<A: Into<SocketAddrRepr>>(destination: A) -> Result<Self> {
-            let destination = destination.into();
-            Self::connect_impl(destination)
         }
 
         fn connect_impl(destination: SocketAddrRepr) -> Result<Self> {
@@ -865,7 +1078,7 @@ pub mod net {
         /// On success, returns the number of bytes read and the origin.
         ///
         ///The function must be called with valid byte array buf of sufficient size to hold the message bytes. If a message is too long to fit in the supplied buffer, excess bytes may be discarded.
-        pub fn read_from(&mut self, buffer: &mut [u8]) -> Result<(usize, Ipv4Addr, u16)> {
+        pub fn recv_from(&self, buffer: &mut [u8]) -> Result<(usize, Ipv4Addr, u16)> {
             let socket_server_handle = BSD_SERVICE.read();
 
             let socket_server = socket_server_handle.as_ref().unwrap();
@@ -888,13 +1101,45 @@ pub mod net {
                 )),
             }
         }
+        /// Receives a single datagram message on the socket, without removing it from the queue.
+        /// On success, returns the number of bytes read and the origin.
+        ///
+        /// The function must be called with valid byte array buf of sufficient size to hold the message bytes.
+        /// If a message is too long to fit in the supplied buffer, excess bytes may be discarded.
+        ///
+        /// Successive calls return the same data. This is accomplished by passing `MSG_PEEK` as a flag to the underlying `recvfrom` system call.
+        ///
+        /// Do not use this function to implement busy waiting, instead use [`poll`][`nx::socket::net::poll`] to synchronize IO events on one or more sockets.
+        pub fn peek_from(&self, buffer: &mut [u8]) -> Result<(usize, Ipv4Addr, u16)> {
+            let socket_server_handle = BSD_SERVICE.read();
+
+            let socket_server = socket_server_handle.as_ref().unwrap();
+
+            let mut out_addr: SocketAddrRepr = Default::default();
+            match socket_server.service.recv_from(
+                self.0,
+                ReadFlags::Peek(),
+                Buffer::from_mut_array(buffer),
+                Buffer::from_mut_var(&mut out_addr),
+            )? {
+                BsdResult::Ok(ret, ()) => Ok((
+                    ret as usize,
+                    Ipv4Addr::from_bits(u32::from_be_bytes(out_addr.addr)),
+                    u16::from_be(out_addr.port),
+                )),
+                BsdResult::Err(errno) => ResultCode::new_err(nx::result::pack_value(
+                    rc::RESULT_MODULE,
+                    1000 + errno.cast_unsigned(),
+                )),
+            }
+        }
 
         /// Receives data on the socket from the remote address to which it is connected.
         /// On success, returns the number of bytes read and the origin or a None value if there is no data.
         ///
         ///The function must be called with valid byte array buf of sufficient size to hold the message bytes. If a message is too long to fit in the supplied buffer, excess bytes may be discarded.
         pub fn recv_from_non_blocking(
-            &mut self,
+            &self,
             buffer: &mut [u8],
         ) -> Result<Option<(usize, Ipv4Addr, u16)>> {
             let socket_server_handle = BSD_SERVICE.read();
@@ -921,16 +1166,19 @@ pub mod net {
         /// Sends data on the socket to the remote address provided (no call to `UdpSocket::connect` is necessary).
         /// Unlike `std::net::UdpSocket`, this method does not return length of the written data.
         /// All data is sent or an error is returned.
+        #[inline(always)]
         pub fn send_to<A: Into<SocketAddrRepr>>(
-            &mut self,
+            &self,
             data: &[u8],
-            destinaation: A,
+            destination: A,
         ) -> Result<()> {
+            self.send_to_impl(data, destination.into())
+        }
+
+        fn send_to_impl(&self, data: &[u8], destination: SocketAddrRepr) -> Result<()> {
             let socket_server_handle = BSD_SERVICE.read();
 
             let socket_server = socket_server_handle.as_ref().unwrap();
-
-            let destination = destinaation.into();
             match socket_server.service.send_to(
                 self.0,
                 SendFlags::None(),
@@ -944,9 +1192,227 @@ pub mod net {
                 )),
             }
         }
+        /// Gets the value of the SO_BROADCAST option for this socket.
+        ///
+        /// For more information about this option, see `UdpSocket::set_broadcast``.
+        pub fn broadcast(&self) -> Result<bool> {
+            let socket_server_handle = BSD_SERVICE.read();
+
+            let socket_server = socket_server_handle.as_ref().unwrap();
+
+            let mut broadcast: i32 = 0;
+            match socket_server.service.get_sock_opt(
+                self.0,
+                SOL_SOCKET,
+                SocketOptions::Broadcast as _,
+                Buffer::from_other_mut_var(&mut broadcast),
+            )? {
+                BsdResult::Ok(_, written_data_len) => {
+                    debug_assert_ne!(written_data_len, 0); // we're reading an i32, but we only care if it's zero or not so any sized write is valid.
+                    Ok(broadcast != 0)
+                }
+                BsdResult::Err(errno) => ResultCode::new_err(nx::result::pack_value(
+                    rc::RESULT_MODULE,
+                    1000 + errno.cast_unsigned(),
+                )),
+            }
+        }
+        /// Sets the value of the SO_BROADCAST option for this socket.
+        ///
+        /// When enabled, this socket is allowed to send packets to a broadcast address.
+        pub fn set_broadcast(&self, value: bool) -> Result<()> {
+            let socket_server_handle = BSD_SERVICE.read();
+            let socket_server = socket_server_handle.as_ref().unwrap();
+
+            if let BsdResult::Err(errno) = socket_server.service.set_sock_opt(
+                self.0,
+                SOL_SOCKET,
+                SocketOptions::Broadcast as _,
+                Buffer::from_other_var(&(value as u8)),
+            )? {
+                return ResultCode::new_err(nx::result::pack_value(
+                    rc::RESULT_MODULE,
+                    1000 + errno.cast_unsigned(),
+                ));
+            }
+
+            Ok(())
+        }
+        /// Gets the value of the IP_MULTICAST_LOOP option for this socket.
+        ///
+        ///For more information about this option, see `UdpSocket::set_multicast_loop``.
+        pub fn multicast_loop(&self) -> Result<bool> {
+            let socket_server_handle = BSD_SERVICE.read();
+
+            let socket_server = socket_server_handle.as_ref().unwrap();
+
+            let mut mm_loop: u8 = 0;
+            match socket_server.service.get_sock_opt(
+                self.0,
+                IpProto::IP as _,
+                IpOptions::MulticastLoopback as _,
+                Buffer::from_other_mut_var(&mut mm_loop),
+            )? {
+                BsdResult::Ok(_, written_data_len) => {
+                    debug_assert_ne!(written_data_len, 0);
+                    Ok(mm_loop != 0)
+                }
+                BsdResult::Err(errno) => ResultCode::new_err(nx::result::pack_value(
+                    rc::RESULT_MODULE,
+                    1000 + errno.cast_unsigned(),
+                )),
+            }
+        }
+        /// Sets the value of the IP_MULTICAST_LOOP option for this socket.
+        ///
+        /// If enabled, multicast packets will be looped back to the local socket.
+        pub fn set_multicast_loop(&self, value: bool) -> Result<()> {
+            let socket_server_handle = BSD_SERVICE.read();
+            let socket_server = socket_server_handle.as_ref().unwrap();
+
+            if let BsdResult::Err(errno) = socket_server.service.set_sock_opt(
+                self.0,
+                IpProto::IP as _,
+                IpOptions::MulticastLoopback as _,
+                Buffer::from_other_var(&(value as u8)),
+            )? {
+                return ResultCode::new_err(nx::result::pack_value(
+                    rc::RESULT_MODULE,
+                    1000 + errno.cast_unsigned(),
+                ));
+            }
+
+            Ok(())
+        }
+        /// Gets the value of the IP_MULTICAST_TTL option for this socket.
+        ///
+        /// For more information about this option, see `UdpSocket::set_multicast_ttl``.
+        pub fn multicast_ttl(&self) -> Result<u8> {
+            let socket_server_handle = BSD_SERVICE.read();
+
+            let socket_server = socket_server_handle.as_ref().unwrap();
+
+            let mut ttl: u8 = 0;
+            match socket_server.service.get_sock_opt(
+                self.0,
+                IpProto::IP as _,
+                IpOptions::MulticastTimeToLive as _,
+                Buffer::from_other_mut_var(&mut ttl),
+            )? {
+                BsdResult::Ok(_, written_data_len) => {
+                    debug_assert_ne!(written_data_len, 0);
+                    Ok(ttl)
+                }
+                BsdResult::Err(errno) => ResultCode::new_err(nx::result::pack_value(
+                    rc::RESULT_MODULE,
+                    1000 + errno.cast_unsigned(),
+                )),
+            }
+        }
+        /// Sets the value of the IP_MULTICAST_TTL option for this socket.
+        ///
+        ///Indicates the time-to-live value of outgoing multicast packets for this socket. The default value is 1 which means that multicast packets don’t leave the local network unless explicitly requested.
+        pub fn set_multicast_ttl(&self, ttl: u8) -> Result<()> {
+            let socket_server_handle = BSD_SERVICE.read();
+            let socket_server = socket_server_handle.as_ref().unwrap();
+
+            if let BsdResult::Err(errno) = socket_server.service.set_sock_opt(
+                self.0,
+                IpProto::IP as _,
+                IpOptions::MulticastTimeToLive as _,
+                Buffer::from_other_var(&(ttl as u8)),
+            )? {
+                return ResultCode::new_err(nx::result::pack_value(
+                    rc::RESULT_MODULE,
+                    1000 + errno.cast_unsigned(),
+                ));
+            }
+
+            Ok(())
+        }
+        /// Executes an operation of the `IP_ADD_MEMBERSHIP` type.
+        ///
+        /// This function specifies a new multicast group for this socket to join.
+        /// The address must be a valid multicast address, and interface is the address of the local interface
+        /// with which the system should join the multicast group.
+        /// If it’s equal to `Ipv4Addr::UNSPECIFIED` then an appropriate interface is chosen by the system.
+        pub fn join_multicast_group(
+            &self,
+            multicast_addr: Ipv4Addr,
+            interface_addr: Ipv4Addr,
+        ) -> Result<()> {
+            let socket_server_handle = BSD_SERVICE.read();
+            let socket_server = socket_server_handle.as_ref().unwrap();
+
+            let ip_request = IpMulticastRequest {
+                multicast_addr,
+                interface_addr,
+            };
+            if let BsdResult::Err(errno) = socket_server.service.set_sock_opt(
+                self.0,
+                IpProto::IP as _,
+                IpOptions::MulticastAddMembership as _,
+                Buffer::from_other_var(&ip_request),
+            )? {
+                return ResultCode::new_err(nx::result::pack_value(
+                    rc::RESULT_MODULE,
+                    1000 + errno.cast_unsigned(),
+                ));
+            }
+
+            Ok(())
+        }
+        /// Executes an operation of the IP_DROP_MEMBERSHIP type.
+        ///
+        /// For more information about this option, see `UdpSocket::join_multicast`.
+        pub fn leave_multicast_group(
+            &self,
+            multicast_addr: Ipv4Addr,
+            interface_addr: Ipv4Addr,
+        ) -> Result<()> {
+            let socket_server_handle = BSD_SERVICE.read();
+            let socket_server = socket_server_handle.as_ref().unwrap();
+
+            let ip_request = IpMulticastRequest {
+                multicast_addr,
+                interface_addr,
+            };
+            if let BsdResult::Err(errno) = socket_server.service.set_sock_opt(
+                self.0,
+                IpProto::IP as _,
+                IpOptions::MulticastDropMembership as _,
+                Buffer::from_other_var(&ip_request),
+            )? {
+                return ResultCode::new_err(nx::result::pack_value(
+                    rc::RESULT_MODULE,
+                    1000 + errno.cast_unsigned(),
+                ));
+            }
+
+            Ok(())
+        }
     }
 
-    impl core::fmt::Write for UdpSocket {
+    unsafe impl traits::SocketCommon for UdpSocket {
+        #[inline(always)]
+        fn as_raw_fd(&self) -> i32 {
+            self.0
+        }
+
+        #[inline(always)]
+        fn connect<A: Into<Ipv4Addr>>(destination: A, port: u16) -> Result<Self> {
+            let destination = (destination.into(), port).into();
+            Self::connect_impl(destination)
+        }
+
+        #[inline(always)]
+        fn try_clone(&self) -> Result<Self> {
+            Ok(Self(self.0))
+        }
+    }
+
+    /// Despite the impl requirements, the object is not mutated
+    impl core::fmt::Write for TcpStream {
         fn write_str(&mut self, s: &str) -> core::fmt::Result {
             match self.send(s.as_bytes()) {
                 Ok(_) => Ok(()),
@@ -955,11 +1421,13 @@ pub mod net {
         }
     }
 
-    impl sealed::SocketCommon for UdpSocket {
-        fn as_raw_fd(&self) -> i32 {
-            self.0
+    /// Despite the impl requirements, the object is not mutated
+    impl core::fmt::Write for UdpSocket {
+        fn write_str(&mut self, s: &str) -> core::fmt::Result {
+            match self.send(s.as_bytes()) {
+                Ok(_) => Ok(()),
+                Err(_) => Err(core::fmt::Error),
+            }
         }
     }
-
-    mod sys {}
 }
