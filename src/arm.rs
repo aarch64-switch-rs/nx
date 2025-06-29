@@ -187,6 +187,12 @@ pub fn get_system_tick() -> u64 {
     system_tick
 }
 
+/// Gets the system tick time as nanoseconds.
+#[inline(always)]
+pub fn get_system_tick_as_nanos() -> u64 {
+    get_system_tick() / (get_system_tick_frequency() / 1_000_000_000u64)
+}
+
 /// Gets the system tick frequency.
 #[inline(always)]
 pub fn get_system_tick_frequency() -> u64 {
