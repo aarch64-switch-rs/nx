@@ -188,13 +188,10 @@ macro_rules! ipc_sf_define_control_interface_trait {
     };
 }
 
-// TODO: better system than using ipc_sf_object_impl_default_command_metadata!(), enforce command version when invoking it (only on client implementations, etc.), more
-
 #[macro_export]
 macro_rules! server_mark_request_command_parameters_types_as_copy {
     ($($t:ty),*) => {
         $(
-        //const_assert!($t::is_pod());
         impl $crate::ipc::server::RequestCommandParameter<'_,$t> for $t {
             fn after_request_read(ctx: &mut $crate::ipc::server::ServerContext) -> $crate::result::Result<Self> {
                 Ok(ctx.raw_data_walker.advance_get())

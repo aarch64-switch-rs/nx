@@ -5,7 +5,7 @@
 /// # Arguments
 ///
 /// * `val`: Expression that should resolve to an unsigned primitive integer type
-/// * `alignement`: Alignement value, that should resolve to the same type as `$val`
+/// * `alignement`: Alignement value, that should resolve to the same type as `val`
 ///
 /// # Examples
 ///
@@ -29,7 +29,7 @@ macro_rules! align_up {
 /// # Arguments
 ///
 /// * `val`: Expression that should resolve to an unsigned primitive integer type
-/// * `alignement`: Alignement value, that should resolve to the same type as `$val`
+/// * `alignment`: Alignement value, that should resolve to the same type as `val`
 ///
 /// # Examples
 ///
@@ -98,17 +98,17 @@ macro_rules! define_bit_set {
 
         #[allow(non_snake_case)]
         impl $name {
-            /// Creates a `$name` from the underlying base type `$base`
+            #[doc = concat!("Creates a `", stringify!($name), "` from the underlying base type `", stringify!($base), "`")]
             pub const fn from(val: $base) -> Self {
                 Self(val)
             }
 
-            /// Checks if the provided `$name` has all of the set bits in `other` are set in `self`
+            #[doc = concat!("Checks if the provided `", stringify!($name), "` has all of the set bits in `other` are set in `self`")]
             pub const fn contains(self, other: Self) -> bool {
                 (self.0 & other.0) == other.0
             }
 
-            /// Checks if the provided `$name` has any common bits with `other`
+            #[doc = concat!("Checks if the provided ", stringify!($name), " has any common bits with `other`")]
             pub const fn intersects(self, other: Self) -> bool {
                 (self.0 & other.0) != 0
             }
@@ -119,7 +119,7 @@ macro_rules! define_bit_set {
             }
 
             $(
-                /// Returns a `$name` where only the bit for `$entry_name` is set
+                #[doc = concat!("Returns a `", stringify!($name), "` where only the bit for `", stringify!($entry_name), "` is set")]
                 $(#[$b_meta])*
                 pub const fn $entry_name() -> Self {
                     Self($entry_value)

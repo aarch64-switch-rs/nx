@@ -154,18 +154,17 @@ pub struct ThreadContext {
     pub tpidr: u64,
 }
 
-/// Flushes memory cache at a certain memory location.
+/// Flushes (clean + invalidate) memory cache at a certain memory location.
+///
+/// The start and end address are rounded to cache line boundaries read from the `CTR_EL0` register.
 ///
 /// # Arguments:
 ///
 /// * `address`: Memory address.
 /// * `size`: Memory size.
-///
-/// # Safety
-///
-/// `address` must be valid pointer.
 #[inline(always)]
-pub unsafe fn cache_flush(address: *mut u8, size: usize) {
+#[deny(clippy::not_unsafe_ptr_arg_deref)]
+pub fn cache_flush(address: *mut u8, size: usize) {
     unsafe extern "C" {
         fn __nx_arm_cache_flush(address: *mut u8, size: usize);
     }
