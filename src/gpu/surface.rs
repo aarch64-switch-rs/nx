@@ -304,7 +304,7 @@ impl Surface {
             surface.do_ioctl(&mut ioctl_alloc)?;
 
             unsafe {
-                mem::flush_data_cache(surface.buffer_data.ptr, total_framebuffer_size);
+                nx::arm::cache_flush(surface.buffer_data.ptr, total_framebuffer_size);
                 svc::set_memory_attribute(
                     surface.buffer_data.ptr,
                     total_framebuffer_size,
@@ -461,7 +461,7 @@ impl Surface {
             ..Default::default()
         };
 
-        mem::flush_data_cache(
+        nx::arm::cache_flush(
             unsafe {
                 self.buffer_data
                     .ptr

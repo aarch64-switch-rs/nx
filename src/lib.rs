@@ -66,8 +66,8 @@ global_asm!(include_str!("asm.s"));
 global_asm!(include_str!("rrt0.s"));
 global_asm!(include_str!("mod0.s"));
 global_asm!(include_str!("arm.s"));
-global_asm!(include_str!("mem.s"));
-global_asm!(include_str!("svc.s"));
+//global_asm!(include_str!("mem.s"));
+//global_asm!(include_str!("svc.s"));
 //global_asm!(include_str!("exception.s"));
 
 extern crate self as nx;
