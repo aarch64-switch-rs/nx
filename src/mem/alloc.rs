@@ -25,7 +25,8 @@ impl From<AllocError> for ResultCode {
 }
 
 #[linkage = "weak"]
-pub static HEAP_SIZE: usize = 0;
+#[unsafe(export_name = "__nx_mem_alloc_default_heap_size")]
+pub static DEFAULT_HEAP_SIZE: usize = 0;
 
 /// Default implementation
 #[linkage = "weak"]
