@@ -1,5 +1,7 @@
 //! Base service/named port support and wrappers
 
+use core::ffi::CStr;
+
 use sm::IUserInterfaceClient;
 
 use crate::ipc::client;
@@ -14,7 +16,7 @@ pub mod sm;
 /// Interfaces which wrap named ports (see [`manage_named_port`][`svc::manage_named_port`] or [`connect_to_named_port`][`svc::connect_to_named_port`]) must implement this trait
 pub trait INamedPort: client::IClientObject {
     /// Gets the name to be used to connect to the named port (via [`connect_to_named_port`][`svc::connect_to_named_port`])
-    fn get_name() -> &'static str;
+    fn get_name() -> &'static CStr;
     /// This will get executed after connecting to the named port in [`new_named_port_object`], allowing for extra initialization
     ///
     /// Some interfaces may have initialization commands (check [SM's case][`sm::UserInterface::register_client`]) which can be automatically called this way
@@ -41,7 +43,7 @@ pub trait IService: client::IClientObject {
 ///
 /// For more information about this, check [`INamedPort`]
 pub fn new_named_port_object<T: INamedPort + 'static>() -> Result<T> {
-    let handle = unsafe { svc::connect_to_named_port(T::get_name().as_ptr()) }?;
+    let handle = unsafe { svc::connect_to_named_port(T::get_name()) }?;
     let mut object = T::new(sf::Session::from_handle(handle));
     object.post_initialize()?;
     Ok(object)

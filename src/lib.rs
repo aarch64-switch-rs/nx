@@ -60,14 +60,10 @@
 
 #![macro_use]
 use core::arch::global_asm;
-// Required assembly bits (those which essentially cannot/shouldn't be inlined)
 
-global_asm!(include_str!("asm.s"));
+// Required assembly bits (those which essentially cannot/shouldn't be inlined)
 global_asm!(include_str!("rrt0.s"));
 global_asm!(include_str!("mod0.s"));
-global_asm!(include_str!("arm.s"));
-//global_asm!(include_str!("mem.s"));
-//global_asm!(include_str!("svc.s"));
 //global_asm!(include_str!("exception.s"));
 
 extern crate self as nx;

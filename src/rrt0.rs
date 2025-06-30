@@ -338,8 +338,8 @@ enum LoaderMode {
     Nso(u32),
     Nro(*const AbiConfigEntry),
 }
+
 #[unsafe(no_mangle)]
-#[linkage = "weak"]
 #[allow(unsafe_op_in_unsafe_fn)]
 unsafe extern "C" fn __nx_rrt0_entry(arg0: usize, arg1: usize) -> ! {
     // Since we're using the `b` instruction instead of `bl` in `rrt0.s`, the `lr` register will still have the passed in value.

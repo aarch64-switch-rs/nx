@@ -850,9 +850,9 @@ impl BlockLinearHeights {
     }
 }
 
-const NVHOST_AS_GPU_PATH: &str = nul!("/dev/nvhost-as-gpu");
-const NVMAP_PATH: &str = nul!("/dev/nvmap");
-const NVHOST_CTRL_PATH: &str = nul!("/dev/nvhost-ctrl");
+const NVHOST_AS_GPU_PATH: &str = "/dev/nvhost-as-gpu\0";
+const NVMAP_PATH: &str = "/dev/nvmap\0";
+const NVHOST_CTRL_PATH: &str = "/dev/nvhost-ctrl\0";
 
 /// Represents the screen width
 pub const SCREEN_WIDTH: u32 = 1280;

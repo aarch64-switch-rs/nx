@@ -238,24 +238,6 @@ macro_rules! read_bits {
     };
 }
 
-/// Creates a NUL-terminated string literal
-///
-/// # Arguments
-///
-/// * `lit`: The string literal
-///
-/// # Examples
-///
-/// ```
-/// assert_eq!("demo\0", nul!("demo"));
-/// ```
-#[macro_export]
-macro_rules! nul {
-    ($lit:literal) => {
-        concat!($lit, "\0")
-    };
-}
-
 /// Gets the current function name
 ///
 /// # Examples
@@ -279,3 +261,22 @@ macro_rules! cur_fn_name {
         &name[..name.len() - DUMMY_FN_EXTRA_SIZE]
     }};
 }
+
+
+// CFI directives cannot be used if neither debuginfo nor panic=unwind is enabled.
+// We don't have an easy way to check the former, so just check based on panic strategy.
+#[cfg(panic = "abort")]
+macro_rules! maybe_cfi {
+    ($x: literal) => {
+        ""
+    };
+}
+
+#[cfg(panic = "unwind")]
+macro_rules! maybe_cfi {
+    ($x: literal) => {
+        $x
+    };
+}
+
+pub(crate) use maybe_cfi;

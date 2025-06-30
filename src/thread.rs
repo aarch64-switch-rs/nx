@@ -11,7 +11,6 @@ use crate::diag::abort::AbortLevel;
 use crate::result::*;
 use crate::svc;
 use crate::util;
-use core::arch::asm;
 use core::cell::UnsafeCell;
 use core::fmt;
 use core::marker::PhantomData;
@@ -1386,7 +1385,7 @@ pub struct ThreadLocalRegion {
     pub _disable_counter: u16,
     /// The interrupt flag
     pub _interrupt_flag: u16,
-    pub _cache_maintenance_flag: u8, // HOS v14.0.0.+
+    pub cache_maintenance_flag: bool, // HOS v14.0.0.+
     pub _reserved_1: [u8; 0x3],
     // These we are ignoring since we're going to use the libnx threadVars anyway and just not use anything in this region
     /*pub reserved_1: [u8; 0x4],
@@ -1409,14 +1408,16 @@ const_assert!(core::mem::align_of::<ThreadLocalRegion>() >= 4); // for some assu
 /// Gets the current thread's [`ThreadLocalRegion`] address
 #[inline(always)]
 pub fn get_thread_local_region() -> *mut ThreadLocalRegion {
-    let tlr: *mut ThreadLocalRegion;
-    unsafe {
-        asm!(
-            "mrs {}, tpidrro_el0",
-            out(reg) tlr
-        );
+    #[unsafe(naked)]
+    unsafe extern "C" fn __nx_thread_get_thread_local_region() -> *mut ThreadLocalRegion {
+        core::arch::naked_asm!(
+            maybe_cfi!(".cfi_startproc"),
+            "mrs x0, tpidrro_el0",
+            "ret",
+            maybe_cfi!(".cfi_endproc")
+        )
     }
-    tlr
+    unsafe {__nx_thread_get_thread_local_region()}
 }
 
 pub(crate) unsafe fn current() -> *mut imp::Thread {

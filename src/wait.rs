@@ -138,7 +138,7 @@ type WaitFn<W> = fn(&[W], i64) -> Result<usize>;
 
 fn handles_wait_fn(handles: &[svc::Handle], timeout: i64) -> Result<usize> {
     unsafe {
-        svc::wait_synchronization(handles.as_ptr(), handles.len() as u32, timeout)
+        svc::wait_synchronization(handles, timeout)
             .map(|idx| idx as usize)
     }
 }

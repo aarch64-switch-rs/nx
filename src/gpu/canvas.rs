@@ -719,9 +719,7 @@ impl<ColorFormat: CanvasColorFormat> Canvas for BufferedCanvas<'_, ColorFormat> 
 impl<ColorFormat: CanvasColorFormat> Drop for BufferedCanvas<'_, ColorFormat> {
     fn drop(&mut self) {
         self.convert_buffers();
-        unsafe {
-            arm::cache_flush(self.base_pointer as *mut u8, self.buffer_size);
-        }
+        arm::cache_flush(self.base_pointer as *mut u8, self.buffer_size);
         let _ = self.manager.surface.queue_buffer(self.slot, self.fences);
         let _ = self.manager.surface.wait_buffer_event(-1);
     }
@@ -833,9 +831,7 @@ impl<ColorFormat: sealed::CanvasColorFormat> Canvas for UnbufferedCanvas<'_, Col
 
 impl<ColorFormat: CanvasColorFormat> Drop for UnbufferedCanvas<'_, ColorFormat> {
     fn drop(&mut self) {
-        unsafe {
-            arm::cache_flush(self.base_pointer as *mut u8, self.buffer_size);
-        }
+        arm::cache_flush(self.base_pointer as *mut u8, self.buffer_size);
         let _ = self.manager.surface.queue_buffer(self.slot, self.fences);
         let _ = self.manager.surface.wait_buffer_event(-1);
     }

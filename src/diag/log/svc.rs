@@ -14,6 +14,6 @@ impl Logger for SvcOutputLogger {
     #[allow(unused_must_use)]
     fn log(&mut self, metadata: &LogMetadata) {
         let msg = format_plain_string_log_impl(metadata, "SvcOutputLog");
-        unsafe { svc::output_debug_string(msg.as_ptr(), msg.len()) };
+        unsafe { svc::output_debug_string(msg.as_c_str()) };
     }
 }

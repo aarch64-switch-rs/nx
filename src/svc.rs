@@ -6,11 +6,10 @@ use crate::arm;
 use crate::ipc::sf::ncm;
 use crate::result::*;
 use crate::util;
-use crate::version;
 use core::mem;
-use core::mem::ManuallyDrop;
 use core::ptr;
 
+pub mod asm;
 pub mod rc;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -212,6 +211,7 @@ pub enum ExceptionType {
 
 pub type PageInfo = u32;
 pub type Address = *const u8;
+pub type MutAddress = *mut u8;
 pub type Size = usize;
 pub type ThreadEntrypointFn = unsafe extern "C" fn(*mut u8) -> !;
 pub type Handle = u32;
@@ -226,7 +226,7 @@ impl ScopedHandle {
 
     // Take the value out without running the destructor and closing the handle, consuming the guard
     pub unsafe fn take(guard: Self) -> Handle {
-        ManuallyDrop::new(guard).0
+        mem::ManuallyDrop::new(guard).0
     }
 }
 
@@ -239,6 +239,46 @@ impl Drop for ScopedHandle {
     }
 }
 
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[repr(C)]
+/// Context of a scheduled thread.
+pub struct LastThreadContext {
+    /// Frame Pointer for the thread.
+    fp: u64,
+    /// Stack Pointer for the thread.
+    sp: u64,
+    /// Link Register for the thread.
+    lr: u64,
+    /// Program Counter for the thread.
+    pc: u64,
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[repr(C)]
+/// Limitable Resources.
+pub enum LimitableResource {
+    /// How much memory can a process map.
+    Memory = 0,
+    /// How many threads can a process spawn.
+    Threads = 1,
+    /// How many events can a process have.
+    Events = 2,
+    /// How many transfer memories can a process make.
+    TransferMemories = 3,
+    /// How many sessions can a process own.
+    Sessions = 4,
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[repr(C)]
+/// Thread Activity.
+pub enum ThreadActivity {
+    ///  Thread can run.
+    Runnable = 0,
+    ///  Thread is paused.
+    Paused = 1,
+}
+
 pub const INVALID_HANDLE: Handle = 0;
 
 pub const CURRENT_THREAD_PSEUDO_HANDLE: Handle = 0xFFFF8000;
@@ -246,115 +286,120 @@ pub const CURRENT_PROCESS_PSEUDO_HANDLE: Handle = 0xFFFF8001;
 
 pub const DEFAULT_PROCESS_PROCESSOR_ID: i32 = -2;
 
+/// Set the process heap to a given size. It can both extend and shrink the heap.
 #[inline(always)]
-pub fn set_heap_size(size: Size) -> Result<*mut u8> {
-    unsafe extern "C" {
-        fn __nx_svc_set_heap_size(out_address: *mut *mut u8, size: Size) -> ResultCode;
-    }
-
+pub fn set_heap_size(size: Size) -> Result<MutAddress> {
     unsafe {
-        let mut address: *mut u8 = ptr::null_mut();
+        let mut address: MutAddress = ptr::null_mut();
 
-        let rc = __nx_svc_set_heap_size(&mut address, size);
+        let rc = asm::set_heap_size(&mut address, size);
         pack(rc, address)
     }
 }
 
-#[inline(always)]
-pub unsafe fn set_memory_attribute(
-    address: Address,
-    size: Size,
-    mask: u32,
-    value: MemoryAttribute,
-) -> Result<()> {
-    unsafe extern "C" {
-        fn __nx_svc_set_memory_attribute(
-            address: Address,
-            size: Size,
-            mask: u32,
-            value: MemoryAttribute,
-        ) -> ResultCode;
-    }
-
-    unsafe {
-        let rc = __nx_svc_set_memory_attribute(address, size, mask, value);
-        pack(rc, ())
-    }
-}
-
+/// Set the memory permissions of a (page-aligned) range of memory.
+///
+/// `MemoryPermission::Execute()` and `MemoryPermission::Execute()` are not allowed.
+/// This can be used to move back and forth between `MemoryPermission::None()`, `MemoryPermission::Read()`
+/// and `MemoryPermission::Read() | MemoryPermission::Write()`.
 #[inline(always)]
 pub unsafe fn set_memory_permission(
     address: Address,
     size: Size,
     value: MemoryPermission,
 ) -> Result<()> {
-    unsafe extern "C" {
-        fn __nx_svc_set_memory_permission(
-            address: Address,
-            size: Size,
-            value: MemoryPermission,
-        ) -> ResultCode;
-    }
-
     unsafe {
-        let rc = __nx_svc_set_memory_permission(address, size, value);
+        let rc = asm::set_memory_permission(address, size, value);
         pack(rc, ())
     }
 }
 
+/// Set the memory attributes of a (page-aligned) range of memory.
+///
+/// Only setting or unsetting the `Uncached` flag (bit 3) is supported,
+/// so the function signature has been changed from libnx to enforce this constraint.
+///
+/// # Safety
+///
+/// The provided address must be valid, and should be page aligned (0x1000).
 #[inline(always)]
-// SAFETY: null pointers are OK here, as we are just querying memory properties
+pub unsafe fn set_memory_attribute(address: Address, size: Size, set_uncached: bool) -> Result<()> {
+    unsafe {
+        let rc = asm::set_memory_attribute(
+            address,
+            size,
+            8,
+            if set_uncached {
+                MemoryAttribute::Uncached()
+            } else {
+                MemoryAttribute::None()
+            },
+        );
+        pack(rc, ())
+    }
+}
+
+/// Maps a memory range into a different range. Mainly used for adding guard pages around stack.
+///
+/// Source range gets reprotected to [`MemoryAttribute::None()`] (it can no longer be accessed),
+/// and [`MemoryAttribute::Borrowed()`] is set in the source page's [`MemoryAttribute`].
+#[inline(always)]
+pub unsafe fn map_memory(
+    address: Address,
+    source_address: MutAddress,
+    size: Size,
+) -> Result<()> {
+    unsafe {
+        let rc = asm::map_memory(address, source_address, size);
+        pack(rc, ())
+    }
+}
+
+/// Unmaps a region that was previously mapped with [`map_memory`]
+#[inline(always)]
+pub unsafe fn unmap_memory(
+    address: Address,
+    source_address: MutAddress,
+    size: Size,
+) -> Result<()> {
+    unsafe {
+        let rc = asm::unmap_memory(address, source_address, size);
+        pack(rc, ())
+    }
+}
+
+/// Query information about an address. Will always fetch the lowest page-aligned mapping that contains the provided address.
+///
+/// # SAFETY: null pointers are OK here, as we are just querying memory properties
+#[inline(always)]
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub fn query_memory(address: Address) -> Result<(MemoryInfo, PageInfo)> {
-    unsafe extern "C" {
-        fn __nx_svc_query_memory(
-            out_info: *mut MemoryInfo,
-            out_page_info: *mut PageInfo,
-            address: Address,
-        ) -> ResultCode;
-    }
-
     unsafe {
         let mut memory_info: MemoryInfo = Default::default();
         let mut page_info: PageInfo = 0;
 
-        let rc = __nx_svc_query_memory(&mut memory_info, &mut page_info, address);
+        let rc = asm::query_memory(&mut memory_info, &mut page_info, address);
         pack(rc, (memory_info, page_info))
     }
 }
 
 #[inline(always)]
 pub fn exit_process() -> ! {
-    unsafe extern "C" {
-        fn __nx_svc_exit_process() -> !;
-    }
-
-    unsafe { __nx_svc_exit_process() }
+    unsafe { asm::exit_process() }
 }
 
 #[inline(always)]
 pub unsafe fn create_thread(
     entry: ThreadEntrypointFn,
-    entry_arg: Address,
-    stack_top: Address,
+    entry_arg: MutAddress,
+    stack_top: MutAddress,
     priority: i32,
     processor_id: i32,
 ) -> Result<Handle> {
-    unsafe extern "C" {
-        fn __nx_svc_create_thread(
-            handle: *mut Handle,
-            entry: ThreadEntrypointFn,
-            entry_arg: Address,
-            stack_top: Address,
-            priority: i32,
-            processor_id: i32,
-        ) -> ResultCode;
-    }
-
     unsafe {
         let mut handle: Handle = 0;
 
-        let rc = __nx_svc_create_thread(
+        let rc = asm::create_thread(
             &mut handle,
             entry,
             entry_arg,
@@ -368,80 +413,78 @@ pub unsafe fn create_thread(
 
 #[inline(always)]
 pub fn start_thread(handle: Handle) -> Result<()> {
-    unsafe extern "C" {
-        fn __nx_svc_start_thread(handle: Handle) -> ResultCode;
-    }
-
     unsafe {
-        let rc = __nx_svc_start_thread(handle);
+        let rc = asm::start_thread(handle);
         pack(rc, ())
     }
 }
 
 #[inline(always)]
 pub fn exit_thread() -> ! {
-    unsafe extern "C" {
-        fn __nx_svc_exit_thread() -> !;
-    }
-
-    unsafe { __nx_svc_exit_thread() }
+    unsafe { asm::exit_thread() }
 }
 
 #[inline(always)]
 pub fn sleep_thread(timeout: i64) -> Result<()> {
-    unsafe extern "C" {
-        fn __nx_svc_sleep_thread(timeout: i64) -> ResultCode;
-    }
-
     unsafe {
-        let rc = __nx_svc_sleep_thread(timeout);
+        let rc = asm::sleep_thread(timeout);
         pack(rc, ())
     }
 }
 
 #[inline(always)]
 pub fn get_thread_priority(handle: Handle) -> Result<i32> {
-    unsafe extern "C" {
-        fn __nx_svc_get_thread_priority(out_priority: *mut i32, handle: Handle) -> ResultCode;
-    }
-
     unsafe {
         let mut priority: i32 = 0;
 
-        let rc = __nx_svc_get_thread_priority(&mut priority, handle);
+        let rc = asm::get_thread_priority(&mut priority, handle);
         pack(rc, priority)
     }
 }
 
 #[inline(always)]
 pub fn set_thread_priority(handle: Handle, priority: i32) -> Result<()> {
-    unsafe extern "C" {
-        fn __nx_svc_set_thread_priority(handle: Handle, priority: i32) -> ResultCode;
-    }
-
     unsafe {
-        let rc = __nx_svc_set_thread_priority(handle, priority);
+        let rc = asm::set_thread_priority(handle, priority);
+        pack(rc, ())
+    }
+}
+
+#[inline(always)]
+pub fn get_thread_core_mask(handle: Handle) -> Result<(i32, u64)> {
+    unsafe {
+        let mut mask = 0;
+        let mut affinity = 0;
+        let rc = asm::get_thread_core_mask(&mut mask, &mut affinity, handle);
+        pack(rc, (mask, affinity))
+    }
+}
+
+#[inline(always)]
+pub fn set_thread_core_mask(handle: Handle, preferred_core: i32, affinity_mask: u32) -> Result<()> {
+    unsafe {
+        let rc = asm::set_thread_core_mask(handle, preferred_core, affinity_mask);
         pack(rc, ())
     }
 }
 
 #[inline(always)]
 pub fn get_current_processor_number() -> u32 {
-    unsafe extern "C" {
-        fn __nx_svc_get_current_processor_number() -> u32;
-    }
-
-    unsafe { __nx_svc_get_current_processor_number() }
+    unsafe { asm::get_current_processor_number() }
 }
 
 #[inline(always)]
 pub fn signal_event(handle: Handle) -> Result<()> {
-    unsafe extern "C" {
-        fn __nx_svc_signal_event(handle: Handle) -> ResultCode;
-    }
-
     unsafe {
-        let rc = __nx_svc_signal_event(handle);
+        let rc = asm::signal_event(handle);
+        pack(rc, ())
+    }
+}
+
+#[inline(always)]
+pub fn clear_event(handle: Handle) -> Result<()> {
+    unsafe {
+        let rc = asm::clear_event(handle);
         pack(rc, ())
     }
 }
@@ -449,33 +492,20 @@ pub fn signal_event(handle: Handle) -> Result<()> {
 #[inline(always)]
 pub unsafe fn map_shared_memory(
     handle: Handle,
-    address: Address,
+    address: MutAddress,
     size: Size,
     permission: MemoryPermission,
 ) -> Result<()> {
-    unsafe extern "C" {
-        fn __nx_svc_map_shared_memory(
-            handle: Handle,
-            address: Address,
-            size: Size,
-            permission: MemoryPermission,
-        ) -> ResultCode;
-    }
-
     unsafe {
-        let rc = __nx_svc_map_shared_memory(handle, address, size, permission);
+        let rc = asm::map_shared_memory(handle, address, size, permission);
         pack(rc, ())
     }
 }
 
 #[inline(always)]
 pub unsafe fn unmap_shared_memory(handle: Handle, address: Address, size: Size) -> Result<()> {
-    unsafe extern "C" {
-        fn __nx_svc_unmap_shared_memory(handle: Handle, address: Address, size: Size)
-        -> ResultCode;
-    }
     unsafe {
-        let rc = __nx_svc_unmap_shared_memory(handle, address, size);
+        let rc = asm::unmap_shared_memory(handle, address, size);
         pack(rc, ())
     }
 }
@@ -483,97 +513,72 @@ pub unsafe fn unmap_shared_memory(handle: Handle, address: Address, size: Size) 
 #[inline(always)]
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub fn create_transfer_memory(
-    address: Address,
+    address: MutAddress,
     size: Size,
     permissions: MemoryPermission,
 ) -> Result<Handle> {
-    unsafe extern "C" {
-        fn __nx_svc_create_transfer_memory(
-            out_handle: *mut Handle,
-            address: Address,
-            size: Size,
-            permissions: MemoryPermission,
-        ) -> ResultCode;
-    }
     unsafe {
         let mut handle: Handle = 0;
 
-        let rc = __nx_svc_create_transfer_memory(&mut handle, address, size, permissions);
+        let rc = asm::create_transfer_memory(&mut handle, address, size, permissions);
         pack(rc, handle)
     }
 }
 
 #[inline(always)]
 pub fn close_handle(handle: Handle) -> Result<()> {
-    unsafe extern "C" {
-        fn __nx_svc_close_handle(handle: Handle) -> ResultCode;
-    }
-
     unsafe {
-        let rc = __nx_svc_close_handle(handle);
+        let rc = asm::close_handle(handle);
         pack(rc, ())
     }
 }
 
 #[inline(always)]
 pub fn reset_signal(handle: Handle) -> Result<()> {
-    unsafe extern "C" {
-        fn __nx_svc_reset_signal(handle: Handle) -> ResultCode;
-    }
-
     unsafe {
-        let rc = __nx_svc_reset_signal(handle);
+        let rc = asm::reset_signal(handle);
         pack(rc, ())
     }
 }
 
 #[inline(always)]
 pub unsafe fn wait_synchronization(
-    handles: *const Handle,
-    handle_count: u32,
+    handles: &[Handle],
     timeout: i64,
 ) -> Result<i32> {
-    unsafe extern "C" {
-        fn __nx_svc_wait_synchronization(
-            out_index: *mut i32,
-            handles: *const Handle,
-            handle_count: u32,
-            timeout: i64,
-        ) -> ResultCode;
-    }
-
     unsafe {
         let mut index: i32 = 0;
 
-        let rc = __nx_svc_wait_synchronization(&mut index, handles, handle_count, timeout);
+        let rc = asm::wait_synchronization(&mut index, handles.as_ptr(), handles.len() as u32, timeout);
         pack(rc, index)
     }
 }
 
 #[inline(always)]
-pub unsafe fn arbitrate_lock(thread_handle: Handle, tag_location: Address, tag: u32) -> Result<()> {
-    unsafe extern "C" {
-        fn __nx_svc_arbitrate_lock(
-            thread_handle: Handle,
-            tag_location: Address,
-            tag: u32,
-        ) -> ResultCode;
-    }
+pub fn wait_synchronization_one(handle: Handle, timeout: i64) -> Result<()> {
+    unsafe { wait_synchronization(&[handle], timeout).map(|_| ()) }
+}
 
+#[inline(always)]
+pub fn cancel_synchronisation(handle: Handle) -> Result<()> {
     unsafe {
-        let rc = __nx_svc_arbitrate_lock(thread_handle, tag_location, tag);
+        let rc = asm::cancel_synchronisation(handle);
+        pack(rc, ())
+    }
+}
+
+#[inline(always)]
+pub unsafe fn arbitrate_lock(thread_handle: Handle, tag_location: Address, tag: u32) -> Result<()> {
+    unsafe {
+        let rc = asm::arbitrate_lock(thread_handle, tag_location, tag);
         pack(rc, ())
     }
 }
 
 #[inline(always)]
 pub unsafe fn arbitrate_unlock(tag_location: Address) -> Result<()> {
-    unsafe extern "C" {
-        fn __nx_svc_arbitrate_unlock(tag_location: Address) -> ResultCode;
-    }
-
     unsafe {
-        let rc = __nx_svc_arbitrate_unlock(tag_location);
+        let rc = asm::arbitrate_unlock(tag_location);
         pack(rc, ())
     }
 }
@@ -585,151 +590,229 @@ pub unsafe fn wait_process_wide_key_atomic(
     desired_tag: u32,
     timeout: i64,
 ) -> Result<()> {
-    unsafe extern "C" {
-        fn __nx_svc_wait_process_wide_key_atomic(
-            wait_location: Address,
-            tag_location: Address,
-            desired_tag: u32,
-            timeout: i64,
-        ) -> ResultCode;
-    }
-
     unsafe {
-        let rc = __nx_svc_wait_process_wide_key_atomic(
-            wait_location,
-            tag_location,
-            desired_tag,
-            timeout,
-        );
+        let rc =
+            asm::wait_process_wide_key_atomic(wait_location, tag_location, desired_tag, timeout);
         pack(rc, ())
     }
 }
 
 #[inline(always)]
 pub unsafe fn signal_process_wide_key(tag_location: Address, desired_tag: i32) -> Result<()> {
-    unsafe extern "C" {
-        fn __nx_svc_signal_process_wide_key(tag_location: Address, desired_tag: i32) -> ResultCode;
-    }
-
     unsafe {
-        let rc = __nx_svc_signal_process_wide_key(tag_location, desired_tag);
+        let rc = asm::signal_process_wide_key(tag_location, desired_tag);
         pack(rc, ())
     }
 }
 
 #[inline(always)]
 pub fn get_system_tick() -> u64 {
-    unsafe extern "C" {
-        fn __nx_svc_get_system_tick() -> u64;
-    }
-
-    unsafe { __nx_svc_get_system_tick() }
+    unsafe { asm::get_system_tick() }
 }
 
 #[inline(always)]
-pub unsafe fn connect_to_named_port(name: Address) -> Result<Handle> {
-    unsafe extern "C" {
-        fn __nx_svc_connect_to_named_port(out_handle: *mut Handle, name: Address) -> ResultCode;
-    }
+pub unsafe fn connect_to_named_port(name: &core::ffi::CStr) -> Result<Handle> {
     unsafe {
         let mut handle: Handle = 0;
 
-        let rc = __nx_svc_connect_to_named_port(&mut handle, name);
+        let rc = asm::connect_to_named_port(&mut handle, name.as_ptr());
         pack(rc, handle)
     }
 }
 
 #[inline(always)]
-pub fn send_sync_request(handle: Handle) -> Result<()> {
-    unsafe extern "C" {
-        fn __nx_svc_send_sync_request(handle: Handle) -> ResultCode;
-    }
-
+pub fn send_sync_request_light(handle: Handle) -> Result<()> {
     unsafe {
-        let rc = __nx_svc_send_sync_request(handle);
+        let rc = asm::send_sync_request_light(handle);
         pack(rc, ())
     }
 }
 
 #[inline(always)]
-pub fn get_process_id(process_handle: Handle) -> Result<u64> {
-    unsafe extern "C" {
-        fn __nx_svc_get_process_id(out_process_id: *mut u64, process_handle: Handle) -> ResultCode;
+pub fn send_sync_request(handle: Handle) -> Result<()> {
+    unsafe {
+        let rc = asm::send_sync_request(handle);
+        pack(rc, ())
     }
+}
 
+#[inline(always)]
+pub unsafe fn send_sync_request_with_user_data(
+    buffer: &mut [u8],
+    handle: Handle,
+) -> Result<()> {
+    unsafe {
+        let rc = asm::send_sync_request_with_user_data(buffer.as_mut_ptr(), buffer.len(), handle);
+        pack(rc, ())
+    }
+}
+
+#[inline(always)]
+pub unsafe fn send_async_request_with_user_data(
+    buffer: &mut [u8],
+    session: Handle,
+) -> Result<Handle> {
+    unsafe {
+        let mut out_handle = 0;
+        let rc = asm::send_async_request_with_user_data(&mut out_handle, buffer.as_mut_ptr(), buffer.len(), session);
+        pack(rc, out_handle)
+    }
+}
+
+#[inline(always)]
+pub fn get_process_id(process_handle: Handle) -> Result<u64> {
     unsafe {
         let mut process_id: u64 = 0;
 
-        let rc = __nx_svc_get_process_id(&mut process_id, process_handle);
+        let rc = asm::get_process_id(&mut process_id, process_handle);
         pack(rc, process_id)
     }
 }
 
 #[inline(always)]
 pub fn get_thread_id(handle: Handle) -> Result<u64> {
-    unsafe extern "C" {
-        fn __nx_svc_get_thread_id(out_thread_id: *mut u64, handle: Handle) -> ResultCode;
-    }
-
     unsafe {
         let mut thread_id: u64 = 0;
 
-        let rc = __nx_svc_get_thread_id(&mut thread_id, handle);
+        let rc = asm::get_thread_id(&mut thread_id, handle);
         pack(rc, thread_id)
     }
 }
 
 #[inline(always)]
 pub unsafe fn r#break(reason: BreakReason, arg: Address, size: Size) -> Result<()> {
-    unsafe extern "C" {
-        fn __nx_svc_break(reason: BreakReason, arg: Address, size: Size) -> ResultCode;
-    }
-
     unsafe {
-        let rc = __nx_svc_break(reason, arg, size);
+        let rc = asm::r#break(reason, arg, size);
         pack(rc, ())
     }
 }
 
 #[inline(always)]
-pub unsafe fn output_debug_string(msg: Address, len: Size) -> Result<()> {
-    unsafe extern "C" {
-        fn __nx_svc_output_debug_string(msg: Address, len: Size) -> ResultCode;
-    }
-
+pub unsafe fn output_debug_string(msg: &core::ffi::CStr) -> Result<()> {
     unsafe {
-        let rc = __nx_svc_output_debug_string(msg, len);
+        let rc = asm::output_debug_string(msg.as_ptr(), msg.count_bytes());
         pack(rc, ())
     }
 }
 
 #[inline(always)]
 pub fn return_from_exception(res: ResultCode) -> ! {
-    unsafe extern "C" {
-        fn __nx_svc_return_from_exception(res: ResultCode) -> !;
-    }
-
     unsafe {
-        __nx_svc_return_from_exception(res);
+        asm::return_from_exception(res);
     }
 }
 
 #[inline(always)]
 pub fn get_info(id: InfoId, handle: Handle, sub_id: u64) -> Result<u64> {
-    unsafe extern "C" {
-        fn __nx_svc_get_info(
-            out_info: *mut u64,
-            id: InfoId,
-            handle: Handle,
-            sub_id: u64,
-        ) -> ResultCode;
-    }
-
     unsafe {
         let mut info: u64 = 0;
 
-        let rc = __nx_svc_get_info(&mut info, id, handle, sub_id);
+        let rc = asm::get_info(&mut info, id, handle, sub_id);
         pack(rc, info)
+    }
+}
+
+#[inline(always)]
+pub unsafe fn flush_entire_data_cache() -> Result<()> {
+    unsafe {
+        let rc = asm::flush_entire_data_cache();
+        pack(rc, ())
+    }
+}
+
+#[inline(always)]
+pub unsafe fn flush_data_cache(address: Address, len: Size) -> Result<()> {
+    unsafe {
+        let rc = asm::flush_data_cache(address, len);
+        pack(rc, ())
+    }
+}
+
+#[inline(always)]
+pub unsafe fn map_physical_memory(address: Address, len: Size) -> Result<()> {
+    unsafe {
+        let rc = asm::map_physical_memory(address, len);
+        pack(rc, ())
+    }
+}
+
+#[inline(always)]
+pub unsafe fn unmap_physical_memory(address: Address, len: Size) -> Result<()> {
+    unsafe {
+        let rc = asm::unmap_physical_memory(address, len);
+        pack(rc, ())
+    }
+}
+
+#[inline(always)]
+pub fn get_debug_future_thread_info(
+    debug_proc_handle: Handle,
+    ns: i64,
+) -> Result<(LastThreadContext, u64)> {
+    unsafe {
+        let mut out_context = mem::zeroed();
+        let mut out_thread_id = 0;
+        let rc = asm::get_debug_future_thread_info(
+            &mut out_context,
+            &mut out_thread_id,
+            debug_proc_handle,
+            ns,
+        );
+        pack(rc, (out_context, out_thread_id))
+    }
+}
+
+#[inline(always)]
+pub fn get_last_thread_info() -> Result<(LastThreadContext, u64, u32)> {
+    unsafe {
+        let mut out_context = mem::zeroed();
+        let mut out_tls_address = 0;
+        let mut out_flags = 0;
+        let rc = asm::get_last_thread_info(&mut out_context, &mut out_tls_address, &mut out_flags);
+        pack(rc, (out_context, out_tls_address, out_flags))
+    }
+}
+
+#[inline(always)]
+pub fn get_resource_limit_limit_value(
+    resource_limit_handle: Handle,
+    limit_kind: LimitableResource,
+) -> Result<i64> {
+    unsafe {
+        let mut out_val = 0;
+        let rc =
+            asm::get_resource_limit_limit_value(&mut out_val, resource_limit_handle, limit_kind);
+        pack(rc, out_val)
+    }
+}
+
+#[inline(always)]
+pub fn get_resource_limit_current_value(
+    resource_limit_handle: Handle,
+    limit_kind: LimitableResource,
+) -> Result<i64> {
+    unsafe {
+        let mut out_val = 0;
+        let rc =
+            asm::get_resource_limit_current_value(&mut out_val, resource_limit_handle, limit_kind);
+        pack(rc, out_val)
+    }
+}
+
+#[inline(always)]
+pub fn set_thread_activity(thread_handle: Handle, thread_state: ThreadActivity) -> Result<()> {
+    unsafe {
+        let rc = asm::set_thread_activity(thread_handle, thread_state);
+        pack(rc, ())
+    }
+}
+
+#[inline(always)]
+pub fn get_thread_context3(thread_handle: Handle) -> Result<()> {
+    unsafe {
+        let mut out_context = Default::default();
+        let rc = asm::get_thread_context3(&mut out_context, thread_handle);
+        pack(rc, ())
     }
 }
 
@@ -740,17 +823,8 @@ pub unsafe fn wait_for_address(
     value: u32,
     timeout: i64,
 ) -> Result<()> {
-    unsafe extern "C" {
-        fn __nx_svc_wait_for_address(
-            address: Address,
-            arbitration_type: u32,
-            value: u32,
-            timeout: i64,
-        ) -> ResultCode;
-    }
-
     unsafe {
-        let rc = __nx_svc_wait_for_address(address, arbitration_type as u32, value, timeout);
+        let rc = asm::wait_for_address(address, arbitration_type as u32, value, timeout);
         pack(rc, ())
     }
 }
@@ -762,53 +836,46 @@ pub unsafe fn signal_to_address(
     value: u32,
     thread_signal_count: i32,
 ) -> Result<()> {
-    unsafe extern "C" {
-        fn __nx_svc_signal_to_address(
-            address: Address,
-            signal: u32,
-            value: u32,
-            signal_count: i32,
-        ) -> ResultCode;
-    }
-
     unsafe {
-        let rc = __nx_svc_signal_to_address(address, signal as u32, value, thread_signal_count);
+        let rc = asm::signal_to_address(address, signal as u32, value, thread_signal_count);
+        pack(rc, ())
+    }
+}
+
+#[inline(always)]
+pub unsafe fn synchronize_preemption_state() -> Result<()> {
+    unsafe {
+        let rc = asm::synchronize_preemption_states();
         pack(rc, ())
     }
 }
 
 #[inline(always)]
 pub fn create_session(is_light: bool, unk_name: u64) -> Result<(Handle, Handle)> {
-    unsafe extern "C" {
-        fn __nx_svc_create_session(
-            out_server_handle: *mut Handle,
-            out_client_handle: *mut Handle,
-            is_light: bool,
-            unk_name: u64,
-        ) -> ResultCode;
-    }
-
     unsafe {
         let mut server_handle: Handle = 0;
         let mut client_handle: Handle = 0;
 
-        let rc =
-            __nx_svc_create_session(&mut server_handle, &mut client_handle, is_light, unk_name);
+        let rc = asm::create_session(&mut server_handle, &mut client_handle, is_light, unk_name);
         pack(rc, (server_handle, client_handle))
     }
 }
 
 #[inline(always)]
 pub fn accept_session(handle: Handle) -> Result<Handle> {
-    unsafe extern "C" {
-        fn __nx_svc_accept_session(out_session_handle: *mut Handle, handle: Handle) -> ResultCode;
-    }
-
     unsafe {
         let mut session_handle: Handle = 0;
 
-        let rc = __nx_svc_accept_session(&mut session_handle, handle);
+        let rc = asm::accept_session(&mut session_handle, handle);
         pack(rc, session_handle)
+    }
+}
+
+#[inline(always)]
+pub fn reply_and_receive_light(handle: Handle) -> Result<()> {
+    unsafe {
+        let rc = asm::reply_and_receive_light(handle);
+        pack(rc, ())
     }
 }
 
@@ -819,132 +886,103 @@ pub unsafe fn reply_and_receive(
     reply_target: Handle,
     timeout: i64,
 ) -> Result<i32> {
-    unsafe extern "C" {
-        fn __nx_svc_reply_and_receive(
-            out_index: *mut i32,
-            handles: *const Handle,
-            handle_count: u32,
-            reply_target: Handle,
-            timeout: i64,
-        ) -> ResultCode;
-    }
-
     unsafe {
         let mut index: i32 = 0;
 
-        let rc =
-            __nx_svc_reply_and_receive(&mut index, handles, handle_count, reply_target, timeout);
+        let rc = asm::reply_and_receive(&mut index, handles, handle_count, reply_target, timeout);
+        pack(rc, index)
+    }
+}
+
+#[inline(always)]
+pub unsafe fn reply_and_receive_with_user_buffer(
+    user_buffer: &mut [u8],
+    handles: &[Handle],
+    reply_target: Handle,
+    timeout: i64,
+) -> Result<i32> {
+    unsafe {
+        let mut index: i32 = 0;
+
+        let rc = asm::reply_and_receive_with_user_buffer(
+            &mut index,
+            user_buffer.as_mut_ptr(),
+            user_buffer.len(),
+            handles.as_ptr(),
+            handles.len() as u32,
+            reply_target,
+            timeout,
+        );
         pack(rc, index)
     }
 }
 
 #[inline(always)]
 pub fn create_event() -> Result<(Handle, Handle)> {
-    unsafe extern "C" {
-        fn __nx_svc_create_event(
-            out_server_handle: *mut Handle,
-            out_client_handle: *mut Handle,
-        ) -> ResultCode;
-    }
-
     unsafe {
         let mut server_handle: Handle = 0;
         let mut client_handle: Handle = 0;
 
-        let rc = __nx_svc_create_event(&mut server_handle, &mut client_handle);
+        let rc = asm::create_event(&mut server_handle, &mut client_handle);
         pack(rc, (server_handle, client_handle))
     }
 }
 
 #[inline(always)]
 pub fn debug_active_process(process_id: u64) -> Result<Handle> {
-    unsafe extern "C" {
-        fn __nx_svc_debug_active_process(out_handle: *mut Handle, process_id: u64) -> ResultCode;
-    }
-
     unsafe {
         let mut handle: Handle = 0;
 
-        let rc = __nx_svc_debug_active_process(&mut handle, process_id);
+        let rc = asm::debug_active_process(&mut handle, process_id);
         pack(rc, handle)
     }
 }
 
 #[inline(always)]
 pub fn break_debug_process(debug_handle: Handle) -> Result<()> {
-    unsafe extern "C" {
-        fn __nx_svc_break_debug_process(debug_handle: Handle) -> ResultCode;
-    }
-
     unsafe {
-        let rc = __nx_svc_break_debug_process(debug_handle);
+        let rc = asm::break_debug_process(debug_handle);
+        pack(rc, ())
+    }
+}
+
+#[inline(always)]
+pub fn terminate_debug_process(debug_handle: Handle) -> Result<()> {
+    unsafe {
+        let rc = asm::terminate_debug_process(debug_handle);
         pack(rc, ())
     }
 }
 
 #[inline(always)]
 pub fn get_debug_event(debug_handle: Handle) -> Result<DebugEvent> {
-    unsafe extern "C" {
-        fn __nx_svc_get_debug_event(
-            out_debug_event: *mut DebugEvent,
-            debug_handle: Handle,
-        ) -> ResultCode;
-    }
-
     unsafe {
         let mut debug_event: DebugEvent = mem::zeroed();
 
-        let rc = __nx_svc_get_debug_event(&mut debug_event, debug_handle);
+        let rc = asm::get_debug_event(&mut debug_event, debug_handle);
         pack(rc, debug_event)
     }
 }
 
 #[inline(always)]
 pub fn continue_debug_event(debug_handle: Handle, flags: u32, thread_ids: &[u64]) -> Result<()> {
-    unsafe extern "C" {
-        fn __nx_svc_legacy_continue_debug_event(
-            debug_handle: Handle,
-            flags: u32,
-            thread_id: u64,
-        ) -> ResultCode;
-        fn __nx_svc_continue_debug_event(
-            debug_handle: Handle,
-            flags: u32,
-            thread_ids: *const u64,
-            thread_id_count: u32,
-        ) -> ResultCode;
-    }
-
     unsafe {
-        if version::get_version() < version::Version::new(3, 0, 0) {
-            let rc = __nx_svc_legacy_continue_debug_event(debug_handle, flags, thread_ids[0]);
-            pack(rc, ())
-        } else {
-            let rc = __nx_svc_continue_debug_event(
-                debug_handle,
-                flags,
-                thread_ids.as_ptr(),
-                thread_ids.len() as u32,
-            );
-            pack(rc, ())
-        }
+        let rc = asm::continue_debug_event(
+            debug_handle,
+            flags,
+            thread_ids.as_ptr(),
+            thread_ids.len() as u32,
+        );
+        pack(rc, ())
     }
 }
 
 #[inline(always)]
 pub fn get_process_list(process_list: &mut [u64]) -> Result<usize> {
-    unsafe extern "C" {
-        fn __nx_svc_get_process_list(
-            out_count: *mut u32,
-            out_process_ids: *mut u64,
-            process_id_count: u32,
-        ) -> ResultCode;
-    }
-
     unsafe {
         let mut count: u32 = 0;
 
-        let rc = __nx_svc_get_process_list(
+        let rc = asm::get_process_list(
             &mut count,
             process_list.as_mut_ptr(),
             process_list.len() as u32,
@@ -955,19 +993,10 @@ pub fn get_process_list(process_list: &mut [u64]) -> Result<usize> {
 
 #[inline(always)]
 pub fn get_thread_list(debug_handle: Handle, thread_id_list: &mut [u64]) -> Result<usize> {
-    unsafe extern "C" {
-        fn __nx_svc_get_thread_list(
-            out_count: *mut u32,
-            out_thread_ids: *mut u64,
-            thread_id_count: u32,
-            debug_handle: Handle,
-        ) -> ResultCode;
-    }
-
     unsafe {
         let mut count: u32 = 0;
 
-        let rc = __nx_svc_get_thread_list(
+        let rc = asm::get_thread_list(
             &mut count,
             thread_id_list.as_mut_ptr(),
             thread_id_list.len() as u32,
@@ -983,20 +1012,11 @@ pub fn get_debug_thread_context(
     thread_id: u64,
     register_group: arm::RegisterGroup,
 ) -> Result<arm::ThreadContext> {
-    unsafe extern "C" {
-        fn __nx_svc_get_debug_thread_context(
-            thread_context: *mut u8, // *mut arm::ThreadContext
-            debug_handle: Handle,
-            thread_id: u64,
-            register_group: u32,
-        ) -> ResultCode;
-    }
-
     unsafe {
         let mut thread_context: arm::ThreadContext = Default::default();
 
-        let rc = __nx_svc_get_debug_thread_context(
-            &raw mut thread_context as *mut _,
+        let rc = asm::get_debug_thread_context(
+            (&raw mut thread_context).cast(),
             debug_handle,
             thread_id,
             register_group.get(),
@@ -1012,17 +1032,8 @@ pub fn set_debug_thread_context(
     thread_id: u64,
     register_group: arm::RegisterGroup,
 ) -> Result<()> {
-    unsafe extern "C" {
-        fn __nx_svc_set_debug_thread_context(
-            debug_handle: Handle,
-            thread_id: u64,
-            thread_context: *const u8, // *const arm::ThreadContext
-            register_group: u32,
-        ) -> ResultCode;
-    }
-
     unsafe {
-        let rc = __nx_svc_set_debug_thread_context(
+        let rc = asm::set_debug_thread_context(
             debug_handle,
             thread_id,
             &raw const thread_context as *const _,
@@ -1041,20 +1052,11 @@ pub fn query_debug_process_memory(
     debug_handle: Handle,
     address: Address,
 ) -> Result<(MemoryInfo, PageInfo)> {
-    unsafe extern "C" {
-        fn __nx_svc_query_debug_process_memory(
-            out_info: *mut MemoryInfo,
-            out_page_info: *mut PageInfo,
-            debug_handle: Handle,
-            address: Address,
-        ) -> ResultCode;
-    }
-
     unsafe {
         let mut memory_info: MemoryInfo = Default::default();
         let mut page_info: PageInfo = 0;
 
-        let rc = __nx_svc_query_debug_process_memory(
+        let rc = asm::query_debug_process_memory(
             &mut memory_info,
             &mut page_info,
             debug_handle,
@@ -1069,19 +1071,10 @@ pub unsafe fn read_debug_process_memory(
     debug_handle: Handle,
     read_address: usize,
     read_size: usize,
-    buffer: *mut u8,
+    buffer: MutAddress,
 ) -> Result<()> {
-    unsafe extern "C" {
-        fn __nx_svc_read_debug_process_memory(
-            buffer: *mut u8,
-            debug_handle: Handle,
-            address: usize,
-            size: usize,
-        ) -> ResultCode;
-    }
-
     unsafe {
-        let rc = __nx_svc_read_debug_process_memory(buffer, debug_handle, read_address, read_size);
+        let rc = asm::read_debug_process_memory(buffer, debug_handle, read_address, read_size);
         pack(rc, ())
     }
 }
@@ -1093,48 +1086,47 @@ pub unsafe fn write_debug_process_memory(
     write_size: usize,
     buffer: *const u8,
 ) -> Result<()> {
-    unsafe extern "C" {
-        fn __nx_svc_write_debug_process_memory(
-            debug_handle: Handle,
-            buffer: Address,
-            address: usize,
-            size: usize,
-        ) -> ResultCode;
-    }
-
     unsafe {
-        let rc =
-            __nx_svc_write_debug_process_memory(debug_handle, buffer, write_address, write_size);
+        let rc = asm::write_debug_process_memory(debug_handle, buffer, write_address, write_size);
         pack(rc, ())
     }
 }
 
 #[inline(always)]
-pub unsafe fn manage_named_port(name: Address, max_sessions: i32) -> Result<Handle> {
-    unsafe extern "C" {
-        fn __nx_svc_manage_named_port(
-            out_handle: *mut Handle,
-            name: Address,
-            max_sessions: i32,
-        ) -> ResultCode;
-    }
+pub unsafe fn create_named_port(
+    name: &core::ffi::CStr,
+    max_sessions: i32,
+    is_light: bool,
+) -> Result<(Handle, Handle)> {
+    unsafe {
+        let mut server_handle = 0;
+        let mut client_handle = 0;
 
+        let rc = asm::create_named_port(
+            &mut server_handle,
+            &mut client_handle,
+            max_sessions,
+            is_light,
+            name.as_ptr().cast(),
+        );
+        pack(rc, (server_handle, client_handle))
+    }
+}
+
+#[inline(always)]
+pub unsafe fn manage_named_port(name: &core::ffi::CStr, max_sessions: i32) -> Result<Handle> {
     unsafe {
         let mut handle: Handle = 0;
 
-        let rc = __nx_svc_manage_named_port(&mut handle, name, max_sessions);
+        let rc = asm::manage_named_port(&mut handle, name.as_ptr().cast(), max_sessions);
         pack(rc, handle)
     }
 }
 
 #[inline(always)]
 pub fn call_secure_monitor(mut inout: [u64; 8]) -> [u64; 8] {
-    unsafe extern "C" {
-        fn __nx_svc_call_secure_monitor(args: *mut u64);
-    }
-
     unsafe {
-        __nx_svc_call_secure_monitor(inout.as_mut_ptr());
+        asm::call_secure_monitor(inout.as_mut_ptr());
     }
     inout
 }

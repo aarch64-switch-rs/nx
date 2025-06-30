@@ -8,7 +8,6 @@ use super::*;
 use crate::gpu::binder;
 use crate::gpu::ioctl;
 use crate::ipc::sf;
-use crate::mem;
 use crate::mem::alloc;
 use crate::service::dispdrv;
 use crate::svc;
@@ -308,8 +307,7 @@ impl Surface {
                 svc::set_memory_attribute(
                     surface.buffer_data.ptr,
                     total_framebuffer_size,
-                    8,
-                    svc::MemoryAttribute::Uncached(),
+                    true
                 )?;
             }
 
@@ -593,8 +591,7 @@ impl Drop for Surface {
             svc::set_memory_attribute(
                 self.buffer_data.ptr,
                 self.buffer_data.layout.size(),
-                8,
-                svc::MemoryAttribute::None(),
+                false
             )
         };
 

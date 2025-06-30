@@ -1,7 +1,7 @@
 //! Logging support and utils
 
 use crate::thread;
-use alloc::string::String;
+use alloc::{ffi::CString, string::String};
 
 /// Represents the logging severity
 pub type LogSeverity = logpacket::detail::LogSeverity;
@@ -77,7 +77,7 @@ pub fn log_with<L: Logger>(metadata: &LogMetadata) {
     logger.log(metadata);
 }
 
-fn format_plain_string_log_impl(metadata: &LogMetadata, log_type: &str) -> String {
+fn format_plain_string_log_impl(metadata: &LogMetadata, log_type: &str) -> CString {
     let severity_str = match metadata.severity {
         LogSeverity::Trace => "Trace",
         LogSeverity::Info => "Info",
@@ -93,17 +93,25 @@ fn format_plain_string_log_impl(metadata: &LogMetadata, log_type: &str) -> Strin
             .get_str()
             .unwrap_or("<unknown>")
     };
-    format!(
-        "[ {} (severity: {}, verbosity: {}) from {} in thread {}, at {}:{} ] {}",
-        log_type,
-        severity_str,
-        metadata.verbosity,
-        metadata.fn_name,
-        thread_name,
-        metadata.file_name,
-        metadata.line_number,
-        metadata.msg
-    )
+
+    // SAFETY - This is find as we are only writing ascii string generated in this function, an the thread_name with is read through
+    // a conversion from a CStr, and a log message that has been escaped of null bytes.
+    unsafe {
+        CString::from_vec_unchecked(
+            format!(
+                "[ {} (severity: {}, verbosity: {}) from {} in thread {}, at {}:{} ] {}\0",
+                log_type,
+                severity_str,
+                metadata.verbosity,
+                metadata.fn_name,
+                thread_name,
+                metadata.file_name,
+                metadata.line_number,
+                metadata.msg.replace('\0', "\\0")
+            )
+            .into_bytes(),
+        )
+    }
 }
 
 pub mod svc;
