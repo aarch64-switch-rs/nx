@@ -805,7 +805,7 @@ impl<T> Clone for JoinInner<'static, T> {
 }
 
 impl<T> JoinInner<'_, T> {
-    fn join(mut self) -> Result<T> {
+    fn join(&mut self) -> Result<T> {
         let _ = self.native.join();
         Arc::get_mut(&mut self.packet)
             .unwrap()
@@ -814,6 +814,7 @@ impl<T> JoinInner<'_, T> {
             .take()
             .unwrap()
     }
+
     fn wait_exit(&self, timeout: Option<i64>) -> crate::result::Result<()> {
         self.native.join_timeout(timeout)
     }
@@ -941,8 +942,8 @@ impl<T, const BLOCK_ON_DROP: bool> JoinHandle<T, BLOCK_ON_DROP> {
     /// }).unwrap();
     /// join_handle.join().expect("Couldn't join on the associated thread");
     /// ```
-    pub fn join(self) -> Result<T> {
-        self.0.clone().join()
+    pub fn join(mut self) -> Result<T> {
+        self.0.join()
     }
 
     /// Waits for the associated thread to finish, with a timeout (in nanoseconds)
