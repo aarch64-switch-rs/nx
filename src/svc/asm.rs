@@ -394,7 +394,10 @@ pub unsafe extern "C" fn get_system_tick() -> u64 {
 }
 
 #[unsafe(naked)]
-pub unsafe extern "C" fn connect_to_named_port(out_handle: *mut Handle, name: *const u8) -> ResultCode {
+pub unsafe extern "C" fn connect_to_named_port(
+    out_handle: *mut Handle,
+    name: *const u8,
+) -> ResultCode {
     nasm!(
         maybe_cfi!(".cfi_startproc"),
         "str x0, [sp, #-16]!",
@@ -785,7 +788,10 @@ pub unsafe extern "C" fn create_session(
 }
 
 #[unsafe(naked)]
-pub unsafe extern "C" fn accept_session(out_session_handle: *mut Handle, handle: Handle) -> ResultCode {
+pub unsafe extern "C" fn accept_session(
+    out_session_handle: *mut Handle,
+    handle: Handle,
+) -> ResultCode {
     nasm!(
         maybe_cfi!(".cfi_startproc"),
         "str x0, [sp, #-16]!",
@@ -1088,7 +1094,10 @@ maybe_cfi!(".cfi_endproc"));}
 */
 
 #[unsafe(naked)]
-pub unsafe extern "C" fn debug_active_process(out_handle: *mut Handle, process_id: u64) -> ResultCode {
+pub unsafe extern "C" fn debug_active_process(
+    out_handle: *mut Handle,
+    process_id: u64,
+) -> ResultCode {
     nasm!(
         maybe_cfi!(".cfi_startproc"),
         "str x0, [sp, #-16]!",
@@ -1218,7 +1227,7 @@ pub unsafe extern "C" fn query_debug_process_memory(
     out_info: *mut MemoryInfo,
     out_page_info: *mut PageInfo,
     debug_handle: Handle,
-    address: *const u8,
+    address: usize,
 ) -> ResultCode {
     nasm!(
         maybe_cfi!(".cfi_startproc"),
@@ -1330,18 +1339,22 @@ pub unsafe extern "C" fn manage_named_port(
     );
 }
 
+#[unsafe(naked)]
+pub unsafe extern "C" fn connect_to_port(session: *mut Handle, port_handle: Handle) -> ResultCode {
+    {
+        nasm!(
+            maybe_cfi!(".cfi_startproc"),
+            "str x0, [sp, #-16]!",
+            "svc 0x72",
+            "ldr x2, [sp], #16",
+            "str w1, [x2]",
+            "ret",
+            maybe_cfi!(".cfi_endproc")
+        );
+    }
+}
+
 /*
-
-connect_to_port
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"str x0, [sp, #-16]!",
-"svc 0x72",
-"ldr x2, [sp], #16",
-"str w1, [x2]",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
-
 set_process_memory_permission
 {nasm!(
 maybe_cfi!(".cfi_startproc"),

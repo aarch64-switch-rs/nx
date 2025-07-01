@@ -1,5 +1,5 @@
-//! This module wraps svc calls provided by `svc.s`.
-//! There is no function-level Safety docs, but the core requirement is that all raw pointers provided must be
+//! This module wraps svc calls provided by `asm.rs`.
+//! There is generally no function-level Safety docs, but the core requirement is that all raw pointers provided must be
 //! validated by the caller.
 
 use crate::arm;
@@ -370,7 +370,7 @@ pub unsafe fn unmap_memory(
 
 /// Query information about an address. Will always fetch the lowest page-aligned mapping that contains the provided address.
 ///
-/// # SAFETY: null pointers are OK here, as we are just querying memory properties
+/// null pointers are OK here, as we are just querying memory properties.
 #[inline(always)]
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub fn query_memory(address: Address) -> Result<(MemoryInfo, PageInfo)> {
@@ -383,11 +383,15 @@ pub fn query_memory(address: Address) -> Result<(MemoryInfo, PageInfo)> {
     }
 }
 
+/// What it says on the tin.
 #[inline(always)]
 pub fn exit_process() -> ! {
     unsafe { asm::exit_process() }
 }
 
+/// Creates a thread.
+/// 
+/// The pointer to the thread arguments and stack memory _must_ live at least as long as the thread is alive.
 #[inline(always)]
 pub unsafe fn create_thread(
     entry: ThreadEntrypointFn,
@@ -411,6 +415,7 @@ pub unsafe fn create_thread(
     }
 }
 
+/// Starts executing a prepared thread by handle (received from [`create_thread`]).
 #[inline(always)]
 pub fn start_thread(handle: Handle) -> Result<()> {
     unsafe {
@@ -419,11 +424,13 @@ pub fn start_thread(handle: Handle) -> Result<()> {
     }
 }
 
+/// What it says on the tin.
 #[inline(always)]
 pub fn exit_thread() -> ! {
     unsafe { asm::exit_thread() }
 }
 
+/// Sleep the current thread for at least `timeout` nanoseconds or yields if passed a value from [`YieldType`][`crate::thread::YieldType`]
 #[inline(always)]
 pub fn sleep_thread(timeout: i64) -> Result<()> {
     unsafe {
@@ -432,6 +439,7 @@ pub fn sleep_thread(timeout: i64) -> Result<()> {
     }
 }
 
+/// Gets a thread's priority.
 #[inline(always)]
 pub fn get_thread_priority(handle: Handle) -> Result<i32> {
     unsafe {
@@ -442,6 +450,7 @@ pub fn get_thread_priority(handle: Handle) -> Result<i32> {
     }
 }
 
+/// Sets a thread's priority.
 #[inline(always)]
 pub fn set_thread_priority(handle: Handle, priority: i32) -> Result<()> {
     unsafe {
@@ -450,6 +459,8 @@ pub fn set_thread_priority(handle: Handle, priority: i32) -> Result<()> {
     }
 }
 
+
+/// Gets a thread's core mask.
 #[inline(always)]
 pub fn get_thread_core_mask(handle: Handle) -> Result<(i32, u64)> {
     unsafe {
@@ -460,6 +471,7 @@ pub fn get_thread_core_mask(handle: Handle) -> Result<(i32, u64)> {
     }
 }
 
+/// Sets a thread's core mask.
 #[inline(always)]
 pub fn set_thread_core_mask(handle: Handle, preferred_core: i32, affinity_mask: u32) -> Result<()> {
     unsafe {
@@ -468,11 +480,13 @@ pub fn set_thread_core_mask(handle: Handle, preferred_core: i32, affinity_mask: 
     }
 }
 
+/// Gets the processor number (core) that the current thread is executing on.
 #[inline(always)]
 pub fn get_current_processor_number() -> u32 {
     unsafe { asm::get_current_processor_number() }
 }
 
+// Sets an event's signalled status.
 #[inline(always)]
 pub fn signal_event(handle: Handle) -> Result<()> {
     unsafe {
@@ -481,6 +495,7 @@ pub fn signal_event(handle: Handle) -> Result<()> {
     }
 }
 
+// Clears an event's signalled status.
 #[inline(always)]
 pub fn clear_event(handle: Handle) -> Result<()> {
     unsafe {
@@ -489,6 +504,7 @@ pub fn clear_event(handle: Handle) -> Result<()> {
     }
 }
 
+/// Maps a block of shared memory.
 #[inline(always)]
 pub unsafe fn map_shared_memory(
     handle: Handle,
@@ -502,6 +518,7 @@ pub unsafe fn map_shared_memory(
     }
 }
 
+/// Unmaps a block of shared memory.
 #[inline(always)]
 pub unsafe fn unmap_shared_memory(handle: Handle, address: Address, size: Size) -> Result<()> {
     unsafe {
@@ -510,6 +527,10 @@ pub unsafe fn unmap_shared_memory(handle: Handle, address: Address, size: Size) 
     }
 }
 
+/// Creates a block of transfer memory.
+/// 
+/// The memory will be reprotected with `permissions` after creation (usually set to none).
+/// The original memory permissions will be restored when the handle is closed.
 #[inline(always)]
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub fn create_transfer_memory(
@@ -525,6 +546,7 @@ pub fn create_transfer_memory(
     }
 }
 
+/// Closes a handle, decrementing the reference count of the corresponding kernel object.
 #[inline(always)]
 pub fn close_handle(handle: Handle) -> Result<()> {
     unsafe {
@@ -533,6 +555,7 @@ pub fn close_handle(handle: Handle) -> Result<()> {
     }
 }
 
+/// Resets a signal.
 #[inline(always)]
 pub fn reset_signal(handle: Handle) -> Result<()> {
     unsafe {
@@ -541,6 +564,9 @@ pub fn reset_signal(handle: Handle) -> Result<()> {
     }
 }
 
+/// Waits on one or more synchronization objects, optionally with a timeout.
+/// 
+/// The max number of handles is `0x40` (64). This is a Horizon kernel limitation.
 #[inline(always)]
 pub unsafe fn wait_synchronization(
     handles: &[Handle],
@@ -548,25 +574,35 @@ pub unsafe fn wait_synchronization(
 ) -> Result<i32> {
     unsafe {
         let mut index: i32 = 0;
-
         let rc = asm::wait_synchronization(&mut index, handles.as_ptr(), handles.len() as u32, timeout);
         pack(rc, index)
     }
 }
 
+/// The same as [`wait_synchronization`] for a single handle
 #[inline(always)]
 pub fn wait_synchronization_one(handle: Handle, timeout: i64) -> Result<()> {
-    unsafe { wait_synchronization(&[handle], timeout).map(|_| ()) }
-}
-
-#[inline(always)]
-pub fn cancel_synchronisation(handle: Handle) -> Result<()> {
     unsafe {
-        let rc = asm::cancel_synchronisation(handle);
+        let mut index: i32 = 0;
+        let rc = asm::wait_synchronization(&mut index, &handle, 1u32, timeout);
         pack(rc, ())
     }
 }
 
+/// If the referenced thread is currently in a synchronization call ([`wait_synchronization`], [`reply_and_receive`]
+/// or [`reply_and_receive_light`]), that call will be interrupted and return `0xec01`([`ResultCancelled`][`rc::ResultCancelled`]) .
+/// If that thread is not currently executing such a synchronization call, the next call to a synchronization call will return `0xec01``.
+/// 
+/// This doesn't take force-pause (activity/debug pause) into account. 
+#[inline(always)]
+pub fn cancel_synchronisation(thread_handle: Handle) -> Result<()> {
+    unsafe {
+        let rc = asm::cancel_synchronisation(thread_handle);
+        pack(rc, ())
+    }
+}
+
+/// Arbitrates a mutex lock operation in userspace.
 #[inline(always)]
 pub unsafe fn arbitrate_lock(thread_handle: Handle, tag_location: Address, tag: u32) -> Result<()> {
     unsafe {
@@ -575,6 +611,7 @@ pub unsafe fn arbitrate_lock(thread_handle: Handle, tag_location: Address, tag: 
     }
 }
 
+/// Arbitrates a mutex unlock operation in userspace.
 #[inline(always)]
 pub unsafe fn arbitrate_unlock(tag_location: Address) -> Result<()> {
     unsafe {
@@ -583,6 +620,7 @@ pub unsafe fn arbitrate_unlock(tag_location: Address) -> Result<()> {
     }
 }
 
+/// Performs a condition variable wait operation in userspace.
 #[inline(always)]
 pub unsafe fn wait_process_wide_key_atomic(
     wait_location: Address,
@@ -597,6 +635,7 @@ pub unsafe fn wait_process_wide_key_atomic(
     }
 }
 
+/// Performs a condition variable wake-up operation in userspace.
 #[inline(always)]
 pub unsafe fn signal_process_wide_key(tag_location: Address, desired_tag: i32) -> Result<()> {
     unsafe {
@@ -605,11 +644,13 @@ pub unsafe fn signal_process_wide_key(tag_location: Address, desired_tag: i32) -
     }
 }
 
+/// Gets the current system tick.
 #[inline(always)]
 pub fn get_system_tick() -> u64 {
     unsafe { asm::get_system_tick() }
 }
 
+/// Connects to a registered named port.
 #[inline(always)]
 pub unsafe fn connect_to_named_port(name: &core::ffi::CStr) -> Result<Handle> {
     unsafe {
@@ -620,6 +661,7 @@ pub unsafe fn connect_to_named_port(name: &core::ffi::CStr) -> Result<Handle> {
     }
 }
 
+/// Sends a light IPC synchronization request to a session.
 #[inline(always)]
 pub fn send_sync_request_light(handle: Handle) -> Result<()> {
     unsafe {
@@ -628,6 +670,7 @@ pub fn send_sync_request_light(handle: Handle) -> Result<()> {
     }
 }
 
+/// Sends an IPC synchronization request to a session.
 #[inline(always)]
 pub fn send_sync_request(handle: Handle) -> Result<()> {
     unsafe {
@@ -636,6 +679,9 @@ pub fn send_sync_request(handle: Handle) -> Result<()> {
     }
 }
 
+/// Sends an IPC synchronization request to a session from an user allocated buffer.
+/// 
+/// The buffer size must be a multiple of the system page size (0x1000).
 #[inline(always)]
 pub unsafe fn send_sync_request_with_user_data(
     buffer: &mut [u8],
@@ -647,6 +693,9 @@ pub unsafe fn send_sync_request_with_user_data(
     }
 }
 
+/// Sends an IPC synchronization request to a session from an user allocated buffer (asynchronous version).
+/// 
+/// The buffer size must be a multiple of the system page size (0x1000).
 #[inline(always)]
 pub unsafe fn send_async_request_with_user_data(
     buffer: &mut [u8],
@@ -659,6 +708,7 @@ pub unsafe fn send_async_request_with_user_data(
     }
 }
 
+/// Gets the PID associated with a process.
 #[inline(always)]
 pub fn get_process_id(process_handle: Handle) -> Result<u64> {
     unsafe {
@@ -669,6 +719,7 @@ pub fn get_process_id(process_handle: Handle) -> Result<u64> {
     }
 }
 
+/// Gets the TID associated with a process.
 #[inline(always)]
 pub fn get_thread_id(handle: Handle) -> Result<u64> {
     unsafe {
@@ -679,14 +730,18 @@ pub fn get_thread_id(handle: Handle) -> Result<u64> {
     }
 }
 
+/// Breaks execution
+/// 
+/// The `debug_data` buffer is passed to a debugging instance if one is attached.
 #[inline(always)]
-pub unsafe fn r#break(reason: BreakReason, arg: Address, size: Size) -> Result<()> {
+pub fn r#break(reason: BreakReason, debug_data: &[u8]) -> Result<()> {
     unsafe {
-        let rc = asm::r#break(reason, arg, size);
+        let rc = asm::r#break(reason, debug_data.as_ptr(), debug_data.len());
         pack(rc, ())
     }
 }
 
+/// Outputs debug text, if used during debugging.
 #[inline(always)]
 pub unsafe fn output_debug_string(msg: &core::ffi::CStr) -> Result<()> {
     unsafe {
@@ -695,6 +750,7 @@ pub unsafe fn output_debug_string(msg: &core::ffi::CStr) -> Result<()> {
     }
 }
 
+/// Returns from an exception.
 #[inline(always)]
 pub fn return_from_exception(res: ResultCode) -> ! {
     unsafe {
@@ -702,6 +758,9 @@ pub fn return_from_exception(res: ResultCode) -> ! {
     }
 }
 
+/// Retrieves information about the system, or a certain kernel object, depending on the value of `id`.
+/// 
+/// `handle` is for particular kernel objects, but `INVALID_HANDLE` is used to retrieve information about the system.
 #[inline(always)]
 pub fn get_info(id: InfoId, handle: Handle, sub_id: u64) -> Result<u64> {
     unsafe {
@@ -712,7 +771,14 @@ pub fn get_info(id: InfoId, handle: Handle, sub_id: u64) -> Result<u64> {
     }
 }
 
+/*
+/// Flushes the entire data cache (by set/way).
+/// 
+/// This is a privileged syscall and may not be available.
+/// 
+/// This syscall has dangerous side effects and should not be used.
 #[inline(always)]
+#[deprecated]
 pub unsafe fn flush_entire_data_cache() -> Result<()> {
     unsafe {
         let rc = asm::flush_entire_data_cache();
@@ -720,7 +786,13 @@ pub unsafe fn flush_entire_data_cache() -> Result<()> {
     }
 }
 
+    */
+
+/// Flushes data cache for a virtual address range.
+/// 
+/// [`cache_flush`][`crate::arm::cache_flush`] should be used instead whenever possible.
 #[inline(always)]
+#[deprecated]
 pub unsafe fn flush_data_cache(address: Address, len: Size) -> Result<()> {
     unsafe {
         let rc = asm::flush_data_cache(address, len);
@@ -728,6 +800,7 @@ pub unsafe fn flush_data_cache(address: Address, len: Size) -> Result<()> {
     }
 }
 
+/// Maps new heap memory at the desired address. [3.0.0+]
 #[inline(always)]
 pub unsafe fn map_physical_memory(address: Address, len: Size) -> Result<()> {
     unsafe {
@@ -736,6 +809,7 @@ pub unsafe fn map_physical_memory(address: Address, len: Size) -> Result<()> {
     }
 }
 
+/// Unmaps memorry mapped by [`map_physical_memory`].  [3.0.0+]
 #[inline(always)]
 pub unsafe fn unmap_physical_memory(address: Address, len: Size) -> Result<()> {
     unsafe {
@@ -744,6 +818,12 @@ pub unsafe fn unmap_physical_memory(address: Address, len: Size) -> Result<()> {
     }
 }
 
+/// Gets information about a thread that will be scheduled in the future. [5.0.0+]
+/// 
+/// `ns` is the nanoseconds in the future when the thread information will be sampled
+/// by the kernel.
+/// 
+/// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub fn get_debug_future_thread_info(
     debug_proc_handle: Handle,
@@ -762,6 +842,7 @@ pub fn get_debug_future_thread_info(
     }
 }
 
+/// Gets information about the previously-scheduled thread.
 #[inline(always)]
 pub fn get_last_thread_info() -> Result<(LastThreadContext, u64, u32)> {
     unsafe {
@@ -773,6 +854,9 @@ pub fn get_last_thread_info() -> Result<(LastThreadContext, u64, u32)> {
     }
 }
 
+/// Gets the maximum value a LimitableResource can have, for a Resource Limit handle.
+/// 
+/// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub fn get_resource_limit_limit_value(
     resource_limit_handle: Handle,
@@ -786,6 +870,9 @@ pub fn get_resource_limit_limit_value(
     }
 }
 
+/// Gets the current value a LimitableResource has, for a Resource Limit handle.
+/// 
+/// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub fn get_resource_limit_current_value(
     resource_limit_handle: Handle,
@@ -799,6 +886,7 @@ pub fn get_resource_limit_current_value(
     }
 }
 
+/// Pauses/unpauses a thread.
 #[inline(always)]
 pub fn set_thread_activity(thread_handle: Handle, thread_state: ThreadActivity) -> Result<()> {
     unsafe {
@@ -807,6 +895,7 @@ pub fn set_thread_activity(thread_handle: Handle, thread_state: ThreadActivity) 
     }
 }
 
+/// Dumps the registers of a thread paused by [`set_thread_activity`] (register groups: all)
 #[inline(always)]
 pub fn get_thread_context3(thread_handle: Handle) -> Result<()> {
     unsafe {
@@ -816,6 +905,7 @@ pub fn get_thread_context3(thread_handle: Handle) -> Result<()> {
     }
 }
 
+/// Arbitrates an address depending on type and value. [4.0.0+]
 #[inline(always)]
 pub unsafe fn wait_for_address(
     address: Address,
@@ -829,6 +919,7 @@ pub unsafe fn wait_for_address(
     }
 }
 
+/// Signals (and updates) an address depending on type and value. [4.0.0+]
 #[inline(always)]
 pub unsafe fn signal_to_address(
     address: Address,
@@ -842,6 +933,7 @@ pub unsafe fn signal_to_address(
     }
 }
 
+/// Sets thread preemption state (used during abort/panic). [8.0.0+]
 #[inline(always)]
 pub unsafe fn synchronize_preemption_state() -> Result<()> {
     unsafe {
@@ -850,6 +942,9 @@ pub unsafe fn synchronize_preemption_state() -> Result<()> {
     }
 }
 
+/// Creates an IPC session.
+/// 
+/// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub fn create_session(is_light: bool, unk_name: u64) -> Result<(Handle, Handle)> {
     unsafe {
@@ -861,6 +956,7 @@ pub fn create_session(is_light: bool, unk_name: u64) -> Result<(Handle, Handle)>
     }
 }
 
+/// Accepts an IPC session.
 #[inline(always)]
 pub fn accept_session(handle: Handle) -> Result<Handle> {
     unsafe {
@@ -871,6 +967,9 @@ pub fn accept_session(handle: Handle) -> Result<Handle> {
     }
 }
 
+/// Performs light IPC input/output.
+/// 
+/// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub fn reply_and_receive_light(handle: Handle) -> Result<()> {
     unsafe {
@@ -879,6 +978,9 @@ pub fn reply_and_receive_light(handle: Handle) -> Result<()> {
     }
 }
 
+/// Performs IPC input/output.
+/// 
+/// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub unsafe fn reply_and_receive(
     handles: *const Handle,
@@ -894,6 +996,9 @@ pub unsafe fn reply_and_receive(
     }
 }
 
+/// Performs IPC input/output on a user-allocated buffer.
+/// 
+/// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub unsafe fn reply_and_receive_with_user_buffer(
     user_buffer: &mut [u8],
@@ -917,6 +1022,7 @@ pub unsafe fn reply_and_receive_with_user_buffer(
     }
 }
 
+/// Creates a system event.
 #[inline(always)]
 pub fn create_event() -> Result<(Handle, Handle)> {
     unsafe {
@@ -928,16 +1034,21 @@ pub fn create_event() -> Result<(Handle, Handle)> {
     }
 }
 
+/// Debugs an active process.
+/// 
+/// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub fn debug_active_process(process_id: u64) -> Result<Handle> {
     unsafe {
         let mut handle: Handle = 0;
-
         let rc = asm::debug_active_process(&mut handle, process_id);
         pack(rc, handle)
     }
 }
 
+/// Breaks an active debugging session.
+/// 
+/// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub fn break_debug_process(debug_handle: Handle) -> Result<()> {
     unsafe {
@@ -946,6 +1057,9 @@ pub fn break_debug_process(debug_handle: Handle) -> Result<()> {
     }
 }
 
+/// Terminates the process of an active debugging session
+/// 
+/// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub fn terminate_debug_process(debug_handle: Handle) -> Result<()> {
     unsafe {
@@ -954,6 +1068,9 @@ pub fn terminate_debug_process(debug_handle: Handle) -> Result<()> {
     }
 }
 
+/// Gets an incoming debug event from a debugging session.
+/// 
+/// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub fn get_debug_event(debug_handle: Handle) -> Result<DebugEvent> {
     unsafe {
@@ -964,6 +1081,9 @@ pub fn get_debug_event(debug_handle: Handle) -> Result<DebugEvent> {
     }
 }
 
+/// Continues a debugging session. [3.0.0+]
+/// 
+/// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub fn continue_debug_event(debug_handle: Handle, flags: u32, thread_ids: &[u64]) -> Result<()> {
     unsafe {
@@ -977,20 +1097,24 @@ pub fn continue_debug_event(debug_handle: Handle, flags: u32, thread_ids: &[u64]
     }
 }
 
+///Retrieves a list of all running processes. Returns the hnumber of PIDs written to the buffer.
 #[inline(always)]
-pub fn get_process_list(process_list: &mut [u64]) -> Result<usize> {
+pub fn get_process_list(process_id_list: &mut [u64]) -> Result<usize> {
     unsafe {
         let mut count: u32 = 0;
 
         let rc = asm::get_process_list(
             &mut count,
-            process_list.as_mut_ptr(),
-            process_list.len() as u32,
+            process_id_list.as_mut_ptr(),
+            process_id_list.len() as u32,
         );
         pack(rc, count as usize)
     }
 }
 
+/// Retrieves a list of all threads for a debug handle (or zero). Returns the hnumber of thread IDs written to the buffer.
+/// 
+/// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub fn get_thread_list(debug_handle: Handle, thread_id_list: &mut [u64]) -> Result<usize> {
     unsafe {
@@ -1006,6 +1130,9 @@ pub fn get_thread_list(debug_handle: Handle, thread_id_list: &mut [u64]) -> Resu
     }
 }
 
+/// Queries the thread context for a thread under debugging.
+/// 
+/// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub fn get_debug_thread_context(
     debug_handle: Handle,
@@ -1025,6 +1152,9 @@ pub fn get_debug_thread_context(
     }
 }
 
+/// Writes the thread context (scoped by `register_group`) back into a thread under debugging.
+/// 
+/// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub fn set_debug_thread_context(
     debug_handle: Handle,
@@ -1043,6 +1173,11 @@ pub fn set_debug_thread_context(
     }
 }
 
+
+/// Gets the memory metadata for an address in a process under debugging.
+/// 
+/// This is a privileged syscall and may not be available.
+/// 
 /// # Safety
 ///
 /// null pointers are OK here, as we are just querying the memory's information
@@ -1050,7 +1185,7 @@ pub fn set_debug_thread_context(
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub fn query_debug_process_memory(
     debug_handle: Handle,
-    address: Address,
+    address: usize,
 ) -> Result<(MemoryInfo, PageInfo)> {
     unsafe {
         let mut memory_info: MemoryInfo = Default::default();
@@ -1066,19 +1201,24 @@ pub fn query_debug_process_memory(
     }
 }
 
+/// Reads memory from an address in a process under debugging.
+/// 
+/// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub unsafe fn read_debug_process_memory(
     debug_handle: Handle,
     read_address: usize,
-    read_size: usize,
-    buffer: MutAddress,
+    buffer: &mut [u8],
 ) -> Result<()> {
     unsafe {
-        let rc = asm::read_debug_process_memory(buffer, debug_handle, read_address, read_size);
+        let rc = asm::read_debug_process_memory(buffer.as_mut_ptr(), debug_handle, read_address, buffer.len());
         pack(rc, ())
     }
 }
 
+/// Reads memory to an address in a process under debugging.
+/// 
+/// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub unsafe fn write_debug_process_memory(
     debug_handle: Handle,
@@ -1092,6 +1232,10 @@ pub unsafe fn write_debug_process_memory(
     }
 }
 
+
+/// Creates a named port.
+/// 
+/// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub unsafe fn create_named_port(
     name: &core::ffi::CStr,
@@ -1113,6 +1257,9 @@ pub unsafe fn create_named_port(
     }
 }
 
+/// Manages a named port.
+/// 
+/// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub unsafe fn manage_named_port(name: &core::ffi::CStr, max_sessions: i32) -> Result<Handle> {
     unsafe {
@@ -1123,10 +1270,27 @@ pub unsafe fn manage_named_port(name: &core::ffi::CStr, max_sessions: i32) -> Re
     }
 }
 
+/// Connects a named port.
+/// 
+/// This is a privileged syscall and may not be available.
 #[inline(always)]
-pub fn call_secure_monitor(mut inout: [u64; 8]) -> [u64; 8] {
+pub unsafe fn connect_named_port(client_session: Handle) -> Result<Handle> {
     unsafe {
-        asm::call_secure_monitor(inout.as_mut_ptr());
+        let mut session_handle: Handle = 0;
+
+        let rc = asm::connect_to_port(&mut session_handle, client_session);
+        pack(rc, session_handle)
     }
-    inout
+}
+
+
+/// Calls a secure monitor function (TrustZone, EL3).
+/// 
+/// This is a privileged syscall and may not be available.
+#[inline(always)]
+pub fn call_secure_monitor(mut secmon_args: [u64; 8]) -> [u64; 8] {
+    unsafe {
+        asm::call_secure_monitor(secmon_args.as_mut_ptr());
+    }
+    secmon_args
 }
