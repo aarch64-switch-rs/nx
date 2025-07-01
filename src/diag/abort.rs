@@ -4,7 +4,6 @@ use crate::mem::alloc;
 use crate::result::*;
 use crate::rrt0;
 use crate::svc;
-use core::mem;
 
 #[cfg(feature = "services")]
 use crate::ipc::sf;

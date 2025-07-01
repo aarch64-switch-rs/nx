@@ -163,7 +163,7 @@ pub struct ThreadContext {
 /// * `address`: Memory address.
 /// * `size`: Memory size.
 #[inline(always)]
-#[deny(clippy::not_unsafe_ptr_arg_deref)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub fn cache_flush(address: *mut u8, size: usize) {
     // Equivalent to `cache_flush2` commented out below, but ends up being better hand-written
     // than compiler optimised.

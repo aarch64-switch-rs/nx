@@ -955,21 +955,19 @@ pub mod net {
     /// # Examples
     ///
     /// ```no_run
-    /// use nx::socket::net::UdpSocket;
+    /// 
+    /// let socket = UdpSocket::bind(Ipv4Addr::LOCALHOST, Some(34254))?;
     ///
-    /// fn main() {
-    ///     let socket = UdpSocket::bind(Ipv4Addr::LOCALHOST, Some(34254))?;
+    /// // Receives a single datagram message on the socket. If `buf` is too small to hold
+    /// // the message, it will be cut off.
+    /// let mut buf = [0; 10];
+    /// let (amt, src_ip, src_port) = socket.recv_from(&mut buf)?;
     ///
-    ///     // Receives a single datagram message on the socket. If `buf` is too small to hold
-    ///     // the message, it will be cut off.
-    ///     let mut buf = [0; 10];
-    ///     let (amt, src_ip, src_port) = socket.recv_from(&mut buf)?;
-    ///
-    ///     // Redeclare `buf` as slice of the received data and send reverse data back to origin.
-    ///     let buf = &mut buf[..amt];
-    ///     buf.reverse();
-    ///     socket.send_to(buf, (src_ip, src_port))?;
-    /// }
+    /// // Redeclare `buf` as slice of the received data and send reverse data back to origin.
+    /// let buf = &mut buf[..amt];
+    /// buf.reverse();
+    /// socket.send_to(buf, (src_ip, src_port))?;
+    /// 
     /// ```
     pub struct UdpSocket(i32);
 
@@ -1320,7 +1318,7 @@ pub mod net {
                 self.0,
                 IpProto::IP as _,
                 IpOptions::MulticastTimeToLive as _,
-                Buffer::from_other_var(&(ttl as u8)),
+                Buffer::from_var(&ttl),
             )? {
                 return ResultCode::new_err(nx::result::pack_value(
                     rc::RESULT_MODULE,

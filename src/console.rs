@@ -124,13 +124,11 @@ pub mod vty {
 
             for y in y..(y + height as i32) {
                 for x in x..(x + width as i32) {
-                    if let Some(color) = color_iter.next() {
-                        if (0..self.canvas.surface.height().cast_signed()).contains(&y)
-                            && (0..self.canvas.surface.width().cast_signed()).contains(&x)
-                        {
-                            self.buffer[(x + y * self.canvas.surface.width() as i32) as usize] =
-                                color;
-                        }
+                    if let Some(color) = color_iter.next()
+                        && (0..self.canvas.surface.height().cast_signed()).contains(&y)
+                        && (0..self.canvas.surface.width().cast_signed()).contains(&x)
+                    {
+                        self.buffer[(x + y * self.canvas.surface.width() as i32) as usize] = color;
                     }
                 }
             }

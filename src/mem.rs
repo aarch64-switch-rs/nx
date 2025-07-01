@@ -1,7 +1,5 @@
 //! Memory (heap) support and utils
 
-use core::usize;
-
 use crate::result::ResultBase;
 use crate::svc;
 pub mod alloc;
