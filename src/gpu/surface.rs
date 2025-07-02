@@ -297,7 +297,7 @@ impl Surface {
                 flags: ioctl::AllocFlags::ReadOnly,
                 align: alloc::PAGE_ALIGNMENT as u32,
                 kind: Kind::Pitch,
-                address: surface.buffer_data.ptr as usize,
+                address: surface.buffer_data.ptr.expose_provenance(),
                 ..Default::default()
             };
             surface.do_ioctl(&mut ioctl_alloc)?;

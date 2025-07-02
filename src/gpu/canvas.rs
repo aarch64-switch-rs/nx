@@ -185,16 +185,30 @@ pub(crate) mod sealed {
     use super::{AlphaBlend, ColorFormat, PixelFormat};
 
     pub trait CanvasColorFormat: Copy + Default + 'static {
+        /// The raw type that will be written into the backing buffer;
         type RawType: num_traits::PrimInt + 'static;
+
+        /// The native color format used
         const COLOR_FORMAT: ColorFormat;
-        const BYTES_PER_PIXEL: u32 = Self::COLOR_FORMAT.bytes_per_pixel();
-        const BYTES_PER_PIXEL_LOG2: u32 = Self::BYTES_PER_PIXEL.ilog2();
+        /// The native pixel format
         const PIXEL_FORMAT: PixelFormat;
+        /// The size of the raw pixel in bytes (must be the same size as the RawType)
+        const BYTES_PER_PIXEL: u32 = Self::COLOR_FORMAT.bytes_per_pixel();
+
+        /// Create a new default instance of the type
         fn new() -> Self;
+
+        /// Create an instance of the type scaled from standard 888 color values
         fn new_scaled(r: u8, g: u8, b: u8, a: u8) -> Self;
+        /// Transmute from the raw backing type
         fn from_raw(raw: Self::RawType) -> Self;
+        /// Transmute to the raw backing type
         fn to_raw(self) -> Self::RawType;
+        /// Alpha blend the pixels together
         fn blend_with(self, other: Self, blend: AlphaBlend) -> Self;
+        /// Scale the color's alpha channel
+        ///
+        /// `alpha` must be between 0 and 1, or the implementation should panic.
         fn scale_alpha(self, alpha: f32) -> Self;
     }
 }
@@ -206,6 +220,7 @@ pub struct CanvasManager<ColorFormat: sealed::CanvasColorFormat> {
 
 #[allow(clippy::too_many_arguments)]
 impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
+    /// Computes the heap memory required to contain all the frame buffers for the provided parameters.
     pub const fn total_heap_required(
         width: u32,
         height: u32,
@@ -260,6 +275,7 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
     }
 
     /// Creates a new managed layer (application/applet window) that can be drawn on overlay elements.
+    ///
     /// These layers exist on top of stray layers and application/applet UIs, and can be Z-order vertically layered over each other.
     /// The GPU provides the alpha blending for all layers based on the committed frame.
     #[inline(always)]
@@ -289,8 +305,10 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
         self.surface.wait_vsync_event(timeout.unwrap_or(-1))
     }
 
-    /// Check out a canvas/framebuffer to draw a new frame. This frame is buffered to a linear buffer before being
-    /// swizzled into the backing buffer during frame-commit. This provides better performance for line-based renderers
+    /// Check out a canvas/framebuffer to draw a new frame.
+    ///
+    /// This frame is buffered to a linear buffer before being swizzled
+    ///  into the backing buffer during frame-commit. This provides better performance for line-based renderers
     /// as writes will be sequential in memory. There are cache misses during commit, but that is still better performance
     /// than mapped page churn for GPU-mapped memory.
     #[inline(always)]
@@ -353,6 +371,7 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
     }
 
     /// Check out a canvas/framebuffer to draw a new frame, without a linear buffer.
+    ///
     /// This can be used in memory constrained environments such as sysmodules, but also provides slightly better performance
     /// for frames that draw in block rather than scan-lines (e.g. JPEG decoding).
     #[inline(always)]
@@ -384,6 +403,9 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
 pub trait Canvas {
     type ColorFormat: sealed::CanvasColorFormat;
 
+    /// Draw a single pixel to the canvas
+    ///
+    /// out-of-bounds co-ordinates should be ignored by the implementation.
     fn draw_single(&mut self, x: i32, y: i32, color: Self::ColorFormat, blend: AlphaBlend);
     fn height(&self) -> u32;
     fn width(&self) -> u32;
@@ -396,6 +418,9 @@ pub trait Canvas {
         }
     }
 
+    /// Draw a single-color rectangle to the canvas
+    ///
+    /// out-of-bounds co-ordinates should be ignored by the implementation.
     fn draw_rect(
         &mut self,
         x: i32,
@@ -418,6 +443,9 @@ pub trait Canvas {
         }
     }
 
+    /// Draw a straight line from the start co-ordinates to the end co-ordinates
+    ///
+    /// Start/end co-ordinates may be outside the screen, but out-of-bounds pixel co-ordinates should be ignored by the implementation.
     fn draw_line(
         &mut self,
         start: (i32, i32),
@@ -432,6 +460,9 @@ pub trait Canvas {
         }
     }
 
+    /// Draw an empty circle from the centre co-ordinates and radius.
+    ///
+    /// The shape does not need to be fully in-bounds, but out-of-bounds pixel co-ordinates should be ignored by the implementation.
     fn draw_circle(
         &mut self,
         x: i32,
@@ -447,6 +478,9 @@ pub trait Canvas {
         }
     }
 
+    /// Draw an filled circle from the centre co-ordinates and radius.
+    ///
+    /// The shape does not need to be fully in-bounds, but out-of-bounds pixel co-ordinates should be ignored by the implementation.
     fn draw_circle_filled(
         &mut self,
         cx: i32,
@@ -470,6 +504,9 @@ pub trait Canvas {
         }
     }
 
+    /// Draw text in a true-type font to the canvas.
+    ///
+    /// The text does not need to be fully in-bounds, but out-of-bounds pixel co-ordinates should be ignored by the implementation.
     #[cfg(feature = "truetype")]
     fn draw_font_text(
         &mut self,
@@ -537,6 +574,9 @@ pub trait Canvas {
         }
     }
 
+    /// Draw text in a 8x8 monospace font to the canvas.
+    ///
+    /// The text does not need to be fully in-bounds, but out-of-bounds pixel co-ordinates should be ignored by the implementation.
     #[cfg(feature = "fonts")]
     #[inline(always)]
     fn draw_ascii_bitmap_text(
@@ -551,6 +591,9 @@ pub trait Canvas {
         self.draw_bitmap_text(text, &font8x8::BASIC_FONTS, color, scale, x, y, blend);
     }
 
+    /// Draw text to the canvas, with a unicode font from the [`font8x8`] crate.
+    ///
+    /// The text does not need to be fully in-bounds, but out-of-bounds pixel co-ordinates should be ignored by the implementation.
     #[cfg(feature = "fonts")]
     fn draw_bitmap_text(
         &mut self,
@@ -613,6 +656,7 @@ pub struct BufferedCanvas<'fb, ColorFormat: sealed::CanvasColorFormat> {
 }
 
 impl<ColorFormat: sealed::CanvasColorFormat> BufferedCanvas<'_, ColorFormat> {
+    /// Write from the pixel buffer to the backing framebuffer in a memory efficient way for GPU page boundaries.
     fn convert_buffers(&mut self) {
         let block_config: BlockLinearHeights = self.manager.surface.get_block_linear_config();
         let block_height_gobs = block_config.block_height();
@@ -672,10 +716,9 @@ impl<ColorFormat: CanvasColorFormat> Canvas for BufferedCanvas<'_, ColorFormat> 
             )
         };
 
-        let _: () = raw_buffer
-            .iter_mut()
-            .map(|pixel_slot| *pixel_slot = raw_color)
-            .collect();
+        for pixel_slot in raw_buffer.iter_mut() {
+            *pixel_slot = raw_color;
+        }
     }
     fn height(&self) -> u32 {
         self.manager.surface.height()
@@ -725,6 +768,7 @@ impl<ColorFormat: CanvasColorFormat> Drop for BufferedCanvas<'_, ColorFormat> {
     }
 }
 
+/// A Canvas checked out from the manager where draws are directly writed to the backing framebuffer memory.
 pub struct UnbufferedCanvas<'fb, ColorFormat: sealed::CanvasColorFormat> {
     slot: i32,
     base_pointer: usize,
@@ -734,8 +778,9 @@ pub struct UnbufferedCanvas<'fb, ColorFormat: sealed::CanvasColorFormat> {
 }
 
 impl<ColorFormat: sealed::CanvasColorFormat> UnbufferedCanvas<'_, ColorFormat> {
-    pub fn raw_buffer(&mut self) -> &mut [u8] {
-        unsafe { core::slice::from_raw_parts_mut(self.base_pointer as *mut u8, self.buffer_size) }
+    /// Gets a mutable reference to the raw framebuffer
+    pub fn raw_buffer(&mut self) -> &mut [ColorFormat::RawType] {
+        unsafe { core::slice::from_raw_parts_mut(core::ptr::with_exposed_provenance_mut(self.base_pointer), self.buffer_size / core::mem::size_of::<ColorFormat::RawType>()) }
     }
 
     pub fn draw_single(&mut self, x: i32, y: i32, color: ColorFormat, blend: AlphaBlend) {
@@ -770,14 +815,14 @@ impl<ColorFormat: sealed::CanvasColorFormat> UnbufferedCanvas<'_, ColorFormat> {
         }
     }
 
-    const BYTES_PER_PIXEL: u32 = ColorFormat::BYTES_PER_PIXEL;
+    /// Calculate the actual offset of the pixel in the swizzled framebuffer from the x/y co-ordinates.
     fn xy_to_gob_pixel_offset(&self, x: u32, y: u32) -> usize {
         let block_config = self.manager.surface.get_block_linear_config();
         let block_height = block_config.block_height();
 
         let mut gob_offset =
             (y / (8 * block_height)) * 512 * block_height * (self.manager.surface.pitch() / 64)
-                + (x * Self::BYTES_PER_PIXEL / 64) * 512 * block_height
+                + (x * ColorFormat::COLOR_FORMAT.bytes_per_pixel() / 64) * 512 * block_height
                 + (y % (8 * block_height) / 8) * 512;
 
         //  Figure 46 in the TRM is in pixel space, even though each GOB in a block is sequential in memory.
@@ -792,9 +837,6 @@ impl<ColorFormat: sealed::CanvasColorFormat> UnbufferedCanvas<'_, ColorFormat> {
             + (x % 16);
 
         (gob_offset / ColorFormat::COLOR_FORMAT.bytes_per_pixel()) as usize
-
-        // the above calculations from the erista TRM are for byte offsets, but we have an array of [`Color`]s so we need to adjust
-        //gob_offset + (gob_pixel_offset * bytes_per_pixel)
     }
 }
 
