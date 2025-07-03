@@ -595,9 +595,9 @@ pub fn wait_synchronization_one(handle: Handle, timeout: i64) -> Result<()> {
 /// 
 /// This doesn't take force-pause (activity/debug pause) into account. 
 #[inline(always)]
-pub fn cancel_synchronisation(thread_handle: Handle) -> Result<()> {
+pub fn cancel_synchronization(thread_handle: Handle) -> Result<()> {
     unsafe {
-        let rc = asm::cancel_synchronisation(thread_handle);
+        let rc = asm::cancel_synchronization(thread_handle);
         pack(rc, ())
     }
 }
@@ -656,7 +656,7 @@ pub unsafe fn connect_to_named_port(name: &core::ffi::CStr) -> Result<Handle> {
     unsafe {
         let mut handle: Handle = 0;
 
-        let rc = asm::connect_to_named_port(&mut handle, name.as_ptr());
+        let rc = asm::connect_to_named_port(&mut handle, name.as_ptr().cast());
         pack(rc, handle)
     }
 }
@@ -745,7 +745,7 @@ pub fn r#break(reason: BreakReason, debug_data: &[u8]) -> Result<()> {
 #[inline(always)]
 pub unsafe fn output_debug_string(msg: &core::ffi::CStr) -> Result<()> {
     unsafe {
-        let rc = asm::output_debug_string(msg.as_ptr(), msg.count_bytes());
+        let rc = asm::output_debug_string(msg.as_ptr().cast(), msg.count_bytes());
         pack(rc, ())
     }
 }
@@ -809,7 +809,7 @@ pub unsafe fn map_physical_memory(address: Address, len: Size) -> Result<()> {
     }
 }
 
-/// Unmaps memorry mapped by [`map_physical_memory`].  [3.0.0+]
+/// Unmaps memory mapped by [`map_physical_memory`].  [3.0.0+]
 #[inline(always)]
 pub unsafe fn unmap_physical_memory(address: Address, len: Size) -> Result<()> {
     unsafe {
@@ -1097,7 +1097,7 @@ pub fn continue_debug_event(debug_handle: Handle, flags: u32, thread_ids: &[u64]
     }
 }
 
-///Retrieves a list of all running processes. Returns the hnumber of PIDs written to the buffer.
+///Retrieves a list of all running processes. Returns the number of PIDs written to the buffer.
 #[inline(always)]
 pub fn get_process_list(process_id_list: &mut [u64]) -> Result<usize> {
     unsafe {
@@ -1112,7 +1112,7 @@ pub fn get_process_list(process_id_list: &mut [u64]) -> Result<usize> {
     }
 }
 
-/// Retrieves a list of all threads for a debug handle (or zero). Returns the hnumber of thread IDs written to the buffer.
+/// Retrieves a list of all threads for a debug handle (or zero). Returns the number of thread IDs written to the buffer.
 /// 
 /// This is a privileged syscall and may not be available.
 #[inline(always)]

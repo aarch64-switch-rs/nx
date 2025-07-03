@@ -339,7 +339,7 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
         runner(&mut canvas)
     }
 
-    /// Renders a pre-preprared buffer of pixels (represented by their color values) directly to the screen.
+    /// Renders a pre-prepared buffer of pixels (represented by their color values) directly to the screen.
     ///
     /// A maximum of `(width * height)` pixels are read from the input buffer line-by-line to the screen. Extra
     /// pixels are discarded, and no error is returned for partial refreshes.
@@ -768,7 +768,10 @@ impl<ColorFormat: CanvasColorFormat> Drop for BufferedCanvas<'_, ColorFormat> {
     }
 }
 
-/// A Canvas checked out from the manager where draws are directly writed to the backing framebuffer memory.
+/// A Canvas where draws are directly written to the backing framebuffer memory.
+/// 
+/// Users of this object are expected to write to the screen efficiently to manage memory controller pressure, 
+/// or to accept lower performance for lower memory usage.
 pub struct UnbufferedCanvas<'fb, ColorFormat: sealed::CanvasColorFormat> {
     slot: i32,
     base_pointer: usize,

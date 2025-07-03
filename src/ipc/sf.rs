@@ -1,7 +1,6 @@
 use core::{marker::PhantomData, mem::MaybeUninit};
 
 use super::*;
-use crate::util;
 use alloc::{
     string::{String, ToString},
     vec::Vec,
@@ -55,7 +54,7 @@ impl<
         unsafe {
             Self::from_ptr::<'a>(
                 var as *const U as *const u8,
-                size_of::<U>() / Self::get_expected_size(),
+                size_of::<U>(),
             )
         }
     }
@@ -86,10 +85,6 @@ impl<
         T,
     >
 {
-    pub const fn get_expected_size() -> usize {
-        // Calculate align-padded size of each element in the buffer (in case a type has a larger alignment than its size)
-        util::const_usize_max(mem::size_of::<T>(), mem::align_of::<T>())
-    }
 
     // TODO: ensure that sizeof(T) is a multiple of size
 
@@ -102,7 +97,7 @@ impl<
     pub const unsafe fn new<'a: 'borrow>(addr: *mut u8, size: usize) -> Self {
         Self {
             buf: addr as *mut T,
-            count: size / Self::get_expected_size(),
+            count: size / core::mem::size_of::<T>(),
             _lifetime: PhantomData,
         }
     }
@@ -178,7 +173,7 @@ impl<
     }
 
     pub const fn get_size(&self) -> usize {
-        self.count * Self::get_expected_size()
+        self.count * core::mem::size_of::<T>()
     }
 
     pub const fn get_count(&self) -> usize {
@@ -309,7 +304,7 @@ impl<
         unsafe {
             Self::from_ptr::<'a>(
                 var as *const U as *const _,
-                size_of::<U>() / Self::get_expected_size(),
+                size_of::<U>(),
             )
         }
     }

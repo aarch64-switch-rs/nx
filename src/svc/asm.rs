@@ -322,7 +322,7 @@ pub unsafe extern "C" fn wait_synchronization(
 }
 
 #[unsafe(naked)]
-pub unsafe extern "C" fn cancel_synchronisation(handle: Handle) -> ResultCode {
+pub unsafe extern "C" fn cancel_synchronization(handle: Handle) -> ResultCode {
     nasm!(
         maybe_cfi!(".cfi_startproc"),
         "svc 0x19",

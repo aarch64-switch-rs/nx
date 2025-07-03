@@ -88,6 +88,7 @@ pub struct Rel {
 /// Represents an ELF Rela type.
 #[derive(Copy, Clone)]
 #[repr(C)]
+#[allow(missing_docs)]
 pub struct Rela {
     pub offset: usize,
     pub info: Info,
@@ -161,21 +162,16 @@ pub unsafe fn relocate_with_dyn(base_address: *mut u8, start_dyn: *const Dyn) {
 /// This is obviously not a great option to use with Rust's upcoming strict/exposed providence APIs, but works fine here as
 /// the Switch has a single address space and the memory will have a static lifetime that is longer than the currently running code.
 #[derive(Debug)]
-pub struct EhFrameHdrPtr(AtomicUsize);
+pub(crate) struct EhFrameHdrPtr(AtomicUsize);
 
 impl EhFrameHdrPtr {
-    pub const fn new() -> Self {
+    pub(crate) const fn new() -> Self {
         Self(AtomicUsize::new(0))
     }
 
-    pub fn set(&self, val: *const u8) {
-        self.0.store(val as usize, SeqCst);
-    }
-}
-
-impl Default for EhFrameHdrPtr {
-    fn default() -> Self {
-        Self::new()
+    /// Stores the pointer to the EhFrameHdr section
+    pub(crate) fn set(&self, val: *const u8) {
+        self.0.store(val.expose_provenance(), SeqCst);
     }
 }
 
@@ -186,7 +182,7 @@ unsafe impl unwinding::custom_eh_frame_finder::EhFrameFinder for EhFrameHdrPtr {
         match self.0.load(SeqCst) {
             0 => None,
             ptr => Some(FrameInfo {
-                text_base: None,
+                text_base: Some(crate::rrt0::TEXT_BASE_ADDRESS.load(SeqCst)),
                 kind: FrameInfoKind::EhFrameHdr(ptr),
             }),
         }

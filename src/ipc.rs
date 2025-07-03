@@ -956,17 +956,7 @@ impl CommandContext {
                 return Ok((static_desc.get_address(), static_desc.get_size()));
             } else if OUT {
                 let buf_size = match FIXED_SIZE {
-                    true => sf::Buffer::<
-                        IN,
-                        OUT,
-                        MAP_ALIAS,
-                        POINTER,
-                        FIXED_SIZE,
-                        AUTO_SELECT,
-                        ALLOW_NON_SECURE,
-                        ALLOW_NON_DEVICE,
-                        T,
-                    >::get_expected_size(),
+                    true => core::mem::size_of::<T>(),
                     false => {
                         self.ensure_pointer_size_walker(raw_data_walker);
                         self.pointer_size_walker.advance_get::<u16>() as usize

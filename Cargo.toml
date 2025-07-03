@@ -10,7 +10,7 @@ include = [
 
 [dependencies]
 paste = "1.0"
-logpacket = { git = "https://github.com/aarch64-switch-rs/logpacket" }
+logpacket = { git = "https://github.com/aarch64-switch-rs/logpacket", tag = "0.1.0"}
 arrayvec = { version = "0.7.4", default-features = false }
 static_assertions = "1.1.0"
 lock_api = { version = "0.4.12", features = ["nightly"] }
@@ -76,8 +76,8 @@ default = []
 services = []
 smc = []
 gpu = ["services"]
-vty = ["console", "dep:embedded-term", "dep:embedded-graphics-core"]
-console = ["canvas", "dep:font8x8"]
+vty = ["canvas", "dep:embedded-term", "dep:embedded-graphics-core"]
+console = ["fonts"]
 canvas = ["gpu", "dep:line_drawing"]
 fonts = ["canvas", "dep:ab_glyph", "dep:font8x8"]
 truetype = ["fonts"]

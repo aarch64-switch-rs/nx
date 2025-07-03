@@ -41,9 +41,6 @@
 #![no_std]
 // needed to implement the APIs for collection types with custom allocators, and doing raw allocations
 #![feature(allocator_api)]
-// needed for implementing the mem::Shared type with dyn-compatibility
-#![feature(coerce_unsized)]
-#![feature(unsize)]
 // needed to specify weak linkage on some items
 #![feature(linkage)]
 // needed for the implementation of the threads module
@@ -52,9 +49,6 @@
 #![feature(try_blocks)]
 // used for ergonomics reading UTF16 strings
 #![feature(str_from_utf16_endian)]
-// for manually pre-checked pointer to reference conversion
-#![feature(ptr_as_ref_unchecked)]
-#![feature(pointer_is_aligned_to)]
 
 //#![warn(missing_docs)]
 
@@ -141,7 +135,7 @@ pub mod rand;
 #[cfg(feature = "la")]
 pub mod la;
 
-#[cfg(feature = "console")]
+#[cfg(any(feature = "console", feature = "vty"))]
 #[macro_use]
 pub mod console;
 

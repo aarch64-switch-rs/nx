@@ -1,6 +1,9 @@
 //! Console Services
 
-/// Virtuall TTY functionality
+/// Virtual TTY functionality
+/// 
+/// The types contained are used to create a tty-like environment, that emulate an
+/// ANSI console (e.g. by wrapping the canvas in a [`embedded_term::TextOnGraphic`]).
 #[cfg(feature = "vty")]
 pub mod vty {
 
@@ -16,14 +19,20 @@ pub mod vty {
     pub use embedded_graphics_core::pixelcolor::{Rgb888, RgbColor};
     pub use embedded_graphics_core::primitives::rectangle::Rectangle;
 
+    /// Type alias for a drawable text-buffer backed console.
+    /// 
+    /// The console state is stored in a text buffer, and draws are pushed through a Canvas
+    /// implementation that keeps a persistant pixel buffer between draw calls.
+    pub type TextBufferConsole = embedded_term::Console<embedded_term::TextOnGraphic<PersistentBufferedCanvas>>;
+
     /// Canvas/Framebuffer type that keeps a single buffer that is
     /// flushed to the display on change.
-    pub struct PersistantBufferedCanvas {
+    pub struct PersistentBufferedCanvas {
         buffer: Box<[Rgb888]>,
         canvas: CanvasManager<Rgb888>,
     }
 
-    impl PersistantBufferedCanvas {
+    impl PersistentBufferedCanvas {
         /// Wraps and existing `CanvasManager` instance
         #[inline(always)]
         pub fn new(canvas: CanvasManager<Rgb888>) -> Self {
@@ -80,7 +89,7 @@ pub mod vty {
         }
     }
 
-    impl OriginDimensions for PersistantBufferedCanvas {
+    impl OriginDimensions for PersistentBufferedCanvas {
         #[inline(always)]
         fn size(&self) -> Size {
             Size {
@@ -90,7 +99,7 @@ pub mod vty {
         }
     }
 
-    impl DrawTarget for PersistantBufferedCanvas {
+    impl DrawTarget for PersistentBufferedCanvas {
         type Color = Rgb888;
         type Error = crate::result::ResultCode;
         fn draw_iter<I>(&mut self, pixels: I) -> Result<()>
@@ -153,7 +162,14 @@ pub mod vty {
         }
     }
 }
+
+#[cfg(feature = "console")]
 pub mod scrollback {
+    //! Console types that are really just text buffers that you can push data into.
+    //! 
+    //! These types are useful if you want to log data to the screen as text, but can't do edits or backtracking
+    //! like the vty module.
+
     use core::num::NonZeroU16;
 
     use crate::{
@@ -173,12 +189,17 @@ pub mod scrollback {
         sync::Arc,
     };
 
+    /// A channel-like object for sending strings to the console for display.
+    /// 
+    /// When all clones of this object are dropped, the strong count of the inner `Arc` will drop to zero and the `Weak`
+    /// handle in the background thread will no longer be able to upgrade and read the data. This will cause the background thread to exit.
     #[derive(Clone)]
     pub struct BackgroundWriter {
         inner: Arc<Mutex<VecDeque<String>>>,
     }
 
     impl BackgroundWriter {
+        /// Create a new console to live in a background thread.
         pub fn new(
             gpu_ctx: Arc<RwLock<gpu::Context>>,
             history_limit: u16,
@@ -222,6 +243,7 @@ pub mod scrollback {
             })
         }
 
+        /// Writes a string into the cross-thread buffer.
         #[inline(always)]
         pub fn write(&self, message: impl ToString) {
             self.inner.lock().push_back(message.to_string());
@@ -231,13 +253,18 @@ pub mod scrollback {
     /// This console creates a full-screen layer that will just scroll through provided strings
     pub struct ScrollbackConsole {
         canvas: CanvasManager<RGBA4>,
+        /// The foreground color of the text
         pub text_color: RGBA4,
+        /// The maximum lines of text to keep, excluding the active line
         pub history_limit: u16,
+        /// The maximum number of chars per line of text.
         pub line_max_chars: u16,
+        /// Controls whether the console will automatically wrap to the next line
         pub line_wrap: bool,
         scrollback_history: alloc::collections::VecDeque<String>,
-        pub scrollback_history_offset: u16,
+        scrollback_history_offset: u16,
         current_line: String,
+        /// Scale of the text when drawing
         pub scale: u8,
     }
 
@@ -245,6 +272,7 @@ pub mod scrollback {
     unsafe impl Sync for ScrollbackConsole {}
 
     impl ScrollbackConsole {
+        /// Create a new instance of the console.
         #[inline(always)]
         pub fn new(
             gpu_ctx: Arc<RwLock<gpu::Context>>,
@@ -273,6 +301,9 @@ pub mod scrollback {
             })
         }
 
+        /// Attempts to scroll up through the scroll buffer.
+        /// 
+        /// Only takes affect if there are more lines of text than can be displayed on the screen.
         #[inline(always)]
         pub fn scroll_up(&mut self) {
             let max_line_count = self.max_line_count();
@@ -286,6 +317,10 @@ pub mod scrollback {
             }
         }
 
+        /// Attempts to scroll down through the scroll buffer
+        /// 
+        /// Only takes affect if there are more lines of text than can be displayed on the screen,
+        /// and the current scroll location is not at the most recent line.
         #[inline(always)]
         pub fn scroll_down(&mut self) {
             self.scrollback_history_offset = self.scrollback_history_offset.saturating_sub(1);
@@ -316,6 +351,10 @@ pub mod scrollback {
             }
         }
 
+        /// Writes a pre-formatted line directly to the history, bypassing the current line
+        /// 
+        /// Panics if the line length is longer then the maximum displayable characters in a line,
+        /// or if the string contains a newline character.
         #[inline(always)]
         pub fn push_history_line(&mut self, line: String) {
             let real_max_len =
@@ -344,6 +383,7 @@ pub mod scrollback {
             }
         }
 
+        /// Writes a string to the console buffer.
         pub fn write(&mut self, text: impl AsRef<str>) {
             let mut text = text.as_ref();
 
@@ -358,11 +398,13 @@ pub mod scrollback {
             (self.canvas.surface.height() - 4) / (10 * self.scale as u32)
         }
 
+        /// Renders the console to the screen.
         pub fn draw(&mut self) -> Result<()> {
             let max_line_count = self.max_line_count();
             self.canvas.render(Some(RGBA4::new()), |canvas| {
                 let mut line_y = 2 + 8 * self.scale as i32; // leave a bit of a gap
 
+                // We take one more from the history if we're not displaying the current line
                 let max_history_lines = if self.scrollback_history_offset == 0 {
                     max_line_count - 1
                 } else {
@@ -408,6 +450,7 @@ pub mod scrollback {
             })
         }
 
+        /// Wait for a vsync event to ensure that the previously submitted frame has been fully rendered to the display.
         #[inline(always)]
         pub fn wait_vsync_event(&self, timeout: Option<i64>) -> Result<()> {
             self.canvas.wait_vsync_event(timeout)

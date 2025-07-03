@@ -666,8 +666,8 @@ pub mod net {
             let socket_server = socket_server_handle
                 .as_ref()
                 .ok_or(rc::ResultNotInitialized::make())?;
+            
             let ipaddr = SocketAddrRepr::from((ip, port));
-            //let ipaddr = SocketAddrRepr::from_str(ipaddr).map_err(|_| rc::ResultInvalidSocketString::make())?;
             let listenfd = match socket_server.service.socket(
                 super::SocketDomain::INet,
                 super::SocketType::Stream,

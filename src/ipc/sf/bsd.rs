@@ -12,7 +12,7 @@ use core::time::Duration as TimeSpec;
 
 pub mod rc;
 
-pub const SOL_SOCKET: i32 = (0xffffffff_u32).cast_signed();
+pub const SOL_SOCKET: i32 = 0xffff;
 
 #[derive(Copy, Clone, Debug, Request, Response)]
 #[repr(C)]
@@ -267,7 +267,7 @@ impl BsdResult {
     //fn convert_errno(_errno: i32) {}
 }*/
 
-#[derive(Copy, Clone, Debug, Default, Request, Response)]
+#[derive(Copy, Clone, Default, Request, Response)]
 #[repr(C)]
 pub struct SocketAddrRepr {
     /// The actual size in bytes of the Socket.
@@ -284,8 +284,17 @@ pub struct SocketAddrRepr {
     /// The min size we are working with for the true types. The real size is based on `self.actual_length` and `self.family`.
     pub(crate) _zero: [u8; 8],
 }
-
 const_assert!(core::mem::size_of::<SocketAddrRepr>() == 16);
+
+impl core::fmt::Debug for SocketAddrRepr {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("SocketAddrRepr")
+        .field("family", &self.family)
+        .field("address", &self.addr)
+        .field("port", &u16::from_be(self.port))
+        .finish_non_exhaustive()
+    }
+}
 
 impl FromStr for SocketAddrRepr {
     type Err = core::net::AddrParseError;
@@ -748,7 +757,7 @@ pub enum IpProto {
     ICMP = 1,
     TCP = 6,
     UDP = 17,
-    Socket = 0xffffffff_u32.cast_signed() as _
+    Socket = 0xffff
 }
 
 define_bit_set! {
