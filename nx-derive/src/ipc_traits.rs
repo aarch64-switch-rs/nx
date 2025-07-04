@@ -36,7 +36,7 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
 
     let default_client: TokenStream = if build_default_client {
         quote! {
-            /// The default client for the `#name` trait. All implementors of the trait need to read their session in accordance with this Types IPC Parameter traits.
+            #[doc = concat!("The default client for the `", stringify!(#name), "` trait. All implementors of the trait need to read their session in accordance with this Types IPC Parameter traits.")]
             pub struct #name {
                 #[doc(hidden)]
                 pub (crate) session: ::nx::ipc::sf::Session
@@ -488,17 +488,18 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
                 #server_fns
             )*
 
-            /// The dynamic dispatch function that calls into the IPC server functions. This should only be called from the [`::nx::ipc::server::ServerManager`] and not from client code.
-                /// Examples for implementing [`ISessionObject`][`::nx::ipc::server::ISessionObject`] or [`IMitmServerOject`][`::nx::ipc::server::IMitmServerObject`] can be found in the [`nx`] crate.
-                fn try_handle_request_by_id(&mut self, req_id: u32, protocol: ::nx::ipc::CommandProtocol, ctx: &mut ::nx::ipc::server::ServerContext) -> Option<::nx::result::Result<()>> {
-                    let version = ::nx::version::get_version();
-                    match req_id {
-                        #(
-                            #handle_request_matches
-                        ),*
-                        _ => None
-                    }
+            /// The dynamic dispatch function that calls into the IPC server functions. This should only be called from the [`ServerManager`][`::nx::ipc::server::ServerManager`] and not from client code.
+            /// 
+            /// Examples for implementing [`ISessionObject`][`::nx::ipc::server::ISessionObject`] or [`IMitmServerOject`][`::nx::ipc::server::IMitmServerObject`] can be found in the [examples](https://github.com/aarch64-switch-rs/examples/) crate.
+            fn try_handle_request_by_id(&mut self, req_id: u32, protocol: ::nx::ipc::CommandProtocol, ctx: &mut ::nx::ipc::server::ServerContext) -> Option<::nx::result::Result<()>> {
+                let version = ::nx::version::get_version();
+                match req_id {
+                    #(
+                        #handle_request_matches
+                    ),*
+                    _ => None
                 }
+            }
         }
     })
 }
