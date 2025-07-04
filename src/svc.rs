@@ -6,6 +6,7 @@ use crate::arm;
 use crate::ipc::sf::ncm;
 use crate::result::*;
 use crate::util;
+use crate::util::ArrayString;
 use core::mem;
 use core::ptr;
 
@@ -40,6 +41,15 @@ pub enum BreakReason {
     PostUnloadDll = 6,
     CppException = 7,
     NotificationOnlyFlag = 0x80000000,
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[repr(u32)]
+pub enum CodeMapOperation {
+    MapOwner = 0,
+    MapSlave,
+    UnmapOwner,
+    UnmapSlave,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -106,30 +116,190 @@ pub struct MemoryInfo {
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
 pub enum InfoId {
+    /// Bitmask of allowed Core IDs.
     CoreMask = 0,
+    /// Bitmask of allowed Thread Priorities.
     PriorityMask = 1,
+    /// Base of the Alias memory region.
     AliasRegionAddress = 2,
+    /// Size of the Alias memory region.
     AliasRegionSize = 3,
+    /// Base of the Heap memory region.
     HeapRegionAddress = 4,
+    /// Size of the Heap memory region.
     HeapRegionSize = 5,
+    /// Total amount of memory available for process.
     TotalMemorySize = 6,
+    /// Amount of memory currently used by process.
     UsedMemorySize = 7,
+    /// Whether current process is being debugged.
     DebuggerAttached = 8,
+    /// Current process's resource limit handle.
     ResourceLimit = 9,
+    /// Number of idle ticks on CPU.
     IdleTickCount = 10,
+    /// [2.0.0+] Random entropy for current process.
     RandomEntropy = 11,
+    /// [2.0.0+] Base of the process's address space.
     AslrRegionAddress = 12,
+    /// [2.0.0+] Size of the process's address space.
     AslrRegionSize = 13,
+    /// [2.0.0+] Base of the Stack memory region.
     StackRegionAddress = 14,
+    /// [2.0.0+] Size of the Stack memory region.
     StackRegionSize = 15,
+    /// [3.0.0+] Total memory allocated for process memory management.
     SystemResourceSizeTotal = 16,
+    /// [3.0.0+] Amount of memory currently used by process memory management.
     SystemResourceSizeUsed = 17,
+    /// [3.0.0+] Program ID for the process.
     ProgramId = 18,
+    /// [4.0.0-4.1.0] Min/max initial process IDs.
     InitialProcessIdRange = 19,
+    /// [5.0.0+] Address of the process's exception context (for break).
     UserExceptionContextAddress = 20,
+    /// [6.0.0+] Total amount of memory available for process, excluding that for process memory management.
     TotalNonSystemMemorySize = 21,
+    /// [6.0.0+] Amount of memory used by process, excluding that for process memory management.
     UsedNonSystemMemorySize = 22,
+    /// [9.0.0+] Whether the specified process is an Application.
     IsApplication = 23,
+    /// [11.0.0+] The number of free threads available to the process's resource limit.
+    FreeThreadCount = 24,
+    /// [13.0.0+] Number of ticks spent on thread.
+    ThreadTickCount = 25,
+    /// [14.0.0+] Does process have access to SVC (only usable with \ref svcSynchronizePreemptionState at present).
+    IsSvcPermitted = 26,
+    /// [16.0.0+] Low bits of the physical address for a KIoRegion.
+    IoRegionHint = 27,
+    /// [18.0.0+] Extra size added to the reserved region.
+    AliasRegionExtraSize = 28,
+    /// [19.0.0+] Low bits of the process address for a KTransferMemory.
+    TransferMemoryHint = 34,
+    /// [1.0.0-12.1.0] Number of ticks spent on thread.
+    ThreadTickCountDeprecated = 0xF0000002,
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[repr(u64)]
+pub enum SystemInfoParam {
+    /// Total amount of DRAM available to system.
+    TotalPhysicalMemorySize = 0,
+    /// Current amount of DRAM used by system.
+    UsedPhysicalMemorySize = 1,
+    /// Min/max initial process IDs.
+    InitialProcessIdRange = 2,
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[repr(u8)]
+pub enum AddressSpaceType {
+    ThirtyTwoBit = 0,
+    SixtyFourBitDeprecated = 1,
+    ThirtyTwoBitWithoutAlias = 2,
+    SixtyFourBit = 3,
+    #[default]
+    Mask = 0x7
+}
+
+impl AddressSpaceType {
+    const fn into_bits(self) -> u8 {
+        self as _
+    }
+
+    const fn from_bits(val: u8) -> Self {
+        match val {
+            0..=3 => unsafe {core::mem::transmute(val)},
+            _ => Self::Mask
+        }
+    }
+}
+
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[repr(u8)]
+pub enum MemoryPoolType {
+    Application = 0,
+    Applet = 1,
+    System = 2,
+    SystemNonSecure = 3,
+    #[default]
+    Mask = 0xF
+}
+
+impl MemoryPoolType {
+    const fn into_bits(self) -> u8 {
+        self as _
+    }
+
+    const fn from_bits(val: u8) -> Self {
+        match val {
+            0..=3 => unsafe {core::mem::transmute(val)},
+            _ => Self::Mask
+        }
+    }
+}
+
+#[bitfield_struct::bitfield(u32, order = Lsb)]
+pub struct CreateProcessFlags {
+    pub is_64bit: bool,
+    #[bits(3, default = AddressSpaceType::Mask)]
+    pub address_space_flags: AddressSpaceType,
+    pub enable_debug: bool,
+    pub enable_aslr: bool,
+    pub is_application: bool,
+    #[bits(4, default = MemoryPoolType::Mask)]
+    pub memory_pool_type: MemoryPoolType,
+    pub optimise_memory_allocation: bool,
+    pub disable_device_address_space_merge: bool,
+    pub alias_region_extra_size: bool,
+    #[bits(18)]
+    _unused: u32,
+}
+
+impl CreateProcessFlags {
+    pub const fn all() -> Self {
+        Self::new()
+            .with_is_64bit(true)
+            .with_address_space_flags(AddressSpaceType::Mask)
+            .with_enable_debug(true)
+            .with_enable_aslr(true)
+            .with_is_application(true)
+            .with_memory_pool_type(MemoryPoolType::Mask)
+            .with_optimise_memory_allocation(true)
+            .with_disable_device_address_space_merge(true)
+            .with_alias_region_extra_size(true)
+    }
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[repr(C)]
+pub struct CreateProcessInfo {
+    pub name: ArrayString<12>,
+    pub version: u32,
+    pub program_id: u64,
+    pub code_address: usize,
+    pub code_num_pages: i32,
+    pub flags: u32,
+    pub resource_limit_handle: Handle,
+    pub system_resource_page_count: i32,
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[repr(C)]
+pub enum DebugThreadParam {
+    ActualPriority = 0,
+    State = 1,
+    IdealCore = 2,
+    CurrentCore = 3,
+    CoreMask = 4,
+}
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[repr(C)]
+pub struct PhysicalMemoryInfo {
+    physical_address: usize,
+    virtual_address: usize,
+    size: usize,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -271,11 +441,11 @@ pub enum LimitableResource {
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]
-/// Thread Activity.
-pub enum ThreadActivity {
-    ///  Thread can run.
+/// Thread/Process Scheduler State.
+pub enum SchedulerState {
+    /// Can be scheduled.
     Runnable = 0,
-    ///  Thread is paused.
+    /// Will not be scheduled.
     Paused = 1,
 }
 
@@ -344,11 +514,7 @@ pub unsafe fn set_memory_attribute(address: Address, size: Size, set_uncached: b
 /// Source range gets reprotected to [`MemoryAttribute::None()`] (it can no longer be accessed),
 /// and [`MemoryAttribute::Borrowed()`] is set in the source page's [`MemoryAttribute`].
 #[inline(always)]
-pub unsafe fn map_memory(
-    address: Address,
-    source_address: MutAddress,
-    size: Size,
-) -> Result<()> {
+pub unsafe fn map_memory(address: Address, source_address: MutAddress, size: Size) -> Result<()> {
     unsafe {
         let rc = asm::map_memory(address, source_address, size);
         pack(rc, ())
@@ -357,11 +523,7 @@ pub unsafe fn map_memory(
 
 /// Unmaps a region that was previously mapped with [`map_memory`]
 #[inline(always)]
-pub unsafe fn unmap_memory(
-    address: Address,
-    source_address: MutAddress,
-    size: Size,
-) -> Result<()> {
+pub unsafe fn unmap_memory(address: Address, source_address: MutAddress, size: Size) -> Result<()> {
     unsafe {
         let rc = asm::unmap_memory(address, source_address, size);
         pack(rc, ())
@@ -390,7 +552,7 @@ pub fn exit_process() -> ! {
 }
 
 /// Creates a thread.
-/// 
+///
 /// The pointer to the thread arguments and stack memory _must_ live at least as long as the thread is alive.
 #[inline(always)]
 pub unsafe fn create_thread(
@@ -458,7 +620,6 @@ pub fn set_thread_priority(handle: Handle, priority: i32) -> Result<()> {
         pack(rc, ())
     }
 }
-
 
 /// Gets a thread's core mask.
 #[inline(always)]
@@ -528,7 +689,7 @@ pub unsafe fn unmap_shared_memory(handle: Handle, address: Address, size: Size) 
 }
 
 /// Creates a block of transfer memory.
-/// 
+///
 /// The memory will be reprotected with `permissions` after creation (usually set to none).
 /// The original memory permissions will be restored when the handle is closed.
 #[inline(always)]
@@ -565,16 +726,14 @@ pub fn reset_signal(handle: Handle) -> Result<()> {
 }
 
 /// Waits on one or more synchronization objects, optionally with a timeout.
-/// 
+///
 /// The max number of handles is `0x40` (64). This is a Horizon kernel limitation.
 #[inline(always)]
-pub unsafe fn wait_synchronization(
-    handles: &[Handle],
-    timeout: i64,
-) -> Result<i32> {
+pub unsafe fn wait_synchronization(handles: &[Handle], timeout: i64) -> Result<i32> {
     unsafe {
         let mut index: i32 = 0;
-        let rc = asm::wait_synchronization(&mut index, handles.as_ptr(), handles.len() as u32, timeout);
+        let rc =
+            asm::wait_synchronization(&mut index, handles.as_ptr(), handles.len() as u32, timeout);
         pack(rc, index)
     }
 }
@@ -592,8 +751,8 @@ pub fn wait_synchronization_one(handle: Handle, timeout: i64) -> Result<()> {
 /// If the referenced thread is currently in a synchronization call ([`wait_synchronization`], [`reply_and_receive`]
 /// or [`reply_and_receive_light`]), that call will be interrupted and return `0xec01`([`ResultCancelled`][`rc::ResultCancelled`]) .
 /// If that thread is not currently executing such a synchronization call, the next call to a synchronization call will return `0xec01``.
-/// 
-/// This doesn't take force-pause (activity/debug pause) into account. 
+///
+/// This doesn't take force-pause (activity/debug pause) into account.
 #[inline(always)]
 pub fn cancel_synchronization(thread_handle: Handle) -> Result<()> {
     unsafe {
@@ -680,13 +839,10 @@ pub fn send_sync_request(handle: Handle) -> Result<()> {
 }
 
 /// Sends an IPC synchronization request to a session from an user allocated buffer.
-/// 
+///
 /// The buffer size must be a multiple of the system page size (0x1000).
 #[inline(always)]
-pub unsafe fn send_sync_request_with_user_data(
-    buffer: &mut [u8],
-    handle: Handle,
-) -> Result<()> {
+pub unsafe fn send_sync_request_with_user_data(buffer: &mut [u8], handle: Handle) -> Result<()> {
     unsafe {
         let rc = asm::send_sync_request_with_user_data(buffer.as_mut_ptr(), buffer.len(), handle);
         pack(rc, ())
@@ -694,7 +850,7 @@ pub unsafe fn send_sync_request_with_user_data(
 }
 
 /// Sends an IPC synchronization request to a session from an user allocated buffer (asynchronous version).
-/// 
+///
 /// The buffer size must be a multiple of the system page size (0x1000).
 #[inline(always)]
 pub unsafe fn send_async_request_with_user_data(
@@ -703,7 +859,12 @@ pub unsafe fn send_async_request_with_user_data(
 ) -> Result<Handle> {
     unsafe {
         let mut out_handle = 0;
-        let rc = asm::send_async_request_with_user_data(&mut out_handle, buffer.as_mut_ptr(), buffer.len(), session);
+        let rc = asm::send_async_request_with_user_data(
+            &mut out_handle,
+            buffer.as_mut_ptr(),
+            buffer.len(),
+            session,
+        );
         pack(rc, out_handle)
     }
 }
@@ -731,7 +892,7 @@ pub fn get_thread_id(handle: Handle) -> Result<u64> {
 }
 
 /// Breaks execution
-/// 
+///
 /// The `debug_data` buffer is passed to a debugging instance if one is attached.
 #[inline(always)]
 pub fn r#break(reason: BreakReason, debug_data: &[u8]) -> Result<()> {
@@ -753,13 +914,11 @@ pub unsafe fn output_debug_string(msg: &core::ffi::CStr) -> Result<()> {
 /// Returns from an exception.
 #[inline(always)]
 pub fn return_from_exception(res: ResultCode) -> ! {
-    unsafe {
-        asm::return_from_exception(res);
-    }
+    unsafe { asm::return_from_exception(res) }
 }
 
 /// Retrieves information about the system, or a certain kernel object, depending on the value of `id`.
-/// 
+///
 /// `handle` is for particular kernel objects, but `INVALID_HANDLE` is used to retrieve information about the system.
 #[inline(always)]
 pub fn get_info(id: InfoId, handle: Handle, sub_id: u64) -> Result<u64> {
@@ -773,9 +932,9 @@ pub fn get_info(id: InfoId, handle: Handle, sub_id: u64) -> Result<u64> {
 
 /*
 /// Flushes the entire data cache (by set/way).
-/// 
+///
 /// This is a privileged syscall and may not be available.
-/// 
+///
 /// This syscall has dangerous side effects and should not be used.
 #[inline(always)]
 #[deprecated]
@@ -789,7 +948,7 @@ pub unsafe fn flush_entire_data_cache() -> Result<()> {
     */
 
 /// Flushes data cache for a virtual address range.
-/// 
+///
 /// [`cache_flush`][`crate::arm::cache_flush`] should be used instead whenever possible.
 #[inline(always)]
 #[deprecated]
@@ -819,10 +978,10 @@ pub unsafe fn unmap_physical_memory(address: Address, len: Size) -> Result<()> {
 }
 
 /// Gets information about a thread that will be scheduled in the future. [5.0.0+]
-/// 
+///
 /// `ns` is the nanoseconds in the future when the thread information will be sampled
 /// by the kernel.
-/// 
+///
 /// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub fn get_debug_future_thread_info(
@@ -855,7 +1014,7 @@ pub fn get_last_thread_info() -> Result<(LastThreadContext, u64, u32)> {
 }
 
 /// Gets the maximum value a LimitableResource can have, for a Resource Limit handle.
-/// 
+///
 /// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub fn get_resource_limit_limit_value(
@@ -871,7 +1030,7 @@ pub fn get_resource_limit_limit_value(
 }
 
 /// Gets the current value a LimitableResource has, for a Resource Limit handle.
-/// 
+///
 /// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub fn get_resource_limit_current_value(
@@ -888,7 +1047,7 @@ pub fn get_resource_limit_current_value(
 
 /// Pauses/unpauses a thread.
 #[inline(always)]
-pub fn set_thread_activity(thread_handle: Handle, thread_state: ThreadActivity) -> Result<()> {
+pub fn set_thread_activity(thread_handle: Handle, thread_state: SchedulerState) -> Result<()> {
     unsafe {
         let rc = asm::set_thread_activity(thread_handle, thread_state);
         pack(rc, ())
@@ -943,7 +1102,7 @@ pub unsafe fn synchronize_preemption_state() -> Result<()> {
 }
 
 /// Creates an IPC session.
-/// 
+///
 /// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub fn create_session(is_light: bool, unk_name: u64) -> Result<(Handle, Handle)> {
@@ -968,7 +1127,7 @@ pub fn accept_session(handle: Handle) -> Result<Handle> {
 }
 
 /// Performs light IPC input/output.
-/// 
+///
 /// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub fn reply_and_receive_light(handle: Handle) -> Result<()> {
@@ -979,7 +1138,7 @@ pub fn reply_and_receive_light(handle: Handle) -> Result<()> {
 }
 
 /// Performs IPC input/output.
-/// 
+///
 /// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub unsafe fn reply_and_receive(
@@ -997,7 +1156,7 @@ pub unsafe fn reply_and_receive(
 }
 
 /// Performs IPC input/output on a user-allocated buffer.
-/// 
+///
 /// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub unsafe fn reply_and_receive_with_user_buffer(
@@ -1035,7 +1194,7 @@ pub fn create_event() -> Result<(Handle, Handle)> {
 }
 
 /// Debugs an active process.
-/// 
+///
 /// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub fn debug_active_process(process_id: u64) -> Result<Handle> {
@@ -1047,7 +1206,7 @@ pub fn debug_active_process(process_id: u64) -> Result<Handle> {
 }
 
 /// Breaks an active debugging session.
-/// 
+///
 /// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub fn break_debug_process(debug_handle: Handle) -> Result<()> {
@@ -1058,7 +1217,7 @@ pub fn break_debug_process(debug_handle: Handle) -> Result<()> {
 }
 
 /// Terminates the process of an active debugging session
-/// 
+///
 /// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub fn terminate_debug_process(debug_handle: Handle) -> Result<()> {
@@ -1069,7 +1228,7 @@ pub fn terminate_debug_process(debug_handle: Handle) -> Result<()> {
 }
 
 /// Gets an incoming debug event from a debugging session.
-/// 
+///
 /// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub fn get_debug_event(debug_handle: Handle) -> Result<DebugEvent> {
@@ -1082,7 +1241,7 @@ pub fn get_debug_event(debug_handle: Handle) -> Result<DebugEvent> {
 }
 
 /// Continues a debugging session. [3.0.0+]
-/// 
+///
 /// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub fn continue_debug_event(debug_handle: Handle, flags: u32, thread_ids: &[u64]) -> Result<()> {
@@ -1113,7 +1272,7 @@ pub fn get_process_list(process_id_list: &mut [u64]) -> Result<usize> {
 }
 
 /// Retrieves a list of all threads for a debug handle (or zero). Returns the number of thread IDs written to the buffer.
-/// 
+///
 /// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub fn get_thread_list(debug_handle: Handle, thread_id_list: &mut [u64]) -> Result<usize> {
@@ -1131,7 +1290,7 @@ pub fn get_thread_list(debug_handle: Handle, thread_id_list: &mut [u64]) -> Resu
 }
 
 /// Queries the thread context for a thread under debugging.
-/// 
+///
 /// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub fn get_debug_thread_context(
@@ -1143,7 +1302,7 @@ pub fn get_debug_thread_context(
         let mut thread_context: arm::ThreadContext = Default::default();
 
         let rc = asm::get_debug_thread_context(
-            (&raw mut thread_context).cast(),
+            &raw mut thread_context,
             debug_handle,
             thread_id,
             register_group.get(),
@@ -1153,7 +1312,7 @@ pub fn get_debug_thread_context(
 }
 
 /// Writes the thread context (scoped by `register_group`) back into a thread under debugging.
-/// 
+///
 /// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub fn set_debug_thread_context(
@@ -1166,18 +1325,17 @@ pub fn set_debug_thread_context(
         let rc = asm::set_debug_thread_context(
             debug_handle,
             thread_id,
-            &raw const thread_context as *const _,
+            &raw const thread_context,
             register_group.get(),
         );
         pack(rc, ())
     }
 }
 
-
 /// Gets the memory metadata for an address in a process under debugging.
-/// 
+///
 /// This is a privileged syscall and may not be available.
-/// 
+///
 /// # Safety
 ///
 /// null pointers are OK here, as we are just querying the memory's information
@@ -1202,7 +1360,7 @@ pub fn query_debug_process_memory(
 }
 
 /// Reads memory from an address in a process under debugging.
-/// 
+///
 /// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub unsafe fn read_debug_process_memory(
@@ -1211,13 +1369,18 @@ pub unsafe fn read_debug_process_memory(
     buffer: &mut [u8],
 ) -> Result<()> {
     unsafe {
-        let rc = asm::read_debug_process_memory(buffer.as_mut_ptr(), debug_handle, read_address, buffer.len());
+        let rc = asm::read_debug_process_memory(
+            buffer.as_mut_ptr(),
+            debug_handle,
+            read_address,
+            buffer.len(),
+        );
         pack(rc, ())
     }
 }
 
 /// Reads memory to an address in a process under debugging.
-/// 
+///
 /// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub unsafe fn write_debug_process_memory(
@@ -1232,9 +1395,8 @@ pub unsafe fn write_debug_process_memory(
     }
 }
 
-
 /// Creates a named port.
-/// 
+///
 /// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub unsafe fn create_named_port(
@@ -1258,7 +1420,7 @@ pub unsafe fn create_named_port(
 }
 
 /// Manages a named port.
-/// 
+///
 /// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub unsafe fn manage_named_port(name: &core::ffi::CStr, max_sessions: i32) -> Result<Handle> {
@@ -1271,7 +1433,7 @@ pub unsafe fn manage_named_port(name: &core::ffi::CStr, max_sessions: i32) -> Re
 }
 
 /// Connects a named port.
-/// 
+///
 /// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub unsafe fn connect_named_port(client_session: Handle) -> Result<Handle> {
@@ -1283,9 +1445,8 @@ pub unsafe fn connect_named_port(client_session: Handle) -> Result<Handle> {
     }
 }
 
-
 /// Calls a secure monitor function (TrustZone, EL3).
-/// 
+///
 /// This is a privileged syscall and may not be available.
 #[inline(always)]
 pub fn call_secure_monitor(mut secmon_args: [u64; 8]) -> [u64; 8] {

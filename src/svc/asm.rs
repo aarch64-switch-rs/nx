@@ -1,12 +1,13 @@
 use core::arch::naked_asm as nasm;
 
-use crate::arm;
 use crate::macros::util::maybe_cfi;
 use crate::result::ResultCode;
+use crate::svc::{CreateProcessInfo, DebugThreadParam, SystemInfoParam};
+use crate::{arm, svc::PhysicalMemoryInfo};
 
 use super::{
-    BreakReason, DebugEvent, Handle, InfoId, LastThreadContext, LimitableResource, MemoryAttribute,
-    MemoryInfo, MemoryPermission, PageInfo, ThreadActivity,
+    BreakReason, CodeMapOperation, DebugEvent, Handle, InfoId, LastThreadContext,
+    LimitableResource, MemoryAttribute, MemoryInfo, MemoryPermission, PageInfo, SchedulerState,
 };
 
 #[unsafe(naked)]
@@ -657,7 +658,7 @@ pub unsafe extern "C" fn get_resource_limit_current_value(
 #[unsafe(naked)]
 pub unsafe extern "C" fn set_thread_activity(
     thread_handle: Handle,
-    thread_state: ThreadActivity,
+    thread_state: SchedulerState,
 ) -> ResultCode {
     nasm!(
         maybe_cfi!(".cfi_startproc"),
@@ -720,53 +721,79 @@ pub unsafe extern "C" fn synchronize_preemption_states() -> ResultCode {
     );
 }
 
-/*
+#[unsafe(naked)]
+pub unsafe extern "C" fn get_resource_limit_peak_value(
+    out_value: *mut i64,
+    resource_limit_handle: Handle,
+    limit_kind: LimitableResource,
+) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "str x0, [sp, #-16]!",
+        "svc 0x37",
+        "ldr x2, [sp], #16",
+        "str x1, [x2]",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-get_resource_limit_peak_value
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"str x0, [sp, #-16]!",
-"svc 0x37",
-"ldr x2, [sp], #16",
-"str x1, [x2]",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn create_io_pool(pool_type: u32) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "str x0, [sp, #-16]!",
+        "svc 0x39",
+        "ldr x2, [sp], #16",
+        "str w1, [x2]",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-create_io_pool
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"str x0, [sp, #-16]!",
-"svc 0x39",
-"ldr x2, [sp], #16",
-"str w1, [x2]",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn create_io_region(
+    io_region_handle: *mut Handle,
+    io_pool_handle: Handle,
+    physical_addres: *mut u8,
+    size: usize,
+    permissions: MemoryPermission,
+) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "str x0, [sp, #-16]!",
+        "svc 0x3A",
+        "ldr x2, [sp], #16",
+        "str w1, [x2]",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-create_io_region
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"str x0, [sp, #-16]!",
-"svc 0x3A",
-"ldr x2, [sp], #16",
-"str w1, [x2]",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn kernel_debug(
+    debug_type: u32,
+    debug_arg0: u64,
+    debug_arg1: u64,
+    debug_arg2: u64,
+) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "svc 0x3C",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-kernel_debug
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"svc 0x3C",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
-
-change_kernel_trace_state
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"svc 0x3D",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
-
-*/
+#[unsafe(naked)]
+pub unsafe extern "C" fn change_kernel_trace_state(tracing_state: u32) {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "svc 0x3D",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
 #[unsafe(naked)]
 pub unsafe extern "C" fn create_session(
@@ -870,228 +897,411 @@ pub unsafe extern "C" fn create_event(
     );
 }
 
-/*
+#[unsafe(naked)]
+pub unsafe extern "C" fn map_io_region(
+    io_region_handle: Handle,
+    address: *mut u8,
+    size: usize,
+    permissions: MemoryPermission,
+) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "svc 0x46",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
+#[unsafe(naked)]
+pub unsafe extern "C" fn unmap_io_region(
+    io_region_handle: Handle,
+    address: *mut u8,
+    size: usize,
+) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "svc 0x47",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-map_io_region
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"svc 0x46",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn map_physical_memory_unsafe(address: *mut u8, size: usize) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "svc 0x48",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-unmap_io_region
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"svc 0x47",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn unmap_physical_memory_unsafe(address: *mut u8, size: usize) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "svc 0x49",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-map_physical_memory_unsafe
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"svc 0x48",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn set_unsafe_limit(size: usize) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "svc 0x4A",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-unmap_physical_memory_unsafe
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"svc 0x49",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn create_code_memory(
+    code_memory_handle: *mut Handle,
+    source_address: *mut u8,
+    size: usize,
+) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "str x0, [sp, #-16]!",
+        "svc 0x4B",
+        "ldr x2, [sp], #16",
+        "str w1, [x2]",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-set_unsafe_limit
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"svc 0x4A",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn control_code_memory(
+    code_memory_handle: Handle,
+    operation_type: CodeMapOperation,
+    destination_address: *mut u8,
+    size: usize,
+    permission: MemoryPermission,
+) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "svc 0x4C",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-create_code_memory
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"str x0, [sp, #-16]!",
-"svc 0x4B",
-"ldr x2, [sp], #16",
-"str w1, [x2]",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn sleep_system() -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "svc 0x4D",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-control_code_memory
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"svc 0x4C",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn read_write_register(
+    mmio_val: u32,
+    register_addres: usize,
+    read_write_mask: u32,
+    in_val: u32,
+) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "str x0, [sp, #-16]!",
+        "svc 0x4E",
+        "ldr x2, [sp], #16",
+        "str w1, [x2]",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-sleep_system
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"svc 0x4D",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn set_process_activity(
+    process: Handle,
+    paused: SchedulerState,
+) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "svc 0x4F",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-read_write_register
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"str x0, [sp, #-16]!",
-"svc 0x4E",
-"ldr x2, [sp], #16",
-"str w1, [x2]",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn create_shared_memory(
+    shmem_handle: *mut Handle,
+    size: usize,
+    local_permission: MemoryPermission,
+    other_permission: MemoryPermission,
+) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "str x0, [sp, #-16]!",
+        "svc 0x50",
+        "ldr x2, [sp], #16",
+        "str w1, [x2]",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-set_process_activity
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"svc 0x4F",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn map_transfer_memory(
+    tmem_handle: Handle,
+    address: *mut u8,
+    size: usize,
+    permissions: MemoryPermission,
+) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "svc 0x51",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-create_shared_memory
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"str x0, [sp, #-16]!",
-"svc 0x50",
-"ldr x2, [sp], #16",
-"str w1, [x2]",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn unmap_transfer_memory(
+    tmem_handle: Handle,
+    address: *mut u8,
+    size: usize,
+) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "svc 0x52",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-map_transfer_memory
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"svc 0x51",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn create_interrupt_event(
+    int_handle: *mut Handle,
+    irq_number: u64,
+    flags: u32,
+) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "str x0, [sp, #-16]!",
+        "svc 0x53",
+        "ldr x2, [sp], #16",
+        "str w1, [x2]",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-unmap_transfer_memory
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"svc 0x52",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn query_physical_address(
+    mem_info: PhysicalMemoryInfo,
+    virtual_address: usize,
+) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "str x0, [sp, #-16]!",
+        "svc 0x54",
+        "ldr x4, [sp], #16",
+        "stp x1, x2, [x4]",
+        "str x3, [x4, #16]",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-create_interrupt_event
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"str x0, [sp, #-16]!",
-"svc 0x53",
-"ldr x2, [sp], #16",
-"str w1, [x2]",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn query_io_mapping(
+    virtual_address: *mut usize,
+    virtual_size: *mut usize,
+    physical_address: usize,
+    physical_size: usize,
+) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "stp x0, x1, [sp, #-16]!",
+        "svc 0x55",
+        "ldp x3, x4, [sp], #16",
+        "str x1, [x3]",
+        "str x2, [x4]",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-query_physical_address
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"str x0, [sp, #-16]!",
-"svc 0x54",
-"ldr x4, [sp], #16",
-"stp x1, x2, [x4]",
-"str x3, [x4, #16]",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn legacy_query_io_mapping(
+    virtual_address: *mut usize,
+    physical_address: usize,
+    physical_size: usize,
+) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "str x0, [sp, #-16]!",
+        "svc 0x55",
+        "ldr x2, [sp], #16",
+        "str x1, [x2]",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-query_io_mapping
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"stp x0, x1, [sp, #-16]!",
-"svc 0x55",
-"ldp x3, x4, [sp], #16",
-"str x1, [x3]",
-"str x2, [x4]",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn create_device_address_space(
+    device_handle: *mut Handle,
+    device_address: usize,
+    device_mem_size: usize,
+) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "str x0, [sp, #-16]!",
+        "svc 0x56",
+        "ldr x2, [sp], #16",
+        "str w1, [x2]",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-legacy_query_io_mapping
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"str x0, [sp, #-16]!",
-"svc 0x55",
-"ldr x2, [sp], #16",
-"str x1, [x2]",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn attach_device_address_space(
+    device: usize,
+    device_handle: Handle,
+) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "svc 0x57",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-create_device_address_space
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"str x0, [sp, #-16]!",
-"svc 0x56",
-"ldr x2, [sp], #16",
-"str w1, [x2]",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn detach_device_address_space(
+    device: usize,
+    device_handle: Handle,
+) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "svc 0x58",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-attach_device_address_space
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"svc 0x57",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn map_device_address_space_by_force(
+    handle: Handle,
+    process_handle: Handle,
+    map_addresss: usize,
+    device_mem_size: usize,
+    device_address: usize,
+    options: u32,
+) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "svc 0x59",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-detach_device_address_space
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"svc 0x58",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn map_device_address_space_aligned(
+    handle: Handle,
+    process_handle: Handle,
+    map_addresss: usize,
+    device_mem_size: usize,
+    device_address: usize,
+    options: u32,
+) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "svc 0x5A",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-map_device_address_space_by_force
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"svc 0x59",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn map_device_address_space(
+    mapped_address_size: *mut usize,
+    handle: Handle,
+    process_handle: Handle,
+    map_addresss: usize,
+    device_mem_size: usize,
+    device_address: usize,
+    options: u32,
+) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "str x0, [sp, #-16]!",
+        "svc 0x5B",
+        "ldr x2, [sp], #16",
+        "str w1, [x2]",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-map_device_address_space_aligned
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"svc 0x5A",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn unmap_device_address_space(
+    handle: Handle,
+    process_handle: Handle,
+    map_addresss: usize,
+    device_mem_size: usize,
+    device_address: usize,
+) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "svc 0x5C",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-map_device_address_space
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"str x0, [sp, #-16]!",
-"svc 0x5B",
-"ldr x2, [sp], #16",
-"str w1, [x2]",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn invalidate_process_data_cache(
+    proc_handle: Handle,
+    address: *const u8,
+    size: usize,
+) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "svc 0x5D",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-unmap_device_address_space
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"svc 0x5C",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn store_process_data_cache(
+    proc_handle: Handle,
+    address: *const u8,
+    size: usize,
+) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "svc 0x5E",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-invalidate_process_data_cache
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"svc 0x5D",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
-
-store_process_data_cache
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"svc 0x5E",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
-
-flush_process_data_cache
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"svc 0x5F",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
-
-*/
+#[unsafe(naked)]
+pub unsafe extern "C" fn flush_process_data_cache(
+    proc_handle: Handle,
+    address: *const u8,
+    size: usize,
+) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "svc 0x5F",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
 #[unsafe(naked)]
 pub unsafe extern "C" fn debug_active_process(
@@ -1194,7 +1404,7 @@ pub unsafe extern "C" fn get_thread_list(
 
 #[unsafe(naked)]
 pub unsafe extern "C" fn get_debug_thread_context(
-    thread_context: *mut u8, // *mut arm::ThreadContext
+    thread_context: *mut arm::ThreadContext, // *mut arm::ThreadContext
     debug_handle: Handle,
     thread_id: u64,
     register_group: u32,
@@ -1211,7 +1421,7 @@ pub unsafe extern "C" fn get_debug_thread_context(
 pub unsafe extern "C" fn set_debug_thread_context(
     debug_handle: Handle,
     thread_id: u64,
-    thread_context: *const u8, // *const arm::ThreadContext
+    thread_context: *const arm::ThreadContext,
     register_group: u32,
 ) -> ResultCode {
     nasm!(
@@ -1270,37 +1480,57 @@ pub unsafe extern "C" fn write_debug_process_memory(
     );
 }
 
-/*
+#[unsafe(naked)]
+pub unsafe extern "C" fn set_hardware_break_point(
+    which: u32,
+    flags: u64,
+    value: u64,
+) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "svc 0x6C",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-set_hardware_break_point
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"svc 0x6C",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn get_debug_thread_param(
+    out_64: *mut u64,
+    out_32: *mut u32,
+    debug_handle: Handle,
+    thread_id: u64,
+    param: DebugThreadParam,
+) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "stp x0, x1, [sp, #-16]!",
+        "svc 0x6D",
+        "ldp x3, x4, [sp], #16",
+        "str x1, [x3]",
+        "str w2, [x4]",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-get_debug_thread_param
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"stp x0, x1, [sp, #-16]!",
-"svc 0x6D",
-"ldp x3, x4, [sp], #16",
-"str x1, [x3]",
-"str w2, [x4]",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
-
-get_system_info
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"str x0, [sp, #-16]!",
-"svc 0x6F",
-"ldr x2, [sp], #16",
-"str x1, [x2]",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
-
-*/
+#[unsafe(naked)]
+pub unsafe extern "C" fn get_system_info(
+    out_info: *mut u64,
+    id0: SystemInfoParam,
+    handle: Handle,
+    id1: u64,
+) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "str x0, [sp, #-16]!",
+        "svc 0x6F",
+        "ldr x2, [sp], #16",
+        "str x1, [x2]",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
 #[unsafe(naked)]
 pub unsafe extern "C" fn create_named_port(
@@ -1354,105 +1584,181 @@ pub unsafe extern "C" fn connect_to_port(session: *mut Handle, port_handle: Hand
     }
 }
 
-/*
-set_process_memory_permission
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"svc 0x73",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn set_process_memory_permission(
+    process_handle: Handle,
+    address: usize,
+    size: usize,
+    permissions: MemoryPermission,
+) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "svc 0x73",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-map_process_memory
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"svc 0x74",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn map_process_memory(
+    destination_address: *mut u8,
+    proc_handle: Handle,
+    source_address: usize,
+    size: usize,
+) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "svc 0x74",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-unmap_process_memory
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"svc 0x75",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn unmap_process_memory(
+    destination_address: *mut u8,
+    proc_handle: Handle,
+    source_address: usize,
+    size: usize,
+) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "svc 0x75",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-query_process_memory
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"str x1, [sp, #-16]!",
-"svc 0x76",
-"ldr x2, [sp], #16",
-"str w1, [x2]",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn query_process_memory(
+    out_memory_info: *mut MemoryInfo,
+    out_page_info: *mut PageInfo,
+    proc_handle: Handle,
+    address: usize,
+) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "str x1, [sp, #-16]!",
+        "svc 0x76",
+        "ldr x2, [sp], #16",
+        "str w1, [x2]",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-map_process_code_memory
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"svc 0x77",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn map_process_code_memory(
+    proc_handle: Handle,
+    destination_address: usize,
+    source_address: usize,
+    size: usize,
+) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "svc 0x77",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-unmap_process_code_memory
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"svc 0x78",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn unmap_process_code_memory(
+    proc_handle: Handle,
+    destination_address: usize,
+    source_address: usize,
+    size: usize,
+) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "svc 0x78",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-create_process
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"str x0, [sp, #-16]!",
-"svc 0x79",
-"ldr x2, [sp], #16",
-"str w1, [x2]",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn create_process(
+    out_handle: *mut Handle,
+    proc_info: *const CreateProcessInfo,
+    capabilities: *const u32,
+    capability_count: u32,
+) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "str x0, [sp, #-16]!",
+        "svc 0x79",
+        "ldr x2, [sp], #16",
+        "str w1, [x2]",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-start_process
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"svc 0x7A",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn start_process(
+    proc_handle: Handle,
+    main_thread_priority: i32,
+    default_cpu_core: i32,
+    main_thread_stack_size: u32,
+) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "svc 0x7A",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-terminate_process
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"svc 0x7B",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn terminate_process(proc_handle: Handle) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "svc 0x7B",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-get_process_info
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"str x0, [sp, #-16]!",
-"svc 0x7C",
-"ldr x2, [sp], #16",
-"str w1, [x2]",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn get_process_info(out_info: *mut i64) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "str x0, [sp, #-16]!",
+        "svc 0x7C",
+        "ldr x2, [sp], #16",
+        "str w1, [x2]",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-create_resource_limit
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"str x0, [sp, #-16]!",
-"svc 0x7D",
-"ldr x2, [sp], #16",
-"str w1, [x2]",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
+#[unsafe(naked)]
+pub unsafe extern "C" fn create_resource_limit(out_handle: *mut Handle) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "str x0, [sp, #-16]!",
+        "svc 0x7D",
+        "ldr x2, [sp], #16",
+        "str w1, [x2]",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
-set_resource_limit_limit_value
-{nasm!(
-maybe_cfi!(".cfi_startproc"),
-"svc 0x7E",
-"ret",
-maybe_cfi!(".cfi_endproc"));}
-
-
-*/
+#[unsafe(naked)]
+pub unsafe extern "C" fn set_resource_limit_limit_value(
+    resource_limit_handle: Handle,
+    limit_kind: LimitableResource,
+    value: u64,
+) -> ResultCode {
+    nasm!(
+        maybe_cfi!(".cfi_startproc"),
+        "svc 0x7E",
+        "ret",
+        maybe_cfi!(".cfi_endproc")
+    );
+}
 
 #[unsafe(naked)]
 pub unsafe extern "C" fn call_secure_monitor(args: *mut u64) {
