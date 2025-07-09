@@ -454,7 +454,6 @@ impl SharedMemoryFormat {
     ///
     ///  It is the caller's responsibility to make sure the returned struct does not outlive the shared memory mapping.
     pub unsafe fn from_shmem_ptr(ptr: *const u8) -> Result<Self> {
-        result_return_if!(ptr.is_null() || !ptr.is_aligned_to(8), ResultInvalidAddress);
         let firmware_version = version::get_version();
 
         // Safety - The calls to `cast()` should be safe as we only access it though the checked `as_ref()` calls,
@@ -462,27 +461,39 @@ impl SharedMemoryFormat {
         unsafe {
             if SharedMemoryFormatV1::VERSION_INTERVAL.contains(firmware_version) {
                 Ok(Self::V1(
-                    ptr.cast::<SharedMemoryFormatV1>().as_ref_unchecked(),
+                    ptr.cast::<SharedMemoryFormatV1>()
+                        .as_ref()
+                        .ok_or(ResultInvalidAddress::make())?,
                 ))
             } else if SharedMemoryFormatV2::VERSION_INTERVAL.contains(firmware_version) {
                 Ok(Self::V2(
-                    ptr.cast::<SharedMemoryFormatV2>().as_ref_unchecked(),
+                    ptr.cast::<SharedMemoryFormatV2>()
+                        .as_ref()
+                        .ok_or(ResultInvalidAddress::make())?,
                 ))
             } else if SharedMemoryFormatV3::VERSION_INTERVAL.contains(firmware_version) {
                 Ok(Self::V3(
-                    ptr.cast::<SharedMemoryFormatV3>().as_ref_unchecked(),
+                    ptr.cast::<SharedMemoryFormatV3>()
+                        .as_ref()
+                        .ok_or(ResultInvalidAddress::make())?,
                 ))
             } else if SharedMemoryFormatV4::VERSION_INTERVAL.contains(firmware_version) {
                 Ok(Self::V4(
-                    ptr.cast::<SharedMemoryFormatV4>().as_ref_unchecked(),
+                    ptr.cast::<SharedMemoryFormatV4>()
+                        .as_ref()
+                        .ok_or(ResultInvalidAddress::make())?,
                 ))
             } else if SharedMemoryFormatV5::VERSION_INTERVAL.contains(firmware_version) {
                 Ok(Self::V5(
-                    ptr.cast::<SharedMemoryFormatV5>().as_ref_unchecked(),
+                    ptr.cast::<SharedMemoryFormatV5>()
+                        .as_ref()
+                        .ok_or(ResultInvalidAddress::make())?,
                 ))
             } else if SharedMemoryFormatV6::VERSION_INTERVAL.contains(firmware_version) {
                 Ok(Self::V6(
-                    ptr.cast::<SharedMemoryFormatV6>().as_ref_unchecked(),
+                    ptr.cast::<SharedMemoryFormatV6>()
+                        .as_ref()
+                        .ok_or(ResultInvalidAddress::make())?,
                 ))
             } else {
                 unreachable!(

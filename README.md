@@ -57,25 +57,15 @@
 
 - NRO Romfs support
 
-- Finish implementing all SVCs
+- Finish implementing all SVC wrappers.
 
 - Actual hw-rendering? (maybe as a separate lib like [deko3d](https://github.com/devkitPro/deko3d)?)
 
 - Finish SMC support
 
-- Finish waitable support
-
-- Improve library applet support (specific implementations, etc.)
-
 - Optimize IPC code to generate even better asm (like libnx or nnsdk)
 
 - Finish documenting still-undocumented modules (`ipc`, `svc` and `service`)
-
-- Console support
-
-- `std` support
-
-- (low priority) 32-bit support (see the corresponding branch)
 
 ## Credits
 

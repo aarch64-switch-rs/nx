@@ -10,17 +10,12 @@ use core::ops::Index;
 use core::ops::IndexMut;
 use core::ptr;
 use core::ptr::NonNull;
-extern crate alloc;
-use alloc::alloc::Allocator;
 
-use alloc::alloc::Global;
-pub use alloc::alloc::Layout;
+use ::alloc::alloc::{AllocError, Allocator, Global, Layout};
 
 pub const PAGE_ALIGNMENT: usize = 0x1000;
 
 pub mod rc;
-
-use alloc::alloc::AllocError;
 
 impl From<AllocError> for ResultCode {
     fn from(_value: AllocError) -> Self {
@@ -29,7 +24,8 @@ impl From<AllocError> for ResultCode {
 }
 
 #[linkage = "weak"]
-pub static HEAP_SIZE: usize = 0;
+#[unsafe(export_name = "__nx_mem_alloc_default_heap_size")]
+pub static DEFAULT_HEAP_SIZE: usize = 0;
 
 /// Default implementation
 #[linkage = "weak"]

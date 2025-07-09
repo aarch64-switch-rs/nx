@@ -296,7 +296,7 @@ impl<T> ScopedJoinHandle<'_, T> {
     ///     assert!(t.join().is_err());
     /// });
     /// ```
-    pub fn join(self) -> Result<T> {
+    pub fn join(mut self) -> Result<T> {
         self.0.join()
     }
 

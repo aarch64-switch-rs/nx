@@ -438,7 +438,7 @@ impl Context {
     ///
     ///  `npad_id`: The [`NpadIdType`][`hid::NpadIdType`] to use
     #[inline]
-    pub fn get_player(&self, npad_id: hid::NpadIdType) -> Player {
+    pub fn get_player(&'_ self, npad_id: hid::NpadIdType) -> Player<'_> {
         Player::new(npad_id, self.supported_style_tags, &self.shmem)
             .expect("The pointers provided by the hid service should never be invalid")
     }

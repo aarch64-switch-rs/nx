@@ -1,8 +1,6 @@
-#![feature(let_chains)]
-
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, DeriveInput};
+use syn::{DeriveInput, parse_macro_input};
 
 mod ipc_traits;
 
@@ -13,7 +11,7 @@ pub fn derive_request(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
     let name = input.ident;
-    return TokenStream::from(quote!(
+    TokenStream::from(quote!(
         impl ::nx::ipc::client::RequestCommandParameter for #name {
             fn before_request_write(_raw: &Self, walker: &mut ::nx::ipc::DataWalker, ctx: &mut ::nx::ipc::CommandContext) -> ::nx::result::Result<()> {
                 walker.advance::<Self>();
@@ -31,7 +29,7 @@ pub fn derive_request(input: TokenStream) -> TokenStream {
                 Ok(ctx.raw_data_walker.advance_get())
             }
         }
-    ));
+    ))
 }
 
 /// This creates the required trait implementations for the type to be used as an IPC response parameter.
@@ -42,7 +40,7 @@ pub fn derive_response(input: TokenStream) -> TokenStream {
 
     let name = input.ident;
     let item_generics = &input.generics;
-    return TokenStream::from(quote!(
+    TokenStream::from(quote!(
         impl #item_generics ::nx::ipc::client::ResponseCommandParameter<#name> for #name {
             fn after_response_read(walker: &mut ::nx::ipc::DataWalker, ctx: &mut ::nx::ipc::CommandContext) -> ::nx::result::Result<Self> {
                 Ok(walker.advance_get())
@@ -60,7 +58,7 @@ pub fn derive_response(input: TokenStream) -> TokenStream {
                 Ok(())
             }
         }
-    ));
+    ))
 }
 
 #[proc_macro_attribute]

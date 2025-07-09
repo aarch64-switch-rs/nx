@@ -6,7 +6,7 @@
 ///
 /// ```
 ///
-/// // This already creates the client-IPC type and impls IObject and the SF trait below
+/// // This already creates the client-IPC type and implements IObject and the SF trait below
 /// ipc_sf_define_default_client_for_interface!(ExampleInterface);
 ///
 /// ipc_sf_define_interface_trait! {
@@ -20,7 +20,7 @@
 macro_rules! ipc_sf_define_default_client_for_interface {
     ($t:ident) => {
         paste::paste! {
-            /// The default client for the `$t` trait. All implementors of the trait need to read their session in accordance with this Types IPC Parameter traits.
+            #[doc = concat!("The default client for the `", stringify!($t), "` trait. All implementors of the trait need to read their session in accordance with this Types IPC Parameter traits.")]
             pub struct $t {
                 #[doc(hidden)]
                 pub (crate) session: $crate::ipc::sf::Session
@@ -107,7 +107,7 @@ macro_rules! ipc_sf_define_default_client_for_interface {
 #[macro_export]
 macro_rules! ipc_client_define_client_default {
     ($t:ident) => {
-        /// Default client object for the $t service
+        #[doc = concat!("Default client object for the `", stringify!($t), "` service")]
         #[allow(missing_docs)]
         pub struct $t {
             pub(crate) session: $crate::ipc::sf::Session,

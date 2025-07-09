@@ -144,6 +144,7 @@ pub(crate) const fn const_usize_min(a: usize, b: usize) -> usize {
     // TODO: const min traits
     if a > b { b } else { a }
 }
+#[allow(dead_code)]
 pub(crate) const fn const_usize_max(a: usize, b: usize) -> usize {
     // TODO: const min traits
     if a < b { b } else { a }

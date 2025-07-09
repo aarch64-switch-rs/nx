@@ -626,6 +626,11 @@ impl FileAccessor {
     }
 }
 
+impl core::fmt::Write for FileAccessor {
+    fn write_str(&mut self, s: &str) -> core::fmt::Result {
+        self.write_array(s.as_bytes()).map_err(|_| core::fmt::Error)
+    }
+}
 /// Represents a wrapper type to simplify directory access
 pub struct DirectoryAccessor {
     dir: Arc<dyn Directory>,

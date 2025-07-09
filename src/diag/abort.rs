@@ -4,7 +4,6 @@ use crate::mem::alloc;
 use crate::result::*;
 use crate::rrt0;
 use crate::svc;
-use core::mem;
 
 #[cfg(feature = "services")]
 use crate::ipc::sf;
@@ -78,11 +77,11 @@ fn do_abort(level: AbortLevel, rc: ResultCode) {
     } else if level == AbortLevel::ProcessExit() {
         rrt0::exit(rc);
     } else if level == AbortLevel::SvcBreak() {
+        let rc = rc.get_value();
         let _ = unsafe {
             svc::r#break(
                 svc::BreakReason::Panic,
-                &rc as *const _ as *const u8,
-                mem::size_of::<ResultCode>(),
+                core::slice::from_raw_parts(&raw const rc as *const u8, 4),
             )
         };
     }

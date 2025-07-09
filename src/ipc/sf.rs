@@ -1,13 +1,13 @@
 use core::{marker::PhantomData, mem::MaybeUninit};
 
 use super::*;
-use crate::util;
 use alloc::{
     string::{String, ToString},
     vec::Vec,
 };
 
 pub use nx_derive::{Request, Response, ipc_trait};
+use zeroize::Zeroize;
 
 pub struct Buffer<
     'borrow,
@@ -51,12 +51,7 @@ impl<
     >
 {
     pub const fn from_other_mut_var<'a: 'borrow, U>(var: &'a mut U) -> Self {
-        unsafe {
-            Self::from_ptr::<'a>(
-                var as *const U as *const u8,
-                size_of::<U>() / Self::get_expected_size(),
-            )
-        }
+        unsafe { Self::from_ptr::<'a>(var as *const U as *const u8, size_of::<U>()) }
     }
 }
 
@@ -85,11 +80,6 @@ impl<
         T,
     >
 {
-    pub const fn get_expected_size() -> usize {
-        // Calculate align-padded size of each element in the buffer (in case a type has a larger alignment than its size)
-        util::const_usize_max(mem::size_of::<T>(), mem::align_of::<T>())
-    }
-
     // TODO: ensure that sizeof(T) is a multiple of size
 
     /// Creates a `Buffer` from raw parts
@@ -101,7 +91,7 @@ impl<
     pub const unsafe fn new<'a: 'borrow>(addr: *mut u8, size: usize) -> Self {
         Self {
             buf: addr as *mut T,
-            count: size / Self::get_expected_size(),
+            count: size / core::mem::size_of::<T>(),
             _lifetime: PhantomData,
         }
     }
@@ -177,15 +167,11 @@ impl<
     }
 
     pub const fn get_size(&self) -> usize {
-        self.count * Self::get_expected_size()
+        self.count * core::mem::size_of::<T>()
     }
 
     pub const fn get_count(&self) -> usize {
         self.count
-    }
-
-    pub const fn get_var(&self) -> &T {
-        unsafe { self.buf.as_ref().unwrap() }
     }
 
     pub fn get_mut_var(&mut self) -> &mut T {
@@ -207,14 +193,6 @@ impl<
         }
 
         out
-    }
-
-    pub fn as_slice(&self) -> Result<&[T]> {
-        result_return_unless!(
-            self.buf.is_aligned() && !self.buf.is_null(),
-            rc::ResultInvalidBufferPointer
-        );
-        Ok(unsafe { core::slice::from_raw_parts(self.buf, self.count) })
     }
 }
 
@@ -254,6 +232,47 @@ impl<
 
 impl<
     'borrow,
+    const OUT: bool,
+    const MAP_ALIAS: bool,
+    const POINTER: bool,
+    const FIXED_SIZE: bool,
+    const AUTO_SELECT: bool,
+    const ALLOW_NON_SECURE: bool,
+    const ALLOW_NON_DEVICE: bool,
+    T,
+>
+    Buffer<
+        'borrow,
+        true,
+        OUT,
+        MAP_ALIAS,
+        POINTER,
+        FIXED_SIZE,
+        AUTO_SELECT,
+        ALLOW_NON_SECURE,
+        ALLOW_NON_DEVICE,
+        T,
+    >
+{
+    pub fn get_var(&self) -> Result<&T> {
+        unsafe {
+            self.buf
+                .as_ref()
+                .ok_or(rc::ResultInvalidBufferPointer::make())
+        }
+    }
+
+    pub fn as_slice(&self) -> Result<&[T]> {
+        result_return_unless!(
+            self.buf.is_aligned() && !self.buf.is_null(),
+            rc::ResultInvalidBufferPointer
+        );
+        Ok(unsafe { core::slice::from_raw_parts(self.buf, self.count) })
+    }
+}
+
+impl<
+    'borrow,
     const IN: bool,
     const MAP_ALIAS: bool,
     const POINTER: bool,
@@ -276,12 +295,7 @@ impl<
     >
 {
     pub const fn from_other_var<'a: 'borrow, U>(var: &'a U) -> Self {
-        unsafe {
-            Self::from_ptr::<'a>(
-                var as *const U as *const _,
-                size_of::<U>() / Self::get_expected_size(),
-            )
-        }
+        unsafe { Self::from_ptr::<'a>(var as *const U as *const _, size_of::<U>()) }
     }
 }
 
@@ -371,6 +385,8 @@ impl<
         T,
     >
 {
+    /// If the input buffer is not marked as "IN" then there isn't an API contract that it will be readable/initialized.
+    /// As such, we should consider all "OUT + !IN" buffers as uninitialized until written by the server function.
     pub fn as_maybeuninit_mut(&mut self) -> Result<&mut [MaybeUninit<T>]> {
         result_return_unless!(
             self.buf.is_aligned() && !self.buf.is_null(),
@@ -403,9 +419,8 @@ impl<
     >
 {
     pub fn get_string(&self) -> String {
-        let cstr = unsafe { core::ffi::CStr::from_ptr(self.buf as _) };
-
-        String::from_utf8_lossy(cstr.to_bytes()).to_string()
+        String::from_utf8_lossy(unsafe { core::slice::from_raw_parts_mut(self.buf, self.count) })
+            .to_string()
     }
 }
 
@@ -434,7 +449,7 @@ impl<
     pub fn set_string(&mut self, string: String) {
         unsafe {
             // First memset to zero so that it will be a valid nul-terminated string
-            core::ptr::write_bytes(self.buf, 0, self.count);
+            core::slice::from_raw_parts_mut(self.buf, self.count).zeroize();
             core::ptr::copy(
                 string.as_ptr(),
                 self.buf,

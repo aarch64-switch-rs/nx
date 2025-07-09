@@ -154,26 +154,79 @@ pub struct ThreadContext {
     pub tpidr: u64,
 }
 
-/// Flushes memory cache at a certain memory location.
+/// Flushes (clean + invalidate) memory cache at a certain memory location.
+///
+/// The start and end address are rounded to cache line boundaries read from the `CTR_EL0` register.
 ///
 /// # Arguments:
 ///
 /// * `address`: Memory address.
 /// * `size`: Memory size.
-///
-/// # Safety
-///
-/// `address` must be valid pointer.
 #[inline(always)]
-pub unsafe fn cache_flush(address: *mut u8, size: usize) {
-    unsafe extern "C" {
-        fn __nx_arm_cache_flush(address: *mut u8, size: usize);
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
+pub fn cache_flush(address: *mut u8, size: usize) {
+    // Equivalent to `cache_flush2` commented out below, but ends up being better hand-written
+    // than compiler optimised.
+    #[unsafe(naked)]
+    unsafe extern "C" fn __nx_arm_cache_flush(address: *mut u8, size: usize) {
+        core::arch::naked_asm!(
+            crate::macros::util::maybe_cfi!(".cfi_startproc"),
+            "add x1, x1, x0",
+            "mrs x8, CTR_EL0",
+            "lsr x8, x8, #16",
+            "and x8, x8, #0xf",
+            "mov x9, #4",
+            "lsl x9, x9, x8",
+            "sub x10, x9, #1",
+            "bic x8, x0, x10",
+            "mov x10, x1",
+            "mov w1, #1",
+            "mrs x0, tpidrro_el0",
+            "strb w1, [x0, #0x104] ", // Set flag at TLR[0x104] for kernel
+            "2:",
+            "dc  civac, x8",
+            "add x8, x8, x9",
+            "cmp x8, x10",
+            "bcc 2b",
+            "dsb sy",
+            "strb wzr, [x0, #0x104]", // Unset flag at TLR[0x104] for kernel
+            "ret",
+            crate::macros::util::maybe_cfi!(".cfi_endproc")
+        );
     }
 
     unsafe {
         __nx_arm_cache_flush(address, size);
     }
 }
+
+/*
+pub fn cache_flush2(address: *mut u8, size: usize) {
+    let address = address.expose_provenance();
+    let mut ctr_el0: u64;
+    unsafe {
+        asm!("mrs {}, CTR_EL0", out(reg) ctr_el0);
+    }
+
+    let cache_line_size = 4usize << (ctr_el0 as usize >> 16 & 0xF);
+    let cache_line_mask = !(cache_line_size - 1);
+    let last_address = address.saturating_add(size) & cache_line_mask;
+    let mut address = address & cache_line_mask;
+
+    unsafe {
+        let tlr = nx::thread::get_thread_local_region();
+        (*tlr).cache_maintenance_flag = true;
+        while address <= last_address {
+            asm!("dc civac, {}", in(reg) address);
+            address = address.saturating_add(cache_line_size);
+        }
+
+        asm!("dsb sy");
+
+        (*tlr).cache_maintenance_flag = false;
+    }
+}
+*/
 
 /// Gets the system tick.
 #[inline(always)]
@@ -186,6 +239,12 @@ pub fn get_system_tick() -> u64 {
         );
     }
     system_tick
+}
+
+/// Gets the system tick time as nanoseconds.
+#[inline(always)]
+pub fn get_system_tick_as_nanos() -> u64 {
+    get_system_tick() / (get_system_tick_frequency() / 1_000_000_000u64)
 }
 
 /// Gets the system tick frequency.

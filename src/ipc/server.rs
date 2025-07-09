@@ -662,7 +662,7 @@ impl<S: IMitmService> ISessionObject for MitmQueryService<S> {
 }
 
 pub trait INamedPort: IServerObject {
-    fn get_port_name() -> &'static str;
+    fn get_port_name() -> &'static core::ffi::CStr;
     fn get_max_sesssions() -> i32;
 }
 
@@ -1125,7 +1125,7 @@ impl<const P: usize> ServerManager<P> {
 
     pub fn register_named_port_server<S: INamedPort + 'static>(&mut self) -> Result<()> {
         let port_handle =
-            unsafe { svc::manage_named_port(S::get_port_name().as_ptr(), S::get_max_sesssions())? };
+            unsafe { svc::manage_named_port(S::get_port_name(), S::get_max_sesssions())? };
 
         self.register_server::<S>(port_handle, sm::ServiceName::empty());
         Ok(())

@@ -1,3 +1,5 @@
+//! AppletAE/AppletOE Support
+
 use crate::hbl::{AppletType, get_applet_type};
 use crate::ipc::sf;
 use crate::result::*;
@@ -14,13 +16,22 @@ static ALL_SYSTEM_APPLET_PROXY_SERVICE: RwLock<Option<AllSystemAppletProxiesServ
     RwLock::new(None);
 static LIBRARY_APPLET_PROXY: RwLock<Option<AppletProxy>> = RwLock::new(None);
 static WINDOW_CONTROLLER: RwLock<Option<WindowController>> = RwLock::new(None);
+
+/// Global AppletResourceUserID.
+/// Stored as part of `applet::initialize()`
 pub static GLOBAL_ARUID: AtomicU64 = AtomicU64::new(0);
 
+/// Proxy type to avoid passing boxed trait objects for Applet Proxy actions.
 pub enum AppletProxy {
+    /// AppletType::Application | AppletType::Default
     Application(ApplicationProxy),
+    /// AppletType::SystemApplet
     SystemApplet(SystemAppletProxy),
+    /// AppletType::LibraryApplet
     LibraryApplet(LibraryAppletProxy),
+    /// AppletType::OverlayApplet
     OverlayApplet(OverlayAppletProxy),
+    /// AppletType::SystemApplication
     SystemApplication(SystemApplicationProxy),
 }
 
@@ -65,7 +76,11 @@ impl ProxyCommon for AppletProxy {
     }
 }
 
+/// global AppletAttribute used for openning the applet proxy for the program
+///
+/// TODO - make a better way to override this value
 #[linkage = "weak"]
+#[unsafe(export_name = "__nx_applet_attribute")]
 pub static APPLET_ATTRIBUTE: AppletAttribute = AppletAttribute::zero();
 
 /// Attempts to initialize the module, or returns if the module has already been initialized.
@@ -164,14 +179,16 @@ pub(crate) fn finalize() {
     *app_proxy_service_guard = None;
 }
 
+/// Gets the registered global Window Controller
 pub fn get_window_controller<'a>() -> ReadGuard<'a, Option<WindowController>> {
     WINDOW_CONTROLLER.read()
 }
 
+/// Gets the registered global AppletProxy
 pub fn get_applet_proxy<'a>() -> ReadGuard<'a, Option<AppletProxy>> {
     LIBRARY_APPLET_PROXY.read()
 }
-
+/// Gets the registered global System Proxy Service
 pub fn get_system_proxy_service<'a>() -> ReadGuard<'a, Option<AllSystemAppletProxiesService>> {
     ALL_SYSTEM_APPLET_PROXY_SERVICE.read()
 }

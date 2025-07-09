@@ -8,7 +8,6 @@ use super::*;
 use crate::gpu::binder;
 use crate::gpu::ioctl;
 use crate::ipc::sf;
-use crate::mem;
 use crate::mem::alloc;
 use crate::service::dispdrv;
 use crate::svc;
@@ -298,19 +297,14 @@ impl Surface {
                 flags: ioctl::AllocFlags::ReadOnly,
                 align: alloc::PAGE_ALIGNMENT as u32,
                 kind: Kind::Pitch,
-                address: surface.buffer_data.ptr as usize,
+                address: surface.buffer_data.ptr.expose_provenance(),
                 ..Default::default()
             };
             surface.do_ioctl(&mut ioctl_alloc)?;
 
             unsafe {
-                mem::flush_data_cache(surface.buffer_data.ptr, total_framebuffer_size);
-                svc::set_memory_attribute(
-                    surface.buffer_data.ptr,
-                    total_framebuffer_size,
-                    8,
-                    svc::MemoryAttribute::Uncached(),
-                )?;
+                nx::arm::cache_flush(surface.buffer_data.ptr, total_framebuffer_size);
+                svc::set_memory_attribute(surface.buffer_data.ptr, total_framebuffer_size, true)?;
             }
 
             let usage = GraphicsAllocatorUsage::HardwareComposer()
@@ -461,7 +455,7 @@ impl Surface {
             ..Default::default()
         };
 
-        mem::flush_data_cache(
+        nx::arm::cache_flush(
             unsafe {
                 self.buffer_data
                     .ptr
@@ -590,12 +584,7 @@ impl Drop for Surface {
         let _ = self.do_ioctl(&mut ioctl_free);
 
         unsafe {
-            svc::set_memory_attribute(
-                self.buffer_data.ptr,
-                self.buffer_data.layout.size(),
-                8,
-                svc::MemoryAttribute::None(),
-            )
+            svc::set_memory_attribute(self.buffer_data.ptr, self.buffer_data.layout.size(), false)
         };
 
         let mut gpu_guard = self.gpu_ctx.write();

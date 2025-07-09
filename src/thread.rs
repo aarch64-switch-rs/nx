@@ -11,7 +11,6 @@ use crate::diag::abort::AbortLevel;
 use crate::result::*;
 use crate::svc;
 use crate::util;
-use core::arch::asm;
 use core::cell::UnsafeCell;
 use core::fmt;
 use core::marker::PhantomData;
@@ -806,7 +805,7 @@ impl<T> Clone for JoinInner<'static, T> {
 }
 
 impl<T> JoinInner<'_, T> {
-    fn join(mut self) -> Result<T> {
+    fn join(&mut self) -> Result<T> {
         let _ = self.native.join();
         Arc::get_mut(&mut self.packet)
             .unwrap()
@@ -815,6 +814,7 @@ impl<T> JoinInner<'_, T> {
             .take()
             .unwrap()
     }
+
     fn wait_exit(&self, timeout: Option<i64>) -> crate::result::Result<()> {
         self.native.join_timeout(timeout)
     }
@@ -942,8 +942,8 @@ impl<T, const BLOCK_ON_DROP: bool> JoinHandle<T, BLOCK_ON_DROP> {
     /// }).unwrap();
     /// join_handle.join().expect("Couldn't join on the associated thread");
     /// ```
-    pub fn join(self) -> Result<T> {
-        self.0.clone().join()
+    pub fn join(mut self) -> Result<T> {
+        self.0.join()
     }
 
     /// Waits for the associated thread to finish, with a timeout (in nanoseconds)
@@ -1386,7 +1386,7 @@ pub struct ThreadLocalRegion {
     pub _disable_counter: u16,
     /// The interrupt flag
     pub _interrupt_flag: u16,
-    pub _cache_maintenance_flag: u8, // HOS v14.0.0.+
+    pub cache_maintenance_flag: bool, // HOS v14.0.0.+
     pub _reserved_1: [u8; 0x3],
     // These we are ignoring since we're going to use the libnx threadVars anyway and just not use anything in this region
     /*pub reserved_1: [u8; 0x4],
@@ -1409,14 +1409,16 @@ const_assert!(core::mem::align_of::<ThreadLocalRegion>() >= 4); // for some assu
 /// Gets the current thread's [`ThreadLocalRegion`] address
 #[inline(always)]
 pub fn get_thread_local_region() -> *mut ThreadLocalRegion {
-    let tlr: *mut ThreadLocalRegion;
-    unsafe {
-        asm!(
-            "mrs {}, tpidrro_el0",
-            out(reg) tlr
-        );
+    #[unsafe(naked)]
+    unsafe extern "C" fn __nx_thread_get_thread_local_region() -> *mut ThreadLocalRegion {
+        core::arch::naked_asm!(
+            maybe_cfi!(".cfi_startproc"),
+            "mrs x0, tpidrro_el0",
+            "ret",
+            maybe_cfi!(".cfi_endproc")
+        )
     }
-    tlr
+    unsafe { __nx_thread_get_thread_local_region() }
 }
 
 pub(crate) unsafe fn current() -> *mut imp::Thread {
