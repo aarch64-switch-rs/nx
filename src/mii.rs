@@ -3,7 +3,7 @@
 use crate::result::*;
 use crate::sync::{Mutex, MutexGuard};
 
-use crate::service::mii::*;
+pub use crate::service::mii::*;
 
 static G_STATIC_SRV: Mutex<Option<StaticService>> = Mutex::new(None);
 static G_DB_SRV: Mutex<Option<MiiDatabase>> = Mutex::new(None);

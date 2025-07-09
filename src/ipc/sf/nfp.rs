@@ -43,6 +43,7 @@ pub enum DeviceState {
     TagRemoved = 3,
     TagMounted = 4,
     Unavailable = 5,
+    Finalized = 6,
 }
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
@@ -69,17 +70,10 @@ const_assert!(core::mem::size_of::<Date>() == 0x4);
 
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]
-pub struct TagId {
+pub struct TagInfo {
     pub uuid: [u8; 10],
     pub uuid_length: u8,
     pub reserved_1: [u8; 0x15],
-}
-const_assert!(core::mem::size_of::<TagId>() == 0x20);
-
-#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
-#[repr(C)]
-pub struct TagInfo {
-    pub uid: TagId,
     pub protocol: u32,
     pub tag_type: u32,
     pub reserved_2: [u8; 0x30],
@@ -112,10 +106,11 @@ const_assert!(core::mem::size_of::<CommonInfo>() == 0x40);
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]
 pub struct ModelInfo {
-    pub character_id: [u8; 3],
-    pub series_id: u8,
-    pub numbering_id: u16,
-    pub nfp_type: u8,
+    pub game_character_id: u16,
+    pub character_variant: u8,
+    pub series: u8,
+    pub model_number: u16,
+    pub figure_type: u8,
     pub reserved: [u8; 0x39],
 }
 const_assert!(core::mem::size_of::<ModelInfo>() == 0x40);
@@ -140,15 +135,26 @@ pub enum ApplicationAreaVersion {
     NintendoSwitch = 3,
 }
 
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[repr(u8)]
+pub enum ConsoleFamily {
+    // Note: unofficial name
+    #[default]
+    Default = 0,
+    NintendoWiiU = 1,
+    Nintendo3DS = 2,
+    NintendoSwitch = 3,
+}
+
 #[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(C)]
 pub struct AdminInfo {
-    pub app_id: ncm::ProgramId,
+    pub program_id: ncm::ProgramId,
     pub access_id: AccessId,
-    pub terminal_id_crc32_change_counter: u16,
+    pub crc32_change_counter: u16,
     pub flags: AdminInfoFlags,
-    pub unk: u8,
-    pub app_area_version: ApplicationAreaVersion,
+    pub tag_type: u8,
+    pub console_family: ConsoleFamily,
     pub pad: [u8; 0x7],
     pub reserved: [u8; 0x28],
 }
@@ -160,7 +166,7 @@ pub struct RegisterInfoPrivate {
     pub mii_store_data: mii::StoreData,
     pub first_write_date: Date,
     pub name: util::ArrayString<41>,
-    pub font_region: u8,
+    pub unk: u8,
     pub reserved: [u8; 0x8E],
 }
 const_assert!(core::mem::size_of::<RegisterInfoPrivate>() == 0x100);
