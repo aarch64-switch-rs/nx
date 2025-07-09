@@ -199,7 +199,7 @@ pub enum AddressSpaceType {
     ThirtyTwoBitWithoutAlias = 2,
     SixtyFourBit = 3,
     #[default]
-    Mask = 0x7
+    Mask = 0x7,
 }
 
 impl AddressSpaceType {
@@ -209,12 +209,11 @@ impl AddressSpaceType {
 
     const fn from_bits(val: u8) -> Self {
         match val {
-            0..=3 => unsafe {core::mem::transmute(val)},
-            _ => Self::Mask
+            0..=3 => unsafe { core::mem::transmute(val) },
+            _ => Self::Mask,
         }
     }
 }
-
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[repr(u8)]
@@ -224,7 +223,7 @@ pub enum MemoryPoolType {
     System = 2,
     SystemNonSecure = 3,
     #[default]
-    Mask = 0xF
+    Mask = 0xF,
 }
 
 impl MemoryPoolType {
@@ -234,8 +233,8 @@ impl MemoryPoolType {
 
     const fn from_bits(val: u8) -> Self {
         match val {
-            0..=3 => unsafe {core::mem::transmute(val)},
-            _ => Self::Mask
+            0..=3 => unsafe { core::mem::transmute(val) },
+            _ => Self::Mask,
         }
     }
 }

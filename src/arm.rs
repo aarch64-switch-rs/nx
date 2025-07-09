@@ -182,7 +182,7 @@ pub fn cache_flush(address: *mut u8, size: usize) {
             "mov x10, x1",
             "mov w1, #1",
             "mrs x0, tpidrro_el0",
-            "strb w1, [x0, #0x104] ",// Set flag at TLR[0x104] for kernel
+            "strb w1, [x0, #0x104] ", // Set flag at TLR[0x104] for kernel
             "2:",
             "dc  civac, x8",
             "add x8, x8, x9",

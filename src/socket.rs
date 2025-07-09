@@ -155,7 +155,7 @@ pub mod net {
         service::bsd::{BsdResult, ReadFlags, SendFlags, SocketAddrRepr},
     };
 
-     pub mod traits {
+    pub mod traits {
         use super::*;
 
         /// Trait for making a bsd-fd wrapper type usable in `super::poll`
@@ -170,9 +170,9 @@ pub mod net {
         }
 
         /// Contains common functions for bsd-compatible socket-like types
-        /// 
+        ///
         /// # Safety
-        /// 
+        ///
         /// Implementors are responsible for synchonising any interior mutablility for types, if any exists.
         pub unsafe trait SocketCommon {
             /// gets the raw file descriptor for the type
@@ -184,12 +184,12 @@ pub mod net {
                 Self: Sized;
 
             /// Creates a new independently owned handle to the underlying socket.
-            /// 
+            ///
             /// The returned object is a references the same stream that this
             /// object references. Both handles will read and write the same stream of
             /// data, and options set on one stream will be propagated to the other
             /// stream.
-            /// 
+            ///
             /// This function is also why objects implementing this trait _should not_ contain any methods requiring mutable references.
             /// Consumers should expect that calls to these functions are synchronized by the implementation.
             fn try_clone(&self) -> Result<Self>
@@ -197,7 +197,7 @@ pub mod net {
                 Self: Sized;
 
             /// Reads data from the remote side into the provided buffer.
-            /// 
+            ///
             /// Immediately returns an error if the socket is not connected.
             fn recv(&self, data: &mut [u8]) -> Result<usize> {
                 let socket_server_handle = BSD_SERVICE.read();
@@ -367,7 +367,7 @@ pub mod net {
             }
 
             /// Sets the value for the `IP_TTL` option on this socket.
-            /// 
+            ///
             /// This value sets the time-to-live field that is used in every packet sent
             /// from this socket.
             fn set_ttl(&self, ttl: u32) -> Result<()> {
@@ -411,13 +411,13 @@ pub mod net {
             }
 
             /// Moves this TCP stream into or out of nonblocking mode.
-            /// 
+            ///
             ///  This will result in `read`, `write`, `recv` and `send` system operations
             ///  becoming nonblocking, i.e., immediately returning from their calls.
             /// If the IO operation is successful, `Ok` is returned and no further
             /// action is required. If the IO operation could not be completed and needs
             /// to be retried, an error with the value set to `EAGAIN` is
-             /// returned.
+            /// returned.
             fn set_nonblocking(&self, nonblocking: bool) -> Result<()> {
                 const O_NONBLOCK: i32 = 0x4000;
 
@@ -490,7 +490,7 @@ pub mod net {
             }
 
             /// Sets the read timeout to the timeout specified.
-            /// 
+            ///
             /// If the value specified is [`None`], then [`SocketCommon::recv`] calls will block
             /// indefinitely. An [`Err`] is returned if the zero [`Duration`] is
             /// passed to this method.
@@ -517,7 +517,7 @@ pub mod net {
             }
 
             /// Returns the write timeout of this socket.
-            /// 
+            ///
             ///  If the timeout is [`None`], then [`SocketCommon::send`] calls will block indefinitely.
             fn send_timeout(&self) -> Result<Option<Duration>> {
                 let socket_server_handle = BSD_SERVICE.read();
@@ -549,7 +549,7 @@ pub mod net {
             }
 
             /// Sets the write timeout to the timeout specified.
-            /// 
+            ///
             ///  If the value specified is [`None`], then [`write`] calls will block
             /// indefinitely. An [`Err`] is returned if the zero [`Duration`] is
             /// passed to this method.
@@ -576,7 +576,7 @@ pub mod net {
             }
 
             /// Gets the value of the `SO_ERROR` option on this socket.
-            /// 
+            ///
             /// This will retrieve the stored error in the underlying socket, clearing
             /// the field in the process. This can be useful for checking errors between
             /// calls.
@@ -666,7 +666,7 @@ pub mod net {
             let socket_server = socket_server_handle
                 .as_ref()
                 .ok_or(rc::ResultNotInitialized::make())?;
-            
+
             let ipaddr = SocketAddrRepr::from((ip, port));
             let listenfd = match socket_server.service.socket(
                 super::SocketDomain::INet,
@@ -955,7 +955,7 @@ pub mod net {
     /// # Examples
     ///
     /// ```no_run
-    /// 
+    ///
     /// let socket = UdpSocket::bind(Ipv4Addr::LOCALHOST, Some(34254))?;
     ///
     /// // Receives a single datagram message on the socket. If `buf` is too small to hold
@@ -967,7 +967,7 @@ pub mod net {
     /// let buf = &mut buf[..amt];
     /// buf.reverse();
     /// socket.send_to(buf, (src_ip, src_port))?;
-    /// 
+    ///
     /// ```
     pub struct UdpSocket(i32);
 
@@ -1165,11 +1165,7 @@ pub mod net {
         /// Unlike `std::net::UdpSocket`, this method does not return length of the written data.
         /// All data is sent or an error is returned.
         #[inline(always)]
-        pub fn send_to<A: Into<SocketAddrRepr>>(
-            &self,
-            data: &[u8],
-            destination: A,
-        ) -> Result<()> {
+        pub fn send_to<A: Into<SocketAddrRepr>>(&self, data: &[u8], destination: A) -> Result<()> {
             self.send_to_impl(data, destination.into())
         }
 

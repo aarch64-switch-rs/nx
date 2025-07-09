@@ -1,7 +1,7 @@
 //! Console Services
 
 /// Virtual TTY functionality
-/// 
+///
 /// The types contained are used to create a tty-like environment, that emulate an
 /// ANSI console (e.g. by wrapping the canvas in a [`embedded_term::TextOnGraphic`]).
 #[cfg(feature = "vty")]
@@ -20,10 +20,11 @@ pub mod vty {
     pub use embedded_graphics_core::primitives::rectangle::Rectangle;
 
     /// Type alias for a drawable text-buffer backed console.
-    /// 
+    ///
     /// The console state is stored in a text buffer, and draws are pushed through a Canvas
     /// implementation that keeps a persistant pixel buffer between draw calls.
-    pub type TextBufferConsole = embedded_term::Console<embedded_term::TextOnGraphic<PersistentBufferedCanvas>>;
+    pub type TextBufferConsole =
+        embedded_term::Console<embedded_term::TextOnGraphic<PersistentBufferedCanvas>>;
 
     /// Canvas/Framebuffer type that keeps a single buffer that is
     /// flushed to the display on change.
@@ -166,7 +167,7 @@ pub mod vty {
 #[cfg(feature = "console")]
 pub mod scrollback {
     //! Console types that are really just text buffers that you can push data into.
-    //! 
+    //!
     //! These types are useful if you want to log data to the screen as text, but can't do edits or backtracking
     //! like the vty module.
 
@@ -190,7 +191,7 @@ pub mod scrollback {
     };
 
     /// A channel-like object for sending strings to the console for display.
-    /// 
+    ///
     /// When all clones of this object are dropped, the strong count of the inner `Arc` will drop to zero and the `Weak`
     /// handle in the background thread will no longer be able to upgrade and read the data. This will cause the background thread to exit.
     #[derive(Clone)]
@@ -302,7 +303,7 @@ pub mod scrollback {
         }
 
         /// Attempts to scroll up through the scroll buffer.
-        /// 
+        ///
         /// Only takes affect if there are more lines of text than can be displayed on the screen.
         #[inline(always)]
         pub fn scroll_up(&mut self) {
@@ -318,7 +319,7 @@ pub mod scrollback {
         }
 
         /// Attempts to scroll down through the scroll buffer
-        /// 
+        ///
         /// Only takes affect if there are more lines of text than can be displayed on the screen,
         /// and the current scroll location is not at the most recent line.
         #[inline(always)]
@@ -352,7 +353,7 @@ pub mod scrollback {
         }
 
         /// Writes a pre-formatted line directly to the history, bypassing the current line
-        /// 
+        ///
         /// Panics if the line length is longer then the maximum displayable characters in a line,
         /// or if the string contains a newline character.
         #[inline(always)]

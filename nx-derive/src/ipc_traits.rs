@@ -3,11 +3,11 @@ use std::str::FromStr;
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 use syn::{
+    AngleBracketedGenericArguments, AttrStyle, FnArg, GenericArgument, Path, PathSegment,
+    ReturnType, TraitItem, TraitItemFn, Type, TypePath,
     punctuated::Punctuated,
     spanned::Spanned,
     token::{Gt, Lt, Mut, PathSep},
-    AngleBracketedGenericArguments, AttrStyle, FnArg, GenericArgument, Path, PathSegment,
-    ReturnType, TraitItem, TraitItemFn, Type, TypePath,
 };
 
 pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<TokenStream> {
@@ -19,20 +19,17 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
     let client_trait = format_ident!("I{}Client", name);
     let server_trait = format_ident!("I{}Server", name);
 
-    let build_default_client = input
-        .attrs
-        .iter()
-        .any(|attr| {
-            if let syn::Attribute {
-                meta: syn::Meta::Path(p),
-                ..
-            } = attr
-            {
-                p.is_ident("default_client")
-            } else {
-                false
-            }
-        });
+    let build_default_client = input.attrs.iter().any(|attr| {
+        if let syn::Attribute {
+            meta: syn::Meta::Path(p),
+            ..
+        } = attr
+        {
+            p.is_ident("default_client")
+        } else {
+            false
+        }
+    });
 
     let default_client: TokenStream = if build_default_client {
         quote! {
@@ -151,7 +148,10 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
                 } else if path.is_ident("version") {
                     version_req = Some(syn::parse2::<syn::Expr>(tokens.clone())?);
                 } else {
-                    return Err(stringify_error(fn_item.span(), "Only the `ipc_rid`, `version`, `no_wrap_return`, and `return_session` attrs are supported on ipc trait functions (plus doc comments)"));
+                    return Err(stringify_error(
+                        fn_item.span(),
+                        "Only the `ipc_rid`, `version`, `no_wrap_return`, and `return_session` attrs are supported on ipc trait functions (plus doc comments)",
+                    ));
                 }
             } else if let syn::Attribute {
                 meta: syn::Meta::Path(p),
@@ -163,7 +163,10 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
                 } else if p.is_ident("no_wrap_return") {
                     return_wrap_result = false
                 } else {
-                    return Err(stringify_error(fn_item.span(), "Only the `ipc_rid`, `version` `no_wrap_return`, and `return_session` attrs are supported on ipc trait functions (plus doc comments)"));
+                    return Err(stringify_error(
+                        fn_item.span(),
+                        "Only the `ipc_rid`, `version` `no_wrap_return`, and `return_session` attrs are supported on ipc trait functions (plus doc comments)",
+                    ));
                 }
             } else if let syn::Attribute {
                 style: AttrStyle::Outer,
@@ -174,7 +177,10 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
             {
                 doc_comment = Some(attr.clone());
             } else {
-                return Err(stringify_error(fn_item.span(), "Only the `ipc_rid`, `version` `no_wrap_return`, and `return_session` attrs are supported on ipc trait functions (plus doc comments)"));
+                return Err(stringify_error(
+                    fn_item.span(),
+                    "Only the `ipc_rid`, `version` `no_wrap_return`, and `return_session` attrs are supported on ipc trait functions (plus doc comments)",
+                ));
             }
         }
 
@@ -264,9 +270,9 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
                     }
                     _ => {
                         return Err(stringify_error(
-                        client_fn.sig.output.span(),
-                        "Only tuple types, paren-wrapped types, or paths are supported for return types",
-                    ));
+                            client_fn.sig.output.span(),
+                            "Only tuple types, paren-wrapped types, or paths are supported for return types",
+                        ));
                     }
                 },
             }
@@ -367,7 +373,10 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
                 && let Type::Path(ty) = *bty
             {
                 if ty.path.segments.len() != 1 {
-                    return Err(stringify_error(server_fn.sig.output.span(), "Output type be a raw type name (the base name of the traits) the return type is marked as a session type"));
+                    return Err(stringify_error(
+                        server_fn.sig.output.span(),
+                        "Output type be a raw type name (the base name of the traits) the return type is marked as a session type",
+                    ));
                 }
                 let out_type_ident = format!(
                     " -> impl I{}Server + 'static",
@@ -376,7 +385,10 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
                 server_fn.sig.output =
                     syn::parse2::<ReturnType>(FromStr::from_str(out_type_ident.as_str())?)?;
             } else {
-                return Err(stringify_error(server_fn.sig.output.span(), "Output type be a raw type name (the base name of the traits) the return type is marked as a session type"));
+                return Err(stringify_error(
+                    server_fn.sig.output.span(),
+                    "Output type be a raw type name (the base name of the traits) the return type is marked as a session type",
+                ));
             }
         }
 
@@ -489,7 +501,7 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
             )*
 
             /// The dynamic dispatch function that calls into the IPC server functions. This should only be called from the [`ServerManager`][`::nx::ipc::server::ServerManager`] and not from client code.
-            /// 
+            ///
             /// Examples for implementing [`ISessionObject`][`::nx::ipc::server::ISessionObject`] or [`IMitmServerOject`][`::nx::ipc::server::IMitmServerObject`] can be found in the [examples](https://github.com/aarch64-switch-rs/examples/) crate.
             fn try_handle_request_by_id(&mut self, req_id: u32, protocol: ::nx::ipc::CommandProtocol, ctx: &mut ::nx::ipc::server::ServerContext) -> Option<::nx::result::Result<()>> {
                 let version = ::nx::version::get_version();

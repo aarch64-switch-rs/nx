@@ -139,7 +139,7 @@ pub fn get_module_name() -> ModulePath {
 
 static G_EXIT_FN: sync::Mutex<Option<ExitFn>> = sync::Mutex::new(None);
 static G_MAIN_THREAD: sync::Mutex<Option<thread::Thread>> = sync::Mutex::new(None);
-pub (crate) static TEXT_BASE_ADDRESS: AtomicUsize = AtomicUsize::new(0);
+pub(crate) static TEXT_BASE_ADDRESS: AtomicUsize = AtomicUsize::new(0);
 static EH_FRAME_HDR_SECTION: elf::EhFrameHdrPtr = elf::EhFrameHdrPtr::new();
 
 /// Exits the current process
@@ -378,7 +378,10 @@ unsafe extern "C" fn __nx_rrt0_entry(arg0: usize, arg1: usize) -> ! {
     mod0.zero_bss_section();
 
     let eh_hdr_ptr_start = mod0.get_eh_frame_header_start();
-    TEXT_BASE_ADDRESS.store(self_base_address.expose_provenance(), core::sync::atomic::Ordering::Relaxed);
+    TEXT_BASE_ADDRESS.store(
+        self_base_address.expose_provenance(),
+        core::sync::atomic::Ordering::Relaxed,
+    );
     EH_FRAME_HDR_SECTION.set(eh_hdr_ptr_start);
     let _ = unwinding::custom_eh_frame_finder::set_custom_eh_frame_finder(&EH_FRAME_HDR_SECTION);
 

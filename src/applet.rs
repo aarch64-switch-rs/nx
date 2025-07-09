@@ -77,8 +77,8 @@ impl ProxyCommon for AppletProxy {
 }
 
 /// global AppletAttribute used for openning the applet proxy for the program
-/// 
-/// TODO - make a better way to override this value 
+///
+/// TODO - make a better way to override this value
 #[linkage = "weak"]
 #[unsafe(export_name = "__nx_applet_attribute")]
 pub static APPLET_ATTRIBUTE: AppletAttribute = AppletAttribute::zero();

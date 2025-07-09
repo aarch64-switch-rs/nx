@@ -1,6 +1,7 @@
 use nx_derive::{Request, Response};
 
-use crate::ipc::sf::{CopyHandle, InAutoSelectBuffer, InOutAutoSelectBuffer, OutAutoSelectBuffer, OutMapAliasBuffer,
+use crate::ipc::sf::{
+    CopyHandle, InAutoSelectBuffer, InOutAutoSelectBuffer, OutAutoSelectBuffer, OutMapAliasBuffer,
     ProcessId,
 };
 use crate::result::Result;
@@ -289,10 +290,10 @@ const_assert!(core::mem::size_of::<SocketAddrRepr>() == 16);
 impl core::fmt::Debug for SocketAddrRepr {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("SocketAddrRepr")
-        .field("family", &self.family)
-        .field("address", &self.addr)
-        .field("port", &u16::from_be(self.port))
-        .finish_non_exhaustive()
+            .field("family", &self.family)
+            .field("address", &self.addr)
+            .field("port", &u16::from_be(self.port))
+            .finish_non_exhaustive()
     }
 }
 
@@ -434,7 +435,6 @@ pub enum ShutdownMode {
     Bidirectional = 2,
 }
 
-
 /// `get/set_sock_opt` options for level `IpProto::IP`
 #[derive(Copy, Clone, Debug, Request, Response)]
 #[repr(C)]
@@ -492,7 +492,6 @@ pub enum IpOptions {
     /// bool: receive IP dst addr/port w/dgram
     OriginalDestinationAddress = 27,
 }
-
 
 /// `get/set_sock_opt` options for level `SOL_SOCKET`
 #[derive(Copy, Clone, Debug, Request, Response)]
@@ -570,7 +569,6 @@ pub enum SocketOptions {
     MaxPacingRate = 0x1018,
 }
 
-
 #[derive(Clone, Copy, Debug, Request, Response)]
 #[repr(C)]
 pub enum TcpOptions {
@@ -616,9 +614,9 @@ pub struct Linger {
 
 #[derive(Copy, Clone, Debug, Request, Response)]
 #[repr(C)]
-pub struct IpMulticastRequest{
+pub struct IpMulticastRequest {
     pub multicast_addr: Ipv4Addr,
-    pub interface_addr: Ipv4Addr
+    pub interface_addr: Ipv4Addr,
 }
 
 impl Linger {
@@ -738,7 +736,6 @@ pub enum SocketDomain {
     //INet6 = 28, - not supported?
 }
 
-
 /// Valid socket types to create from the bsd service.
 #[derive(Copy, Clone, Debug, Request, Response)]
 #[repr(C)]
@@ -757,7 +754,7 @@ pub enum IpProto {
     ICMP = 1,
     TCP = 6,
     UDP = 17,
-    Socket = 0xffff
+    Socket = 0xffff,
 }
 
 define_bit_set! {

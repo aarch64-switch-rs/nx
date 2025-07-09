@@ -11,12 +11,11 @@ use core::ops::IndexMut;
 use core::ptr;
 use core::ptr::NonNull;
 
-use ::alloc::alloc::{Global, Allocator, AllocError, Layout};
+use ::alloc::alloc::{AllocError, Allocator, Global, Layout};
 
 pub const PAGE_ALIGNMENT: usize = 0x1000;
 
 pub mod rc;
-
 
 impl From<AllocError> for ResultCode {
     fn from(_value: AllocError) -> Self {

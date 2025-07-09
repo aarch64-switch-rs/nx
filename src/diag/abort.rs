@@ -77,11 +77,11 @@ fn do_abort(level: AbortLevel, rc: ResultCode) {
     } else if level == AbortLevel::ProcessExit() {
         rrt0::exit(rc);
     } else if level == AbortLevel::SvcBreak() {
-        let rc =rc.get_value();
+        let rc = rc.get_value();
         let _ = unsafe {
             svc::r#break(
                 svc::BreakReason::Panic,
-                core::slice::from_raw_parts(&raw const rc as *const u8, 4)
+                core::slice::from_raw_parts(&raw const rc as *const u8, 4),
             )
         };
     }

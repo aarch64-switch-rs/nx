@@ -769,8 +769,8 @@ impl<ColorFormat: CanvasColorFormat> Drop for BufferedCanvas<'_, ColorFormat> {
 }
 
 /// A Canvas where draws are directly written to the backing framebuffer memory.
-/// 
-/// Users of this object are expected to write to the screen efficiently to manage memory controller pressure, 
+///
+/// Users of this object are expected to write to the screen efficiently to manage memory controller pressure,
 /// or to accept lower performance for lower memory usage.
 pub struct UnbufferedCanvas<'fb, ColorFormat: sealed::CanvasColorFormat> {
     slot: i32,
@@ -783,7 +783,12 @@ pub struct UnbufferedCanvas<'fb, ColorFormat: sealed::CanvasColorFormat> {
 impl<ColorFormat: sealed::CanvasColorFormat> UnbufferedCanvas<'_, ColorFormat> {
     /// Gets a mutable reference to the raw framebuffer
     pub fn raw_buffer(&mut self) -> &mut [ColorFormat::RawType] {
-        unsafe { core::slice::from_raw_parts_mut(core::ptr::with_exposed_provenance_mut(self.base_pointer), self.buffer_size / core::mem::size_of::<ColorFormat::RawType>()) }
+        unsafe {
+            core::slice::from_raw_parts_mut(
+                core::ptr::with_exposed_provenance_mut(self.base_pointer),
+                self.buffer_size / core::mem::size_of::<ColorFormat::RawType>(),
+            )
+        }
     }
 
     pub fn draw_single(&mut self, x: i32, y: i32, color: ColorFormat, blend: AlphaBlend) {

@@ -1418,7 +1418,7 @@ pub fn get_thread_local_region() -> *mut ThreadLocalRegion {
             maybe_cfi!(".cfi_endproc")
         )
     }
-    unsafe {__nx_thread_get_thread_local_region()}
+    unsafe { __nx_thread_get_thread_local_region() }
 }
 
 pub(crate) unsafe fn current() -> *mut imp::Thread {

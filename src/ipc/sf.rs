@@ -51,12 +51,7 @@ impl<
     >
 {
     pub const fn from_other_mut_var<'a: 'borrow, U>(var: &'a mut U) -> Self {
-        unsafe {
-            Self::from_ptr::<'a>(
-                var as *const U as *const u8,
-                size_of::<U>(),
-            )
-        }
+        unsafe { Self::from_ptr::<'a>(var as *const U as *const u8, size_of::<U>()) }
     }
 }
 
@@ -85,7 +80,6 @@ impl<
         T,
     >
 {
-
     // TODO: ensure that sizeof(T) is a multiple of size
 
     /// Creates a `Buffer` from raw parts
@@ -245,7 +239,7 @@ impl<
     const AUTO_SELECT: bool,
     const ALLOW_NON_SECURE: bool,
     const ALLOW_NON_DEVICE: bool,
-    T
+    T,
 >
     Buffer<
         'borrow,
@@ -301,12 +295,7 @@ impl<
     >
 {
     pub const fn from_other_var<'a: 'borrow, U>(var: &'a U) -> Self {
-        unsafe {
-            Self::from_ptr::<'a>(
-                var as *const U as *const _,
-                size_of::<U>(),
-            )
-        }
+        unsafe { Self::from_ptr::<'a>(var as *const U as *const _, size_of::<U>()) }
     }
 }
 

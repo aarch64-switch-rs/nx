@@ -304,11 +304,7 @@ impl Surface {
 
             unsafe {
                 nx::arm::cache_flush(surface.buffer_data.ptr, total_framebuffer_size);
-                svc::set_memory_attribute(
-                    surface.buffer_data.ptr,
-                    total_framebuffer_size,
-                    true
-                )?;
+                svc::set_memory_attribute(surface.buffer_data.ptr, total_framebuffer_size, true)?;
             }
 
             let usage = GraphicsAllocatorUsage::HardwareComposer()
@@ -588,11 +584,7 @@ impl Drop for Surface {
         let _ = self.do_ioctl(&mut ioctl_free);
 
         unsafe {
-            svc::set_memory_attribute(
-                self.buffer_data.ptr,
-                self.buffer_data.layout.size(),
-                false
-            )
+            svc::set_memory_attribute(self.buffer_data.ptr, self.buffer_data.layout.size(), false)
         };
 
         let mut gpu_guard = self.gpu_ctx.write();

@@ -21,8 +21,12 @@ pub fn wait_for_permission(
     let timeout = timeout.unwrap_or(usize::MAX);
     let mut time_taken: usize = 0;
 
-    while !svc::query_memory(address)?.0.permission.intersects(permission) {
-        result_return_if!( time_taken >= timeout, svc::rc::ResultTimedOut);
+    while !svc::query_memory(address)?
+        .0
+        .permission
+        .intersects(permission)
+    {
+        result_return_if!(time_taken >= timeout, svc::rc::ResultTimedOut);
         time_taken = time_taken.saturating_add(100_000);
         let _ = crate::thread::sleep(100_000);
     }
