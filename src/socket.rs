@@ -771,6 +771,14 @@ pub mod net {
         }
     }
 
+    impl Drop for TcpListener {
+        fn drop(&mut self) {
+            let socket_server_handle = BSD_SERVICE.read();
+
+            let socket_server = socket_server_handle.as_ref().unwrap();
+            socket_server.service.close(self.0);
+        }
+    }
     pub struct TcpStream(i32);
 
     impl TcpStream {
@@ -907,6 +915,15 @@ pub mod net {
             }
 
             Ok(())
+        }
+    }
+
+    impl Drop for TcpStream {
+        fn drop(&mut self) {
+            let socket_server_handle = BSD_SERVICE.read();
+
+            let socket_server = socket_server_handle.as_ref().unwrap();
+            socket_server.service.close(self.0);
         }
     }
 
@@ -1384,6 +1401,15 @@ pub mod net {
             }
 
             Ok(())
+        }
+    }
+
+    impl Drop for UdpSocket {
+        fn drop(&mut self) {
+            let socket_server_handle = BSD_SERVICE.read();
+
+            let socket_server = socket_server_handle.as_ref().unwrap();
+            socket_server.service.close(self.0);
         }
     }
 
