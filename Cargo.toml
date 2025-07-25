@@ -1,12 +1,31 @@
 [package]
 name = "nx"
-version = "0.4.1"
+version = "0.5.0"
 authors = ["XorTroll", "Pantsman0"]
 edition = "2024"
 include = [
     "src",
     "nx_derive"
 ]
+
+[features]
+default = []
+services = []
+smc = []
+gpu = ["services"]
+vty = ["canvas", "dep:embedded-term", "dep:embedded-graphics-core"]
+console = ["fonts"]
+canvas = ["gpu", "dep:line_drawing"]
+fonts = ["canvas", "dep:ab_glyph", "dep:font8x8"]
+truetype = ["fonts"]
+fs = ["services"]
+input = ["services", "applet"]
+la = ["services"]
+rand = ["services", "dep:rand"]
+socket = ["services"]
+applet = ["services"]
+mii = ["services"]
+
 
 [dependencies]
 paste = "1.0"
@@ -20,6 +39,7 @@ nx-derive = { path = "nx-derive/" }
 bitfield-struct = "0.11.0"
 num-derive = "0.4.2"
 enum-iterator = "2.1.0"
+enum_dispatch = "0.3.13"
 
 [dependencies.libc]
 version = "0.2"
@@ -71,20 +91,3 @@ version = "0.9"
 default-features = false
 features = ["alloc"]
 
-[features]
-default = []
-services = []
-smc = []
-gpu = ["services"]
-vty = ["canvas", "dep:embedded-term", "dep:embedded-graphics-core"]
-console = ["fonts"]
-canvas = ["gpu", "dep:line_drawing"]
-fonts = ["canvas", "dep:ab_glyph", "dep:font8x8"]
-truetype = ["fonts"]
-fs = ["services"]
-input = ["services", "applet"]
-la = ["services"]
-rand = ["services", "dep:rand"]
-socket = ["services"]
-applet = ["services"]
-mii = ["services"]
