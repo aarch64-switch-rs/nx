@@ -1592,36 +1592,17 @@ pub mod net {
         }
     }
 
-    #[cfg(feature  = "io")]
-    pub use io::*;
     #[cfg(feature = "io")]
-    mod io {
-        use crate::socket::net::traits::SocketCommon;
+    pub mod io_impls {
+        use crate::{result::ResultCode, socket::net::traits::SocketCommon};
 
         use super::{TcpStream, UdpSocket};
 
-        #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-        pub struct IoError{
-            pub errno: i32
-        }
-
-        impl embedded_io::Error for IoError {
-            fn kind(&self) -> embedded_io::ErrorKind {
-                match self.errno {
-                    1004 => embedded_io::ErrorKind::Interrupted,
-                    1005 => embedded_io::ErrorKind::WriteZero,
-                    1011 => embedded_io::ErrorKind::TimedOut,
-                    1032 => embedded_io::ErrorKind::BrokenPipe,
-                    _ => embedded_io::ErrorKind::Other
-                }
-            }
-        }
-
         impl embedded_io::ErrorType for TcpStream {
-            type Error = IoError;
+            type Error = ResultCode;
         }
         impl embedded_io::ErrorType for UdpSocket {
-            type Error = IoError;
+            type Error = ResultCode;
         }
 
         impl embedded_io::Read for TcpStream {
@@ -1630,11 +1611,7 @@ pub mod net {
                     return Ok(0);
                 }
 
-                match self.recv(buf) {
-                    Ok(0) => Err(IoError { errno: 1005 }),
-                    Ok(l) => Ok(l as usize),
-                    Err(e) => Err(IoError { errno: e.get_description().cast_signed() })
-                }
+                self.recv(buf).map(|l| l as usize)
             }
         }
 
@@ -1644,27 +1621,23 @@ pub mod net {
                     return Ok(0);
                 }
 
-                match self.recv(buf) {
-                    Ok(0) => Err(IoError { errno: 1005 }),
-                    Ok(l) => Ok(l as usize),
-                    Err(e) => Err(IoError { errno: e.get_description().cast_signed() })
-                }
+                self.recv(buf).map(|l| l as usize)
             }
         }
-    
+
         impl embedded_io::Write for TcpStream {
             fn write(&mut self, buf: &[u8]) -> core::result::Result<usize, Self::Error> {
                 if buf.len() == 0 {
-                    return Ok(0)
+                    return Ok(0);
                 }
-    
+
                 match self.send(buf) {
-                    Ok(0) => Err(IoError { errno: 1005 }),
+                    Ok(0) => Err(ResultCode::new(1005)),
                     Ok(l) => Ok(l as usize),
-                    Err(e) => Err(IoError { errno: e.get_description().cast_signed() })
+                    Err(e) => Err(e),
                 }
             }
-    
+
             fn flush(&mut self) -> core::result::Result<(), Self::Error> {
                 Ok(())
             }
@@ -1673,22 +1646,19 @@ pub mod net {
         impl embedded_io::Write for UdpSocket {
             fn write(&mut self, buf: &[u8]) -> core::result::Result<usize, Self::Error> {
                 if buf.len() == 0 {
-                    return Ok(0)
+                    return Ok(0);
                 }
-    
+
                 match self.send(buf) {
-                    Ok(0) => Err(IoError { errno: 1005 }),
+                    Ok(0) => Err(ResultCode::new(1005)),
                     Ok(l) => Ok(l as usize),
-                    Err(e) => Err(IoError { errno: e.get_description().cast_signed() })
+                    Err(e) => Err(e),
                 }
             }
-    
+
             fn flush(&mut self) -> core::result::Result<(), Self::Error> {
                 Ok(())
             }
         }
     }
-
-
-    
 }

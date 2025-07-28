@@ -180,3 +180,36 @@ pub trait ResultBase {
 result_define! {
     Success: 0, 0
 }
+
+
+#[cfg(feature = "io")]
+impl embedded_io::Error for ResultCode {
+    fn kind(&self) -> embedded_io::ErrorKind {
+        use embedded_io::ErrorKind;
+        match (self.get_module(), self.get_description()) {
+        #[cfg(feature = "socket")]
+        (crate::socket::rc::RESULT_MODULE, errno) => {
+            match errno {
+                1004 => ErrorKind::Interrupted,
+                    1005 => ErrorKind::WriteZero,
+                    1011 => ErrorKind::TimedOut,
+                    1032 => ErrorKind::BrokenPipe,
+                    _ => ErrorKind::Other
+            }
+
+        },
+        #[cfg(feature = "fs")]
+        (crate::fs::rc::RESULT_SUBMODULE, errno) => {
+            match errno {
+                4000..=4999 => ErrorKind::InvalidData,
+                6003..=6199 => ErrorKind::InvalidInput,
+                6602 | 6603 => ErrorKind::NotFound,
+                6300..=6399 => ErrorKind::Unsupported,
+                6400..=6449 => ErrorKind::PermissionDenied,
+                _ => ErrorKind::Other
+            }
+        }
+        _ => ErrorKind::Other
+        }
+    }
+}

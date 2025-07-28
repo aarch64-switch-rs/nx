@@ -128,7 +128,7 @@ pub trait File {
         buf: sf::InNonSecureMapAliasBuffer<'_, u8>,
     );
     #[ipc_rid(2)]
-    fn flush(&mut self);
+    fn flush(&self);
     #[ipc_rid(3)]
     fn set_size(&mut self, size: usize);
     #[ipc_rid(4)]
