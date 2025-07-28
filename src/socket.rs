@@ -207,7 +207,7 @@ impl BsdSocketService {
         loop {
             if let Ok(value) =
                 self.checkout_slots
-                    .fetch_update(Ordering::SeqCst, Ordering::SeqCst, |v| {
+                    .fetch_update(Ordering::AcqRel, Ordering::Acquire, |v| {
                         let slot = v.trailing_ones() as usize;
                         if slot < slot_limit {
                             // write a checkout bit into the checkout slot
@@ -1574,7 +1574,6 @@ pub mod net {
         }
     }
 
-    /// Despite the impl requirements, the object is not mutated
     impl core::fmt::Write for TcpStream {
         fn write_str(&mut self, s: &str) -> core::fmt::Result {
             match self.send(s.as_bytes()) {
@@ -1584,7 +1583,6 @@ pub mod net {
         }
     }
 
-    /// Despite the impl requirements, the object is not mutated
     impl core::fmt::Write for UdpSocket {
         fn write_str(&mut self, s: &str) -> core::fmt::Result {
             match self.send(s.as_bytes()) {
@@ -1593,4 +1591,104 @@ pub mod net {
             }
         }
     }
+
+    #[cfg(feature  = "io")]
+    pub use io::*;
+    #[cfg(feature = "io")]
+    mod io {
+        use crate::socket::net::traits::SocketCommon;
+
+        use super::{TcpStream, UdpSocket};
+
+        #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+        pub struct IoError{
+            pub errno: i32
+        }
+
+        impl embedded_io::Error for IoError {
+            fn kind(&self) -> embedded_io::ErrorKind {
+                match self.errno {
+                    1004 => embedded_io::ErrorKind::Interrupted,
+                    1005 => embedded_io::ErrorKind::WriteZero,
+                    1011 => embedded_io::ErrorKind::TimedOut,
+                    1032 => embedded_io::ErrorKind::BrokenPipe,
+                    _ => embedded_io::ErrorKind::Other
+                }
+            }
+        }
+
+        impl embedded_io::ErrorType for TcpStream {
+            type Error = IoError;
+        }
+        impl embedded_io::ErrorType for UdpSocket {
+            type Error = IoError;
+        }
+
+        impl embedded_io::Read for TcpStream {
+            fn read(&mut self, buf: &mut [u8]) -> Result<usize, Self::Error> {
+                if buf.len() == 0 {
+                    return Ok(0);
+                }
+
+                match self.recv(buf) {
+                    Ok(0) => Err(IoError { errno: 1005 }),
+                    Ok(l) => Ok(l as usize),
+                    Err(e) => Err(IoError { errno: e.get_description().cast_signed() })
+                }
+            }
+        }
+
+        impl embedded_io::Read for UdpSocket {
+            fn read(&mut self, buf: &mut [u8]) -> Result<usize, Self::Error> {
+                if buf.len() == 0 {
+                    return Ok(0);
+                }
+
+                match self.recv(buf) {
+                    Ok(0) => Err(IoError { errno: 1005 }),
+                    Ok(l) => Ok(l as usize),
+                    Err(e) => Err(IoError { errno: e.get_description().cast_signed() })
+                }
+            }
+        }
+    
+        impl embedded_io::Write for TcpStream {
+            fn write(&mut self, buf: &[u8]) -> core::result::Result<usize, Self::Error> {
+                if buf.len() == 0 {
+                    return Ok(0)
+                }
+    
+                match self.send(buf) {
+                    Ok(0) => Err(IoError { errno: 1005 }),
+                    Ok(l) => Ok(l as usize),
+                    Err(e) => Err(IoError { errno: e.get_description().cast_signed() })
+                }
+            }
+    
+            fn flush(&mut self) -> core::result::Result<(), Self::Error> {
+                Ok(())
+            }
+        }
+
+        impl embedded_io::Write for UdpSocket {
+            fn write(&mut self, buf: &[u8]) -> core::result::Result<usize, Self::Error> {
+                if buf.len() == 0 {
+                    return Ok(0)
+                }
+    
+                match self.send(buf) {
+                    Ok(0) => Err(IoError { errno: 1005 }),
+                    Ok(l) => Ok(l as usize),
+                    Err(e) => Err(IoError { errno: e.get_description().cast_signed() })
+                }
+            }
+    
+            fn flush(&mut self) -> core::result::Result<(), Self::Error> {
+                Ok(())
+            }
+        }
+    }
+
+
+    
 }
