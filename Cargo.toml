@@ -18,13 +18,14 @@ console = ["fonts"]
 canvas = ["gpu", "dep:line_drawing"]
 fonts = ["canvas", "dep:ab_glyph", "dep:font8x8"]
 truetype = ["fonts"]
-fs = ["services"]
+fs = ["services", "io"]
 input = ["services", "applet"]
 la = ["services"]
 rand = ["services", "dep:rand"]
 socket = ["services"]
 applet = ["services"]
 mii = ["services"]
+io = ["dep:embedded-io"]
 
 
 [dependencies]
@@ -41,9 +42,11 @@ num-derive = "0.4.2"
 enum-iterator = "2.1.0"
 enum_dispatch = "0.3.13"
 
-[dependencies.libc]
-version = "0.2"
-default-features = false
+
+[dependencies.embedded-io]
+version = "0.6.1"
+optional = true
+features = ["alloc"]
 
 [dependencies.embedded-term]
 version = "0.1.1"

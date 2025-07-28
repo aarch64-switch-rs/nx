@@ -13,6 +13,7 @@ use alloc::boxed::Box;
 use alloc::string::String;
 use alloc::sync::Arc;
 use alloc::vec::Vec;
+use embedded_io::SeekFrom;
 use core::mem as cmem;
 use core::ops::DerefMut;
 
@@ -498,14 +499,6 @@ impl FileSystem for ProxyFileSystem {
     }
 }
 
-/// Represents an offset kind/relativeness.
-#[allow(missing_docs)]
-pub enum SeekFrom {
-    Start(usize),
-    Current(isize),
-    End(isize),
-}
-
 /// Represents a wrapper type to simplify file access, tracking the currently seek-ed location in the file.
 pub struct FileAccessor {
     file: Box<dyn File>,
@@ -550,11 +543,11 @@ impl FileAccessor {
     /// * `offset`: The offset to seek to.
     pub fn seek(&mut self, pos: SeekFrom) -> Result<()> {
         match pos {
-            SeekFrom::Start(offset) => self.offset = offset,
-            SeekFrom::Current(offset) => self.offset = self.offset.saturating_add_signed(offset),
+            SeekFrom::Start(offset) => self.offset = offset as _,
+            SeekFrom::Current(offset) => self.offset = self.offset.saturating_add_signed(offset as _),
             SeekFrom::End(offset) => {
                 let size = self.get_size()?;
-                self.offset = size.saturating_add_signed(offset);
+                self.offset = size.saturating_add_signed(offset as _);
             }
         };
         Ok(())
@@ -1034,8 +1027,8 @@ pub fn open_file(path: &str, option: FileOpenOption) -> Result<FileAccessor> {
         }
     };
 
-    let offset: usize = match option.contains(FileOpenOption::Append()) {
-        true => file.get_size().unwrap_or(0),
+    let offset: u64 = match option.contains(FileOpenOption::Append()) {
+        true => file.get_size().unwrap_or(0) as _,
         false => 0,
     };
 
