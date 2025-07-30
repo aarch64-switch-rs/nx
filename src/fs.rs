@@ -16,7 +16,8 @@ use alloc::vec::Vec;
 use core::mem as cmem;
 use core::ops::DerefMut;
 use embedded_io::ErrorType;
-use embedded_io::SeekFrom;
+pub use embedded_io::SeekFrom;
+pub use embedded_io::Write;
 
 pub mod rc;
 
