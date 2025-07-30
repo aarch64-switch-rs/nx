@@ -782,8 +782,19 @@ impl<T> Drop for Packet<'_, T> {
         // the scope function will panic.
         let unhandled_panic = matches!(self.result.get_mut(), Some(Err(_)));
 
-        // we don't support panic unwinding
-        if unhandled_panic {
+        // Drop the result without causing unwinding.
+        // This is only relevant for threads that aren't join()ed, as
+        // join() will take the `result` and set it to None, such that
+        // there is nothing left to drop here.
+        // If this panics, we should handle that, because we're outside the
+        // outermost `catch_unwind` of our thread.
+        // We just abort in that case, since there's nothing else we can do.
+        // (And even if we tried to handle it somehow, we'd also need to handle
+        // the case where the panic payload we get out of it also panics on
+        // drop, and so on. See issue #86027.)
+        if let Err(_) = unwinding::panic::catch_unwind(core::panic::AssertUnwindSafe(|| {
+            *self.result.get_mut() = None;
+        }))  {
             abort::abort(AbortLevel::Panic(), crate::rc::ResultPanicked::make());
         }
 
