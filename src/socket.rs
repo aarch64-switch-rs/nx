@@ -562,14 +562,14 @@ pub mod net {
             /// to be retried, an error with the value set to `EAGAIN` is
             /// returned.
             fn set_nonblocking(&self, nonblocking: bool) -> Result<()> {
-                const O_NONBLOCK: i32 = 0x4000;
+                const O_NONBLOCK: i32 = 0x800;
 
                 let socket_server_handle = BSD_SERVICE.read();
                 let socket_server = socket_server_handle.as_ref().unwrap();
 
-                let current_flags = match socket_server.get_service().fnctl(
+                let current_flags = match socket_server.get_service().fcntl(
                     self.as_raw_fd(),
-                    super::FnCtlCmd::GetFl,
+                    super::FcntlCmd::GetFl,
                     0,
                 )? {
                     BsdResult::Ok(flags, ()) => flags,
@@ -587,9 +587,9 @@ pub mod net {
                     current_flags & !O_NONBLOCK
                 };
 
-                if let BsdResult::Err(errno) = socket_server.get_service().fnctl(
+                if let BsdResult::Err(errno) = socket_server.get_service().fcntl(
                     self.as_raw_fd(),
-                    super::FnCtlCmd::SetFl,
+                    super::FcntlCmd::SetFl,
                     flags,
                 )? {
                     return ResultCode::new_err(nx::result::pack_value(
@@ -905,6 +905,56 @@ pub mod net {
                     1000 + errno.cast_unsigned(),
                 )),
             }
+        }
+
+        /// Moves this TCP listener into or out of nonblocking mode.
+        ///
+        /// This will result in the `accept` operation
+        /// becoming nonblocking, i.e., immediately returning from their calls.
+        /// If the IO operation is successful, `Ok` is returned and no further
+        /// action is required. If the IO operation could not be completed and needs
+        /// to be retried, an error with the value set to `EAGAIN` is
+        /// returned.
+        /// 
+        /// The function returns a bool representing if the listener was already in non-blocking mode.
+        pub fn set_nonblocking(&self, nonblocking: bool) -> Result<bool> {
+            const O_NONBLOCK: i32 = 0x800;
+
+            let socket_server_handle = BSD_SERVICE.read();
+            let socket_server = socket_server_handle.as_ref().unwrap();
+
+            let current_flags = match socket_server.get_service().fcntl(
+                self.0,
+                super::FcntlCmd::GetFl,
+                0,
+            )? {
+                BsdResult::Ok(flags, ()) => flags,
+                BsdResult::Err(errno) => {
+                    return ResultCode::new_err(nx::result::pack_value(
+                        rc::RESULT_MODULE,
+                        1000 + errno.cast_unsigned(),
+                    ));
+                }
+            };
+
+            let flags = if nonblocking {
+                current_flags | O_NONBLOCK
+            } else {
+                current_flags & !O_NONBLOCK
+            };
+
+            if let BsdResult::Err(errno) = socket_server.get_service().fcntl(
+                self.0,
+                super::FcntlCmd::SetFl,
+                flags,
+            )? {
+                return ResultCode::new_err(nx::result::pack_value(
+                    rc::RESULT_MODULE,
+                    1000 + errno.cast_unsigned(),
+                ));
+            }
+
+            Ok(current_flags & O_NONBLOCK != 0)
         }
     }
 
