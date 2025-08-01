@@ -915,7 +915,7 @@ pub mod net {
         /// action is required. If the IO operation could not be completed and needs
         /// to be retried, an error with the value set to `EAGAIN` is
         /// returned.
-        /// 
+        ///
         /// The function returns a bool representing if the listener was already in non-blocking mode.
         pub fn set_nonblocking(&self, nonblocking: bool) -> Result<bool> {
             const O_NONBLOCK: i32 = 0x800;
@@ -923,19 +923,19 @@ pub mod net {
             let socket_server_handle = BSD_SERVICE.read();
             let socket_server = socket_server_handle.as_ref().unwrap();
 
-            let current_flags = match socket_server.get_service().fcntl(
-                self.0,
-                super::FcntlCmd::GetFl,
-                0,
-            )? {
-                BsdResult::Ok(flags, ()) => flags,
-                BsdResult::Err(errno) => {
-                    return ResultCode::new_err(nx::result::pack_value(
-                        rc::RESULT_MODULE,
-                        1000 + errno.cast_unsigned(),
-                    ));
-                }
-            };
+            let current_flags =
+                match socket_server
+                    .get_service()
+                    .fcntl(self.0, super::FcntlCmd::GetFl, 0)?
+                {
+                    BsdResult::Ok(flags, ()) => flags,
+                    BsdResult::Err(errno) => {
+                        return ResultCode::new_err(nx::result::pack_value(
+                            rc::RESULT_MODULE,
+                            1000 + errno.cast_unsigned(),
+                        ));
+                    }
+                };
 
             let flags = if nonblocking {
                 current_flags | O_NONBLOCK
@@ -943,11 +943,11 @@ pub mod net {
                 current_flags & !O_NONBLOCK
             };
 
-            if let BsdResult::Err(errno) = socket_server.get_service().fcntl(
-                self.0,
-                super::FcntlCmd::SetFl,
-                flags,
-            )? {
+            if let BsdResult::Err(errno) =
+                socket_server
+                    .get_service()
+                    .fcntl(self.0, super::FcntlCmd::SetFl, flags)?
+            {
                 return ResultCode::new_err(nx::result::pack_value(
                     rc::RESULT_MODULE,
                     1000 + errno.cast_unsigned(),

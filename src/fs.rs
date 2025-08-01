@@ -672,7 +672,8 @@ impl embedded_io::Write for FileAccessor {
 
 impl core::fmt::Write for FileAccessor {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
-        self.write_array::<u8, true>(s.as_bytes()).map_err(|_| core::fmt::Error)
+        self.write_array::<u8, true>(s.as_bytes())
+            .map_err(|_| core::fmt::Error)
     }
 }
 /// Represents a wrapper type to simplify directory access

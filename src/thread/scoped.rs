@@ -154,7 +154,7 @@ where
         Err(e) => {
             unwinding::panic::begin_panic(e);
             unreachable!()
-        },
+        }
         Ok(_) if scope.data.a_thread_panicked.load(Ordering::Relaxed) => {
             panic!("a scoped thread panicked")
         }

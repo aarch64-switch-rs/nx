@@ -917,8 +917,6 @@ pub trait Bsd {
     #[ipc_rid(18)]
     fn listen(&self, sockfd: i32, backlog: i32) -> BsdResult<()>;
 
-
-
     #[ipc_rid(20)]
     fn fcntl(&self, sockfd: i32, cmd: FcntlCmd, flags: i32) -> BsdResult<()>;
 
