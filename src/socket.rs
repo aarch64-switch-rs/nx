@@ -1641,8 +1641,6 @@ pub mod net {
             }
         }
     }
-
-    #[cfg(feature = "io")]
     pub mod io_impls {
         use crate::{result::ResultCode, socket::net::traits::SocketCommon};
 

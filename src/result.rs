@@ -182,7 +182,7 @@ result_define! {
 }
 
 
-#[cfg(feature = "io")]
+#[cfg(any(feature = "fs", feature = "socket"))]
 impl embedded_io::Error for ResultCode {
     fn kind(&self) -> embedded_io::ErrorKind {
         use embedded_io::ErrorKind;
