@@ -594,8 +594,7 @@ impl Thread {
     /// # Safety
     /// If `name` is `ThreadName::Other(_)`, the contained string must be valid UTF-8.
     unsafe fn new_inner(name: ThreadName) -> Thread {
-        // We have to use `unsafe` here to construct the `Parker` in-place,
-        // which is required for the UNIX implementation.
+        // We have to use `unsafe` here to construct the `Inner` in-place.
         //
         // SAFETY: We pin the Arc immediately after creation, so its address never
         // changes.
@@ -669,6 +668,18 @@ impl Thread {
     #[must_use]
     pub fn name(&self) -> ThreadName {
         self.inner.name
+    }
+
+    /// Atomically makes the handle’s token available if it is not already.
+    ///
+    /// Takes no effect if the thread was currently unparked, but this marks parked threads for scheduling.
+    pub fn unpark(&self) {
+        let _ = unsafe {
+            svc::set_thread_activity(
+                core::ptr::read(self.inner.thread_handle.get()),
+                svc::SchedulerState::Runnable,
+            )
+        };
     }
 }
 
@@ -771,8 +782,19 @@ impl<T> Drop for Packet<'_, T> {
         // the scope function will panic.
         let unhandled_panic = matches!(self.result.get_mut(), Some(Err(_)));
 
-        // we don't support panic unwinding
-        if unhandled_panic {
+        // Drop the result without causing unwinding.
+        // This is only relevant for threads that aren't join()ed, as
+        // join() will take the `result` and set it to None, such that
+        // there is nothing left to drop here.
+        // If this panics, we should handle that, because we're outside the
+        // outermost `catch_unwind` of our thread.
+        // We just abort in that case, since there's nothing else we can do.
+        // (And even if we tried to handle it somehow, we'd also need to handle
+        // the case where the panic payload we get out of it also panics on
+        // drop, and so on. See issue #86027.)
+        if let Err(_) = unwinding::panic::catch_unwind(core::panic::AssertUnwindSafe(|| {
+            *self.result.get_mut() = None;
+        })) {
             abort::abort(AbortLevel::Panic(), crate::rc::ResultPanicked::make());
         }
 
@@ -1502,4 +1524,14 @@ pub fn r#yield(yield_type: YieldType) -> crate::result::Result<()> {
 #[inline]
 pub fn exit() -> ! {
     svc::exit_thread()
+}
+
+/// Blocks unless or until the current thread’s token is made available.
+///
+/// A call to `park` does not guarantee that the thread will remain parked forever,
+/// and callers should be prepared for this possibility.
+/// However, it is guaranteed that this function will not panic.
+pub fn park() {
+    let current_thread = unsafe { current().as_mut().unwrap() };
+    let _ = svc::set_thread_activity(current_thread.handle(), svc::SchedulerState::Paused);
 }

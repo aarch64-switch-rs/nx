@@ -163,7 +163,7 @@ pub trait IClientObject {
         self.get_session().object_info
     }
 
-    fn set_info(&mut self, info: ObjectInfo) {
+    unsafe fn set_info(&mut self, info: ObjectInfo) {
         self.get_session_mut().set_info(info);
     }
 
@@ -171,7 +171,7 @@ pub trait IClientObject {
         self.get_session_mut().convert_to_domain()
     }
 
-    fn query_own_pointer_buffer_size(&mut self) -> Result<u16> {
+    fn query_own_pointer_buffer_size(&self) -> Result<u16> {
         self.get_info().query_pointer_buffer_size()
     }
 
@@ -179,11 +179,24 @@ pub trait IClientObject {
         self.get_session_mut().close()
     }
 
-    fn is_valid(&mut self) -> bool {
+    fn is_valid(&self) -> bool {
         self.get_info().is_valid()
     }
 
-    fn is_domain(&mut self) -> bool {
+    fn is_domain(&self) -> bool {
         self.get_info().is_domain()
+    }
+
+    fn clone(&self) -> Result<Self>
+    where
+        Self: Sized,
+    {
+        let handle = self.get_info().clone_current_object()?;
+        Ok(Self::new(sf::Session {
+            object_info: ObjectInfo {
+                handle: handle.handle,
+                ..self.get_info()
+            },
+        }))
     }
 }

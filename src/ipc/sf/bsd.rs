@@ -655,7 +655,7 @@ impl From<Option<TimeSpec>> for Linger {
 
 #[derive(Copy, Clone, Debug, Request, Response)]
 #[repr(C)]
-pub enum FnCtlCmd {
+pub enum FcntlCmd {
     /// Duplicate file descriptor
     DupFd = 0,
     /// Get file descriptor flags (close on exec)
@@ -918,7 +918,7 @@ pub trait Bsd {
     fn listen(&self, sockfd: i32, backlog: i32) -> BsdResult<()>;
 
     #[ipc_rid(20)]
-    fn fnctl(&self, sockfd: i32, cmd: FnCtlCmd, flags: i32) -> BsdResult<()>;
+    fn fcntl(&self, sockfd: i32, cmd: FcntlCmd, flags: i32) -> BsdResult<()>;
 
     #[ipc_rid(21)]
     fn set_sock_opt(

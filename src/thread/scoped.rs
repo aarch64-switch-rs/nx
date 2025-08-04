@@ -141,7 +141,7 @@ where
     };
 
     // Run `f`, the scoped function.
-    let result = f(&scope);
+    let result = unwinding::panic::catch_unwind(core::panic::AssertUnwindSafe(|| f(&scope)));
 
     // Wait until all the threads are finished. This should always happen first try as we can only drop a thread handle when the thread has finished.
     // TODO: we can possibly detect panics if the num_running_threads > 0 - as this should never happen in our model.
@@ -149,7 +149,17 @@ where
         let _ = super::r#yield(super::YieldType::ToAnyThread);
     }
 
-    result
+    // Throw any panic from `f`, or the return value of `f` if no thread panicked.
+    match result {
+        Err(e) => {
+            unwinding::panic::begin_panic(e);
+            unreachable!()
+        }
+        Ok(_) if scope.data.a_thread_panicked.load(Ordering::Relaxed) => {
+            panic!("a scoped thread panicked")
+        }
+        Ok(result) => result,
+    }
 }
 
 impl<'scope> Scope<'scope, '_> {

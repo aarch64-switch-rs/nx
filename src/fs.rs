@@ -15,6 +15,9 @@ use alloc::sync::Arc;
 use alloc::vec::Vec;
 use core::mem as cmem;
 use core::ops::DerefMut;
+use embedded_io::ErrorType;
+pub use embedded_io::SeekFrom;
+pub use embedded_io::Write;
 
 pub mod rc;
 
@@ -53,7 +56,7 @@ pub trait File: Sync {
     fn write(&mut self, offset: usize, buf: &[u8], option: FileWriteOption) -> Result<()>;
 
     /// Flushes the pending file writes.
-    fn flush(&mut self) -> Result<()>;
+    fn flush(&self) -> Result<()>;
 
     /// Sets the file size.
     ///
@@ -283,7 +286,7 @@ impl File for ProxyFile {
             .write(option, offset, buf.len(), ipc_sf::Buffer::from_array(buf))
     }
 
-    fn flush(&mut self) -> Result<()> {
+    fn flush(&self) -> Result<()> {
         self.file_obj.flush()
     }
 
@@ -498,14 +501,6 @@ impl FileSystem for ProxyFileSystem {
     }
 }
 
-/// Represents an offset kind/relativeness.
-#[allow(missing_docs)]
-pub enum SeekFrom {
-    Start(usize),
-    Current(isize),
-    End(isize),
-}
-
 /// Represents a wrapper type to simplify file access, tracking the currently seek-ed location in the file.
 pub struct FileAccessor {
     file: Box<dyn File>,
@@ -550,11 +545,13 @@ impl FileAccessor {
     /// * `offset`: The offset to seek to.
     pub fn seek(&mut self, pos: SeekFrom) -> Result<()> {
         match pos {
-            SeekFrom::Start(offset) => self.offset = offset,
-            SeekFrom::Current(offset) => self.offset = self.offset.saturating_add_signed(offset),
+            SeekFrom::Start(offset) => self.offset = offset as _,
+            SeekFrom::Current(offset) => {
+                self.offset = self.offset.saturating_add_signed(offset as _)
+            }
             SeekFrom::End(offset) => {
                 let size = self.get_size()?;
-                self.offset = size.saturating_add_signed(offset);
+                self.offset = size.saturating_add_signed(offset as _);
             }
         };
         Ok(())
@@ -593,18 +590,23 @@ impl FileAccessor {
         Ok(t)
     }
 
-    // TODO (writes): some sort of "flush" flag to not always flush after writing?
-
     /// Writes data from the given array
     ///
     /// # Arguments
     ///
     /// * `arr`: The input array
-    pub fn write_array<T: Copy>(&mut self, arr: &[T]) -> Result<()> {
+    pub fn write_array<T: Copy, const FLUSH: bool>(&mut self, arr: &[T]) -> Result<()> {
         let transmuted: &[u8] =
             unsafe { core::slice::from_raw_parts(arr.as_ptr() as _, core::mem::size_of_val(arr)) };
-        self.file
-            .write(self.offset, transmuted, FileWriteOption::Flush())?;
+        self.file.write(
+            self.offset,
+            transmuted,
+            if FLUSH {
+                FileWriteOption::Flush()
+            } else {
+                FileWriteOption::None()
+            },
+        )?;
         self.offset += transmuted.len();
         Ok(())
     }
@@ -614,21 +616,64 @@ impl FileAccessor {
     /// # Arguments
     ///
     /// * `t`: The value to write
-    pub fn write_val<T: Copy>(&mut self, t: &T) -> Result<()> {
+    pub fn write_val<T: Copy, const FLUSH: bool>(&mut self, t: &T) -> Result<()> {
         let transmuted = unsafe {
             core::slice::from_raw_parts(t as *const T as *const u8, cmem::size_of::<T>())
         };
 
-        self.file
-            .write(self.offset, transmuted, FileWriteOption::Flush())?;
+        self.file.write(
+            self.offset,
+            transmuted,
+            if FLUSH {
+                FileWriteOption::Flush()
+            } else {
+                FileWriteOption::None()
+            },
+        )?;
         self.offset += transmuted.len();
         Ok(())
+    }
+
+    /// Flushes reads/writes to the underlying file.
+    ///
+    /// It is provided, but it is not currently required as all writes to [`FileAccessor`] send the `Flush` flag.
+    pub fn flush(&self) -> Result<()> {
+        self.file.flush()
+    }
+}
+
+impl ErrorType for FileAccessor {
+    type Error = ResultCode;
+}
+
+impl embedded_io::Read for FileAccessor {
+    fn read(&mut self, buf: &mut [u8]) -> Result<usize> {
+        if buf.len() == 0 {
+            return Ok(0);
+        }
+
+        self.read_array(buf)
+    }
+}
+
+impl embedded_io::Write for FileAccessor {
+    fn write(&mut self, buf: &[u8]) -> Result<usize> {
+        if buf.len() == 0 {
+            return Ok(0);
+        }
+
+        self.write_array::<u8, false>(buf).map(|_| buf.len())
+    }
+
+    fn flush(&mut self) -> Result<()> {
+        FileAccessor::flush(&*self)
     }
 }
 
 impl core::fmt::Write for FileAccessor {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
-        self.write_array(s.as_bytes()).map_err(|_| core::fmt::Error)
+        self.write_array::<u8, true>(s.as_bytes())
+            .map_err(|_| core::fmt::Error)
     }
 }
 /// Represents a wrapper type to simplify directory access
@@ -1034,8 +1079,8 @@ pub fn open_file(path: &str, option: FileOpenOption) -> Result<FileAccessor> {
         }
     };
 
-    let offset: usize = match option.contains(FileOpenOption::Append()) {
-        true => file.get_size().unwrap_or(0),
+    let offset: u64 = match option.contains(FileOpenOption::Append()) {
+        true => file.get_size().unwrap_or(0) as _,
         false => 0,
     };
 

@@ -1,11 +1,18 @@
 //! Implementation of the Rust libstd TCP/UDP APIs, and re-exports of the raw bsd sockets API.
 
 use core::alloc::Layout;
+use core::ops::Deref;
+use core::ops::DerefMut;
+use core::sync::atomic::AtomicU16;
+use core::sync::atomic::AtomicUsize;
+use core::sync::atomic::Ordering;
 
 use alloc::alloc::Allocator;
 use alloc::alloc::Global;
 use alloc::boxed::Box;
+use alloc::vec::Vec;
 
+use crate::ipc::client::IClientObject;
 use crate::ipc::sf;
 use crate::ipc::sf::CopyHandle;
 use crate::mem::alloc::Buffer;
@@ -18,13 +25,90 @@ pub use crate::service::bsd::*;
 use crate::service::new_service_object;
 use crate::svc::Handle;
 use crate::svc::MemoryPermission;
+use crate::sync::sys::futex::Futex;
 use crate::sync::{ReadGuard, RwLock, WriteGuard};
+
+#[repr(usize)]
+pub enum Paralellism {
+    One = 1,
+    Two,
+    Three,
+    Four,
+    Five,
+    Six,
+    Seven,
+    Eight,
+    Nine,
+    Ten,
+    Eleven,
+    Twelve,
+    Thirteen,
+    Fourteen,
+    Fifteen,
+    Sixteen,
+}
+pub(crate) enum BsdServiceDispatcher {
+    U(UserBsdService),
+    A(AppletBsdService),
+    S(SystemBsdService),
+}
+
+impl Deref for BsdServiceDispatcher {
+    type Target = dyn IBsdClient;
+    fn deref(&self) -> &Self::Target {
+        match self {
+            Self::A(service) => service as &dyn IBsdClient,
+            Self::U(service) => service as &dyn IBsdClient,
+            Self::S(service) => service as &dyn IBsdClient,
+        }
+    }
+}
+
+impl DerefMut for BsdServiceDispatcher {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        match self {
+            Self::A(service) => service as &mut dyn IBsdClient,
+            Self::U(service) => service as &mut dyn IBsdClient,
+            Self::S(service) => service as &mut dyn IBsdClient,
+        }
+    }
+}
+
+struct BsdServiceHandle<'p> {
+    parent: &'p BsdSocketService,
+    slot: usize,
+}
+
+impl Deref for BsdServiceHandle<'_> {
+    type Target = dyn IBsdClient;
+    fn deref(&self) -> &Self::Target {
+        unsafe { self.parent.services.get_unchecked(self.slot) }.deref()
+    }
+}
+
+impl Drop for BsdServiceHandle<'_> {
+    fn drop(&mut self) {
+        let inverse_mask: u16 = !(1 << self.slot);
+        // return the slot to the queue for use
+        self.parent
+            .checkout_slots
+            .fetch_and(inverse_mask, Ordering::Release);
+
+        // if there are any waiters, notify one
+        if self.parent.waiters.load(Ordering::Acquire) > 0 {
+            self.parent.service_waiter.signal_one();
+        }
+    }
+}
 
 /// Holder type for the intialized bsd service
 pub struct BsdSocketService {
     _tmem_buffer: Buffer<u8>,
     tmem_handle: Handle,
-    service: Box<dyn IBsdClient + Send + 'static>,
+    checkout_slots: AtomicU16,
+    waiters: AtomicUsize,
+    service_waiter: Futex,
+    services: Vec<BsdServiceDispatcher>,
     _monitor_service: Box<dyn IBsdClient + Send + 'static>,
     _bsd_client_pid: u64,
 }
@@ -37,14 +121,33 @@ impl BsdSocketService {
         config: BsdServiceConfig,
         kind: BsdSrvkind,
         transfer_mem_buffer: Option<Buffer<u8>>,
+        parrallellism: Paralellism,
     ) -> Result<Self> {
-        let mut service = match kind {
-            BsdSrvkind::Applet => Box::new(new_service_object::<AppletBsdService>()?)
-                as Box<dyn IBsdClient + Send + Sync + 'static>,
-            BsdSrvkind::System => Box::new(new_service_object::<SystemBsdService>()?)
-                as Box<dyn IBsdClient + Send + Sync + 'static>,
-            BsdSrvkind::User => Box::new(new_service_object::<UserBsdService>()?)
-                as Box<dyn IBsdClient + Send + Sync + 'static>,
+        let mut services: Vec<BsdServiceDispatcher> = match kind {
+            BsdSrvkind::Applet => {
+                let mut services = vec![new_service_object::<AppletBsdService>()?];
+                for _ in 1..(parrallellism as usize) {
+                    let copy = services[0].clone()?;
+                    services.push(copy);
+                }
+                services.into_iter().map(BsdServiceDispatcher::A).collect()
+            }
+            BsdSrvkind::System => {
+                let mut services = vec![new_service_object::<SystemBsdService>()?];
+                for _ in 1..(parrallellism as usize) {
+                    let copy = services[0].clone()?;
+                    services.push(copy);
+                }
+                services.into_iter().map(BsdServiceDispatcher::S).collect()
+            }
+            BsdSrvkind::User => {
+                let mut services = vec![new_service_object::<UserBsdService>()?];
+                for _ in 1..(parrallellism as usize) {
+                    let copy = services[0].clone()?;
+                    services.push(copy);
+                }
+                services.into_iter().map(BsdServiceDispatcher::U).collect()
+            }
         };
 
         let mut monitor_service = match kind {
@@ -78,7 +181,7 @@ impl BsdSocketService {
             MemoryPermission::None(),
         )?;
 
-        let bsd_client_pid = service.register_client(
+        let bsd_client_pid = services[0].register_client(
             config,
             sf::ProcessId::new(),
             tmem_buffer.layout.size(),
@@ -90,17 +193,51 @@ impl BsdSocketService {
         Ok(Self {
             _tmem_buffer: tmem_buffer,
             tmem_handle,
-            service,
+            checkout_slots: AtomicU16::new(0),
+            waiters: AtomicUsize::new(0),
+            service_waiter: Futex::new(),
+            services,
             _monitor_service: monitor_service,
             _bsd_client_pid: bsd_client_pid,
         })
+    }
+
+    fn get_service(&self) -> BsdServiceHandle<'_> {
+        let slot_limit = self.services.len();
+        loop {
+            if let Ok(value) =
+                self.checkout_slots
+                    .fetch_update(Ordering::AcqRel, Ordering::Acquire, |v| {
+                        let slot = v.trailing_ones() as usize;
+                        if slot < slot_limit {
+                            // write a checkout bit into the checkout slot
+                            Some(v | (1 << slot))
+                        } else {
+                            // all valid slots are filled, bail on the update so we can wait on the futex.
+                            None
+                        }
+                    })
+            {
+                // since the atomic update succeeded, we can rerun the trailing_ones call on
+                // the returned original value to re-calculate the slot we took.
+                return BsdServiceHandle {
+                    parent: self,
+                    slot: value.trailing_ones() as usize,
+                };
+            } else {
+                // wait for an active hold on the service to be released.
+                self.waiters.fetch_add(1, Ordering::Release);
+                self.service_waiter.wait(0, -1);
+                self.waiters.fetch_sub(1, Ordering::Release);
+            }
+        }
     }
 }
 
 impl Drop for BsdSocketService {
     fn drop(&mut self) {
         self._monitor_service.close_session();
-        self.service.close_session();
+        self.services.iter_mut().for_each(drop);
         let _ = crate::svc::close_handle(self.tmem_handle);
         let _ = wait_for_permission(self._tmem_buffer.ptr as _, MemoryPermission::Write(), None);
     }
@@ -113,6 +250,7 @@ pub fn initialize(
     kind: BsdSrvkind,
     config: BsdServiceConfig,
     tmem_buffer: Option<Buffer<u8>>,
+    paralellism: Paralellism,
 ) -> Result<()> {
     let mut service_handle = BSD_SERVICE.write();
 
@@ -120,7 +258,12 @@ pub fn initialize(
         return Ok(());
     }
 
-    *service_handle = Some(BsdSocketService::new(config, kind, tmem_buffer)?);
+    *service_handle = Some(BsdSocketService::new(
+        config,
+        kind,
+        tmem_buffer,
+        paralellism,
+    )?);
 
     Ok(())
 }
@@ -203,7 +346,7 @@ pub mod net {
                 let socket_server_handle = BSD_SERVICE.read();
                 let socket_server = socket_server_handle.as_ref().unwrap();
 
-                match socket_server.service.recv(
+                match socket_server.get_service().recv(
                     self.as_raw_fd(),
                     ReadFlags::None(),
                     Buffer::from_mut_array(data),
@@ -232,7 +375,7 @@ pub mod net {
                 let socket_server_handle = BSD_SERVICE.read();
                 let socket_server = socket_server_handle.as_ref().unwrap();
 
-                match socket_server.service.recv(
+                match socket_server.get_service().recv(
                     self.as_raw_fd(),
                     ReadFlags::Peek(),
                     Buffer::from_mut_array(data),
@@ -255,7 +398,7 @@ pub mod net {
                 let socket_server_handle = BSD_SERVICE.read();
                 let socket_server = socket_server_handle.as_ref().unwrap();
 
-                match socket_server.service.send(
+                match socket_server.get_service().send(
                     self.as_raw_fd(),
                     SendFlags::None(),
                     Buffer::from_array(data),
@@ -278,7 +421,7 @@ pub mod net {
                 let socket_server_handle = BSD_SERVICE.read();
                 let socket_server = socket_server_handle.as_ref().unwrap();
 
-                match socket_server.service.send(
+                match socket_server.get_service().send(
                     self.as_raw_fd(),
                     SendFlags::DontWait(),
                     Buffer::from_array(data),
@@ -301,7 +444,7 @@ pub mod net {
                 let socket_server_handle = BSD_SERVICE.read();
                 let socket_server = socket_server_handle.as_ref().unwrap();
 
-                match socket_server.service.recv(self.as_raw_fd(), ReadFlags::DontWait(), Buffer::from_mut_array(buffer))? {
+                match socket_server.get_service().recv(self.as_raw_fd(), ReadFlags::DontWait(), Buffer::from_mut_array(buffer))? {
                     BsdResult::Ok(ret, ()) => {
                         Ok(Some(ret as usize))
                     },
@@ -325,7 +468,7 @@ pub mod net {
 
                 let mut out_ip: SocketAddrRepr = Default::default();
                 match socket_server
-                    .service
+                    .get_service()
                     .get_socket_name(self.as_raw_fd(), Buffer::from_mut_var(&mut out_ip))?
                 {
                     BsdResult::Ok(_, written_sockaddr_size) => {
@@ -349,7 +492,7 @@ pub mod net {
 
                 let mut out_ip: SocketAddrRepr = Default::default();
                 match socket_server
-                    .service
+                    .get_service()
                     .get_peer_name(self.as_raw_fd(), Buffer::from_mut_var(&mut out_ip))?
                 {
                     BsdResult::Ok(_, written_sockaddr_size) => {
@@ -374,7 +517,7 @@ pub mod net {
                 let socket_server_handle = BSD_SERVICE.read();
                 let socket_server = socket_server_handle.as_ref().unwrap();
 
-                if let BsdResult::Err(errno) = socket_server.service.set_sock_opt(
+                if let BsdResult::Err(errno) = socket_server.get_service().set_sock_opt(
                     self.as_raw_fd(),
                     IpProto::IP as _,
                     IpOptions::TimeToLive as _,
@@ -395,7 +538,7 @@ pub mod net {
                 let socket_server = socket_server_handle.as_ref().unwrap();
 
                 let mut ttl: u32 = 0;
-                if let BsdResult::Err(errno) = socket_server.service.get_sock_opt(
+                if let BsdResult::Err(errno) = socket_server.get_service().get_sock_opt(
                     self.as_raw_fd(),
                     IpProto::IP as _,
                     IpOptions::TimeToLive as _,
@@ -419,14 +562,14 @@ pub mod net {
             /// to be retried, an error with the value set to `EAGAIN` is
             /// returned.
             fn set_nonblocking(&self, nonblocking: bool) -> Result<()> {
-                const O_NONBLOCK: i32 = 0x4000;
+                const O_NONBLOCK: i32 = 0x800;
 
                 let socket_server_handle = BSD_SERVICE.read();
                 let socket_server = socket_server_handle.as_ref().unwrap();
 
-                let current_flags = match socket_server.service.fnctl(
+                let current_flags = match socket_server.get_service().fcntl(
                     self.as_raw_fd(),
-                    super::FnCtlCmd::GetFl,
+                    super::FcntlCmd::GetFl,
                     0,
                 )? {
                     BsdResult::Ok(flags, ()) => flags,
@@ -444,11 +587,11 @@ pub mod net {
                     current_flags & !O_NONBLOCK
                 };
 
-                if let BsdResult::Err(errno) =
-                    socket_server
-                        .service
-                        .fnctl(self.as_raw_fd(), super::FnCtlCmd::SetFl, flags)?
-                {
+                if let BsdResult::Err(errno) = socket_server.get_service().fcntl(
+                    self.as_raw_fd(),
+                    super::FcntlCmd::SetFl,
+                    flags,
+                )? {
                     return ResultCode::new_err(nx::result::pack_value(
                         rc::RESULT_MODULE,
                         1000 + errno.cast_unsigned(),
@@ -465,7 +608,7 @@ pub mod net {
                 let socket_server = socket_server_handle.as_ref().unwrap();
 
                 let mut timeout: BsdDuration = Default::default();
-                match socket_server.service.get_sock_opt(
+                match socket_server.get_service().get_sock_opt(
                     self.as_raw_fd(),
                     SOL_SOCKET,
                     SocketOptions::ReceiveTimeout as _,
@@ -501,7 +644,7 @@ pub mod net {
                 let socket_server = socket_server_handle.as_ref().unwrap();
 
                 let timeout: BsdDuration = timeout.into();
-                if let BsdResult::Err(errno) = socket_server.service.set_sock_opt(
+                if let BsdResult::Err(errno) = socket_server.get_service().set_sock_opt(
                     self.as_raw_fd(),
                     SOL_SOCKET,
                     SocketOptions::ReceiveTimeout as _,
@@ -524,7 +667,7 @@ pub mod net {
                 let socket_server = socket_server_handle.as_ref().unwrap();
 
                 let mut timeout: BsdDuration = Default::default();
-                match socket_server.service.get_sock_opt(
+                match socket_server.get_service().get_sock_opt(
                     self.as_raw_fd(),
                     SOL_SOCKET,
                     SocketOptions::SendTimeout as _,
@@ -560,7 +703,7 @@ pub mod net {
                 let socket_server = socket_server_handle.as_ref().unwrap();
 
                 let timeout: BsdDuration = timeout.into();
-                if let BsdResult::Err(errno) = socket_server.service.set_sock_opt(
+                if let BsdResult::Err(errno) = socket_server.get_service().set_sock_opt(
                     self.as_raw_fd(),
                     SOL_SOCKET,
                     SocketOptions::SendTimeout as _,
@@ -586,7 +729,7 @@ pub mod net {
                 let socket_server = socket_server_handle.as_ref().unwrap();
 
                 let mut ret_errno: i32 = 0;
-                if let BsdResult::Err(errno) = socket_server.service.get_sock_opt(
+                if let BsdResult::Err(errno) = socket_server.get_service().get_sock_opt(
                     self.as_raw_fd(),
                     SOL_SOCKET,
                     SocketOptions::Error as i32,
@@ -639,7 +782,7 @@ pub mod net {
             .ok_or(rc::ResultNotInitialized::make())?;
 
         if let BsdResult::Err(errno) = socket_server
-            .service
+            .get_service()
             .poll(Buffer::from_mut_array(fds.as_mut_slice()), timeout)?
         {
             return ResultCode::new_err(nx::result::pack_value(
@@ -668,7 +811,7 @@ pub mod net {
                 .ok_or(rc::ResultNotInitialized::make())?;
 
             let ipaddr = SocketAddrRepr::from((ip, port));
-            let listenfd = match socket_server.service.socket(
+            let listenfd = match socket_server.get_service().socket(
                 super::SocketDomain::INet,
                 super::SocketType::Stream,
                 super::IpProto::IP,
@@ -683,7 +826,7 @@ pub mod net {
             };
 
             let yes = 1i32;
-            if let BsdResult::Err(errno) = socket_server.service.set_sock_opt(
+            if let BsdResult::Err(errno) = socket_server.get_service().set_sock_opt(
                 listenfd,
                 SOL_SOCKET,
                 SocketOptions::ReuseAddr as i32,
@@ -696,7 +839,7 @@ pub mod net {
             }
 
             if let BsdResult::Err(errno) = socket_server
-                .service
+                .get_service()
                 .bind(listenfd, Buffer::from_var(&ipaddr))?
             {
                 return ResultCode::new_err(nx::result::pack_value(
@@ -705,7 +848,7 @@ pub mod net {
                 ));
             };
 
-            if let BsdResult::Err(errno) = socket_server.service.listen(listenfd, 5)? {
+            if let BsdResult::Err(errno) = socket_server.get_service().listen(listenfd, 5)? {
                 return ResultCode::new_err(nx::result::pack_value(
                     rc::RESULT_MODULE,
                     1000 + errno.cast_unsigned(),
@@ -723,7 +866,7 @@ pub mod net {
             let mut out_ip: SocketAddrRepr = Default::default();
 
             match socket_server
-                .service
+                .get_service()
                 .accept(self.get_poll_fd(), Buffer::from_mut_var(&mut out_ip))?
             {
                 BsdResult::Ok(new_sock, written_sockaddr_size) => {
@@ -747,7 +890,7 @@ pub mod net {
 
             let mut out_ip: SocketAddrRepr = Default::default();
             match socket_server
-                .service
+                .get_service()
                 .get_socket_name(self.0, Buffer::from_mut_var(&mut out_ip))?
             {
                 BsdResult::Ok(_, written_sockaddr_size) => {
@@ -763,6 +906,56 @@ pub mod net {
                 )),
             }
         }
+
+        /// Moves this TCP listener into or out of nonblocking mode.
+        ///
+        /// This will result in the `accept` operation
+        /// becoming nonblocking, i.e., immediately returning from their calls.
+        /// If the IO operation is successful, `Ok` is returned and no further
+        /// action is required. If the IO operation could not be completed and needs
+        /// to be retried, an error with the value set to `EAGAIN` is
+        /// returned.
+        ///
+        /// The function returns a bool representing if the listener was already in non-blocking mode.
+        pub fn set_nonblocking(&self, nonblocking: bool) -> Result<bool> {
+            const O_NONBLOCK: i32 = 0x800;
+
+            let socket_server_handle = BSD_SERVICE.read();
+            let socket_server = socket_server_handle.as_ref().unwrap();
+
+            let current_flags =
+                match socket_server
+                    .get_service()
+                    .fcntl(self.0, super::FcntlCmd::GetFl, 0)?
+                {
+                    BsdResult::Ok(flags, ()) => flags,
+                    BsdResult::Err(errno) => {
+                        return ResultCode::new_err(nx::result::pack_value(
+                            rc::RESULT_MODULE,
+                            1000 + errno.cast_unsigned(),
+                        ));
+                    }
+                };
+
+            let flags = if nonblocking {
+                current_flags | O_NONBLOCK
+            } else {
+                current_flags & !O_NONBLOCK
+            };
+
+            if let BsdResult::Err(errno) =
+                socket_server
+                    .get_service()
+                    .fcntl(self.0, super::FcntlCmd::SetFl, flags)?
+            {
+                return ResultCode::new_err(nx::result::pack_value(
+                    rc::RESULT_MODULE,
+                    1000 + errno.cast_unsigned(),
+                ));
+            }
+
+            Ok(current_flags & O_NONBLOCK != 0)
+        }
     }
 
     impl traits::Pollable for TcpListener {
@@ -776,7 +969,7 @@ pub mod net {
             let socket_server_handle = BSD_SERVICE.read();
 
             let socket_server = socket_server_handle.as_ref().unwrap();
-            socket_server.service.close(self.0);
+            let _ = socket_server.get_service().close(self.0);
         }
     }
     pub struct TcpStream(i32);
@@ -789,7 +982,7 @@ pub mod net {
                 .as_ref()
                 .ok_or(rc::ResultNotInitialized::make())?;
 
-            let socket = match socket_server.service.socket(
+            let socket = match socket_server.get_service().socket(
                 super::SocketDomain::INet,
                 super::SocketType::Stream,
                 super::IpProto::IP,
@@ -804,7 +997,7 @@ pub mod net {
             };
 
             if let BsdResult::Err(errno) = socket_server
-                .service
+                .get_service()
                 .connect(socket, Buffer::from_var(&destination))?
             {
                 return ResultCode::new_err(nx::result::pack_value(
@@ -822,7 +1015,7 @@ pub mod net {
             let socket_server = socket_server_handle.as_ref().unwrap();
 
             let mut linger: Linger = Default::default();
-            if let BsdResult::Err(errno) = socket_server.service.get_sock_opt(
+            if let BsdResult::Err(errno) = socket_server.get_service().get_sock_opt(
                 self.0,
                 SOL_SOCKET,
                 SocketOptions::Linger as i32,
@@ -845,7 +1038,7 @@ pub mod net {
             let socket_server = socket_server_handle.as_ref().unwrap();
 
             let mut delay: i32 = 0;
-            match socket_server.service.get_sock_opt(
+            match socket_server.get_service().get_sock_opt(
                 self.0,
                 IpProto::IP as _,
                 TcpOptions::NoDelay as _,
@@ -873,7 +1066,7 @@ pub mod net {
             let socket_server_handle = BSD_SERVICE.read();
             let socket_server = socket_server_handle.as_ref().unwrap();
 
-            if let BsdResult::Err(errno) = socket_server.service.set_sock_opt(
+            if let BsdResult::Err(errno) = socket_server.get_service().set_sock_opt(
                 self.0,
                 SOL_SOCKET,
                 SocketOptions::Broadcast as _,
@@ -907,7 +1100,7 @@ pub mod net {
             let socket_server_handle = BSD_SERVICE.read();
             let socket_server = socket_server_handle.as_ref().unwrap();
 
-            if let BsdResult::Err(errno) = socket_server.service.shutdown(self.0, mode)? {
+            if let BsdResult::Err(errno) = socket_server.get_service().shutdown(self.0, mode)? {
                 return ResultCode::new_err(nx::result::pack_value(
                     rc::RESULT_MODULE,
                     1000 + errno.cast_unsigned(),
@@ -923,7 +1116,7 @@ pub mod net {
             let socket_server_handle = BSD_SERVICE.read();
 
             let socket_server = socket_server_handle.as_ref().unwrap();
-            socket_server.service.close(self.0);
+            let _ = socket_server.get_service().close(self.0);
         }
     }
 
@@ -1027,7 +1220,7 @@ pub mod net {
             let socket_server = socket_server_handle
                 .as_ref()
                 .ok_or(rc::ResultNotInitialized::make())?;
-            let socket = match socket_server.service.socket(
+            let socket = match socket_server.get_service().socket(
                 super::SocketDomain::INet,
                 super::SocketType::DataGram,
                 super::IpProto::UDP,
@@ -1044,7 +1237,7 @@ pub mod net {
             let ipaddr: Ipv4Addr = addr.into();
             let socketaddr = SocketAddrRepr::from((ipaddr, port.unwrap_or(0)));
             if let BsdResult::Err(errno) = socket_server
-                .service
+                .get_service()
                 .bind(socket, Buffer::from_var(&socketaddr))?
             {
                 return ResultCode::new_err(nx::result::pack_value(
@@ -1062,7 +1255,7 @@ pub mod net {
                 .as_ref()
                 .ok_or(rc::ResultNotInitialized::make())?;
 
-            let socket = match socket_server.service.socket(
+            let socket = match socket_server.get_service().socket(
                 super::SocketDomain::INet,
                 super::SocketType::DataGram,
                 super::IpProto::UDP,
@@ -1077,7 +1270,7 @@ pub mod net {
             };
 
             if let BsdResult::Err(errno) = socket_server
-                .service
+                .get_service()
                 .connect(socket, Buffer::from_var(&destination))?
             {
                 return ResultCode::new_err(nx::result::pack_value(
@@ -1099,7 +1292,7 @@ pub mod net {
             let socket_server = socket_server_handle.as_ref().unwrap();
 
             let mut out_addr: SocketAddrRepr = Default::default();
-            match socket_server.service.recv_from(
+            match socket_server.get_service().recv_from(
                 self.0,
                 ReadFlags::None(),
                 Buffer::from_mut_array(buffer),
@@ -1131,7 +1324,7 @@ pub mod net {
             let socket_server = socket_server_handle.as_ref().unwrap();
 
             let mut out_addr: SocketAddrRepr = Default::default();
-            match socket_server.service.recv_from(
+            match socket_server.get_service().recv_from(
                 self.0,
                 ReadFlags::Peek(),
                 Buffer::from_mut_array(buffer),
@@ -1162,7 +1355,7 @@ pub mod net {
             let socket_server = socket_server_handle.as_ref().unwrap();
 
             let mut out_addr: SocketAddrRepr = Default::default();
-            match socket_server.service.recv_from(self.0, ReadFlags::DontWait(), Buffer::from_mut_array(buffer), Buffer::from_mut_var(&mut out_addr))? {
+            match socket_server.get_service().recv_from(self.0, ReadFlags::DontWait(), Buffer::from_mut_array(buffer), Buffer::from_mut_var(&mut out_addr))? {
                 BsdResult::Ok(ret, ()) => {
                     Ok(Some((ret as usize, Ipv4Addr::from_bits(u32::from_be_bytes(out_addr.addr)), u16::from_be(out_addr.port))))
                 },
@@ -1190,7 +1383,7 @@ pub mod net {
             let socket_server_handle = BSD_SERVICE.read();
 
             let socket_server = socket_server_handle.as_ref().unwrap();
-            match socket_server.service.send_to(
+            match socket_server.get_service().send_to(
                 self.0,
                 SendFlags::None(),
                 Buffer::from_array(data),
@@ -1212,7 +1405,7 @@ pub mod net {
             let socket_server = socket_server_handle.as_ref().unwrap();
 
             let mut broadcast: i32 = 0;
-            match socket_server.service.get_sock_opt(
+            match socket_server.get_service().get_sock_opt(
                 self.0,
                 SOL_SOCKET,
                 SocketOptions::Broadcast as _,
@@ -1235,7 +1428,7 @@ pub mod net {
             let socket_server_handle = BSD_SERVICE.read();
             let socket_server = socket_server_handle.as_ref().unwrap();
 
-            if let BsdResult::Err(errno) = socket_server.service.set_sock_opt(
+            if let BsdResult::Err(errno) = socket_server.get_service().set_sock_opt(
                 self.0,
                 SOL_SOCKET,
                 SocketOptions::Broadcast as _,
@@ -1258,7 +1451,7 @@ pub mod net {
             let socket_server = socket_server_handle.as_ref().unwrap();
 
             let mut mm_loop: u8 = 0;
-            match socket_server.service.get_sock_opt(
+            match socket_server.get_service().get_sock_opt(
                 self.0,
                 IpProto::IP as _,
                 IpOptions::MulticastLoopback as _,
@@ -1281,7 +1474,7 @@ pub mod net {
             let socket_server_handle = BSD_SERVICE.read();
             let socket_server = socket_server_handle.as_ref().unwrap();
 
-            if let BsdResult::Err(errno) = socket_server.service.set_sock_opt(
+            if let BsdResult::Err(errno) = socket_server.get_service().set_sock_opt(
                 self.0,
                 IpProto::IP as _,
                 IpOptions::MulticastLoopback as _,
@@ -1304,7 +1497,7 @@ pub mod net {
             let socket_server = socket_server_handle.as_ref().unwrap();
 
             let mut ttl: u8 = 0;
-            match socket_server.service.get_sock_opt(
+            match socket_server.get_service().get_sock_opt(
                 self.0,
                 IpProto::IP as _,
                 IpOptions::MulticastTimeToLive as _,
@@ -1327,7 +1520,7 @@ pub mod net {
             let socket_server_handle = BSD_SERVICE.read();
             let socket_server = socket_server_handle.as_ref().unwrap();
 
-            if let BsdResult::Err(errno) = socket_server.service.set_sock_opt(
+            if let BsdResult::Err(errno) = socket_server.get_service().set_sock_opt(
                 self.0,
                 IpProto::IP as _,
                 IpOptions::MulticastTimeToLive as _,
@@ -1359,7 +1552,7 @@ pub mod net {
                 multicast_addr,
                 interface_addr,
             };
-            if let BsdResult::Err(errno) = socket_server.service.set_sock_opt(
+            if let BsdResult::Err(errno) = socket_server.get_service().set_sock_opt(
                 self.0,
                 IpProto::IP as _,
                 IpOptions::MulticastAddMembership as _,
@@ -1388,7 +1581,7 @@ pub mod net {
                 multicast_addr,
                 interface_addr,
             };
-            if let BsdResult::Err(errno) = socket_server.service.set_sock_opt(
+            if let BsdResult::Err(errno) = socket_server.get_service().set_sock_opt(
                 self.0,
                 IpProto::IP as _,
                 IpOptions::MulticastDropMembership as _,
@@ -1409,7 +1602,7 @@ pub mod net {
             let socket_server_handle = BSD_SERVICE.read();
 
             let socket_server = socket_server_handle.as_ref().unwrap();
-            socket_server.service.close(self.0);
+            let _ = socket_server.get_service().close(self.0);
         }
     }
 
@@ -1431,7 +1624,6 @@ pub mod net {
         }
     }
 
-    /// Despite the impl requirements, the object is not mutated
     impl core::fmt::Write for TcpStream {
         fn write_str(&mut self, s: &str) -> core::fmt::Result {
             match self.send(s.as_bytes()) {
@@ -1441,12 +1633,79 @@ pub mod net {
         }
     }
 
-    /// Despite the impl requirements, the object is not mutated
     impl core::fmt::Write for UdpSocket {
         fn write_str(&mut self, s: &str) -> core::fmt::Result {
             match self.send(s.as_bytes()) {
                 Ok(_) => Ok(()),
                 Err(_) => Err(core::fmt::Error),
+            }
+        }
+    }
+    pub mod io_impls {
+        use crate::{result::ResultCode, socket::net::traits::SocketCommon};
+
+        use super::{TcpStream, UdpSocket};
+
+        impl embedded_io::ErrorType for TcpStream {
+            type Error = ResultCode;
+        }
+        impl embedded_io::ErrorType for UdpSocket {
+            type Error = ResultCode;
+        }
+
+        impl embedded_io::Read for TcpStream {
+            fn read(&mut self, buf: &mut [u8]) -> Result<usize, Self::Error> {
+                if buf.len() == 0 {
+                    return Ok(0);
+                }
+
+                self.recv(buf).map(|l| l as usize)
+            }
+        }
+
+        impl embedded_io::Read for UdpSocket {
+            fn read(&mut self, buf: &mut [u8]) -> Result<usize, Self::Error> {
+                if buf.len() == 0 {
+                    return Ok(0);
+                }
+
+                self.recv(buf).map(|l| l as usize)
+            }
+        }
+
+        impl embedded_io::Write for TcpStream {
+            fn write(&mut self, buf: &[u8]) -> core::result::Result<usize, Self::Error> {
+                if buf.len() == 0 {
+                    return Ok(0);
+                }
+
+                match self.send(buf) {
+                    Ok(0) => Err(ResultCode::new(1005)),
+                    Ok(l) => Ok(l as usize),
+                    Err(e) => Err(e),
+                }
+            }
+
+            fn flush(&mut self) -> core::result::Result<(), Self::Error> {
+                Ok(())
+            }
+        }
+
+        impl embedded_io::Write for UdpSocket {
+            fn write(&mut self, buf: &[u8]) -> core::result::Result<usize, Self::Error> {
+                if buf.len() == 0 {
+                    return Ok(0);
+                }
+
+                match self.send(buf) {
+                    Ok(0) => Err(ResultCode::new(1005)),
+                    Ok(l) => Ok(l as usize),
+                    Err(e) => Err(e),
+                }
+            }
+
+            fn flush(&mut self) -> core::result::Result<(), Self::Error> {
+                Ok(())
             }
         }
     }

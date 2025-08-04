@@ -80,14 +80,14 @@ impl ObjectInfo {
         ipc_client_send_control_command!([*self; cmif::ControlRequestId::ConvertCurrentObjectToDomain] () => (domain_object_id: cmif::DomainObjectId))
     }
 
-    pub fn query_pointer_buffer_size(&mut self) -> Result<u16> {
+    pub fn query_pointer_buffer_size(&self) -> Result<u16> {
         if self.uses_tipc_protocol() {
             return super::rc::ResultNotSupported::make_err();
         }
         ipc_client_send_control_command!([*self; cmif::ControlRequestId::QueryPointerBufferSize] () => (pointer_buffer_size: u16))
     }
 
-    pub fn clone_current_object(&mut self) -> Result<sf::MoveHandle> {
+    pub fn clone_current_object(&self) -> Result<sf::MoveHandle> {
         if self.uses_tipc_protocol() {
             return super::rc::ResultNotSupported::make_err();
         }
