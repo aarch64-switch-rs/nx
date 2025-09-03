@@ -197,9 +197,6 @@ impl Surface {
                     .set_scaling_mode(vi::ScalingMode::PreserveAspectRatio, layer_id)?;
             }
         }
-        gpu_guard
-            .application_display_service
-            .set_scaling_mode(vi::ScalingMode::FitToLayer, layer_id)?;
 
         system_display_service.set_layer_position(x, y, layer_id)?;
 
