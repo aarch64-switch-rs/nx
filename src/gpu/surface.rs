@@ -177,7 +177,7 @@ impl Surface {
                 )?;
                 gpu_guard
                     .application_display_service
-                    .set_scaling_mode(vi::ScalingMode::FitToLayer, layer_id)?
+                    .set_scaling_mode(vi::ScalingMode::FitToLayer, layer_id)?;
             }
             ScaleMode::FitToLayer { width, height } => {
                 system_display_service.set_layer_size(layer_id, width as u64, height as u64)?;
