@@ -224,10 +224,12 @@ unsafe fn normal_entry(loader_mode: LoaderMode, exit_config: Option<ExitFn>) -> 
                         hbl::AbiConfigEntryKey::NextLoadPath => {
                             // lengths from nx-hbloader:source/main.c
                             // https://github.com/switchbrew/nx-hbloader/blob/cd6a723acbeabffd827a8bdc40563066f5401fb7/source/main.c#L13-L14
-                            let next_load_path: &'static mut util::ArrayString<512> =
-                                core::mem::transmute((*abi_entry).value[0]);
-                            let next_load_argv: &'static mut util::ArrayString<2048> =
-                                core::mem::transmute((*abi_entry).value[1]);
+                            let next_load_path=
+                                core::ptr::with_exposed_provenance_mut::<util::ArrayString<512>>((*abi_entry).value[0] as usize)
+                                    .as_mut();
+                            let next_load_argv=
+                                core::ptr::with_exposed_provenance_mut::<util::ArrayString<2048>>((*abi_entry).value[1] as usize)
+                                    .as_mut();
                             hbl::set_next_load_entry_ptr(next_load_path, next_load_argv);
                         }
                         hbl::AbiConfigEntryKey::OverrideHeap => {

@@ -89,7 +89,10 @@ impl Surface {
             )?;
             let mut parcel = parcel::Parcel::new();
             parcel.load_from(native_window);
-            let binder_handle = parcel.read::<parcel::ParcelData>()?.handle;
+            let binder_handle = parcel
+                .read::<parcel::ParcelData>()
+                .expect("ParcelData should always be readable if create_stray_layer succeeds.")
+                .handle;
             (binder_handle, layer_id)
         };
 
@@ -164,51 +167,57 @@ impl Surface {
             sf::Buffer::from_other_mut_var(&mut native_window),
         )?;
 
-        let mut binder_parcel = parcel::Parcel::new();
-        binder_parcel.load_from(native_window);
-        let binder_handle = binder_parcel.read::<parcel::ParcelData>()?.handle;
-
-        match scaling {
-            ScaleMode::None => {
-                system_display_service.set_layer_size(
-                    layer_id,
-                    framebuffer_width as u64,
-                    framebuffer_height as u64,
-                )?;
-                gpu_guard
-                    .application_display_service
-                    .set_scaling_mode(vi::ScalingMode::FitToLayer, layer_id)?
+        let binder_handle = match try {
+            let mut binder_parcel = parcel::Parcel::new();
+            binder_parcel.load_from(native_window);
+            let binder_handle = binder_parcel.read::<parcel::ParcelData>()?.handle;
+            match scaling {
+                ScaleMode::None => {
+                    gpu_guard
+                        .application_display_service
+                        .set_scaling_mode(vi::ScalingMode::None, layer_id)?;
+                    system_display_service.set_layer_size(
+                        layer_id,
+                        framebuffer_width as u64,
+                        framebuffer_height as u64,
+                    )?;
+                }
+                ScaleMode::FitToLayer { width, height } => {
+                    gpu_guard
+                        .application_display_service
+                        .set_scaling_mode(vi::ScalingMode::FitToLayer, layer_id)?;
+                    system_display_service.set_layer_size(layer_id, width as u64, height as u64)?;
+                }
+                ScaleMode::PreseveAspect { height } => {
+                    gpu_guard
+                        .application_display_service
+                        .set_scaling_mode(vi::ScalingMode::PreserveAspectRatio, layer_id)?;
+                    system_display_service.set_layer_size(
+                        layer_id,
+                        (framebuffer_width as f32 * (height as f32) / (framebuffer_height as f32))
+                            as u64,
+                        height as u64,
+                    )?;
+                }
             }
-            ScaleMode::FitToLayer { width, height } => {
-                system_display_service.set_layer_size(layer_id, width as u64, height as u64)?;
-                gpu_guard
-                    .application_display_service
-                    .set_scaling_mode(vi::ScalingMode::FitToLayer, layer_id)?;
-            }
-            ScaleMode::PreseveAspect { height } => {
-                system_display_service.set_layer_size(
-                    layer_id,
-                    (framebuffer_width as f32 * (height as f32) / (framebuffer_height as f32))
-                        as u64,
-                    height as u64,
-                )?;
-                gpu_guard
-                    .application_display_service
-                    .set_scaling_mode(vi::ScalingMode::PreserveAspectRatio, layer_id)?;
-            }
-        }
-        gpu_guard
-            .application_display_service
-            .set_scaling_mode(vi::ScalingMode::FitToLayer, layer_id)?;
 
-        system_display_service.set_layer_position(x, y, layer_id)?;
+            system_display_service.set_layer_position(x, y, layer_id)?;
 
-        let z_value = match z {
-            LayerZ::Max => system_display_service.get_z_order_count_max(display_id)?,
-            LayerZ::Min => system_display_service.get_z_order_count_min(display_id)?,
-            LayerZ::Value(z_val) => z_val,
+            let z_value = match z {
+                LayerZ::Max => system_display_service.get_z_order_count_max(display_id)?,
+                LayerZ::Min => system_display_service.get_z_order_count_min(display_id)?,
+                LayerZ::Value(z_val) => z_val,
+            };
+            system_display_service.set_layer_z(layer_id, z_value)?;
+
+            binder_handle
+        } {
+            Err(e) => {
+                manager_display_service.destroy_managed_layer(layer_id)?;
+                return Err(e);
+            }
+            Ok(handle) => handle,
         };
-        system_display_service.set_layer_z(layer_id, z_value)?;
 
         drop(gpu_guard);
         Self::new_from_parts(

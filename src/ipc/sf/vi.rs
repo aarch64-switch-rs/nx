@@ -109,7 +109,7 @@ pub trait ApplicationDisplay {
         out_native_window: sf::OutMapAliasBuffer<'_, u8>,
     ) -> usize;
     #[ipc_rid(2021)]
-    fn set_scaling_mode(&mut self, scaling_mode: ScalingMode, layer_id: LayerId);
+    fn destroy_managed_layer(&mut self, id: LayerId);
     #[ipc_rid(2030)]
     fn create_stray_layer(
         &mut self,
@@ -119,6 +119,8 @@ pub trait ApplicationDisplay {
     ) -> (LayerId, usize);
     #[ipc_rid(2031)]
     fn destroy_stray_layer(&mut self, id: LayerId);
+    #[ipc_rid(2101)]
+    fn set_scaling_mode(&mut self, scaling_mode: ScalingMode, layer_id: LayerId);
     #[ipc_rid(5202)]
     fn get_display_vsync_event(&self, id: DisplayId) -> sf::CopyHandle;
 }
