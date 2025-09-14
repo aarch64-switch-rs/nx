@@ -122,9 +122,10 @@ impl BufferDescriptor {
     }
 
     pub fn new(buffer: *const u8, buffer_size: usize, flags: BufferFlags) -> Self {
-        let address_low = buffer as usize as u32;
-        let address_mid = ((buffer as usize) >> 32) as u32;
-        let address_high = ((buffer as usize) >> 36) as u32;
+        let buffer = buffer.expose_provenance();
+        let address_low = buffer as u32;
+        let address_mid = (buffer >> 32) as u32;
+        let address_high = (buffer >> 36) as u32;
         let size_low = buffer_size as u32;
         let size_high = (buffer_size >> 32) as u32;
 
@@ -171,9 +172,10 @@ impl SendStaticDescriptor {
     }
 
     pub fn new(buffer: *const u8, buffer_size: usize, index: u32) -> Self {
-        let address_low = buffer as usize as u32;
-        let address_mid = ((buffer as usize) >> 32) as u32;
-        let address_high = ((buffer as usize) >> 36) as u32;
+        let buffer = buffer.expose_provenance();
+        let address_low = buffer as u32;
+        let address_mid = (buffer >> 32) as u32;
+        let address_high = (buffer >> 36) as u32;
 
         let mut bits: u32 = 0;
         write_bits!(0, 5, bits, index);
@@ -213,8 +215,9 @@ impl ReceiveStaticDescriptor {
     }
 
     pub fn new(buffer: *const u8, buffer_size: usize) -> Self {
-        let address_low = buffer as usize as u32;
-        let address_high = ((buffer as usize) >> 32) as u32;
+        let buffer = buffer.expose_provenance();
+        let address_low = buffer as  u32;
+        let address_high = (buffer >> 32) as u32;
 
         let mut bits: u32 = 0;
         write_bits!(0, 15, bits, address_high);

@@ -204,11 +204,11 @@ pub static G_NEXT_LOAD_PATH: Mutex<Option<&'static mut ArrayString<512>>> = Mute
 pub static G_NEXT_LOAD_ARGV: Mutex<Option<&'static mut ArrayString<2048>>> = Mutex::new(None);
 
 pub(crate) fn set_next_load_entry_ptr(
-    next_load_path: &'static mut ArrayString<512>,
-    next_load_argv: &'static mut ArrayString<2048>,
+    next_load_path: Option<&'static mut ArrayString<512>>,
+    next_load_argv: Option<&'static mut ArrayString<2048>>,
 ) {
-    *G_NEXT_LOAD_PATH.lock() = Some(next_load_path);
-    *G_NEXT_LOAD_ARGV.lock() = Some(next_load_argv);
+    *G_NEXT_LOAD_PATH.lock() = next_load_path;
+    *G_NEXT_LOAD_ARGV.lock() = next_load_argv;
 }
 
 /// Gets the next load path, AKA the path of the homebrew NRO which will be executed after this one exits
