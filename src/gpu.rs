@@ -1,6 +1,5 @@
 //! Graphics and GPU support and utils
 
-use ::alloc::boxed::Box;
 use ::alloc::sync::Arc;
 
 use crate::ipc::sf;
@@ -10,10 +9,10 @@ use crate::service;
 use crate::service::applet;
 use crate::service::dispdrv;
 use crate::service::nv;
-use crate::service::nv::INvDrvClient;
+use crate::service::nv::{ErrorCode, Fd,INvDrvClient, IoctlId};
 use crate::service::vi;
 use crate::service::vi::{
-    ApplicationDisplayRootService, IApplicationDisplayClient, ManagerDisplayRootService,
+    ApplicationDisplayRootService, ApplicationDisplay, IApplicationDisplayClient, ManagerDisplayRootService,
     SystemDisplayRootService,
 };
 use crate::svc;
@@ -928,19 +927,76 @@ pub fn convert_nv_error_code(err: nv::ErrorCode) -> Result<()> {
 }
 
 /// A holder for our `*RootService` objects, just to keep them alive for the lifetime of the `Context`
-#[allow(missing_docs)]
 pub enum RootServiceHolder {
+    /// Application Service
     Application(ApplicationDisplayRootService),
+    /// Manager Service
     Manager(ManagerDisplayRootService),
+    /// System Service
     System(SystemDisplayRootService),
+}
+
+/// A holder for our `nvdrv` service objects
+pub enum NvDrvServiceHolder {
+    /// Application Service
+    Application(nv::ApplicationNvDrvService),
+    /// Applet Service
+    Applet(nv::AppletNvDrvService),
+    /// System Service
+    System(nv::SystemNvDrvService)
+}
+
+impl NvDrvServiceHolder {
+    fn open(&self, path: sf::InMapAliasBuffer<'_, u8>) -> Result<(Fd, ErrorCode)> {
+        match self {
+            Self::Application(s) => s.open(path),
+            Self::Applet(s) => s.open(path),
+            Self::System(s) => s.open(path)
+        }
+    }
+    fn ioctl(&self, fd: Fd, id: IoctlId, in_buf: sf::InOutAutoSelectBuffer<'_, u8>) -> Result<ErrorCode> {
+        match self {
+            Self::Application(s) => s.ioctl(fd, id, in_buf),
+            Self::Applet(s) => s.ioctl(fd, id, in_buf),
+            Self::System(s) => s.ioctl(fd, id, in_buf)
+        }
+    }
+    fn close(&self, fd: Fd) -> Result<ErrorCode> {
+        match self {
+            Self::Application(s) => s.close(fd),
+            Self::Applet(s) => s.close(fd),
+            Self::System(s) => s.close(fd)
+        }
+    }
+    fn initialize(
+        &self,
+        transfer_mem_size: u32,
+        self_process_handle: sf::CopyHandle,
+        transfer_mem_handle: sf::CopyHandle,
+    ) -> Result<ErrorCode> {
+        match self {
+            Self::Application(s) => s.initialize(transfer_mem_size, self_process_handle, transfer_mem_handle),
+            Self::Applet(s) => s.initialize(transfer_mem_size, self_process_handle, transfer_mem_handle),
+            Self::System(s) => s.initialize(transfer_mem_size, self_process_handle, transfer_mem_handle)
+        }
+    }
+
+    fn close_self(&mut self) {
+        use crate::ipc::client::IClientObject;
+        match self {
+            Self::Application(s) => s.get_session_mut().close(),
+            Self::Applet(s) => s.get_session_mut().close(),
+            Self::System(s) => s.get_session_mut().close()
+        }
+    }
 }
 
 /// Represents a graphics context
 #[allow(dead_code)]
 pub struct Context {
     vi_service: RootServiceHolder,
-    nvdrv_service: Box<dyn INvDrvClient>,
-    application_display_service: Box<dyn IApplicationDisplayClient>,
+    nvdrv_service: NvDrvServiceHolder,
+    application_display_service: ApplicationDisplay,
     hos_binder_driver: Arc<dispdrv::HOSBinderDriver>,
     transfer_mem: alloc::Buffer<u8>,
     transfer_mem_handle: svc::Handle,
@@ -969,7 +1025,7 @@ impl Context {
                 use vi::IManagerDisplayRootClient;
                 let vi_srv = service::new_service_object::<ManagerDisplayRootService>()?;
                 let app_disp_srv =
-                    Box::new(vi_srv.get_display_service(vi::DisplayServiceMode::Privileged)?);
+                    vi_srv.get_display_service(vi::DisplayServiceMode::Privileged)?;
 
                 (RootServiceHolder::Manager(vi_srv), app_disp_srv)
             }
@@ -977,7 +1033,7 @@ impl Context {
                 use vi::ISystemDisplayRootClient;
                 let vi_srv = service::new_service_object::<SystemDisplayRootService>()?;
                 let app_disp_srv =
-                    Box::new(vi_srv.get_display_service(vi::DisplayServiceMode::Privileged)?);
+                    vi_srv.get_display_service(vi::DisplayServiceMode::Privileged)?;
 
                 (RootServiceHolder::System(vi_srv), app_disp_srv)
             }
@@ -985,21 +1041,21 @@ impl Context {
                 use vi::IApplicationDisplayRootClient;
                 let vi_srv = service::new_service_object::<ApplicationDisplayRootService>()?;
                 let app_disp_srv =
-                    Box::new(vi_srv.get_display_service(vi::DisplayServiceMode::User)?);
+                    vi_srv.get_display_service(vi::DisplayServiceMode::User)?;
 
                 (RootServiceHolder::Application(vi_srv), app_disp_srv)
             }
         };
 
-        let nvdrv_srv: Box<dyn INvDrvClient> = match nv_kind {
+        let nvdrv_srv= match nv_kind {
             NvDrvServiceKind::Application => {
-                Box::new(service::new_service_object::<nv::ApplicationNvDrvService>()?)
+                NvDrvServiceHolder::Application(service::new_service_object::<nv::ApplicationNvDrvService>()?)
             }
             NvDrvServiceKind::Applet => {
-                Box::new(service::new_service_object::<nv::AppletNvDrvService>()?)
+                NvDrvServiceHolder::Applet(service::new_service_object::<nv::AppletNvDrvService>()?)
             }
             NvDrvServiceKind::System => {
-                Box::new(service::new_service_object::<nv::SystemNvDrvService>()?)
+                NvDrvServiceHolder::System(service::new_service_object::<nv::SystemNvDrvService>()?)
             }
         };
 
@@ -1023,10 +1079,10 @@ impl Context {
     /// * `nvdrv_srv`: The NV [`INvDrvClient`] service object
     /// * `transfer_mem_size`: The transfer memory size to use
     /// * `nv_host_as_gpu`: Flag whether to open a handle to the GPU for hardware accelerated rendering.
-    pub fn from(
+    fn from(
         vi_srv: RootServiceHolder,
-        application_display_srv: Box<dyn vi::IApplicationDisplayClient>,
-        mut nvdrv_srv: Box<dyn INvDrvClient>,
+        application_display_srv: ApplicationDisplay,
+        mut nvdrv_srv: NvDrvServiceHolder,
         transfer_mem_size: usize,
         nv_host_as_gpu: bool,
     ) -> Result<Self> {
@@ -1074,7 +1130,7 @@ impl Context {
                 let _ = nvdrv_srv.close(nvhostctrl_fd);
 
                 let _ = nvdrv_srv.close(transfer_mem_handle);
-                nvdrv_srv.get_session_mut().close();
+                nvdrv_srv.close_self();
                 svc::close_handle(transfer_mem_handle).unwrap();
                 let _ = wait_for_permission(transfer_mem.ptr, MemoryPermission::Write(), None);
                 return Err(rc);
@@ -1094,26 +1150,26 @@ impl Context {
         })
     }
 
-    /// Gets the underlying NV [`INvDrvClient`] service object
-    pub fn nvdrv_service(&self) -> &dyn INvDrvClient {
-        self.nvdrv_service.as_ref()
+    /// Gets the wrapped NV [`INvDrvClient`] service object
+    pub fn nvdrv_service(&self) -> &NvDrvServiceHolder {
+        &self.nvdrv_service
     }
 
-    /// Gets the underlying NV [`INvDrvClient`] service object mutably
-    pub fn nvdrv_service_mut(&mut self) -> &mut dyn INvDrvClient {
-        self.nvdrv_service.as_mut()
+    /// Gets the wrapped NV [`INvDrvClient`] service object mutably
+    pub fn nvdrv_service_mut(&mut self) -> &mut NvDrvServiceHolder {
+        &mut self.nvdrv_service
     }
 
     /// Gets the underlying [`IApplicationDisplayClient`] object
     pub fn get_application_display_service(&self) -> &dyn vi::IApplicationDisplayClient {
-        self.application_display_service.as_ref()
+        & self.application_display_service
     }
 
     /// Gets the underlying [`IApplicationDisplayClient`] object mutably
     pub fn get_application_display_service_mut(
         &mut self,
     ) -> &mut dyn vi::IApplicationDisplayClient {
-        self.application_display_service.as_mut()
+        &mut self.application_display_service
     }
 
     /// Gets the underlying [`IHOSBinderDriverClient`][`dispdrv::IHOSBinderDriverClient`] object
@@ -1131,7 +1187,7 @@ impl Drop for Context {
         self.nvdrv_service.close(self.nvhostctrl_fd);
 
         self.nvdrv_service.close(self.transfer_mem_handle);
-        self.nvdrv_service.get_session_mut().close();
+        self.nvdrv_service.close_self();
         svc::close_handle(self.transfer_mem_handle).unwrap();
         wait_for_permission(self.transfer_mem.ptr, MemoryPermission::Write(), None);
     }
