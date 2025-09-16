@@ -747,6 +747,8 @@ pub mod sm;
 
 pub mod psm;
 
+pub mod audio;
+
 pub mod applet;
 
 pub mod lm;

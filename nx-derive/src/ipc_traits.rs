@@ -450,7 +450,7 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
                 ctx.raw_data_walker = ::nx::ipc::DataWalker::new(ctx.ctx.in_params.data_offset);
                 #( let #server_in_param_names = <#in_param_types as ::nx::ipc::server::RequestCommandParameter<_>>::after_request_read(&mut ctx)?; )*
 
-                let ( #( #out_param_names ),* ) = self.#fn_name( #( #server_in_param_names ),* )?;
+                let ( #( #out_param_names ),* ) = unsafe {self.#fn_name( #( #server_in_param_names ),* )? };
 
                 ctx.raw_data_walker = ::nx::ipc::DataWalker::new(core::ptr::null_mut());
                 #( let #carry_state_names = ::nx::ipc::server::ResponseCommandParameter::before_response_write(&#out_param_names, &mut ctx)?; )*
