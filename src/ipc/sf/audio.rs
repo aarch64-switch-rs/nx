@@ -1,7 +1,8 @@
-use arrayvec::ArrayString;
+
+use crate::util::ArrayString;
 use nx_derive::{Request, Response};
 
-use crate::ipc::sf::{AppletResourceUserId, InAutoSelectBuffer, InMapAliasBuffer, OutAutoSelectBuffer, OutMapAliasBuffer};
+use crate::ipc::sf::{self, AppletResourceUserId, CopyHandle, InAutoSelectBuffer, InMapAliasBuffer, OutAutoSelectBuffer, OutMapAliasBuffer};
 use crate::version;
 
 pub mod rc;
@@ -29,7 +30,7 @@ pub struct AudioResponseParameters {
 #[repr(C)]
 pub struct AudioBuffer {
     pub _unused_ptr: usize,
-    pub sample_buffer: *const u8,
+    pub sample_buffer: *mut u8,
     pub buffer_capacity: usize,
     pub data_size: usize,
     pub _data_offset: usize
@@ -60,14 +61,14 @@ pub trait AudioOutManager {
     fn list_audio_outs(&self, names: OutMapAliasBuffer<AudioInterfaceName>) -> u32;
     #[ipc_rid(1)]
     #[return_session]
-    fn open_audio_out(&self, in_name: InMapAliasBuffer<AudioInterfaceName>, out_params: OutMapAliasBuffer<AudioResponseParameters>, params: AudioRequestParameters, aruid: AppletResourceUserId) -> AudioOut; 
+    fn open_audio_out(&self, in_name: InMapAliasBuffer<AudioInterfaceName>, out_name: OutMapAliasBuffer<AudioInterfaceName>, params: AudioRequestParameters, aruid: AppletResourceUserId, process_handle: sf::CopyHandle) -> (AudioOut, AudioResponseParameters); 
     #[ipc_rid(2)]
     #[version(version::VersionInterval::from(version::Version::new(3, 0, 0)))]
     fn list_audio_outs_auto(&self, names: OutAutoSelectBuffer<AudioInterfaceName>) -> u32;
     #[ipc_rid(3)]
     #[return_session]
     #[version(version::VersionInterval::from(version::Version::new(3, 0, 0)))]
-    fn open_audio_out_auto(&self, in_name: InAutoSelectBuffer<AudioInterfaceName>, out_params: OutAutoSelectBuffer<AudioResponseParameters>, params: AudioRequestParameters, aruid: AppletResourceUserId) -> AudioOut; 
+    fn open_audio_out_auto(&self, in_name: InAutoSelectBuffer<AudioInterfaceName>, out_name: OutMapAliasBuffer<AudioInterfaceName>, params: AudioRequestParameters, aruid: AppletResourceUserId, process_handle: sf::CopyHandle) -> (AudioOut, AudioResponseParameters); 
 }
 
 #[nx_derive::ipc_trait]
@@ -76,21 +77,21 @@ pub trait AudioInManager {
     fn list(&self, names: OutMapAliasBuffer<AudioInterfaceName>) -> u32;
     #[ipc_rid(1)]
     #[return_session]
-    fn open(&self, in_name: InMapAliasBuffer<AudioInterfaceName>, out_params: OutMapAliasBuffer<AudioResponseParameters>, params: AudioRequestParameters, aruid: AppletResourceUserId) -> AudioIn; 
+    fn open(&self, in_name: InMapAliasBuffer<AudioInterfaceName>, out_name: OutMapAliasBuffer<AudioInterfaceName>, params: AudioRequestParameters, aruid: AppletResourceUserId, process_handle: sf::CopyHandle) -> (AudioIn, AudioResponseParameters); 
     #[ipc_rid(2)]
     #[version(version::VersionInterval::from(version::Version::new(3, 0, 0)))]
     fn list_auto(&self, names: OutAutoSelectBuffer<AudioInterfaceName>) -> u32;
     #[ipc_rid(3)]
     #[return_session]
     #[version(version::VersionInterval::from(version::Version::new(3, 0, 0)))]
-    fn open_auto(&self, in_name: InAutoSelectBuffer<AudioInterfaceName>, out_params: OutAutoSelectBuffer<AudioResponseParameters>, params: AudioRequestParameters, aruid: AppletResourceUserId) -> AudioIn; 
+    fn open_auto(&self, in_name: InAutoSelectBuffer<AudioInterfaceName>, out_name: OutMapAliasBuffer<AudioInterfaceName>, params: AudioRequestParameters, aruid: AppletResourceUserId, process_handle: sf::CopyHandle) -> (AudioIn, AudioResponseParameters); 
     #[ipc_rid(4)]
     #[version(version::VersionInterval::from(version::Version::new(4, 0, 0)))]
     fn list_filtered(&self, names: OutAutoSelectBuffer<AudioInterfaceName>) -> u32;
     #[ipc_rid(5)]
     #[return_session]
     #[version(version::VersionInterval::from(version::Version::new(4, 0, 0)))]
-    fn open_with_protocol(&self, in_name: InMapAliasBuffer<AudioInterfaceName>, out_params: OutMapAliasBuffer<AudioResponseParameters>, params: AudioRequestParameters, aruid: AppletResourceUserId, protocol: u64) -> AudioIn; 
+    fn open_with_protocol(&self, in_name: InMapAliasBuffer<AudioInterfaceName>, out_name: OutMapAliasBuffer<AudioInterfaceName>, params: AudioRequestParameters, aruid: AppletResourceUserId, process_handle: sf::CopyHandle, protocol: u64) -> (AudioIn, AudioResponseParameters); 
 }
 
 
@@ -109,9 +110,9 @@ pub trait AudioOut {
     /// The `buffer_ptr` parameter must be a pointer to the `buffer` [`AudioBuffer`] TODO - support unsafe fns
     unsafe fn append_buffer(&self, buffer: InMapAliasBuffer<AudioBuffer>, buffer_ptr: usize);
     #[ipc_rid(4)]
-    fn register_buffer_event(&self) -> nx::svc::Handle;
+    fn register_buffer_event(&self) -> CopyHandle;
     #[ipc_rid(5)]
-    fn get_released_buffers(&self, buffers: OutMapAliasBuffer<AudioBuffer>) -> u32;
+    fn get_released_buffers(&self, buffers: OutMapAliasBuffer<*mut AudioBuffer>) -> u32;
     #[ipc_rid(6)]
     fn contains_buffer(&self, buffer_ptr: usize) -> bool;
     #[ipc_rid(7)]

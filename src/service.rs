@@ -123,3 +123,6 @@ pub mod lr;
 
 /// "bsd" socket service definitions
 pub mod bsd;
+
+/// "aud*" auudio service definitions
+pub mod audio; 

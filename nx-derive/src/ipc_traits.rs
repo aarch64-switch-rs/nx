@@ -369,27 +369,56 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
         }
 
         if return_type_is_session {
-            if let ReturnType::Type(_, bty) = server_fn.sig.output.clone()
-                && let Type::Path(ty) = *bty
-            {
-                if ty.path.segments.len() != 1 {
-                    return Err(stringify_error(
-                        server_fn.sig.output.span(),
-                        "Output type be a raw type name (the base name of the traits) the return type is marked as a session type",
-                    ));
+            if let ReturnType::Type(_, bty) = &mut server_fn.sig.output {
+                match *bty.clone() {
+                    Type::Path(ty) => {
+                        if ty.path.segments.len() != 1 {
+                            return Err(stringify_error(
+                                server_fn.sig.output.span(),
+                                "Output type be a raw type name (the base name of the traits) the return type is marked as a session type",
+                            ));
+                        }
+                        let out_type_ident = format!(
+                            "impl I{}Server + 'static",
+                            ty.path.segments.last().unwrap().ident
+                        );
+                        *bty =
+                            Box::new(syn::parse2::<Type>(FromStr::from_str(out_type_ident.as_str())?)?);
+                    }
+                    Type::Tuple(mut tup_ty) => {
+                        if let Some(first_mut_ref) = tup_ty.elems.first_mut() {
+                            if let Type::Path(ty) = first_mut_ref.clone() {
+                                if ty.path.segments.len() != 1 {
+                                    return Err(stringify_error(
+                                        server_fn.sig.output.span(),
+                                        "Output type be a raw type name (the base name of the traits) the return type is marked as a session type",
+                                    ));
+                                }
+                                *first_mut_ref = syn::parse2(FromStr::from_str(format!(
+                                    "impl I{}Server + 'static",
+                                    ty.path.segments.last().unwrap().ident
+                                ).as_str())?)?;
+                            } else {
+                                return Err(stringify_error(
+                                    server_fn.sig.output.span(), "The first element of a tuple return type must be a bare type name when returning a session type"));
+                            }
+                            
+                            *bty =
+                            Box::new(Type::Tuple(tup_ty));
+                        } else {
+                            return Err(stringify_error(
+                                server_fn.sig.output.span(), "Tuple type outputs must have at least 2 elements when specifying a session type. If one element is being returned, omit the braces to return the bare type."));
+                        }
+                    }
+                    _ => {
+                        return Err(stringify_error(
+                            server_fn.sig.output.span(),
+                            "Output type be a raw type name (the base name of the traits) or a tuple with the base name as the first element, if the return type is marked as a session type",
+                        ));
+                    }
                 }
-                let out_type_ident = format!(
-                    " -> impl I{}Server + 'static",
-                    ty.path.segments.last().unwrap().ident
-                );
-                server_fn.sig.output =
-                    syn::parse2::<ReturnType>(FromStr::from_str(out_type_ident.as_str())?)?;
-            } else {
-                return Err(stringify_error(
-                    server_fn.sig.output.span(),
-                    "Output type be a raw type name (the base name of the traits) the return type is marked as a session type",
-                ));
             }
+            
         }
 
         // now that the return type for server functions has been fixed, we can apply the same T -> Result<T> from the client functions
