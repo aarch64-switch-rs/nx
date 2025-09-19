@@ -9,11 +9,11 @@ use crate::service;
 use crate::service::applet;
 use crate::service::dispdrv;
 use crate::service::nv;
-use crate::service::nv::{ErrorCode, Fd,INvDrvClient, IoctlId};
+use crate::service::nv::{ErrorCode, Fd, INvDrvClient, IoctlId};
 use crate::service::vi;
 use crate::service::vi::{
-    ApplicationDisplayRootService, ApplicationDisplay, IApplicationDisplayClient, ManagerDisplayRootService,
-    SystemDisplayRootService,
+    ApplicationDisplay, ApplicationDisplayRootService, IApplicationDisplayClient,
+    ManagerDisplayRootService, SystemDisplayRootService,
 };
 use crate::svc;
 use crate::svc::MemoryPermission;
@@ -943,7 +943,7 @@ pub enum NvDrvServiceHolder {
     /// Applet Service
     Applet(nv::AppletNvDrvService),
     /// System Service
-    System(nv::SystemNvDrvService)
+    System(nv::SystemNvDrvService),
 }
 
 impl NvDrvServiceHolder {
@@ -951,21 +951,26 @@ impl NvDrvServiceHolder {
         match self {
             Self::Application(s) => s.open(path),
             Self::Applet(s) => s.open(path),
-            Self::System(s) => s.open(path)
+            Self::System(s) => s.open(path),
         }
     }
-    fn ioctl(&self, fd: Fd, id: IoctlId, in_buf: sf::InOutAutoSelectBuffer<'_, u8>) -> Result<ErrorCode> {
+    fn ioctl(
+        &self,
+        fd: Fd,
+        id: IoctlId,
+        in_buf: sf::InOutAutoSelectBuffer<'_, u8>,
+    ) -> Result<ErrorCode> {
         match self {
             Self::Application(s) => s.ioctl(fd, id, in_buf),
             Self::Applet(s) => s.ioctl(fd, id, in_buf),
-            Self::System(s) => s.ioctl(fd, id, in_buf)
+            Self::System(s) => s.ioctl(fd, id, in_buf),
         }
     }
     fn close(&self, fd: Fd) -> Result<ErrorCode> {
         match self {
             Self::Application(s) => s.close(fd),
             Self::Applet(s) => s.close(fd),
-            Self::System(s) => s.close(fd)
+            Self::System(s) => s.close(fd),
         }
     }
     fn initialize(
@@ -975,9 +980,15 @@ impl NvDrvServiceHolder {
         transfer_mem_handle: sf::CopyHandle,
     ) -> Result<ErrorCode> {
         match self {
-            Self::Application(s) => s.initialize(transfer_mem_size, self_process_handle, transfer_mem_handle),
-            Self::Applet(s) => s.initialize(transfer_mem_size, self_process_handle, transfer_mem_handle),
-            Self::System(s) => s.initialize(transfer_mem_size, self_process_handle, transfer_mem_handle)
+            Self::Application(s) => {
+                s.initialize(transfer_mem_size, self_process_handle, transfer_mem_handle)
+            }
+            Self::Applet(s) => {
+                s.initialize(transfer_mem_size, self_process_handle, transfer_mem_handle)
+            }
+            Self::System(s) => {
+                s.initialize(transfer_mem_size, self_process_handle, transfer_mem_handle)
+            }
         }
     }
 
@@ -986,7 +997,7 @@ impl NvDrvServiceHolder {
         match self {
             Self::Application(s) => s.get_session_mut().close(),
             Self::Applet(s) => s.get_session_mut().close(),
-            Self::System(s) => s.get_session_mut().close()
+            Self::System(s) => s.get_session_mut().close(),
         }
     }
 }
@@ -1040,16 +1051,17 @@ impl Context {
             ViServiceKind::Application => {
                 use vi::IApplicationDisplayRootClient;
                 let vi_srv = service::new_service_object::<ApplicationDisplayRootService>()?;
-                let app_disp_srv =
-                    vi_srv.get_display_service(vi::DisplayServiceMode::User)?;
+                let app_disp_srv = vi_srv.get_display_service(vi::DisplayServiceMode::User)?;
 
                 (RootServiceHolder::Application(vi_srv), app_disp_srv)
             }
         };
 
-        let nvdrv_srv= match nv_kind {
+        let nvdrv_srv = match nv_kind {
             NvDrvServiceKind::Application => {
-                NvDrvServiceHolder::Application(service::new_service_object::<nv::ApplicationNvDrvService>()?)
+                NvDrvServiceHolder::Application(service::new_service_object::<
+                    nv::ApplicationNvDrvService,
+                >()?)
             }
             NvDrvServiceKind::Applet => {
                 NvDrvServiceHolder::Applet(service::new_service_object::<nv::AppletNvDrvService>()?)
@@ -1162,7 +1174,7 @@ impl Context {
 
     /// Gets the underlying [`IApplicationDisplayClient`] object
     pub fn get_application_display_service(&self) -> &dyn vi::IApplicationDisplayClient {
-        & self.application_display_service
+        &self.application_display_service
     }
 
     /// Gets the underlying [`IApplicationDisplayClient`] object mutably

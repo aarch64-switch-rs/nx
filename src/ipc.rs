@@ -216,7 +216,7 @@ impl ReceiveStaticDescriptor {
 
     pub fn new(buffer: *const u8, buffer_size: usize) -> Self {
         let buffer = buffer.expose_provenance();
-        let address_low = buffer as  u32;
+        let address_low = buffer as u32;
         let address_high = (buffer >> 32) as u32;
 
         let mut bits: u32 = 0;
