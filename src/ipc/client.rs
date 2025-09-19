@@ -163,6 +163,10 @@ pub trait IClientObject {
         self.get_session().object_info
     }
 
+    /// # Safety
+    ///
+    /// The `ObjectInfo` being passed in must be for the same implementation of `IClientObject`,
+    /// or the object will cease to function after this call.
     unsafe fn set_info(&mut self, info: ObjectInfo) {
         self.get_session_mut().set_info(info);
     }

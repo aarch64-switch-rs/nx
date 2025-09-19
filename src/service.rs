@@ -125,4 +125,4 @@ pub mod lr;
 pub mod bsd;
 
 /// "aud*" auudio service definitions
-pub mod audio; 
+pub mod audio;

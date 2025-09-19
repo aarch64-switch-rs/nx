@@ -130,7 +130,7 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
         let mut version_req = None;
         let mut return_type_is_session = false;
         let mut return_wrap_result = true;
-        let mut doc_comment: Option<syn::Attribute> = None;
+        let mut doc_comments: Vec<syn::Attribute> = vec![];
         for attr in fn_item.attrs.iter() {
             if let syn::Attribute {
                 style: AttrStyle::Outer,
@@ -175,7 +175,7 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
             } = attr
                 && path.is_ident("doc")
             {
-                doc_comment = Some(attr.clone());
+                doc_comments.push(attr.clone());
             } else {
                 return Err(stringify_error(
                     fn_item.span(),
@@ -198,10 +198,7 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
 
         // fix up the return types of the client functions to return nx::result::Result
         let mut client_fn = fn_item.clone();
-        client_fn.attrs = vec![];
-        if let Some(doc_comment) = doc_comment {
-            client_fn.attrs.push(doc_comment);
-        }
+        client_fn.attrs = doc_comments.clone();
 
         let mut client_in_param_names = vec![];
         let mut server_in_param_names = vec![];
@@ -355,7 +352,7 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
 
         // fix the return type for the server function types if
         let mut server_fn = fn_item.clone();
-        server_fn.attrs = vec![];
+        server_fn.attrs = doc_comments;
 
         if let Some(FnArg::Receiver(r)) = server_fn.sig.inputs.iter_mut().next() {
             // all server functions are considered &mut borrowing
@@ -382,8 +379,9 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
                             "impl I{}Server + 'static",
                             ty.path.segments.last().unwrap().ident
                         );
-                        *bty =
-                            Box::new(syn::parse2::<Type>(FromStr::from_str(out_type_ident.as_str())?)?);
+                        *bty = Box::new(syn::parse2::<Type>(FromStr::from_str(
+                            out_type_ident.as_str(),
+                        )?)?);
                     }
                     Type::Tuple(mut tup_ty) => {
                         if let Some(first_mut_ref) = tup_ty.elems.first_mut() {
@@ -394,20 +392,26 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
                                         "Output type be a raw type name (the base name of the traits) the return type is marked as a session type",
                                     ));
                                 }
-                                *first_mut_ref = syn::parse2(FromStr::from_str(format!(
-                                    "impl I{}Server + 'static",
-                                    ty.path.segments.last().unwrap().ident
-                                ).as_str())?)?;
+                                *first_mut_ref = syn::parse2(FromStr::from_str(
+                                    format!(
+                                        "impl I{}Server + 'static",
+                                        ty.path.segments.last().unwrap().ident
+                                    )
+                                    .as_str(),
+                                )?)?;
                             } else {
                                 return Err(stringify_error(
-                                    server_fn.sig.output.span(), "The first element of a tuple return type must be a bare type name when returning a session type"));
+                                    server_fn.sig.output.span(),
+                                    "The first element of a tuple return type must be a bare type name when returning a session type",
+                                ));
                             }
-                            
-                            *bty =
-                            Box::new(Type::Tuple(tup_ty));
+
+                            *bty = Box::new(Type::Tuple(tup_ty));
                         } else {
                             return Err(stringify_error(
-                                server_fn.sig.output.span(), "Tuple type outputs must have at least 2 elements when specifying a session type. If one element is being returned, omit the braces to return the bare type."));
+                                server_fn.sig.output.span(),
+                                "Tuple type outputs must have at least 2 elements when specifying a session type. If one element is being returned, omit the braces to return the bare type.",
+                            ));
                         }
                     }
                     _ => {
@@ -418,7 +422,6 @@ pub fn ipc_trait(_args: TokenStream, ipc_trait: TokenStream) -> syn::Result<Toke
                     }
                 }
             }
-            
         }
 
         // now that the return type for server functions has been fixed, we can apply the same T -> Result<T> from the client functions
