@@ -107,7 +107,7 @@ pub trait AudioOut {
     #[ipc_rid(3)]
     /// Safety:
     /// 
-    /// The `buffer_ptr` parameter must be a pointer to the `buffer` [`AudioBuffer`] TODO - support unsafe fns
+    /// The `buffer_ptr` parameter must be a pointer to the `buffer` [`AudioBuffer`]
     unsafe fn append_buffer(&self, buffer: InMapAliasBuffer<AudioBuffer>, buffer_ptr: usize);
     #[ipc_rid(4)]
     fn register_buffer_event(&self) -> CopyHandle;
@@ -153,6 +153,33 @@ pub trait AudioIn {
     #[ipc_rid(3)]
     /// Safety:
     /// 
-    /// The `buffer_ptr` parameter must be a pointer to the `buffer` [`AudioBuffer`] TODO - support unsafe fns
+    /// The `buffer_ptr` parameter must be a pointer to the `buffer` [`AudioBuffer`]
     unsafe fn append_buffer(&self, buffer: InMapAliasBuffer<AudioBuffer>, buffer_ptr: usize);
+    #[ipc_rid(4)]
+    fn register_buffer_event(&self) -> CopyHandle;
+    #[ipc_rid(5)]
+    fn get_released_buffers(&self, buffers: OutMapAliasBuffer<*mut AudioBuffer>) -> u32;
+    #[ipc_rid(6)]
+    fn contains_buffer(&self, buffer_ptr: usize) -> bool;
+    #[ipc_rid(8)]
+    #[version(version::VersionInterval::from(version::Version::new(3, 0, 0)))]
+    /// Safety:
+    /// 
+    /// The `buffer_ptr` parameter must be a pointer to the `buffer` [`AudioBuffer`]
+    unsafe fn append_buffer_auto(&self, buffer: InAutoSelectBuffer<AudioBuffer>, buffer_ptr: usize);
+    #[ipc_rid(9)]
+    #[version(version::VersionInterval::from(version::Version::new(3, 0, 0)))]
+    fn get_released_buffers_auto(&self, buffers: OutAutoSelectBuffer<*mut AudioBuffer>) -> u32;
+    #[ipc_rid(11)]
+    #[version(version::VersionInterval::from(version::Version::new(4, 0, 0)))]
+    fn get_buffer_count(&self) -> u32;
+    #[ipc_rid(12)]
+    #[version(version::VersionInterval::from(version::Version::new(4, 0, 0)))]
+    fn set_device_gain(&mut self, gain: f32);
+    #[ipc_rid(13)]
+    #[version(version::VersionInterval::from(version::Version::new(4, 0, 0)))]
+    fn get_device_gain(&self) -> f32;
+    #[ipc_rid(14)]
+    #[version(version::VersionInterval::from(version::Version::new(6, 0, 0)))]
+    fn flush_buffers(&self) -> bool;
 }
