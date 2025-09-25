@@ -209,7 +209,7 @@ impl AddressSpaceType {
 
     const fn from_bits(val: u8) -> Self {
         match val {
-            0..=3 => unsafe { core::mem::transmute(val) },
+            0..=3 => unsafe { core::mem::transmute::<u8, Self>(val) },
             _ => Self::Mask,
         }
     }
@@ -233,7 +233,7 @@ impl MemoryPoolType {
 
     const fn from_bits(val: u8) -> Self {
         match val {
-            0..=3 => unsafe { core::mem::transmute(val) },
+            0..=3 => unsafe { core::mem::transmute::<u8, Self>(val) },
             _ => Self::Mask,
         }
     }

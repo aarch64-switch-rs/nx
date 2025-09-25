@@ -792,9 +792,11 @@ impl<T> Drop for Packet<'_, T> {
         // (And even if we tried to handle it somehow, we'd also need to handle
         // the case where the panic payload we get out of it also panics on
         // drop, and so on. See issue #86027.)
-        if let Err(_) = unwinding::panic::catch_unwind(core::panic::AssertUnwindSafe(|| {
+        if unwinding::panic::catch_unwind(core::panic::AssertUnwindSafe(|| {
             *self.result.get_mut() = None;
-        })) {
+        }))
+        .is_err()
+        {
             abort::abort(AbortLevel::Panic(), crate::rc::ResultPanicked::make());
         }
 
