@@ -73,7 +73,7 @@ macro_rules! bit {
 /// # Examples
 ///
 /// ```
-/// bit_enum! {
+/// define_bit_set! {
 ///    Test (u32) {
 ///        A = bit!(1),
 ///        B = bit!(2)
@@ -170,12 +170,12 @@ macro_rules! define_bit_set {
     };
 }
 
-/// Constructs a `bit_enum` type value from various flags
+/// Constructs a `define_bit_set` type value from various flags
 ///
 /// # Examples
 ///
 /// ```
-/// bit_enum! {
+/// define_bit_set! {
 ///    Test (u32) {
 ///        A = bit!(1),
 ///        B = bit!(2)

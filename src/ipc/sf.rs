@@ -333,6 +333,7 @@ impl<
 }
 
 impl<
+    const IN: bool,
     const MAP_ALIAS: bool,
     const POINTER: bool,
     const FIXED_SIZE: bool,
@@ -343,7 +344,7 @@ impl<
 >
     Buffer<
         '_,
-        true,
+        IN,
         true,
         MAP_ALIAS,
         POINTER,
