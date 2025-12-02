@@ -1,6 +1,5 @@
 use core::arch::naked_asm as nasm;
 
-use crate::macros::util::maybe_cfi;
 use crate::result::ResultCode;
 use crate::svc::{CreateProcessInfo, DebugThreadParam, SystemInfoParam};
 use crate::{arm, svc::PhysicalMemoryInfo};
