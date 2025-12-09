@@ -511,18 +511,24 @@ impl ServerHolder {
             #[cfg(feature = "services")]
             {
                 let mut sm = service::new_named_port_object::<sm::UserInterface>()?;
-                match (self.is_mitm_service, self.handle_type) {
-                    (true, WaitHandleType::Server) => {
+
+                if self.handle_type == WaitHandleType::Server {
+                    if self.is_mitm_service {
                         debug_assert!(
                             self.info.owns_handle,
                             "MitM server objects should always own their handles."
                         );
                         sm.atmosphere_uninstall_mitm(self.service_name)?;
-                        sf::Session::from(self.mitm_forward_info).close();
                     }
-                    (false, _) => sm.unregister_service(self.service_name)?,
-                    _ => {}
-                };
+                    else {
+                        sm.unregister_service(self.service_name)?;
+                    }
+                }
+
+                if self.is_mitm_service {
+                    sf::Session::from(self.mitm_forward_info).close();
+                }
+
                 sm.detach_client(sf::ProcessId::new())?;
             }
         }
@@ -698,7 +704,7 @@ impl<const P: usize> ServerManager<P> {
         let mut handles_index: usize = 0;
         for server_holder in &mut self.server_holders {
             let server_info = server_holder.info;
-            if server_info.handle != 0 {
+            if server_info.handle != svc::INVALID_HANDLE {
                 self.wait_handles[handles_index] = server_info.handle;
                 handles_index += 1;
             }

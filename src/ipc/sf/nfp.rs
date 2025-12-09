@@ -27,14 +27,14 @@ pub struct DeviceHandle {
 }
 const_assert!(core::mem::size_of::<DeviceHandle>() == 0x8);
 
-#[derive(Request, Response, Copy, Clone, PartialEq, Eq)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
 pub enum State {
     NonInitialized = 0,
     Initialized = 1,
 }
 
-#[derive(Request, Response, Copy, Clone, PartialEq, Eq)]
+#[derive(Request, Response, Copy, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
 pub enum DeviceState {
     Initialized = 0,
