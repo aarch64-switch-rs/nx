@@ -828,7 +828,7 @@ pub fn send_sync_request_light(handle: Handle) -> Result<()> {
     }
 }
 
-/// Sends an IPC synchronization request to a session.
+/// Sends a synchronous IPC request to a session.
 #[inline(always)]
 pub fn send_sync_request(handle: Handle) -> Result<()> {
     unsafe {
@@ -837,7 +837,7 @@ pub fn send_sync_request(handle: Handle) -> Result<()> {
     }
 }
 
-/// Sends an IPC synchronization request to a session from an user allocated buffer.
+/// Sends a synchronous IPC request to a session from an user allocated buffer.
 ///
 /// The buffer size must be a multiple of the system page size (0x1000).
 #[inline(always)]
@@ -848,7 +848,7 @@ pub unsafe fn send_sync_request_with_user_data(buffer: &mut [u8], handle: Handle
     }
 }
 
-/// Sends an IPC synchronization request to a session from an user allocated buffer (asynchronous version).
+/// Sends an asynchronous IPC request to a session from an user allocated buffer .
 ///
 /// The buffer size must be a multiple of the system page size (0x1000).
 #[inline(always)]
