@@ -189,8 +189,8 @@ impl<'scope> Scope<'scope, '_> {
     /// [`join`]: ScopedJoinHandle::join
     pub fn spawn<F, T>(&'scope self, f: F) -> ScopedJoinHandle<'scope, T>
     where
-        F: FnOnce() -> T + Send + 'scope,
-        T: Send + 'scope,
+        F: FnOnce() -> T + Send + 'scope + 'static,
+        T: Send + 'scope + 'static,
     {
         Builder::new()
             .spawn_scoped(self, f)
@@ -251,8 +251,8 @@ impl Builder {
         f: F,
     ) -> crate::result::Result<ScopedJoinHandle<'scope, T>>
     where
-        F: FnOnce() -> T + Send + 'scope,
-        T: Send + 'scope,
+        F: FnOnce() -> T + Send + 'scope + 'static,
+        T: Send + 'scope + 'static,
     {
         Ok(ScopedJoinHandle(unsafe {
             self.spawn_unchecked_(f, Some(scope.data.clone()))

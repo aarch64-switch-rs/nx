@@ -464,7 +464,7 @@ impl ServerHolder {
             new_mitm_server_fn: self.new_mitm_server_fn,
             handle_type: WaitHandleType::Session,
             mitm_forward_info: mitm_fwd_info,
-            is_mitm_service: forward_handle != 0,
+            is_mitm_service: forward_handle != svc::INVALID_HANDLE,
             service_name: sm::ServiceName::empty(),
             domain_table: self.domain_table.clone(),
         })
@@ -519,18 +519,18 @@ impl ServerHolder {
                             "MitM server objects should always own their handles."
                         );
                         sm.atmosphere_uninstall_mitm(self.service_name)?;
-                    }
-                    else {
+                    } else {
                         sm.unregister_service(self.service_name)?;
                     }
                 }
 
-                if self.is_mitm_service {
-                    sf::Session::from(self.mitm_forward_info).close();
-                }
-
                 sm.detach_client(sf::ProcessId::new())?;
             }
+        }
+
+        // Forward info may be valid despite having an empty service name (like a cloned session)
+        if self.is_mitm_service {
+            sf::Session::from(self.mitm_forward_info).close();
         }
 
         // Don't close our session like a normal one (like the forward session below) as we allocated the object IDs ourselves, the only thing we do have to close is the handle

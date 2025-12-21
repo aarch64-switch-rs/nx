@@ -292,23 +292,23 @@ impl Builder {
         f: F,
     ) -> crate::result::Result<JoinHandle<T, WAIT_ON_DROP>>
     where
-        F: FnOnce() -> T,
+        F: FnOnce() -> T + 'static,
         F: Send,
-        T: Send,
+        T: Send + 'static,
     {
         Ok(JoinHandle(unsafe { self.spawn_unchecked_(f, None) }?))
     }
 
     #[allow(unsafe_op_in_unsafe_fn)]
-    unsafe fn spawn_unchecked_<'scope, F, T>(
+    unsafe fn spawn_unchecked_<F, T>(
         self,
         f: F,
         scope_data: Option<Arc<scoped::ScopeData>>,
-    ) -> crate::result::Result<JoinInner<'scope, T>>
+    ) -> crate::result::Result<JoinInner<'static, T>>
     where
-        F: FnOnce() -> T,
+        F: FnOnce() -> T + 'static,
         F: Send,
-        T: Send,
+        T: Send + 'static,
     {
         let Builder {
             name,
@@ -327,7 +327,7 @@ impl Builder {
         let my_thread = Thread::new_inner(name);
         let _their_thread = my_thread.clone();
 
-        let my_packet: Arc<Packet<'scope, T>> = Arc::new(Packet {
+        let my_packet: Arc<Packet<'static, T>> = Arc::new(Packet {
             scope: scope_data,
             result: UnsafeCell::new(None),
             _marker: PhantomData,
@@ -370,7 +370,7 @@ impl Builder {
             // will call `decrement_num_running_threads` and therefore signal that this thread is
             // done.
             drop(their_packet);
-            // Here, the lifetime `'scope` can end. `main` keeps running for a bit
+            // Here, the lifetime `'static` can end. `main` keeps running for a bit
             // after that before returning itself.
         };
 
@@ -803,9 +803,9 @@ impl<T> Drop for Packet<'_, T> {
         // Book-keeping so the scope knows when it's done.
         if let Some(scope) = &self.scope {
             // Now that there will be no more user code running on this thread
-            // that can use 'scope, mark the thread as 'finished'.
+            // that can use 'static, mark the thread as 'finished'.
             // It's important we only do this after the `result` has been dropped,
-            // since dropping it might still use things it borrowed from 'scope.
+            // since dropping it might still use things it borrowed from 'static.
             scope.decrement_num_running_threads(unhandled_panic);
         }
     }
