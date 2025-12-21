@@ -519,8 +519,7 @@ impl ServerHolder {
                             "MitM server objects should always own their handles."
                         );
                         sm.atmosphere_uninstall_mitm(self.service_name)?;
-                    }
-                    else {
+                    } else {
                         sm.unregister_service(self.service_name)?;
                     }
                 }
