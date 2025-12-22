@@ -73,7 +73,7 @@ pub trait UserInterface {
     fn unregister_service(&self, name: ServiceName);
     #[ipc_rid(4)]
     #[version(version::VersionInterval::from(version::Version::new(11, 0, 0)))]
-    fn detach_client(&mut self, process_id: sf::ProcessId);
+    fn detach_client(&self, process_id: sf::ProcessId);
     #[ipc_rid(65000)]
     fn atmosphere_install_mitm(&self, name: ServiceName) -> (sf::MoveHandle, sf::MoveHandle);
     #[ipc_rid(65001)]

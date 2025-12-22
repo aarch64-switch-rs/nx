@@ -510,9 +510,8 @@ impl ServerHolder {
         if !self.service_name.is_empty() {
             #[cfg(feature = "services")]
             {
-                let mut sm = service::new_named_port_object::<sm::UserInterface>()?;
-
                 if self.handle_type == WaitHandleType::Server {
+                    let sm = service::new_named_port_object::<sm::UserInterface>()?;
                     if self.is_mitm_service {
                         debug_assert!(
                             self.info.owns_handle,
@@ -522,9 +521,8 @@ impl ServerHolder {
                     } else {
                         sm.unregister_service(self.service_name)?;
                     }
+                    sm.detach_client(sf::ProcessId::new())?;
                 }
-
-                sm.detach_client(sf::ProcessId::new())?;
             }
         }
 
@@ -997,7 +995,7 @@ impl<const P: usize> ServerManager<P> {
                         if server_holder.is_mitm_service {
                             #[cfg(feature = "services")]
                             {
-                                let mut sm = service::new_named_port_object::<sm::UserInterface>()?;
+                                let sm = service::new_named_port_object::<sm::UserInterface>()?;
                                 let (info, session_handle) = sm
                                     .atmosphere_acknowledge_mitm_session(
                                         server_holder.service_name,
@@ -1104,7 +1102,7 @@ impl<const P: usize> ServerManager<P> {
     pub fn register_service_server<S: IService + 'static>(&mut self) -> Result<()> {
         let service_name = S::get_name();
 
-        let mut sm = service::new_named_port_object::<sm::UserInterface>()?;
+        let sm = service::new_named_port_object::<sm::UserInterface>()?;
         let service_handle = sm.register_service(service_name, false, S::get_max_sesssions())?;
         self.register_server::<S>(service_handle.handle, service_name);
         sm.detach_client(sf::ProcessId::new())?;
@@ -1115,7 +1113,7 @@ impl<const P: usize> ServerManager<P> {
     pub fn register_mitm_service_server<S: IMitmService + 'static>(&mut self) -> Result<()> {
         let service_name = S::get_name();
 
-        let mut sm = service::new_named_port_object::<sm::UserInterface>()?;
+        let sm = service::new_named_port_object::<sm::UserInterface>()?;
         let (mitm_handle, query_handle) = sm.atmosphere_install_mitm(service_name)?;
 
         self.register_mitm_server::<S>(mitm_handle.handle, service_name);
