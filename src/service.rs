@@ -53,7 +53,7 @@ pub fn new_named_port_object<T: INamedPort + 'static>() -> Result<T> {
 ///
 /// For more information about this, check [`IService`]
 pub fn new_service_object<T: IService>() -> Result<T> {
-    let mut sm = new_named_port_object::<sm::UserInterface>()?;
+    let sm = new_named_port_object::<sm::UserInterface>()?;
     let session_handle = sm.get_service_handle(T::get_name())?;
     sm.detach_client(sf::ProcessId::new())?;
     let mut object = T::new(sf::Session::from_handle(session_handle.handle));
