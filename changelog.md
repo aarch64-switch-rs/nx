@@ -2,9 +2,7 @@
 
 ## `v0.4.0`
 
-- Documentation and cleanup on multiple modules/functions
-
-- Proper types and functions in sockets module
+- Mature Sockets module and a number of other updates by @pantsman0 in https://github.com/aarch64-switch-rs/nx/pull/40
 
 ### `rc1`
 
