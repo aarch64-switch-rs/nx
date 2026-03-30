@@ -236,8 +236,10 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
 
         buffer_count as usize * single_buffer_size
     }
-
-    /// Creates a new stray layer (application/applet window) that can be drawn on for UI elements
+    /// Creates a new managed layer (application/applet window) that can be drawn on overlay elements.
+    ///
+    /// These layers exist on top of stray layers and application/applet UIs, and can be Z-order vertically layered over each other.
+    /// The GPU provides the alpha blending for all layers based on the committed frame.
     pub fn new_managed(
         gpu_ctx: Arc<RwLock<Context>>,
         surface_name: super::surface::DisplayName,
@@ -274,10 +276,7 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
         })
     }
 
-    /// Creates a new managed layer (application/applet window) that can be drawn on overlay elements.
-    ///
-    /// These layers exist on top of stray layers and application/applet UIs, and can be Z-order vertically layered over each other.
-    /// The GPU provides the alpha blending for all layers based on the committed frame.
+    /// Creates a new stray layer (application/applet window) that can be drawn on for UI elements
     #[inline(always)]
     pub fn new_stray(
         gpu_ctx: Arc<RwLock<Context>>,
