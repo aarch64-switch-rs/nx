@@ -314,7 +314,7 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
     pub fn render<T>(
         &mut self,
         clear_color: Option<ColorFormat>,
-        runner: impl Fn(&mut BufferedCanvas<'_, ColorFormat>) -> Result<T>,
+        mut runner: impl FnOnce(&mut BufferedCanvas<'_, ColorFormat>) -> Result<T>,
     ) -> Result<T> {
         let (buffer, buffer_length, slot, _fence_present, fences) =
             self.surface.dequeue_buffer(false)?;
@@ -377,7 +377,7 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
     pub fn render_unbuffered<T>(
         &mut self,
         clear_color: Option<ColorFormat>,
-        runner: impl Fn(&mut UnbufferedCanvas<'_, ColorFormat>) -> Result<T>,
+        mut runner: impl FnOnce(&mut UnbufferedCanvas<'_, ColorFormat>) -> Result<T>,
     ) -> Result<T> {
         let (buffer, buffer_length, slot, _fence_present, fences) =
             self.surface.dequeue_buffer(false)?;
@@ -715,9 +715,7 @@ impl<ColorFormat: CanvasColorFormat> Canvas for BufferedCanvas<'_, ColorFormat> 
             )
         };
 
-        for pixel_slot in raw_buffer.iter_mut() {
-            *pixel_slot = raw_color;
-        }
+        raw_buffer.fill(raw_color);
     }
     fn height(&self) -> u32 {
         self.manager.surface.height()
@@ -755,6 +753,55 @@ impl<ColorFormat: CanvasColorFormat> Canvas for BufferedCanvas<'_, ColorFormat> 
                 out_color.to_raw(),
             )
         };
+    }
+    fn draw_rect(
+        &mut self,
+        x: i32,
+        y: i32,
+        width: u32,
+        height: u32,
+        color: Self::ColorFormat,
+        blend: AlphaBlend,
+    ) {
+        let s_width = self.width() as i32;
+        let s_height = self.height() as i32;
+        let x0 = x.clamp(0, s_width);
+        let x1 = x.saturating_add_unsigned(width).clamp(0, s_width);
+        let y0 = y.clamp(0, s_height);
+        let y1 = y.saturating_add_unsigned(height).clamp(0, s_height);
+        for y in y0..y1 {
+            self.draw_line((x0, y), (x1, y), 1, color, blend);
+        }
+    }
+    #[inline]
+    fn draw_line(
+        &mut self,
+        start: (i32, i32),
+        end: (i32, i32),
+        width: u32,
+        color: Self::ColorFormat,
+        blend: AlphaBlend,
+    ) {
+        if start.1 == end.1 && width == 1 && blend == AlphaBlend::None {
+            let start_offset = (self.manager.surface.pitch() * start.1 as u32
+                + start.0 as u32 * ColorFormat::COLOR_FORMAT.bytes_per_pixel())
+                as usize;
+            let raw_buffer: &mut [<ColorFormat as CanvasColorFormat>::RawType] = unsafe {
+                core::slice::from_raw_parts_mut(
+                    self.linear_buf.ptr as *mut <ColorFormat as CanvasColorFormat>::RawType,
+                    self.linear_buf.layout.size()
+                        / <ColorFormat as CanvasColorFormat>::BYTES_PER_PIXEL as usize,
+                )
+            };
+
+            raw_buffer[start_offset..(start_offset+(end.0-start.0))].fill(color.to_raw());
+
+            return;
+        }
+        for (x, y) in line_drawing::Bresenham::new(start, end) {
+            // TODO - fix this stupid algorithm
+            self.draw_circle_filled(x, y, width, color, blend)
+        }
     }
 }
 
