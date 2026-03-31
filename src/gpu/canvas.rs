@@ -46,7 +46,7 @@ pub struct RGBA4 {
 impl RGBA4 {
     /// Takes in standard 8-bit colors and scales them down to fit the range of 4-bit channels (via 4-bit right shift)
     #[inline]
-    pub fn new_scaled(r: u8, g: u8, b: u8, a: u8) -> Self {
+    pub const fn new_scaled(r: u8, g: u8, b: u8, a: u8) -> Self {
         Self::new()
             .with_r(r >> 4)
             .with_g(g >> 4)
@@ -127,7 +127,7 @@ pub struct RGBA8 {
 }
 
 impl RGBA8 {
-    pub fn new_scaled(r: u8, g: u8, b: u8, a: u8) -> Self {
+    pub const fn new_scaled(r: u8, g: u8, b: u8, a: u8) -> Self {
         Self::new().with_r(r).with_g(g).with_b(b).with_a(a)
     }
 
