@@ -62,6 +62,26 @@ unsafe extern "Rust" {
 /// Represents the fn pointer used for exiting
 pub type ExitFn = unsafe extern "C" fn(ResultCode) -> !;
 
+pub(crate) mod critical_section {
+
+    use crate::sync::sys::mutex::Mutex;
+    static CRITICAL_SECTION: Mutex = Mutex::new();
+
+    pub(crate) struct RawMutexCriticalSection;
+
+    critical_section::set_impl!(RawMutexCriticalSection);
+
+    unsafe impl critical_section::Impl for RawMutexCriticalSection {
+        unsafe fn acquire() -> () {
+            CRITICAL_SECTION.lock();
+        }
+
+        unsafe fn release(_token: critical_section::RawRestoreState) {
+            unsafe { CRITICAL_SECTION.unlock() }
+        }
+    }
+}
+
 #[atomic_enum]
 /// Represents the executable type of the current process
 #[derive(PartialEq, Eq, Default)]

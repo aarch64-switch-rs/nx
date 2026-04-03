@@ -13,6 +13,8 @@ use core::ptr::NonNull;
 
 use ::alloc::alloc::{AllocError, Allocator, Global, Layout};
 
+use embedded_alloc::LlffHeap as Heap;
+
 pub const PAGE_ALIGNMENT: usize = 0x1000;
 
 pub mod rc;
@@ -82,8 +84,6 @@ pub fn configure_heap(heap_override: PointerAndSize) -> PointerAndSize {
     }
 }
 
-// TODO: be able to change the global allocator?
-
 /// Represents a heap allocator for this library
 /// # Safety
 ///
@@ -106,18 +106,21 @@ pub unsafe trait AllocatorEx: Allocator {
     ///
     /// # Arguments
     ///
-    /// * `t`: Heap value address
-    fn delete<T>(&self, t: *mut T) {
+    /// * `ptr`: Heap value address
+    ///
+    /// # Safety
+    ///
+    /// As with the regular Allocator trait, the `delete` function can only be called on pointers produced by the same implementation's `new`
+    unsafe fn delete<T>(&self, ptr: *mut T) {
         let layout = Layout::new::<T>();
-        unsafe { self.deallocate(NonNull::new_unchecked(t.cast()), layout) };
+        unsafe { self.deallocate(NonNull::new_unchecked(ptr.cast()), layout) };
     }
 }
 
 unsafe impl AllocatorEx for Global {}
 
 #[global_allocator]
-static GLOBAL_ALLOCATOR: linked_list_allocator::LockedHeap =
-    linked_list_allocator::LockedHeap::empty();
+static GLOBAL_ALLOCATOR: Heap = Heap::empty();
 
 /// Initializes the global allocator with the given address and size.
 /// Returns a bool to indicate if the memory was consumed by the allocator
@@ -125,8 +128,8 @@ static GLOBAL_ALLOCATOR: linked_list_allocator::LockedHeap =
 /// # Arguments
 ///
 /// * `heap`: The heap address and size
-pub fn initialize(heap: PointerAndSize) -> bool {
-    unsafe { GLOBAL_ALLOCATOR.lock().init(heap.address, heap.size) };
+pub (crate) fn initialize(heap: PointerAndSize) -> bool {
+    unsafe { GLOBAL_ALLOCATOR.init(heap.address.expose_provenance(), heap.size) };
     false
 }
 
@@ -134,10 +137,8 @@ pub fn initialize(heap: PointerAndSize) -> bool {
 ///
 /// The library may internally disable them in exceptional cases: for instance, to avoid exception handlers to allocate heap memory if the exception cause is actually an OOM situation
 pub fn is_enabled() -> bool {
-    let alloc_guard = GLOBAL_ALLOCATOR.lock();
-    alloc_guard.size() != 0
+    GLOBAL_ALLOCATOR.free() != 0 // TODO!!!! - fix this to actually workout if we can allocate in an exception handler. maybe remove this from the API too since we require a heap in almost all circumstances.
 }
-
 /// Represents a wrapped and manually managed heap value
 ///
 /// Note that a [`Buffer`] is able to hold both a single value or an array of values of the provided type
