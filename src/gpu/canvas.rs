@@ -46,7 +46,7 @@ pub struct RGBA4 {
 impl RGBA4 {
     /// Takes in standard 8-bit colors and scales them down to fit the range of 4-bit channels (via 4-bit right shift)
     #[inline]
-    pub const fn new_scaled(r: u8, g: u8, b: u8, a: u8) -> Self {
+    pub fn new_scaled(r: u8, g: u8, b: u8, a: u8) -> Self {
         Self::new()
             .with_r(r >> 4)
             .with_g(g >> 4)
@@ -127,7 +127,7 @@ pub struct RGBA8 {
 }
 
 impl RGBA8 {
-    pub const fn new_scaled(r: u8, g: u8, b: u8, a: u8) -> Self {
+    pub fn new_scaled(r: u8, g: u8, b: u8, a: u8) -> Self {
         Self::new().with_r(r).with_g(g).with_b(b).with_a(a)
     }
 
@@ -236,10 +236,8 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
 
         buffer_count as usize * single_buffer_size
     }
-    /// Creates a new managed layer (application/applet window) that can be drawn on overlay elements.
-    ///
-    /// These layers exist on top of stray layers and application/applet UIs, and can be Z-order vertically layered over each other.
-    /// The GPU provides the alpha blending for all layers based on the committed frame.
+
+    /// Creates a new stray layer (application/applet window) that can be drawn on for UI elements
     pub fn new_managed(
         gpu_ctx: Arc<RwLock<Context>>,
         surface_name: super::surface::DisplayName,
@@ -276,7 +274,10 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
         })
     }
 
-    /// Creates a new stray layer (application/applet window) that can be drawn on for UI elements
+    /// Creates a new managed layer (application/applet window) that can be drawn on overlay elements.
+    ///
+    /// These layers exist on top of stray layers and application/applet UIs, and can be Z-order vertically layered over each other.
+    /// The GPU provides the alpha blending for all layers based on the committed frame.
     #[inline(always)]
     pub fn new_stray(
         gpu_ctx: Arc<RwLock<Context>>,
@@ -314,7 +315,7 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
     pub fn render<T>(
         &mut self,
         clear_color: Option<ColorFormat>,
-        runner: impl Fn(&mut BufferedCanvas<'_, ColorFormat>) -> Result<T>,
+        mut runner: impl FnOnce(&mut BufferedCanvas<'_, ColorFormat>) -> Result<T>,
     ) -> Result<T> {
         let (buffer, buffer_length, slot, _fence_present, fences) =
             self.surface.dequeue_buffer(false)?;
@@ -377,7 +378,7 @@ impl<ColorFormat: sealed::CanvasColorFormat> CanvasManager<ColorFormat> {
     pub fn render_unbuffered<T>(
         &mut self,
         clear_color: Option<ColorFormat>,
-        runner: impl Fn(&mut UnbufferedCanvas<'_, ColorFormat>) -> Result<T>,
+        mut runner: impl FnOnce(&mut UnbufferedCanvas<'_, ColorFormat>) -> Result<T>,
     ) -> Result<T> {
         let (buffer, buffer_length, slot, _fence_present, fences) =
             self.surface.dequeue_buffer(false)?;
@@ -715,9 +716,7 @@ impl<ColorFormat: CanvasColorFormat> Canvas for BufferedCanvas<'_, ColorFormat> 
             )
         };
 
-        for pixel_slot in raw_buffer.iter_mut() {
-            *pixel_slot = raw_color;
-        }
+        raw_buffer.fill(raw_color);
     }
     fn height(&self) -> u32 {
         self.manager.surface.height()
@@ -755,6 +754,109 @@ impl<ColorFormat: CanvasColorFormat> Canvas for BufferedCanvas<'_, ColorFormat> 
                 out_color.to_raw(),
             )
         };
+    }
+    fn draw_rect(
+        &mut self,
+        x: i32,
+        y: i32,
+        width: u32,
+        height: u32,
+        color: Self::ColorFormat,
+        blend: AlphaBlend,
+    ) {
+        let s_width = self.width() as i32;
+        let s_height = self.height() as i32;
+        let x0 = x.clamp(0, s_width);
+        let x1 = x.saturating_add_unsigned(width).clamp(0, s_width);
+        let y0 = y.clamp(0, s_height);
+        let y1 = y.saturating_add_unsigned(height).clamp(0, s_height);
+
+        let pitch = self.manager.surface.pitch() as usize;
+        let bpp = ColorFormat::COLOR_FORMAT.bytes_per_pixel() as usize;
+
+        for y in y0..y1 {
+            debug_assert!(
+                (pitch * (y as usize) + (x1 as usize) * bpp) < self.buffer_size,
+                "in-bounds pixels should never lead to out-of bounds reads/writes"
+            );
+            let mut pixel_offset = pitch * (y as usize) + (x0 as usize) * bpp;
+
+            match blend {
+                AlphaBlend::None => {
+                    let array: &mut [ColorFormat::RawType] = unsafe {
+                        // SAFETY: alignment is guaranteed due to the way the buffer is set up (align_of::<ColorFormat::RawType>() <= align_of::<u128>() for all implementors)
+                        // and bounds are checked by the debug assert above
+                        core::slice::from_raw_parts_mut(
+                            self.linear_buf.ptr.add(pixel_offset) as *mut ColorFormat::RawType,
+                            (x1 - x0) as usize,
+                        )
+                    };
+                    array.fill(color.to_raw());
+                }
+                _ => {
+                    for _ in x0..x1 {
+                        let out_color = color.blend_with(
+                            ColorFormat::from_raw(unsafe {
+                                core::ptr::read(self.linear_buf.ptr.add(pixel_offset)
+                                    as *mut ColorFormat::RawType)
+                            }),
+                            blend,
+                        );
+
+                        // SAFETY - we know get_unchecked access below is OK as we have checked the dimensions
+                        unsafe {
+                            core::ptr::write(
+                                self.linear_buf.ptr.add(pixel_offset) as *mut ColorFormat::RawType,
+                                out_color.to_raw(),
+                            )
+                        };
+
+                        pixel_offset += bpp;
+                    }
+                }
+            }
+        }
+    }
+    #[inline]
+    fn draw_line(
+        &mut self,
+        start: (i32, i32),
+        end: (i32, i32),
+        width: u32,
+        color: Self::ColorFormat,
+        blend: AlphaBlend,
+    ) {
+        match (start.0 == end.0, start.1 == end.1) {
+            (true, true) => {} //zero-sized line, do nothing.
+            (true, false) => {
+                //vertical line
+                self.draw_rect(
+                    start.0 - (width as i32 / 2), // the line should be offset to center it at the co-ordinate
+                    start.1.min(end.1),
+                    width,
+                    (start.1 - end.1).abs() as u32,
+                    color,
+                    blend,
+                );
+            }
+            (false, true) => {
+                //horizontal line
+                self.draw_rect(
+                    start.0.min(end.0),
+                    start.1 - (width as i32 / 2), // as above, the line should be offset to center it at the co-ordinate
+                    (start.0 - end.0).abs() as u32,
+                    width,
+                    color,
+                    blend,
+                );
+            }
+            (false, false) => {
+                //diagonal line
+                for (x, y) in line_drawing::Bresenham::new(start, end) {
+                    self.draw_circle_filled(x, y, width / 2, color, blend)
+                }
+            }
+        }
     }
 }
 
