@@ -78,9 +78,12 @@ default-features = false
 features = ["libm"]
 
 [dependencies.unwinding]
-version = "0.2.8"
+#version = "0.2.8"
 default-features = false
 features = ["unwinder", "panic", "fde-custom", "personality"]
+# use pinned git commit until 0.2.9 is released
+git = "https://github.com/nbdd0121/unwinding"
+rev = "e432817afbea4c13f011f63b882486192d15f22b"
 
 [dependencies.linked_list_allocator]
 version = "0.10.5"
