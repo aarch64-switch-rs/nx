@@ -1,7 +1,10 @@
 //! Pseudo-RNG support
 
+use core::convert::Infallible;
+
 use alloc::sync::Arc;
-pub use rand::{CryptoRng, Rng, RngCore};
+use rand::TryRng;
+pub use rand::{CryptoRng, Rng, rand_core::Rng as RngCore};
 
 /// Represents a pseudo-RNG
 use crate::ipc::sf::Buffer;
@@ -10,24 +13,26 @@ use crate::service;
 pub use crate::service::spl::{IRandomClient, RandomService};
 use crate::sync::Mutex;
 
-impl RngCore for RandomService {
-    fn next_u32(&mut self) -> u32 {
+impl TryRng for RandomService {
+    type Error = Infallible;
+    fn try_next_u32(&mut self) -> core::result::Result<u32, Self::Error> {
         let mut data = [0; 4];
         self.generate_random_bytes(Buffer::from_mut_array(&mut data))
             .expect("Generating rand bytes should never fail");
-        u32::from_ne_bytes(data)
+        Ok(u32::from_ne_bytes(data))
     }
 
-    fn next_u64(&mut self) -> u64 {
+    fn try_next_u64(&mut self) -> core::result::Result<u64, Self::Error> {
         let mut data = [0; 8];
         self.generate_random_bytes(Buffer::from_mut_array(&mut data))
             .expect("Generating rand bytes should never fail");
-        u64::from_ne_bytes(data)
+        Ok(u64::from_ne_bytes(data))
     }
 
-    fn fill_bytes(&mut self, dst: &mut [u8]) {
+    fn try_fill_bytes(&mut self, dst: &mut [u8]) -> core::result::Result<(), Self::Error> {
         self.generate_random_bytes(Buffer::from_mut_array(dst))
             .expect("Generating rand bytes should never fail");
+        Ok(())
     }
 }
 
@@ -57,6 +62,10 @@ pub fn get_rng() -> Result<spl::SplCsrngGenerator> {
 
 mod spl {
 
+    use core::convert::Infallible;
+
+    use rand::{TryCryptoRng, TryRng};
+
     use super::*;
 
     /// Represents a pseudo-RNG using [`spl`][`crate::service::spl`]'s [`RandomService`] interface
@@ -74,29 +83,29 @@ mod spl {
         }
     }
 
-    impl RngCore for SplCsrngGenerator {
-        fn next_u32(&mut self) -> u32 {
+    impl TryRng for SplCsrngGenerator {
+        type Error = Infallible;
+        fn try_next_u32(&mut self) -> core::result::Result<u32, Self::Error> {
             let mut data = [0; 4];
             self.csrng
                 .generate_random_bytes(Buffer::from_mut_array(&mut data))
                 .expect("Generating rand bytes should never fail");
-            u32::from_ne_bytes(data)
+            Ok(u32::from_ne_bytes(data))
         }
-
-        fn next_u64(&mut self) -> u64 {
+        fn try_next_u64(&mut self) -> core::result::Result<u64, Self::Error> {
             let mut data = [0; 8];
             self.csrng
                 .generate_random_bytes(Buffer::from_mut_array(&mut data))
                 .expect("Generating rand bytes should never fail");
-            u64::from_ne_bytes(data)
+            Ok(u64::from_ne_bytes(data))
         }
-
-        fn fill_bytes(&mut self, dst: &mut [u8]) {
+        fn try_fill_bytes(&mut self, dst: &mut [u8]) -> core::result::Result<(), Self::Error> {
             self.csrng
                 .generate_random_bytes(Buffer::from_mut_array(dst))
                 .expect("Generating rand bytes should never fail");
+            Ok(())
         }
     }
 
-    impl CryptoRng for SplCsrngGenerator {}
+    impl TryCryptoRng for SplCsrngGenerator {}
 }
