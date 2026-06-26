@@ -728,7 +728,7 @@ pub fn reset_signal(handle: Handle) -> Result<()> {
 ///
 /// The max number of handles is `0x40` (64). This is a Horizon kernel limitation.
 #[inline(always)]
-pub unsafe fn wait_synchronization(handles: &[Handle], timeout: i64) -> Result<i32> {
+pub fn wait_synchronization(handles: &[Handle], timeout: i64) -> Result<i32> {
     unsafe {
         let mut index: i32 = 0;
         let rc =

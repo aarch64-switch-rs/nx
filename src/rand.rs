@@ -1,7 +1,7 @@
 //! Pseudo-RNG support
 
 use alloc::sync::Arc;
-pub use rand::{Rng, RngCore};
+pub use rand::{CryptoRng, Rng, RngCore};
 
 /// Represents a pseudo-RNG
 use crate::ipc::sf::Buffer;
@@ -56,6 +56,7 @@ pub fn get_rng() -> Result<spl::SplCsrngGenerator> {
 }
 
 mod spl {
+
     use super::*;
 
     /// Represents a pseudo-RNG using [`spl`][`crate::service::spl`]'s [`RandomService`] interface
@@ -96,4 +97,6 @@ mod spl {
                 .expect("Generating rand bytes should never fail");
         }
     }
+
+    impl CryptoRng for SplCsrngGenerator {}
 }
