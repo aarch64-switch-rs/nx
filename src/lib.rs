@@ -47,10 +47,8 @@
 #![feature(get_mut_unchecked)]
 // get rid of mangled error handling in applet::initialize
 #![feature(try_blocks)]
-// used for ergonomics reading UTF16 strings
-#![feature(str_from_utf16_endian)]
 //#![warn(missing_docs)]
-#![macro_use]
+
 use core::arch::global_asm;
 
 // Required assembly bits (those which essentially cannot/shouldn't be inlined)
