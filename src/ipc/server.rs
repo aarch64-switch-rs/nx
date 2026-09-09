@@ -976,12 +976,7 @@ impl<const P: usize> ServerManager<P> {
                                 };
                             }
                             cmif::CommandType::Control | cmif::CommandType::ControlWithContext => {
-                                match cmif::server::read_control_command_from_msg_buffer(&mut ctx) {
-                                    Ok(control_rq_id) => {
-                                        rq_id = control_rq_id as u32;
-                                    }
-                                    Err(rc) => return Err(rc),
-                                };
+                                rq_id = cmif::server::read_control_command_from_msg_buffer(&mut ctx)? as u32;
                             }
                             cmif::CommandType::Close => {
                                 should_close_session = true;

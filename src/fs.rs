@@ -648,7 +648,7 @@ impl ErrorType for FileAccessor {
 
 impl embedded_io::Read for FileAccessor {
     fn read(&mut self, buf: &mut [u8]) -> Result<usize> {
-        if buf.len() == 0 {
+        if buf.is_empty() {
             return Ok(0);
         }
 
@@ -658,7 +658,7 @@ impl embedded_io::Read for FileAccessor {
 
 impl embedded_io::Write for FileAccessor {
     fn write(&mut self, buf: &[u8]) -> Result<usize> {
-        if buf.len() == 0 {
+        if buf.is_empty() {
             return Ok(0);
         }
 

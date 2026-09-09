@@ -207,7 +207,7 @@ impl BsdSocketService {
         loop {
             if let Ok(value) =
                 self.checkout_slots
-                    .fetch_update(Ordering::AcqRel, Ordering::Acquire, |v| {
+                    .try_update(Ordering::AcqRel, Ordering::Acquire, |v| {
                         let slot = v.trailing_ones() as usize;
                         if slot < slot_limit {
                             // write a checkout bit into the checkout slot
@@ -1655,27 +1655,27 @@ pub mod net {
 
         impl embedded_io::Read for TcpStream {
             fn read(&mut self, buf: &mut [u8]) -> Result<usize, Self::Error> {
-                if buf.len() == 0 {
+                if buf.is_empty() {
                     return Ok(0);
                 }
 
-                self.recv(buf).map(|l| l as usize)
+                self.recv(buf)
             }
         }
 
         impl embedded_io::Read for UdpSocket {
             fn read(&mut self, buf: &mut [u8]) -> Result<usize, Self::Error> {
-                if buf.len() == 0 {
+                if buf.is_empty() {
                     return Ok(0);
                 }
 
-                self.recv(buf).map(|l| l as usize)
+                self.recv(buf)
             }
         }
 
         impl embedded_io::Write for TcpStream {
             fn write(&mut self, buf: &[u8]) -> core::result::Result<usize, Self::Error> {
-                if buf.len() == 0 {
+                if buf.is_empty() {
                     return Ok(0);
                 }
 
@@ -1693,7 +1693,7 @@ pub mod net {
 
         impl embedded_io::Write for UdpSocket {
             fn write(&mut self, buf: &[u8]) -> core::result::Result<usize, Self::Error> {
-                if buf.len() == 0 {
+                if buf.is_empty() {
                     return Ok(0);
                 }
 
