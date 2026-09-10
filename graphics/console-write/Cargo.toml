@@ -1,0 +1,12 @@
+[package]
+name = "console-write"
+version = "0.1.0"
+authors = ["XorTroll"]
+edition = "2021"
+
+[dependencies]
+nx = { workspace = true , features = [ "input", "fs", "console", "rand" ] }
+rand = { version = "0.10.2", default-features = false }
+
+[package.metadata.nx.nro]
+nacp = { default_name = "console-write", default_author = "XorTroll", version = "Example" }

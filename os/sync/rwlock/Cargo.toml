@@ -1,0 +1,10 @@
+[package]
+name = "rwlock"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+nx = { workspace = true, features = ["input", "truetype", "fs", "rand"] }
+
+[package.metadata.nx.nro]
+nacp = { default_name = "rwlock-dealock-test", default_author = "Pantsman0", version = "Example" }

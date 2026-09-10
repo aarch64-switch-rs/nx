@@ -23,6 +23,9 @@ socket = ["services", "dep:embedded-io"]
 applet = ["services"]
 mii = ["services"]
 
+[workspace.dependencies.nx]
+git = "https://github.com/aarch64-switch-rs/nx"
+tag = "0.6.0"
 
 [dependencies]
 paste = "1.0"
