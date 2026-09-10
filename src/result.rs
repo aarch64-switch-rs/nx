@@ -111,6 +111,8 @@ impl fmt::Display for ResultCode {
     }
 }
 
+impl core::error::Error for ResultCode {}
+
 /// Represents a result holding a certain value or a  [`ResultCode`] as an indication of failure
 pub type Result<T> = result::Result<T, ResultCode>;
 
