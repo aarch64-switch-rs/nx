@@ -1,5 +1,15 @@
 # Change history
 
+## `v0.6.0`
+
+- Update dependencies
+- Fix lints
+- Expose error codes when implementing rand interface for the SPL service.
+
+## `v0.5.0`
+
+- Several fixes on multiple modules, along with the introduction of audin/audout service support and fixes in server code and latest nightly Rust support
+
 ## `v0.4.0`
 
 - Mature Sockets module and a number of other updates by @pantsman0 in https://github.com/aarch64-switch-rs/nx/pull/40
