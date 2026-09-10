@@ -24,11 +24,10 @@ pub fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
     hbl_heap
 }
 
-type RGBType = nx::gpu::canvas::RGBA4;
+type RGBType = nx::gpu::canvas::RGBA8;
 
 #[no_mangle]
 pub fn main() {
-    
     let supported_tags =
         hid::NpadStyleTag::Handheld() | hid::NpadStyleTag::FullKey() | hid::NpadStyleTag::JoyDual();
     let input_ctx = input::Context::new(supported_tags, 1).unwrap();
@@ -42,11 +41,12 @@ pub fn main() {
         nx::gpu::canvas::Font::try_from_slice(include_bytes!("../../font/Roboto-Medium.ttf"))
             .unwrap();
 
-            let gpu_ctx = gpu::Context::new(
-                gpu::NvDrvServiceKind::Applet,
-                gpu::ViServiceKind::System,
-                0x40000,
-            ).unwrap();
+    let gpu_ctx = gpu::Context::new(
+        gpu::NvDrvServiceKind::Applet,
+        gpu::ViServiceKind::System,
+        0x40000,
+    )
+    .unwrap();
     let mut surface = match nx::gpu::canvas::CanvasManager::new_stray(
         Arc::new(RwLock::new(gpu_ctx)),
         Default::default(),
@@ -146,16 +146,73 @@ pub fn main() {
                     );
                 }
             }
+
+            c.draw_line(
+                (600, 350),
+                (700, 250),
+                10,
+                RGBType::new_scaled(0, 0, 0, 128),
+                gpu::canvas::AlphaBlend::Source,
+            );
+            c.draw_line(
+                (700, 250),
+                (750, 250),
+                10,
+                RGBType::new_scaled(0, 0, 0, 255),
+                gpu::canvas::AlphaBlend::None,
+            );
+            c.draw_line(
+                (750, 250),
+                (850, 350),
+                10,
+                RGBType::new_scaled(0, 0, 0, 128),
+                gpu::canvas::AlphaBlend::Destination,
+            );
+            c.draw_line(
+                (850, 350),
+                (850, 400),
+                10,
+                RGBType::new_scaled(0, 0, 0, 255),
+                gpu::canvas::AlphaBlend::None,
+            );
+            c.draw_line(
+                (850, 400),
+                (750, 500),
+                10,
+                RGBType::new_scaled(0, 0, 0, 128),
+                gpu::canvas::AlphaBlend::Source,
+            );
+            c.draw_line(
+                (750, 500),
+                (700, 500),
+                10,
+                RGBType::new_scaled(0, 0, 0, 255),
+                gpu::canvas::AlphaBlend::None,
+            );
+            c.draw_line(
+                (700, 500),
+                (600, 400),
+                10,
+                RGBType::new_scaled(0, 0, 0, 255),
+                gpu::canvas::AlphaBlend::Destination,
+            );
+            c.draw_line(
+                (600, 400),
+                (600, 350),
+                10,
+                RGBType::new_scaled(0, 0, 0, 255),
+                gpu::canvas::AlphaBlend::None,
+            );
+
             Ok(())
         });
         let _ = surface.wait_vsync_event(None);
     }
-
 }
 
 #[panic_handler]
 fn panic_handler(_info: &panic::PanicInfo) -> ! {
     //let panic_str = format!("{}", info);
-    nx::diag::abort::abort(abort::AbortLevel::Panic(), nx::rc::ResultPanicked::make());
+    nx::diag::abort::abort(abort::AbortLevel::Panic(), nx::rc::ResultPanicked::make())
     //util::simple_panic_handler::<LmLogger>(info, abort::AbortLevel::FatalThrow())
 }
