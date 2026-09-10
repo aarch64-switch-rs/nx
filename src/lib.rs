@@ -45,8 +45,9 @@
 #![feature(linkage)]
 // needed for the implementation of the threads module
 #![feature(get_mut_unchecked)]
-// get rid of mangled error handling in applet::initialize
-#![feature(try_blocks)]
+// get rid of mangled error handling in the `applet` and `gpu` modules
+#![cfg_attr(any(feature = "applet", feature = "gpu"), feature(try_blocks))]
+
 //#![warn(missing_docs)]
 
 use core::arch::global_asm;
