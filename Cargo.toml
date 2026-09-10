@@ -42,12 +42,13 @@ optional = true
 features = ["alloc"]
 
 [dependencies.embedded-term]
-version = "0.1.1"
+git = "https://github.com/rcore-os/embedded-term"
+rev = "ce0fc1b30a883dba95f7d6ef794699100f178bd6"
 optional = true
 default-features = false
 
 [dependencies.embedded-graphics-core]
-version = "0.3.3"
+version = "0.4.1"
 optional = true
 
 [dependencies.line_drawing]
